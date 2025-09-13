@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Post } from "@/types/post";
 import { PostComment } from "@/types/user";
@@ -47,25 +46,25 @@ export const useFeed = () => {
     const loadRealPosts = async () => {
       try {
         setIsLoading(true);
-        const realPosts = await realSocialService.getPosts(page, PAGE_SIZE);
-        
-        // Transform Supabase data to match Post interface
+        const realPosts = await realSocialService.getFeed(undefined, { limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
+
+        // Transform Supabase data (mapped by service) to match Post interface
         const transformedPosts: Post[] = realPosts.map((p: any) => ({
           id: p.id,
           author: {
-            name: p.author_name || "User",
-            username: p.author_username || `user-${p.user_id.slice(0, 8)}`,
-            avatar: p.author_avatar || "/placeholder.svg",
-            verified: false,
+            name: (p.author && (p.author.name || p.author.full_name)) || "User",
+            username: (p.author && (p.author.username || p.author.id)) || `user-${(p.userId || p.user_id || '').toString().slice(0, 8)}`,
+            avatar: (p.author && (p.author.avatar || p.author.avatar_url)) || "/placeholder.svg",
+            verified: !!(p.author && p.author.verified),
           },
           content: p.content,
-          image: p.media_urls?.[0],
+          image: p.imageUrl || p.media_urls?.[0] || null,
           location: null,
           taggedUsers: null,
-          createdAt: formatDate(p.created_at),
-          likes: p.like_count || 0,
-          comments: p.comment_count || 0,
-          shares: p.share_count || 0,
+          createdAt: formatDate(p.createdAt || p.created_at),
+          likes: p.likes || p.like_count || 0,
+          comments: p.comments || p.comment_count || 0,
+          shares: p.shares || p.share_count || 0,
           poll: null
         }));
 
