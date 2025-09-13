@@ -199,7 +199,8 @@ const loadRealFeedData = async (page: number = 1, limit: number = 10): Promise<U
     });
 
   } catch (error) {
-    console.error('Error loading real feed data:', error);
+    const msg = (error && (error.message || (typeof error === 'string' ? error : JSON.stringify(error)))) || 'Unknown error';
+    console.error('Error loading real feed data:', msg, error);
     return [];
   }
 };
