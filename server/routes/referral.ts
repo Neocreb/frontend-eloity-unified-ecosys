@@ -35,6 +35,7 @@ const ensureDb = (res: any) => {
 
 // Generate referral link
 router.post('/generate', authenticateToken, async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -112,6 +113,7 @@ router.post('/generate', authenticateToken, async (req, res) => {
 
 // Get user's referral links
 router.get('/links', authenticateToken, async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -154,6 +156,7 @@ router.get('/links', authenticateToken, async (req, res) => {
 
 // Get referral statistics
 router.get('/stats', authenticateToken, async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -206,6 +209,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
 
 // Track referral click
 router.post('/track-click', async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const { referralCode } = req.body;
     const clientIp = req.ip || req.connection.remoteAddress;
@@ -274,6 +278,7 @@ router.post('/track-click', async (req, res) => {
 
 // Process referral signup
 router.post('/signup', async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const { referralCode, newUserId } = req.body;
 
