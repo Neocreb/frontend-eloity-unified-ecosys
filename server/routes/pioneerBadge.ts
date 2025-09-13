@@ -12,14 +12,26 @@ import { users } from '../../shared/schema.js';
 
 const router = express.Router();
 
-// Initialize database connection
+// Initialize database connection safely
 const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
+let db: any;
+if (connectionString) {
+  try {
+    const sql_client = neon(connectionString);
+    db = drizzle(sql_client);
+  } catch (e) {
+    console.warn('pioneerBadge route: failed to initialize DB client:', e?.message || e);
+    db = null;
+  }
+} else {
+  console.warn('pioneerBadge route: DATABASE_URL not set, running in mock mode');
+  db = {
+    select: () => ({ from: () => ({ where: () => ({ limit: async () => [] }) }) }),
+    insert: () => ({ values: () => ({ returning: async () => [] }) }),
+    update: () => ({ set: () => ({ where: () => ({ execute: async () => [] }) }) }),
+    delete: () => ({ where: () => ({ execute: async () => [] }) })
+  };
 }
-
-const sql_client = neon(connectionString);
-const db = drizzle(sql_client);
 
 // Constants
 const MAX_PIONEER_BADGES = 500;

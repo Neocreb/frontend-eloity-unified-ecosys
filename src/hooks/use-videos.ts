@@ -12,22 +12,22 @@ export const useVideos = () => {
   useEffect(() => {
     const loadVideoContent = async () => {
       try {
-        const posts = await realSocialService.getPosts(1, 20);
+        const posts = await realSocialService.getFeed(undefined, { limit: 20, offset: 0 });
         const videoItems: VideoItem[] = posts
-          .filter((post: any) => post.media_type === 'video' || (post.media_urls && post.media_urls.some((url: string) => url.includes('video'))))
+          .filter((post: any) => post.mediaType === 'video' || post.media_type === 'video' || (post.media_urls && post.media_urls.some((url: string) => url.includes('video'))))
           .map((post: any) => ({
             id: post.id,
-            url: post.media_urls?.[0] || '',
-            thumbnail: post.thumbnail || '/placeholder.svg',
+            url: post.videoUrl || post.imageUrl || post.media_urls?.[0] || '',
+            thumbnail: (post.author && post.author.avatar) || post.thumbnail || '/placeholder.svg',
             description: post.content || '',
-            likes: post.like_count || 0,
-            comments: post.comment_count || 0,
-            shares: post.share_count || 0,
+            likes: post.likes || post.like_count || 0,
+            comments: post.comments || post.comment_count || 0,
+            shares: post.shares || post.share_count || 0,
             author: {
-              name: post.author_name || 'Creator',
-              username: post.author_username || `user-${String(post.user_id || '').slice(0, 8)}`,
-              avatar: post.author_avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=creator",
-              verified: !!post.author_verified,
+              name: (post.author && (post.author.name || post.author.full_name)) || 'Creator',
+              username: (post.author && (post.author.username || post.author.id)) || `user-${String(post.userId || post.user_id || '').slice(0, 8)}`,
+              avatar: (post.author && (post.author.avatar || post.author.avatar_url)) || "https://api.dicebear.com/7.x/avataaars/svg?seed=creator",
+              verified: !!(post.author && post.author.verified),
             },
             isFollowing: false,
           }));

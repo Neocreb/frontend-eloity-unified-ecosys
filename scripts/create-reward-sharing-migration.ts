@@ -5,12 +5,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const connectionString = process.env.DATABASE_URL;
+let sql: any = null;
+let db: any = null;
 if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
+  console.warn('scripts/create-reward-sharing-migration: DATABASE_URL not set; skipping DB migrations in this environment');
+} else {
+  sql = neon(connectionString);
+  db = drizzle(sql);
 }
-
-const sql = neon(connectionString);
-const db = drizzle(sql);
 
 async function createRewardSharingTables() {
   try {

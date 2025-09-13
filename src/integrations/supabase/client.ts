@@ -8,7 +8,8 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Custom fetch to surface detailed error payloads from Supabase in the console
+// Custom fetch to surface basic error details from Supabase in the console
+// When responses are non-OK, read the body as text for logging then return a fresh Response
 const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
@@ -16,26 +17,37 @@ const debugFetch: typeof fetch = async (input, init) => {
       try {
         const url = typeof input === 'string' ? input : (input as Request).url;
         const ct = res.headers.get('content-type') || '';
-        const isParsable = res.type === 'basic' || res.type === 'cors';
-        let body: any = null;
-        if (isParsable && ct.includes('application/json')) {
-          body = await res.clone().json();
-        } else if (isParsable) {
-          body = await res.clone().text();
-        } else {
-          body = '[opaque response: body not readable]';
+        // Read the body as text for logging. Use clone to avoid consuming original stream,
+        // then reconstruct a fresh Response so downstream (Supabase SDK) can still parse it.
+        const text = await res.clone().text();
+        let parsedBody: any = text;
+        if (ct.includes('application/json')) {
+          try {
+            parsedBody = JSON.parse(text);
+          } catch (e) {
+            // keep raw text
+          }
         }
-        // Log structured details to aid debugging auth/API errors
+
         console.error('Supabase request failed', {
           url,
           status: res.status,
           statusText: res.statusText,
           type: res.type,
           contentType: ct,
-          body,
+          body: parsedBody,
         });
+
+        // Recreate a fresh Response so SDK can continue to read/parse it
+        const fresh = new Response(text, {
+          status: res.status,
+          statusText: res.statusText,
+          headers: res.headers,
+        });
+        return fresh;
       } catch (e) {
-        console.error('Supabase request failed and response could not be parsed', e);
+        console.error('Supabase request failed (logging error)', e);
+        return res;
       }
     }
     return res;
