@@ -9,7 +9,7 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // import { supabase } from "@/integrations/supabase/client";
 
 // Custom fetch to surface basic error details from Supabase in the console
-// IMPORTANT: avoid reading/consuming the response body here — let Supabase SDK handle parsing
+// When responses are non-OK, read the body as text for logging then return a fresh Response
 const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
@@ -17,18 +17,37 @@ const debugFetch: typeof fetch = async (input, init) => {
       try {
         const url = typeof input === 'string' ? input : (input as Request).url;
         const ct = res.headers.get('content-type') || '';
-        // Only log headers and metadata to avoid interfering with body stream
+        // Read the body as text for logging. Use clone to avoid consuming original stream,
+        // then reconstruct a fresh Response so downstream (Supabase SDK) can still parse it.
+        const text = await res.clone().text();
+        let parsedBody: any = text;
+        if (ct.includes('application/json')) {
+          try {
+            parsedBody = JSON.parse(text);
+          } catch (e) {
+            // keep raw text
+          }
+        }
+
         console.error('Supabase request failed', {
           url,
           status: res.status,
           statusText: res.statusText,
           type: res.type,
           contentType: ct,
-          // Do not attempt to read res.text()/res.json() here — it may cause "body already used" downstream
+          body: parsedBody,
         });
+
+        // Recreate a fresh Response so SDK can continue to read/parse it
+        const fresh = new Response(text, {
+          status: res.status,
+          statusText: res.statusText,
+          headers: res.headers,
+        });
+        return fresh;
       } catch (e) {
-        // Swallow to avoid breaking the SDK
         console.error('Supabase request failed (logging error)', e);
+        return res;
       }
     }
     return res;
