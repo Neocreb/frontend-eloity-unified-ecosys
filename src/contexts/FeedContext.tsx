@@ -78,36 +78,32 @@ const loadRealFeedData = async (page: number = 1, limit: number = 10): Promise<U
   const feedItems: UnifiedFeedItem[] = [];
 
   try {
-    // Load posts from Supabase
-    const posts = await realSocialService.getPosts(page, limit);
+    // Load posts from Supabase using the realSocialService.getFeed API
+    const posts = await realSocialService.getFeed(undefined, { limit, offset: (page - 1) * limit });
     for (const post of posts) {
       feedItems.push({
         id: post.id,
         type: "post",
-        timestamp: new Date(post.created_at),
+        timestamp: new Date(post.createdAt || post.created_at || Date.now()),
         priority: 8,
         author: {
-          id: post.user_id,
-          name: post.author_name || "User",
-          username: post.author_username || `user-${post.user_id.slice(0, 8)}`,
-          avatar: post.author_avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-          verified: false,
+          id: post.userId || post.user_id,
+          name: (post.author && (post.author.name || post.author.full_name)) || "User",
+          username: (post.author && (post.author.username || post.author.full_name)) || `user-${(post.userId || post.user_id || '').toString().slice(0, 8)}`,
+          avatar: (post.author && (post.author.avatar || post.author.avatar_url)) || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          verified: !!(post.author && post.author.verified),
         },
         content: {
           text: post.content,
-          media: post.media_urls?.length > 0 ? post.media_urls.map((url: string) => ({
-            type: post.media_type || "image",
-            url,
-            alt: "Post media"
-          })) : []
+          media: post.mediaType === 'image' && post.imageUrl ? [{ type: 'image', url: post.imageUrl, alt: 'Post media' }] : [],
         },
         interactions: {
-          likes: post.like_count || 0,
-          comments: post.comment_count || 0,
-          shares: post.share_count || 0,
+          likes: post.likes || post.like_count || 0,
+          comments: post.comments || post.comment_count || 0,
+          shares: post.shares || post.share_count || 0,
         },
         userInteracted: {
-          liked: false,
+          liked: !!post.isLiked,
           commented: false,
           shared: false,
           saved: false,
