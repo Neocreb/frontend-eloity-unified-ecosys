@@ -109,10 +109,11 @@ export const MarketplaceProvider = ({ children }: { children: React.ReactNode })
 
         setProducts(transformedProducts);
       } catch (error) {
-        console.error('Error loading products:', error);
+        const msg = (error && (error.message || (typeof error === 'string' ? error : JSON.stringify(error)))) || 'Unknown error';
+        console.error('Error loading products:', msg, error);
         toast({
-          title: "Error",
-          description: "Failed to load products",
+          title: "Error loading products",
+          description: msg,
           variant: "destructive"
         });
       } finally {
