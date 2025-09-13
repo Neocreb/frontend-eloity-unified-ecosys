@@ -9,14 +9,29 @@ import { users } from '../../shared/schema.js';
 
 const router = express.Router();
 
-// Initialize database connection
+// Initialize database connection safely (do not throw during import)
 const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
+let db: any = null;
+if (connectionString) {
+  try {
+    const sql_client = neon(connectionString);
+    db = drizzle(sql_client);
+  } catch (e) {
+    console.warn('Referral route: failed to initialize DB client:', e?.message || e);
+    db = null;
+  }
+} else {
+  console.warn('Referral route: DATABASE_URL not set, referral endpoints will be disabled');
 }
 
-const sql_client = neon(connectionString);
-const db = drizzle(sql_client);
+// Helper to ensure DB available in routes
+const ensureDb = (res: any) => {
+  if (!db) {
+    res.status(503).json({ error: 'Database not configured. Referral service unavailable.' });
+    return false;
+  }
+  return true;
+};
 
 // Generate referral link
 router.post('/generate', authenticateToken, async (req, res) => {
