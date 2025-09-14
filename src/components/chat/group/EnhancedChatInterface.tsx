@@ -16,7 +16,7 @@ import { ChatListItem } from "./ChatListItem";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EnhancedChatInterfaceProps {
-  currentUserId: string;
+  currentUserId?: string;
   isMobile?: boolean;
 }
 

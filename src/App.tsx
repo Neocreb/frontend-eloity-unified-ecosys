@@ -387,7 +387,7 @@ const AppRoutes = () => {
           <Route path="feed" element={<EnhancedFeedWithTabs />} />
           {/* <Route path="feed-demo" element={<FeedWithFollowDemo />} /> */}
           <Route path="create" element={<EnhancedFreelance />} />
-          <Route path="freelance" element={<RealFreelance />} />
+          <Route path="freelance" element={<EnhancedFreelance />} />
           <Route
             path="freelance/dashboard"
             element={
@@ -424,7 +424,7 @@ const AppRoutes = () => {
           <Route path="freelance/job/:jobId" element={<DetailedJobPage />} />
           <Route path="freelance/service/:serviceId" element={<ServiceDetail />} />
           <Route path="freelance/profile/:username" element={<FreelancerProfile />} />
-          <Route path="chat" element={<RealChat />} />
+          <Route path="chat" element={<Chat />} />
           <Route path="chat/:threadId" element={<ChatRoom />} />
           <Route path="chat-test/:threadId" element={<ChatTest />} />
           <Route path="chat-simple/:threadId" element={<SimpleChatRoom />} />
@@ -459,7 +459,7 @@ const AppRoutes = () => {
           <Route path="notifications" element={<RealNotifications />} />
 
           {/* Marketplace routes */}
-          <Route path="marketplace" element={<RealMarketplace />} />
+          <Route path="marketplace" element={<Marketplace />} />
           <Route
             path="marketplace/browse"
             element={<Navigate to="/app/marketplace" replace />}
