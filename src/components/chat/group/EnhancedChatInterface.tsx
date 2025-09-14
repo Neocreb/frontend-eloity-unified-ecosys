@@ -46,7 +46,30 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   const loadConversations = async () => {
     try {
       setLoading(true);
-      
+
+      if (USE_MOCK_DATA) {
+        // Load from mock chat service
+        const threads = await chatService.getChatThreads({ type: activeTab });
+        const transformedChats: UnifiedChatThread[] = (threads || []).map((chat: any) => ({
+          id: chat.id,
+          type: activeTab,
+          isAI: false,
+          referenceId: chat.referenceId || null,
+          participants: chat.participants || [],
+          lastMessage: chat.lastMessage || "No messages yet",
+          lastMessageAt: chat.lastMessageAt || chat.updatedAt || new Date().toISOString(),
+          updatedAt: chat.updatedAt || chat.lastMessageAt || new Date().toISOString(),
+          createdAt: chat.createdAt || new Date().toISOString(),
+          isGroup: !!chat.isGroup,
+          title: chat.groupName || chat.title || `Chat ${String(chat.id).slice(0, 8)}`,
+          unreadCount: chat.unreadCount || 0,
+          groupAvatar: (chat as any).groupAvatar,
+        }));
+
+        setConversations(transformedChats);
+        return;
+      }
+
       // Load chat conversations from Supabase
       const { data: chatData, error: chatError } = await supabase
         .from('chat_conversations')
@@ -86,6 +109,12 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
 
   const loadMessages = async (threadId: string) => {
     try {
+      if (USE_MOCK_DATA) {
+        const msgs = await chatService.getMessages(threadId, 200, 0, currentUserId);
+        setMessages(msgs || []);
+        return;
+      }
+
       const { data: messagesData, error: messagesError } = await supabase
         .from('chat_messages')
         .select('*')
@@ -124,6 +153,37 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
 
   const handleCreateGroup = async (request: any) => {
     try {
+      if (USE_MOCK_DATA) {
+        const newChat = await chatService.createGroupChatThread({
+          participants: [currentUserId, ...(request.participants || [])],
+          groupName: request.name,
+        });
+
+        const newThread: UnifiedChatThread = {
+          id: newChat.id,
+          type: activeTab,
+          isAI: false,
+          referenceId: null,
+          participants: newChat.participants,
+          lastMessage: newChat.lastMessage || "Group created",
+          lastMessageAt: newChat.createdAt || new Date().toISOString(),
+          updatedAt: newChat.updatedAt || new Date().toISOString(),
+          createdAt: newChat.createdAt || new Date().toISOString(),
+          isGroup: true,
+          title: request.name,
+          unreadCount: newChat.unreadCount || 0,
+        };
+
+        setConversations(prev => [newThread, ...prev]);
+        setShowCreateGroup(false);
+
+        toast({
+          title: "Group Created",
+          description: `${request.name} has been created successfully`,
+        });
+        return;
+      }
+
       // Create new conversation in Supabase
       const { data: newChat, error } = await supabase
         .from('chat_conversations')
@@ -171,6 +231,17 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
     if (!selectedChat || !content.trim()) return;
 
     try {
+      if (USE_MOCK_DATA) {
+        const newMessage = await chatService.sendMessage({
+          threadId: selectedChat.id,
+          content: content.trim(),
+          currentUserId,
+        } as any);
+
+        setMessages(prev => [...prev, newMessage]);
+        return;
+      }
+
       const { data: newMessage, error } = await supabase
         .from('chat_messages')
         .insert({
