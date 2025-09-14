@@ -28,7 +28,8 @@ const debugFetch: typeof fetch = async (input, init) => {
           // Fallback: attempt to read the body text directly (consumes the body)
           text = await res.text();
         } catch (readErr) {
-          // If we can't read the body at all, log what we have and return the original response.
+          // If we can't read the body at all, log what we have and return a fresh empty Response
+          // (returning the original `res` can lead to 'body already used' errors downstream).
           console.error('Supabase request failed (unable to read response body for logging)', {
             url,
             status: res.status,
@@ -37,7 +38,14 @@ const debugFetch: typeof fetch = async (input, init) => {
             contentType: ct,
             error: cloneErr || readErr,
           });
-          return res;
+
+          const fallbackHeaders = new Headers(res.headers ?? {});
+          if (ct && !fallbackHeaders.has('content-type')) fallbackHeaders.set('content-type', ct);
+          return new Response('', {
+            status: res.status,
+            statusText: res.statusText,
+            headers: fallbackHeaders,
+          });
         }
       }
 
