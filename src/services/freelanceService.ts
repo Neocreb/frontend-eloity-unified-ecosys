@@ -150,10 +150,20 @@ export const freelanceService = {
 
   // Categories and skills (delegated with real fallbacks)
   async getCategories(): Promise<string[]> {
-    return realFreelanceService.getCategories();
+    const { data, error } = await supabase
+      .from('freelance_categories')
+      .select('name')
+      .order('name');
+    if (error) return [];
+    return data?.map((c: any) => c.name) || [];
   },
 
   async getSkills(): Promise<string[]> {
-    return realFreelanceService.getSkills();
+    const { data, error } = await supabase
+      .from('freelance_skills')
+      .select('name')
+      .order('name');
+    if (error) return [];
+    return data?.map((s: any) => s.name) || [];
   },
 };
