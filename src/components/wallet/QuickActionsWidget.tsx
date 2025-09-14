@@ -443,7 +443,11 @@ const QuickActionsWidget = () => {
 
       <PayBillModal
         isOpen={showPayBillModal}
-        onClose={() => setShowPayBillModal(false)}
+        onClose={() => {
+          setShowPayBillModal(false);
+          setPayBillInitialType(undefined);
+        }}
+        initialBillType={payBillInitialType}
       />
 
       <TopUpModal
