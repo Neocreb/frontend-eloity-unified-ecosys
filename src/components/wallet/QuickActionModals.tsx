@@ -57,6 +57,7 @@ interface TransferModalProps {
 interface PayBillModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialBillType?: string;
 }
 
 interface TopUpModalProps {
