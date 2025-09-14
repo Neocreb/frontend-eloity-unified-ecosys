@@ -1,12 +1,17 @@
 import React from "react";
+import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
-// Ensure React is properly available globally
+// Ensure React is properly available globally (useful for some dev tools)
 if (typeof window !== "undefined") {
-  (window as any).React = React;
+  try {
+    (window as any).React = React;
+  } catch (e) {
+    console.warn('Failed to assign React to window:', e);
+  }
 }
 
 // Error boundary component
