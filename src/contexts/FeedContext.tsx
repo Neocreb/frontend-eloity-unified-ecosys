@@ -4,6 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { realSocialService } from '@/services/realSocialService';
 import { realMarketplaceService } from '@/services/realMarketplaceService';
 import { realFreelanceService } from '@/services/realFreelanceService';
+import { USE_MOCK_DATA } from '@/lib/featureFlags';
 
 interface UnifiedFeedItem {
   id: string;
