@@ -66,17 +66,27 @@ const useGroups = () => {
         setLoading(true);
         const { data, error } = await supabase
           .from('groups')
-          .select(`
-            *,
-            creator:profiles!creator_id(name, username, avatar_url),
-            member_count
-          `)
+          .select(`id, name, member_count, cover_url, avatar_url, description, privacy, created_at, creator_id`)
           .eq('privacy', 'public')
           .order('member_count', { ascending: false });
 
         if (error) throw error;
 
-        const formattedGroups = data?.map(group => ({
+        // Fetch creators in batch to avoid relying on DB relationship mapping
+        const creatorIds = Array.from(new Set((data || []).map((g: any) => g.creator_id).filter(Boolean)));
+        let creatorsMap: Record<string, any> = {};
+        if (creatorIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url')
+            .in('id', creatorIds);
+          creatorsMap = (profiles || []).reduce((acc: any, p: any) => {
+            acc[p.id] = p;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+
+        const formattedGroups = (data || []).map((group: any) => ({
           id: group.id,
           name: group.name,
           members: group.member_count || 0,
@@ -90,7 +100,8 @@ const useGroups = () => {
           location: 'Global',
           createdAt: group.created_at,
           avatar: group.avatar_url || "https://api.dicebear.com/7.x/initials/svg?seed=" + group.name,
-        })) || [];
+          creator: creatorsMap[group.creator_id] || null,
+        }));
 
         setGroups(formattedGroups);
       } catch (err) {

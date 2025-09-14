@@ -79,6 +79,10 @@ import UserStore from "./pages/profile/UserStore";
 import UserProjects from "./pages/profile/UserProjects";
 import UserTrades from "./pages/profile/UserTrades";
 import Wallet from "./pages/Wallet";
+import WalletAnalyticsPage from "./pages/wallet/WalletAnalytics";
+import WalletTransactionsPage from "./pages/wallet/WalletTransactions";
+import WalletIntegrationsPage from "./pages/wallet/WalletIntegrations";
+import WalletConvertPage from "./pages/wallet/WalletConvert";
 import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -448,6 +452,10 @@ const AppRoutes = () => {
           <Route path="unified-profile/:username" element={<UnifiedProfile />} />
           <Route path="demo/profiles" element={<ProfileDemo />} />
           <Route path="wallet" element={<Wallet />} />
+          <Route path="wallet/analytics" element={<WalletAnalyticsPage />} />
+          <Route path="wallet/transactions" element={<WalletTransactionsPage />} />
+          <Route path="wallet/integrations" element={<WalletIntegrationsPage />} />
+          <Route path="wallet/convert" element={<WalletConvertPage />} />
           <Route path="notifications" element={<RealNotifications />} />
 
           {/* Marketplace routes */}

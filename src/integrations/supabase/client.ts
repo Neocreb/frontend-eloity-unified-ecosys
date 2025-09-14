@@ -14,42 +14,58 @@ const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
     if (!res.ok) {
-      try {
-        const url = typeof input === 'string' ? input : (input as Request).url;
-        const ct = res.headers.get('content-type') || '';
-        // Read the body as text for logging. Use clone to avoid consuming original stream,
-        // then reconstruct a fresh Response so downstream (Supabase SDK) can still parse it.
-        const text = await res.clone().text();
-        let parsedBody: any = text;
-        if (ct.includes('application/json')) {
-          try {
-            parsedBody = JSON.parse(text);
-          } catch (e) {
-            // keep raw text
-          }
+      const url = typeof input === 'string' ? input : (input as Request).url;
+      const ct = res.headers.get('content-type') || '';
+
+      // Try to read the response body for logging only if it's safe to clone.
+      // We DO NOT call res.text() directly because that can consume the body expected by the SDK.
+      let text: string | null = null;
+      if (typeof (res.clone) === 'function') {
+        try {
+          text = await res.clone().text();
+        } catch (cloneErr) {
+          // If clone() fails, fall through and log without body
+          console.error('Supabase debugFetch clone() failed, will log without body', { url, status: res.status, statusText: res.statusText, error: cloneErr });
         }
-
-        console.error('Supabase request failed', {
-          url,
-          status: res.status,
-          statusText: res.statusText,
-          type: res.type,
-          contentType: ct,
-          body: parsedBody,
-        });
-
-        // Recreate a fresh Response so SDK can continue to read/parse it
-        const fresh = new Response(text, {
-          status: res.status,
-          statusText: res.statusText,
-          headers: res.headers,
-        });
-        return fresh;
-      } catch (e) {
-        console.error('Supabase request failed (logging error)', e);
-        return res;
+      } else {
+        // clone not available in this environment; avoid reading the body to prevent consumption
+        console.error('Supabase debugFetch: Response.clone not available, skipping body read', { url, status: res.status, statusText: res.statusText });
       }
+
+      // Try to parse JSON when we successfully captured text
+      let parsedBody: any = text;
+      if (text !== null && ct.includes('application/json')) {
+        try {
+          parsedBody = JSON.parse(text);
+        } catch (e) {
+          // keep raw text
+        }
+      }
+
+      console.error('Supabase request failed', {
+        url,
+        status: res.status,
+        statusText: res.statusText,
+        type: res.type,
+        contentType: ct,
+        body: parsedBody,
+      });
+
+      // If we captured body text, return a fresh Response built from it so SDK can consume normally.
+      if (text !== null) {
+        const headers = new Headers(res.headers ?? {});
+        if (!headers.has('content-type') && ct) headers.set('content-type', ct);
+        return new Response(text as any, {
+          status: res.status,
+          statusText: res.statusText,
+          headers,
+        });
+      }
+
+      // Otherwise return the original response untouched (safe: we didn't consume it).
+      return res;
     }
+
     return res;
   } catch (networkError) {
     console.error('Supabase network error', networkError);
