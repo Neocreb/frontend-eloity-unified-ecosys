@@ -28,8 +28,6 @@ import {
   Target,
   Lightbulb,
   Sparkles,
-  Building,
-  Wifi,
   Receipt,
 
 } from "lucide-react";
