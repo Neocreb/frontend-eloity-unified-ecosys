@@ -1,4 +1,3 @@
-import React, { Component, ReactNode, type ErrorInfo } from "react";
 import React, { Component, type ReactNode, type ErrorInfo, useLayoutEffect } from "react";
 import { ThemeProvider } from "./ThemeContext";
 
