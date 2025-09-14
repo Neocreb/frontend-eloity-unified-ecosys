@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { UnifiedChatThread, UnifiedChatType } from "@/types/unified-chat";
 import { ChatMessage, ChatParticipant } from "@/types/chat";
 import { CreateGroupModal } from "./CreateGroupModal";
-import { GroupSettingsModal } from "./GroupSettingsModal";
+import { GroupSettingsPanel } from "./GroupSettingsPanel";
 import { ChatListItem } from "./ChatListItem";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -403,15 +403,25 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
       )}
 
       {showGroupSettings && selectedChat && (
-        <GroupSettingsModal
-          groupChat={selectedChat as any}
-          currentUserId={currentUserId}
-          onUpdateGroup={() => {}}
-          onLeaveGroup={() => {}}
-          onDeleteGroup={() => {}}
-          onClose={() => setShowGroupSettings(false)}
-          isMobile={isMobile}
-        />
+        <Dialog open={showGroupSettings} onOpenChange={() => setShowGroupSettings(false)}>
+          <DialogContent className="max-w-3xl w-[95vw]">
+            <DialogHeader>
+              <DialogTitle>Group Settings</DialogTitle>
+            </DialogHeader>
+            <GroupSettingsPanel
+              group={selectedChat as any}
+              currentUserId={currentUserId}
+              isCurrentUserAdmin={true}
+              onUpdateSettings={async () => {}}
+              onUpdateGroup={async () => {}}
+              onCreateInviteLink={async () => ""}
+              onRevokeInviteLink={async () => {}}
+              onArchiveGroup={async () => {}}
+              onExportChatHistory={async () => {}}
+              onDeleteGroup={async () => {}}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
