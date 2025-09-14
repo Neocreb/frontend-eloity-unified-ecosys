@@ -14,42 +14,68 @@ const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
     if (!res.ok) {
+      const url = typeof input === 'string' ? input : (input as Request).url;
+      const ct = res.headers.get('content-type') || '';
+
+      // Try multiple strategies to safely obtain the response body text for logging.
+      // Some environments do not support clone() or body may already be consumed.
+      let text: string | null = null;
       try {
-        const url = typeof input === 'string' ? input : (input as Request).url;
-        const ct = res.headers.get('content-type') || '';
-        // Read the body as text for logging. Use clone to avoid consuming original stream,
-        // then reconstruct a fresh Response so downstream (Supabase SDK) can still parse it.
-        const text = await res.clone().text();
-        let parsedBody: any = text;
-        if (ct.includes('application/json')) {
-          try {
-            parsedBody = JSON.parse(text);
-          } catch (e) {
-            // keep raw text
-          }
+        // Preferred: try clone() first (doesn't consume original body in most browsers)
+        text = await res.clone().text();
+      } catch (cloneErr) {
+        try {
+          // Fallback: attempt to read the body text directly (consumes the body)
+          text = await res.text();
+        } catch (readErr) {
+          // If we can't read the body at all, log what we have and return the original response.
+          console.error('Supabase request failed (unable to read response body for logging)', {
+            url,
+            status: res.status,
+            statusText: res.statusText,
+            type: res.type,
+            contentType: ct,
+            error: cloneErr || readErr,
+          });
+          return res;
         }
-
-        console.error('Supabase request failed', {
-          url,
-          status: res.status,
-          statusText: res.statusText,
-          type: res.type,
-          contentType: ct,
-          body: parsedBody,
-        });
-
-        // Recreate a fresh Response so SDK can continue to read/parse it
-        const fresh = new Response(text, {
-          status: res.status,
-          statusText: res.statusText,
-          headers: res.headers,
-        });
-        return fresh;
-      } catch (e) {
-        console.error('Supabase request failed (logging error)', e);
-        return res;
       }
+
+      // At this point we have `text` (string). Try to parse JSON when appropriate.
+      let parsedBody: any = text;
+      if (ct.includes('application/json')) {
+        try {
+          parsedBody = JSON.parse(text || '');
+        } catch (e) {
+          // leave as raw text
+        }
+      }
+
+      console.error('Supabase request failed', {
+        url,
+        status: res.status,
+        statusText: res.statusText,
+        type: res.type,
+        contentType: ct,
+        body: parsedBody,
+      });
+
+      // Recreate a fresh Response (using the captured text) so the Supabase SDK can still consume it.
+      const headers = new Headers(res.headers ?? {});
+      // Ensure content-type remains accurate if known
+      if (text !== null && !headers.has('content-type') && ct) {
+        headers.set('content-type', ct);
+      }
+
+      const fresh = new Response(text as any, {
+        status: res.status,
+        statusText: res.statusText,
+        headers,
+      });
+
+      return fresh;
     }
+
     return res;
   } catch (networkError) {
     console.error('Supabase network error', networkError);
