@@ -217,13 +217,58 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
 
   const PAGE_SIZE = 10;
 
-  // Load real feed data from Supabase
+  // Mock feed loader
+  const loadMockFeedData = async (page: number = 1, limit: number = 10): Promise<UnifiedFeedItem[]> => {
+    const now = Date.now();
+    const items: UnifiedFeedItem[] = [
+      {
+        id: `mock_post_${page}_1`,
+        type: 'post',
+        timestamp: new Date(now - 1000 * 60 * 60),
+        priority: 8,
+        author: { id: 'user_1', name: 'Alice Johnson', username: 'alice', avatar: '', verified: true },
+        content: { text: 'Hey! How was your weekend?', media: [] },
+        interactions: { likes: 12, comments: 3, shares: 1 },
+        userInteracted: { liked: false, commented: false, shared: false, saved: false },
+      },
+      {
+        id: `mock_product_${page}_1`,
+        type: 'product',
+        timestamp: new Date(now - 1000 * 60 * 120),
+        priority: 6,
+        author: { id: 'seller_1', name: 'AudioHouse', username: 'audiohouse', avatar: '', verified: true },
+        content: {
+          title: 'Wireless Headphones X200',
+          description: 'High quality wireless headphones with noise cancellation.',
+          price: 99.99,
+          images: ['https://images.unsplash.com/photo-1518444021915-7a1b9cb11a2a?w=800'],
+          inStock: true,
+        },
+        interactions: { likes: 34, comments: 2, shares: 0, saves: 5 },
+        userInteracted: { liked: false, commented: false, shared: false, saved: false },
+      },
+      {
+        id: `mock_job_${page}_1`,
+        type: 'job',
+        timestamp: new Date(now - 1000 * 60 * 60 * 24),
+        priority: 7,
+        author: { id: 'client_1', name: 'TechCorp Inc.', username: 'techcorp', avatar: '', verified: true },
+        content: { title: 'React Developer for E-commerce Platform', description: 'Build a responsive e-commerce frontend', budget: { min: 0, max: 5000, type: 'fixed' }, skills: ['React','TypeScript'] },
+        interactions: { likes: 5, comments: 1, shares: 0 },
+        userInteracted: { liked: false, commented: false, shared: false, saved: false },
+      }
+    ];
+
+    return items.slice(0, limit);
+  };
+
+  // Load feed data (real or mock) from Supabase or mocks
   const loadFeedData = useCallback(async (page: number = 1, append: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const newPosts = await loadRealFeedData(page, PAGE_SIZE);
+      const newPosts = USE_MOCK_DATA ? await loadMockFeedData(page, PAGE_SIZE) : await loadRealFeedData(page, PAGE_SIZE);
 
       if (append) {
         setUserPosts(prev => [...prev, ...newPosts]);
@@ -231,7 +276,7 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
         setUserPosts(newPosts);
       }
 
-      // Real pagination logic based on actual data
+      // Pagination logic
       setHasMore(newPosts.length === PAGE_SIZE);
       setCurrentPage(page);
 
