@@ -93,7 +93,7 @@ const EnhancedWalletDashboardContent = () => {
               <div className="text-sm text-white/90">Total Balance</div>
               <div className="flex items-center gap-3">
                 <div className="text-4xl md:text-5xl font-bold">
-                  {balanceVisible ? `$${displayedBalance.toFixed(2)}` : "••••••"}
+                  {balanceVisible ? `$${displayedBalance.toFixed(2)}` : "��•••••"}
                 </div>
                 <button
                   aria-label="Toggle balance visibility"
@@ -148,6 +148,9 @@ const EnhancedWalletDashboardContent = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Hidden withdraw trigger for QuickActions compatibility */}
+      <button data-action="withdraw" onClick={() => setShowWithdrawModal(true)} className="hidden" aria-hidden="true" />
 
       {/* Quick Actions */}
       <QuickActionsWidget />
