@@ -28,8 +28,6 @@ import {
   Target,
   Lightbulb,
   Sparkles,
-  Building,
-  Wifi,
   Receipt,
 
 } from "lucide-react";
@@ -79,7 +77,6 @@ const QuickActionsWidget = () => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showPayBillModal, setShowPayBillModal] = useState(false);
-  const [payBillInitialType, setPayBillInitialType] = useState<string | undefined>(undefined);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
 
   // Quick Actions
@@ -118,46 +115,12 @@ const QuickActionsWidget = () => {
       color: "bg-orange-500 hover:bg-orange-600",
       action: () => setShowTransferModal(true),
     },
-    // Break out Pay Bill into category-specific quick actions
     {
-      id: "pay-utilities",
-      label: "Utilities",
-      icon: <Building className="h-4 w-4" />,
-      color: "bg-red-500 hover:bg-red-600",
-      action: () => {
-        setPayBillInitialType("utilities");
-        setShowPayBillModal(true);
-      },
-    },
-    {
-      id: "pay-internet",
-      label: "Internet & Cable",
-      icon: <Wifi className="h-4 w-4" />,
-      color: "bg-green-500 hover:bg-green-600",
-      action: () => {
-        setPayBillInitialType("internet");
-        setShowPayBillModal(true);
-      },
-    },
-    {
-      id: "pay-mobile",
-      label: "Mobile Phone",
-      icon: <Smartphone className="h-4 w-4" />,
-      color: "bg-blue-500 hover:bg-blue-600",
-      action: () => {
-        setPayBillInitialType("phone");
-        setShowPayBillModal(true);
-      },
-    },
-    {
-      id: "pay-cable",
-      label: "Cable TV",
+      id: "pay-bill",
+      label: "Pay Bill",
       icon: <Receipt className="h-4 w-4" />,
-      color: "bg-indigo-500 hover:bg-indigo-600",
-      action: () => {
-        setPayBillInitialType("cable_tv");
-        setShowPayBillModal(true);
-      },
+      color: "bg-red-500 hover:bg-red-600",
+      action: () => setShowPayBillModal(true),
     },
     {
       id: "top-up",
@@ -445,9 +408,7 @@ const QuickActionsWidget = () => {
         isOpen={showPayBillModal}
         onClose={() => {
           setShowPayBillModal(false);
-          setPayBillInitialType(undefined);
         }}
-        initialBillType={payBillInitialType}
       />
 
       <TopUpModal

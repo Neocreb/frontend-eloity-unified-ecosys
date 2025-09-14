@@ -11,18 +11,20 @@ import { useToast } from "@/components/ui/use-toast";
 import { UnifiedChatThread, UnifiedChatType } from "@/types/unified-chat";
 import { ChatMessage, ChatParticipant } from "@/types/chat";
 import { CreateGroupModal } from "./CreateGroupModal";
-import { GroupSettingsModal } from "./GroupSettingsModal";
+import { GroupSettingsPanel } from "./GroupSettingsPanel";
 import { ChatListItem } from "./ChatListItem";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EnhancedChatInterfaceProps {
-  currentUserId: string;
+  currentUserId?: string;
   isMobile?: boolean;
+  className?: string;
 }
 
 export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   currentUserId = "current",
   isMobile = false,
+  className,
 }) => {
   const { toast } = useToast();
   const [conversations, setConversations] = useState<UnifiedChatThread[]>([]);
@@ -219,7 +221,7 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   }
 
   return (
-    <div className={cn("flex h-full", isMobile ? "flex-col" : "")}>
+    <div className={cn("flex h-full", isMobile ? "flex-col" : "", className)}>
       {/* Chat List Sidebar */}
       <div className={cn(
         "border-r bg-background",
@@ -403,15 +405,25 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
       )}
 
       {showGroupSettings && selectedChat && (
-        <GroupSettingsModal
-          groupChat={selectedChat as any}
-          currentUserId={currentUserId}
-          onUpdateGroup={() => {}}
-          onLeaveGroup={() => {}}
-          onDeleteGroup={() => {}}
-          onClose={() => setShowGroupSettings(false)}
-          isMobile={isMobile}
-        />
+        <Dialog open={showGroupSettings} onOpenChange={() => setShowGroupSettings(false)}>
+          <DialogContent className="max-w-3xl w-[95vw]">
+            <DialogHeader>
+              <DialogTitle>Group Settings</DialogTitle>
+            </DialogHeader>
+            <GroupSettingsPanel
+              group={selectedChat as any}
+              currentUserId={currentUserId}
+              isCurrentUserAdmin={true}
+              onUpdateSettings={async () => {}}
+              onUpdateGroup={async () => {}}
+              onCreateInviteLink={async () => ""}
+              onRevokeInviteLink={async () => {}}
+              onArchiveGroup={async () => {}}
+              onExportChatHistory={async () => {}}
+              onDeleteGroup={async () => {}}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

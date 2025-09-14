@@ -57,7 +57,6 @@ interface TransferModalProps {
 interface PayBillModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialBillType?: string;
 }
 
 interface TopUpModalProps {
@@ -567,12 +566,12 @@ export const TransferModal = ({ isOpen, onClose }: TransferModalProps) => {
 };
 
 // Pay Bill Modal
-export const PayBillModal = ({ isOpen, onClose, initialBillType }: PayBillModalProps) => {
+export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
   const { toast } = useToast();
   const { walletBalance } = useWalletContext();
 
   const [formData, setFormData] = useState({
-    billType: initialBillType || "",
+    billType: "",
     provider: "",
     accountNumber: "",
     amount: "",
