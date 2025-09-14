@@ -18,11 +18,13 @@ import { supabase } from "@/integrations/supabase/client";
 interface EnhancedChatInterfaceProps {
   currentUserId?: string;
   isMobile?: boolean;
+  className?: string;
 }
 
 export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   currentUserId = "current",
   isMobile = false,
+  className,
 }) => {
   const { toast } = useToast();
   const [conversations, setConversations] = useState<UnifiedChatThread[]>([]);
@@ -219,7 +221,7 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   }
 
   return (
-    <div className={cn("flex h-full", isMobile ? "flex-col" : "")}>
+    <div className={cn("flex h-full", isMobile ? "flex-col" : "", className)}>
       {/* Chat List Sidebar */}
       <div className={cn(
         "border-r bg-background",
