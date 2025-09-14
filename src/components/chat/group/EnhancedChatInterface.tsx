@@ -14,6 +14,8 @@ import { CreateGroupModal } from "./CreateGroupModal";
 import { GroupSettingsPanel } from "./GroupSettingsPanel";
 import { ChatListItem } from "./ChatListItem";
 import { supabase } from "@/integrations/supabase/client";
+import { USE_MOCK_DATA } from '@/lib/featureFlags';
+import { chatService } from '@/services/chatService';
 
 interface EnhancedChatInterfaceProps {
   currentUserId?: string;
