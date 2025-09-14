@@ -75,13 +75,74 @@ export const MarketplaceProvider = ({ children }: { children: React.ReactNode })
   const [isLoading, setIsLoading] = useState(true);
   const [boostOptions] = useState<BoostOption[]>([]);
 
-  // Load real products from Supabase
+  // Load products (real or mock)
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setIsLoading(true);
+
+        if (USE_MOCK_DATA) {
+          // Seed some mock products for the marketplace
+          const mockProducts: Product[] = [
+            {
+              id: 'prod_1',
+              name: 'Wireless Headphones X200',
+              description: 'High quality wireless headphones with noise cancellation.',
+              price: 129.99,
+              discountPrice: 99.99,
+              image: 'https://images.unsplash.com/photo-1518444021915-7a1b9cb11a2a?w=800',
+              images: [
+                'https://images.unsplash.com/photo-1518444021915-7a1b9cb11a2a?w=800',
+              ],
+              category: 'Electronics',
+              rating: 4.6,
+              reviewCount: 124,
+              inStock: true,
+              isNew: false,
+              isFeatured: true,
+              isSponsored: false,
+              tags: ['electronics', 'audio'],
+              sellerId: 'seller_1',
+              sellerName: 'AudioHouse',
+              sellerAvatar: 'https://api.dicebear.com/7.x/initials/svg?seed=AudioHouse',
+              sellerRating: 4.7,
+              sellerVerified: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            {
+              id: 'prod_2',
+              name: 'Ergonomic Office Chair',
+              description: 'Comfortable chair with lumbar support and breathable fabric.',
+              price: 249.0,
+              discountPrice: 199.0,
+              image: 'https://images.unsplash.com/photo-1578898884730-0b6b15f6b7f2?w=800',
+              images: ['https://images.unsplash.com/photo-1578898884730-0b6b15f6b7f2?w=800'],
+              category: 'Home & Lifestyle',
+              rating: 4.5,
+              reviewCount: 58,
+              inStock: true,
+              isNew: true,
+              isFeatured: false,
+              isSponsored: false,
+              tags: ['furniture', 'office'],
+              sellerId: 'seller_2',
+              sellerName: 'ComfortLiving',
+              sellerAvatar: 'https://api.dicebear.com/7.x/initials/svg?seed=ComfortLiving',
+              sellerRating: 4.4,
+              sellerVerified: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+          ];
+
+          setProducts(mockProducts);
+          setIsLoading(false);
+          return;
+        }
+
         const realProducts = await realMarketplaceService.getProducts({ limit: 50 });
-        
+
         // Transform Supabase data to match Product interface
         const transformedProducts: Product[] = realProducts.map((p: any) => ({
           id: p.id,
