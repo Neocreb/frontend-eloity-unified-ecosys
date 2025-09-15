@@ -153,7 +153,7 @@ const Header = ({ mobileMenuOpen, setMobileMenuOpen }: HeaderProps) => {
           </Button>
 
           <Link to="/app/feed" className="flex items-center gap-2">
-            <SoftchatLogo className="h-8 w-8" />
+            <SoftchatLogo className="h-8 w-8" variant="icon" showText={false} />
             <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               Eloity
             </span>
