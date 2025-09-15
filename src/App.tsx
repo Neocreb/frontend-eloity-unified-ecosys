@@ -13,6 +13,7 @@ import {
 import { setupGlobalErrorHandlers } from "@/lib/error-handler";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
+import AppInitializer from './components/layout/AppInitializer';
 import { MarketplaceProvider } from "./contexts/MarketplaceContext";
 import { EnhancedMarketplaceProvider } from "./contexts/EnhancedMarketplaceContext";
 import { ChatProvider } from "./contexts/ChatContext";
@@ -78,6 +79,10 @@ import UserStore from "./pages/profile/UserStore";
 import UserProjects from "./pages/profile/UserProjects";
 import UserTrades from "./pages/profile/UserTrades";
 import Wallet from "./pages/Wallet";
+import WalletAnalyticsPage from "./pages/wallet/WalletAnalytics";
+import WalletTransactionsPage from "./pages/wallet/WalletTransactions";
+import WalletIntegrationsPage from "./pages/wallet/WalletIntegrations";
+import WalletConvertPage from "./pages/wallet/WalletConvert";
 import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -201,8 +206,11 @@ import CampaignCenter from "./components/campaigns/CampaignCenter";
 import MemeGifDemo from "./pages/MemeGifDemo";
 import MemeGifTest from "./components/debug/MemeGifTest";
 
-// Import missing components
-import MarketplaceSell from "./pages/marketplace/MarketplaceSell";
+import RealFreelance from "./pages/RealFreelance";
+import RealChat from "./pages/RealChat";
+import RealNotifications from "./pages/RealNotifications";
+import RealMarketplace from "./pages/RealMarketplace";
+import RealCreatorStudio from "./pages/RealCreatorStudio";
 import VideoDetail from "./pages/VideoDetail";
 import {
   ServiceDetail,
@@ -379,7 +387,7 @@ const AppRoutes = () => {
           <Route path="feed" element={<EnhancedFeedWithTabs />} />
           {/* <Route path="feed-demo" element={<FeedWithFollowDemo />} /> */}
           <Route path="create" element={<EnhancedFreelance />} />
-          <Route path="freelance" element={<FreelanceJobs />} />
+          <Route path="freelance" element={<EnhancedFreelance />} />
           <Route
             path="freelance/dashboard"
             element={
@@ -444,10 +452,14 @@ const AppRoutes = () => {
           <Route path="unified-profile/:username" element={<UnifiedProfile />} />
           <Route path="demo/profiles" element={<ProfileDemo />} />
           <Route path="wallet" element={<Wallet />} />
-          <Route path="notifications" element={<UnifiedNotifications />} />
+          <Route path="wallet/analytics" element={<WalletAnalyticsPage />} />
+          <Route path="wallet/transactions" element={<WalletTransactionsPage />} />
+          <Route path="wallet/integrations" element={<WalletIntegrationsPage />} />
+          <Route path="wallet/convert" element={<WalletConvertPage />} />
+          <Route path="notifications" element={<RealNotifications />} />
 
           {/* Marketplace routes */}
-          <Route path="marketplace" element={<EnhancedMarketplace />} />
+          <Route path="marketplace" element={<Marketplace />} />
           <Route
             path="marketplace/browse"
             element={<Navigate to="/app/marketplace" replace />}
@@ -478,7 +490,7 @@ const AppRoutes = () => {
             path="marketplace/checkout"
             element={<MarketplaceCheckout />}
           />
-          <Route path="marketplace/sell" element={<MarketplaceSell />} />
+          <Route path="marketplace/sell" element={<MarketplaceSeller />} />
 
           {/* Delivery routes */}
           <Route path="delivery" element={<DeliveryProviderStatus />} />
@@ -545,7 +557,7 @@ const AppRoutes = () => {
           <Route path="monetization-policy" element={<MonetizationPolicy />} />
           <Route path="help" element={<HelpPage />} />
           <Route path="creator-studio" element={<CreatorStudio />} />
-          <Route path="unified-creator-studio" element={<UnifiedCreatorStudio />} />
+          <Route path="unified-creator-studio" element={<RealCreatorStudio />} />
           <Route path="send-gifts" element={<SendGifts />} />
           <Route path="post/:postId" element={<PostDetail />} />
           {/* <Route path="feed-toggle-demo" element={<FeedToggleDemo />} /> */}
@@ -721,33 +733,35 @@ const App = () => {
             <I18nProvider>
               <CurrencyProvider>
                 <AuthProvider>
-                  <UserCollectionsProvider>
-                    <UnifiedNotificationProvider>
-                    <AdminProvider>
-                    <AccessibilityProvider>
-                      <TooltipProvider>
-                        <GlobalCallProvider>
-                          <AppRoutes />
+                  <AppInitializer>
+                    <UserCollectionsProvider>
+                      <UnifiedNotificationProvider>
+                      <AdminProvider>
+                      <AccessibilityProvider>
+                        <TooltipProvider>
+                          <GlobalCallProvider>
+                            <AppRoutes />
 
-                          {/* Global Components */}
-                          <OnboardingTour />
-                          <NotificationSystem />
-                          <RewardNotificationContainer />
-                          <AccessibilityControlPanel />
-                          <KeyboardNavigationHelper />
-                          <ReadingGuide />
-                          <ConnectionStatus />
-                          <PWAInstallPrompt />
+                            {/* Global Components */}
+                            <OnboardingTour />
+                            <NotificationSystem />
+                            <RewardNotificationContainer />
+                            <AccessibilityControlPanel />
+                            <KeyboardNavigationHelper />
+                            <ReadingGuide />
+                            <ConnectionStatus />
+                            <PWAInstallPrompt />
 
-                          {/* Toasters */}
-                          <Toaster />
-                          <Sonner />
-                        </GlobalCallProvider>
-                      </TooltipProvider>
-                    </AccessibilityProvider>
-                    </AdminProvider>
-                    </UnifiedNotificationProvider>
-                  </UserCollectionsProvider>
+                            {/* Toasters */}
+                            <Toaster />
+                            <Sonner />
+                          </GlobalCallProvider>
+                        </TooltipProvider>
+                      </AccessibilityProvider>
+                      </AdminProvider>
+                      </UnifiedNotificationProvider>
+                    </UserCollectionsProvider>
+                  </AppInitializer>
                 </AuthProvider>
               </CurrencyProvider>
             </I18nProvider>

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -522,7 +522,7 @@ export const GroupVideoRoom: React.FC<GroupVideoRoomProps> = ({
               <div className="w-80 border-l border-gray-700 bg-gray-900 flex flex-col">
                 <Tabs
                   value={activeTab}
-                  onValueChange={setActiveTab}
+                  onValueChange={(value) => setActiveTab(value as "participants" | "chat" | "settings")}
                   className="flex-1 flex flex-col"
                 >
                   <TabsList className="grid w-full grid-cols-3 bg-gray-800">

@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { realSocialService } from '@/services/realSocialService';
+import { realMarketplaceService } from '@/services/realMarketplaceService';
+import { realFreelanceService } from '@/services/realFreelanceService';
 
 interface UnifiedFeedItem {
   id: string;
@@ -70,122 +73,136 @@ interface FeedProviderProps {
   children: ReactNode;
 }
 
-// Mock feed data generator (will be replaced with real API calls)
-const generateMockFeedData = (page: number = 1, limit: number = 10): UnifiedFeedItem[] => {
-  const baseItems = [
-    {
-      id: `post-${page}-1`,
-      type: "post" as const,
-      timestamp: new Date(Date.now() - (page * 2 * 60 * 60 * 1000)),
-      priority: 8,
-      author: {
-        id: "user-1",
-        name: "Sarah Johnson",
-        username: "sarahj",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-        verified: true,
-        badges: ["Creator"],
-      },
-      content: {
-        text: `Amazing new project launch! 🚀 This is post ${page} - Working on something exciting that will change how we work remotely.`,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=600&fit=crop",
-            alt: "Project screenshot",
-          },
-        ],
-        location: "San Francisco, CA",
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 500) + 50,
-        comments: Math.floor(Math.random() * 50) + 5,
-        shares: Math.floor(Math.random() * 25) + 2,
-        views: Math.floor(Math.random() * 2000) + 100,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
-    },
-    {
-      id: `product-${page}-1`,
-      type: "product" as const,
-      timestamp: new Date(Date.now() - (page * 3 * 60 * 60 * 1000)),
-      priority: 6,
-      author: {
-        id: "seller-1",
-        name: "TechGear Store",
-        username: "techgear",
-        avatar: "https://api.dicebear.com/7.x/initials/svg?seed=TG",
-        verified: true,
-        badges: ["Trusted Seller"],
-      },
-      content: {
-        title: `Premium Wireless Headphones - Page ${page}`,
-        description: "High-quality wireless headphones with noise cancellation and 30-hour battery life.",
-        price: 129.99,
-        originalPrice: 199.99,
-        discount: 35,
-        images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop"],
-        rating: 4.8,
-        reviews: Math.floor(Math.random() * 3000) + 500,
-        category: "Electronics",
-        inStock: true,
-        fastShipping: true,
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 200) + 20,
-        comments: Math.floor(Math.random() * 30) + 3,
-        shares: Math.floor(Math.random() * 15) + 1,
-        saves: Math.floor(Math.random() * 100) + 10,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: Math.random() > 0.7,
-      },
-    },
-    {
-      id: `post-${page}-2`,
-      type: "post" as const,
-      timestamp: new Date(Date.now() - (page * 4 * 60 * 60 * 1000)),
-      priority: 7,
-      author: {
-        id: "user-2",
-        name: "Mike Chen",
-        username: "mikechen",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-        verified: false,
-      },
-      content: {
-        text: `Beautiful sunset from the office today! Sometimes you need to step back and appreciate the simple things. Page ${page} memories 🌅✨`,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop",
-            alt: "Sunset view",
-          },
-        ],
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 300) + 30,
-        comments: Math.floor(Math.random() * 40) + 5,
-        shares: Math.floor(Math.random() * 10) + 1,
-      },
-      userInteracted: {
-        liked: Math.random() > 0.5,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
-    },
-  ];
+// Real feed data generator using Supabase
+const loadRealFeedData = async (page: number = 1, limit: number = 10): Promise<UnifiedFeedItem[]> => {
+  const feedItems: UnifiedFeedItem[] = [];
 
-  return baseItems.slice(0, limit);
+  try {
+    // Load posts from Supabase using the realSocialService.getFeed API
+    const posts = await realSocialService.getFeed(undefined, { limit, offset: (page - 1) * limit });
+    for (const post of posts) {
+      feedItems.push({
+        id: post.id,
+        type: "post",
+        timestamp: new Date(post.createdAt || post.created_at || Date.now()),
+        priority: 8,
+        author: {
+          id: post.userId || post.user_id,
+          name: (post.author && (post.author.name || post.author.full_name)) || "User",
+          username: (post.author && (post.author.username || post.author.full_name)) || `user-${(post.userId || post.user_id || '').toString().slice(0, 8)}`,
+          avatar: (post.author && (post.author.avatar || post.author.avatar_url)) || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          verified: !!(post.author && post.author.verified),
+        },
+        content: {
+          text: post.content,
+          media: post.mediaType === 'image' && post.imageUrl ? [{ type: 'image', url: post.imageUrl, alt: 'Post media' }] : [],
+        },
+        interactions: {
+          likes: post.likes || post.like_count || 0,
+          comments: post.comments || post.comment_count || 0,
+          shares: post.shares || post.share_count || 0,
+        },
+        userInteracted: {
+          liked: !!post.isLiked,
+          commented: false,
+          shared: false,
+          saved: false,
+        },
+      });
+    }
+
+    // Load products from marketplace
+    const products = await realMarketplaceService.getProducts({ page, limit: Math.floor(limit / 3) });
+    for (const product of products) {
+      feedItems.push({
+        id: `product-${product.id}`,
+        type: "product",
+        timestamp: new Date(product.created_at),
+        priority: 6,
+        author: {
+          id: product.seller_id,
+          name: "Seller",
+          username: `seller-${product.seller_id.slice(0, 8)}`,
+          avatar: "https://api.dicebear.com/7.x/initials/svg?seed=seller",
+          verified: true,
+          badges: ["Trusted Seller"],
+        },
+        content: {
+          title: product.title,
+          description: product.description,
+          price: product.price,
+          images: product.images || [],
+          category: product.category,
+          inStock: product.status === 'active',
+        },
+        interactions: {
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          saves: 0,
+        },
+        userInteracted: {
+          liked: false,
+          commented: false,
+          shared: false,
+          saved: false,
+        },
+      });
+    }
+
+    // Load freelance jobs
+    const jobs = await realFreelanceService.getJobs({ page, limit: Math.floor(limit / 3) });
+    for (const job of jobs) {
+      feedItems.push({
+        id: `job-${job.id}`,
+        type: "job",
+        timestamp: new Date(job.created_at),
+        priority: 7,
+        author: {
+          id: job.client_id,
+          name: "Client",
+          username: `client-${job.client_id.slice(0, 8)}`,
+          avatar: "https://api.dicebear.com/7.x/initials/svg?seed=client",
+          verified: true,
+          badges: ["Verified Client"],
+        },
+        content: {
+          title: job.title,
+          description: job.description,
+          budget: {
+            min: job.budget_min,
+            max: job.budget_max,
+            type: job.project_type,
+          },
+          skills: job.skills_required || [],
+          experience_level: job.experience_level,
+        },
+        interactions: {
+          likes: 0,
+          comments: 0,
+          shares: 0,
+        },
+        userInteracted: {
+          liked: false,
+          commented: false,
+          shared: false,
+          saved: false,
+        },
+      });
+    }
+
+    // Sort by timestamp and priority
+    return feedItems.sort((a, b) => {
+      const priorityDiff = b.priority - a.priority;
+      if (priorityDiff !== 0) return priorityDiff;
+      return b.timestamp.getTime() - a.timestamp.getTime();
+    });
+
+  } catch (error) {
+    const msg = (error && (error.message || (typeof error === 'string' ? error : JSON.stringify(error)))) || 'Unknown error';
+    console.error('Error loading real feed data:', msg, error);
+    return [];
+  }
 };
 
 export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
@@ -199,20 +216,13 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
 
   const PAGE_SIZE = 10;
 
-  // Load initial feed data
+  // Load real feed data from Supabase
   const loadFeedData = useCallback(async (page: number = 1, append: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // For now, use mock data. In production, this would be:
-      // const response = await fetch(`/api/posts?page=${page}&limit=${PAGE_SIZE}`);
-      // const data = await response.json();
-      
-      const newPosts = generateMockFeedData(page, PAGE_SIZE);
+      const newPosts = await loadRealFeedData(page, PAGE_SIZE);
 
       if (append) {
         setUserPosts(prev => [...prev, ...newPosts]);
@@ -220,8 +230,8 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
         setUserPosts(newPosts);
       }
 
-      // Simulate pagination logic
-      setHasMore(page < 5); // Assume we have 5 pages of content
+      // Real pagination logic based on actual data
+      setHasMore(newPosts.length === PAGE_SIZE);
       setCurrentPage(page);
 
     } catch (err) {

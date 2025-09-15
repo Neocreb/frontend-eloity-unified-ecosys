@@ -4,33 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FeedUserCard, FeedGroupCard, FeedPageCard } from '@/components/feed/FeedEntityCards';
 import { useEntityFollowHandlers } from '@/components/feed/UnifiedFeedHandlers';
-import { groups, pages } from '@/data/mockExploreData';
-import { getRandomMockUsers } from '@/data/mockUsers';
+const groups: any[] = [];
+const pages: any[] = [];
+const sampleUsers: any[] = [];
 import { Users, Building, UserPlus } from 'lucide-react';
 
 const FeedWithFollowDemo: React.FC = () => {
   const { handleUserFollow, handleGroupJoin, handlePageFollow } = useEntityFollowHandlers();
   
-  // Get sample data
-  const sampleUsers = getRandomMockUsers(3).map(mockUser => ({
-    ...mockUser.profile!,
-    isFollowing: Math.random() > 0.5,
-    followers: Math.floor(Math.random() * 10000) + 100,
-    mutualConnections: Math.floor(Math.random() * 50) + 1,
-    bio: "Passionate developer and tech enthusiast. Building the future one line of code at a time.",
-    location: "San Francisco, CA",
-    isOnline: Math.random() > 0.5,
-  }));
-
-  const sampleGroups = groups.slice(0, 3).map(group => ({
-    ...group,
-    recentActivity: [
-      "15 new posts today",
-      "New challenge started", 
-      "Weekly meetup announced"
-    ][Math.floor(Math.random() * 3)]
-  }));
-
+  // Placeholder sample data until real APIs are connected
+  const sampleUsersLocal = sampleUsers;
+  const sampleGroups = groups.slice(0, 3);
   const samplePages = pages.slice(0, 3);
 
   return (
@@ -82,7 +66,7 @@ const FeedWithFollowDemo: React.FC = () => {
             <Badge variant="outline">Interactive</Badge>
           </div>
           <div className="space-y-4">
-            {sampleUsers.map((user, index) => (
+            {sampleUsersLocal.map((user, index) => (
               <FeedUserCard
                 key={`user-${index}`}
                 user={user}

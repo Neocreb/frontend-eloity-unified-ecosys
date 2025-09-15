@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import {
   MessageCircle,
   Briefcase,
@@ -16,7 +16,7 @@ import { UnifiedChatType } from "@/types/unified-chat";
 
 interface ChatActionButtonProps {
   variant?: "default" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "lg" | "default";
   disabled?: boolean;
   loading?: boolean;
   onClick: () => void;
@@ -48,7 +48,7 @@ interface SocialChatButtonProps extends ChatActionButtonProps {
 // Generic chat button
 export const ChatActionButton: React.FC<ChatActionButtonProps> = ({
   variant = "default",
-  size = "md",
+  size = "default",
   disabled = false,
   loading = false,
   onClick,

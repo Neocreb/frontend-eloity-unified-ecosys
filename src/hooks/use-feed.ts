@@ -1,12 +1,11 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Post } from "@/types/post";
 import { PostComment } from "@/types/user";
 import { useNotification } from "@/hooks/use-notification";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockPosts, mockComments } from "@/data/mockFeedData";
 import { CreatePost } from "@/types/post";
 import { notificationService } from "@/services/notificationService";
+import { realSocialService } from "@/services/realSocialService";
 
 type CreatePostParams = {
   content: string;
@@ -42,27 +41,57 @@ export const useFeed = () => {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  // Load posts with pagination
+  // Load real posts from Supabase
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Simulate paginated data
-      const startIndex = (page - 1) * PAGE_SIZE;
-      const endIndex = startIndex + PAGE_SIZE;
-      const paginatedPosts = mockPosts.slice(0, endIndex);
+    const loadRealPosts = async () => {
+      try {
+        setIsLoading(true);
+        const realPosts = await realSocialService.getFeed(undefined, { limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE });
 
-      setPosts(paginatedPosts);
-      setHasMore(endIndex < mockPosts.length);
+        // Transform Supabase data (mapped by service) to match Post interface
+        const transformedPosts: Post[] = realPosts.map((p: any) => ({
+          id: p.id,
+          author: {
+            name: (p.author && (p.author.name || p.author.full_name)) || "User",
+            username: (p.author && (p.author.username || p.author.id)) || `user-${(p.userId || p.user_id || '').toString().slice(0, 8)}`,
+            avatar: (p.author && (p.author.avatar || p.author.avatar_url)) || "/placeholder.svg",
+            verified: !!(p.author && p.author.verified),
+          },
+          content: p.content,
+          image: p.imageUrl || p.media_urls?.[0] || null,
+          location: null,
+          taggedUsers: null,
+          createdAt: formatDate(p.createdAt || p.created_at),
+          likes: p.likes || p.like_count || 0,
+          comments: p.comments || p.comment_count || 0,
+          shares: p.shares || p.share_count || 0,
+          poll: null
+        }));
 
-      const initialComments: Record<string, PostComment[]> = {};
-      paginatedPosts.forEach(post => {
-        initialComments[post.id] = post.id === "1" ? mockComments : [];
-      });
-      setPostComments(initialComments);
+        // For pagination, append or replace based on page
+        if (page === 1) {
+          setPosts(transformedPosts);
+        } else {
+          setPosts(prev => [...prev, ...transformedPosts]);
+        }
+        
+        setHasMore(transformedPosts.length === PAGE_SIZE);
 
-      setIsLoading(false);
-    }, 1000);
+        // Initialize empty comments for posts
+        const initialComments: Record<string, PostComment[]> = {};
+        transformedPosts.forEach(post => {
+          initialComments[post.id] = [];
+        });
+        setPostComments(prev => ({ ...prev, ...initialComments }));
 
-    return () => clearTimeout(timer);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading posts:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadRealPosts();
   }, [page]);
 
   const loadMorePosts = () => {
@@ -71,42 +100,60 @@ export const useFeed = () => {
     }
   };
 
-  // Enhanced post creation with all metadata
-  const handleCreatePost = useCallback(({
+  // Enhanced post creation with real Supabase integration
+  const handleCreatePost = useCallback(async ({
     content,
     mediaUrl,
     location,
     taggedUsers = [],
     poll
   }: CreatePostParams) => {
-    const newPost: Post = {
-      id: `new-${Date.now()}`,
-      author: {
-        name: user?.name || "John Doe",
-        username: user?.profile?.username || "johndoe",
-        avatar: user?.avatar || "/placeholder.svg",
-        verified: !!user?.profile?.is_verified,
-      },
-      content,
-      image: mediaUrl,
-      location: location || null,
-      taggedUsers: taggedUsers || null,
-      createdAt: "Just now",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      poll: poll
-    };
+    try {
+      if (!user?.id) {
+        notification.error("Must be logged in to create posts");
+        return;
+      }
 
-    setPosts(prev => [newPost, ...prev]);
+      const newPost = await realSocialService.createPost({
+        user_id: user.id,
+        content,
+        media_urls: mediaUrl ? [mediaUrl] : [],
+        media_type: mediaUrl ? 'image' : undefined
+      });
 
-    // Initialize empty comments for the new post
-    setPostComments(prev => ({
-      ...prev,
-      [newPost.id]: []
-    }));
+      // Transform to UI format and add to local state
+      const transformedPost: Post = {
+        id: newPost.id,
+        author: {
+          name: user?.name || "You",
+          username: user?.profile?.username || "you",
+          avatar: user?.avatar || "/placeholder.svg",
+          verified: !!user?.profile?.is_verified,
+        },
+        content,
+        image: mediaUrl,
+        location: location || null,
+        taggedUsers: taggedUsers || null,
+        createdAt: "Just now",
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        poll: poll
+      };
 
-    notification.success("Post created successfully");
+      setPosts(prev => [transformedPost, ...prev]);
+
+      // Initialize empty comments for the new post
+      setPostComments(prev => ({
+        ...prev,
+        [newPost.id]: []
+      }));
+
+      notification.success("Post created successfully");
+    } catch (error) {
+      console.error('Error creating post:', error);
+      notification.error("Failed to create post");
+    }
   }, [user, notification]);
 
   const handleAddComment = useCallback(async (postId: string, commentText: string) => {

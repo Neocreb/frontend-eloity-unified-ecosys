@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
@@ -93,152 +93,16 @@ interface DuetChallengesHubProps {
   onJoinChallenge: (challengeId: string) => void;
 }
 
-// Mock data for demonstration
-const mockChallenges: Challenge[] = [
-  {
-    id: '1',
-    title: 'Dance Fusion Challenge',
-    description: 'Combine two different dance styles in one epic duet! Show us your creativity and skill.',
-    hashtag: 'DanceFusionChallenge',
-    originalPostId: 'post1',
-    createdBy: {
-      id: 'user1',
-      username: 'dancemaster',
-      displayName: 'DanceMaster Pro',
-      avatar: '/api/placeholder/150/150',
-      verified: true,
-    },
-    startDate: new Date('2024-01-15'),
-    endDate: new Date('2024-02-15'),
-    status: 'active',
-    isSponsored: true,
-    isFeatured: true,
-    firstPrize: 1000,
-    secondPrize: 500,
-    thirdPrize: 250,
-    participationReward: 25,
-    totalSubmissions: 147,
-    totalViews: 89420,
-    totalLikes: 12340,
-    bannerUrl: '/api/placeholder/400/200',
-    rules: 'Must include two distinct dance styles. Original audio preferred. Clean content only.',
-    tags: ['dance', 'fusion', 'creativity']
-  },
-  {
-    id: '2',
-    title: 'Comedy Sketch Duet',
-    description: 'Create the funniest duet response! Make us laugh with your comedy skills.',
-    hashtag: 'ComedyDuetChallenge',
-    originalPostId: 'post2',
-    createdBy: {
-      id: 'user2',
-      username: 'funnybone',
-      displayName: 'Comedy Central',
-      avatar: '/api/placeholder/150/150',
-      verified: false,
-    },
-    startDate: new Date('2024-01-20'),
-    endDate: new Date('2024-02-20'),
-    status: 'active',
-    isSponsored: false,
-    isFeatured: false,
-    firstPrize: 500,
-    secondPrize: 250,
-    thirdPrize: 100,
-    participationReward: 10,
-    totalSubmissions: 89,
-    totalViews: 45230,
-    totalLikes: 7890,
-    rules: 'Keep it clean and funny. No offensive content.',
-    tags: ['comedy', 'funny', 'entertainment']
-  },
-  {
-    id: '3',
-    title: 'Singing Harmony Challenge',
-    description: 'Create beautiful harmonies with the original track. Show off your vocal skills!',
-    hashtag: 'HarmonyChallenge',
-    originalPostId: 'post3',
-    createdBy: {
-      id: 'user3',
-      username: 'vocalguru',
-      displayName: 'Vocal Harmony',
-      avatar: '/api/placeholder/150/150',
-      verified: true,
-    },
-    startDate: new Date('2024-01-10'),
-    endDate: new Date('2024-01-31'),
-    status: 'ended',
-    isSponsored: false,
-    isFeatured: true,
-    firstPrize: 750,
-    secondPrize: 375,
-    thirdPrize: 150,
-    participationReward: 15,
-    totalSubmissions: 203,
-    totalViews: 125680,
-    totalLikes: 18940,
-    rules: 'Must maintain harmony with original. Clear audio required.',
-    tags: ['singing', 'harmony', 'music']
-  }
-];
 
-const mockSubmissions: ChallengeSubmission[] = [
-  {
-    id: '1',
-    challengeId: '1',
-    postId: 'post_sub1',
-    user: {
-      id: 'user4',
-      username: 'dancequeen',
-      displayName: 'Dance Queen',
-      avatar: '/api/placeholder/150/150',
-      verified: false,
-    },
-    score: 9.2,
-    ranking: 1,
-    views: 12500,
-    likes: 2340,
-    comments: 156,
-    shares: 89,
-    status: 'qualified',
-    rewardEarned: 0,
-    submittedAt: new Date('2024-01-25'),
-    videoUrl: '/api/placeholder/300/400',
-    thumbnailUrl: '/api/placeholder/300/400'
-  },
-  {
-    id: '2',
-    challengeId: '1',
-    postId: 'post_sub2',
-    user: {
-      id: 'user5',
-      username: 'hiphopking',
-      displayName: 'HipHop King',
-      avatar: '/api/placeholder/150/150',
-      verified: true,
-    },
-    score: 8.8,
-    ranking: 2,
-    views: 9800,
-    likes: 1890,
-    comments: 123,
-    shares: 67,
-    status: 'qualified',
-    rewardEarned: 0,
-    submittedAt: new Date('2024-01-26'),
-    videoUrl: '/api/placeholder/300/400',
-    thumbnailUrl: '/api/placeholder/300/400'
-  }
-];
 
 const DuetChallengesHub: React.FC<DuetChallengesHubProps> = ({
   userBalance,
   onCreateChallenge,
   onJoinChallenge,
 }) => {
-  const [challenges, setChallenges] = useState<Challenge[]>(mockChallenges);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
-  const [submissions, setSubmissions] = useState<ChallengeSubmission[]>(mockSubmissions);
+  const [submissions, setSubmissions] = useState<ChallengeSubmission[]>([]);
   const [activeTab, setActiveTab] = useState('browse');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

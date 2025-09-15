@@ -103,7 +103,6 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         avatar: groupInfo.avatar,
         participants: selectedParticipants,
         settings: groupSettings,
-        createdBy: 'current-user-id', // Should come from auth context
       };
 
       await onCreateGroup(request);

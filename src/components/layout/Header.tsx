@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import OnlineIndicator from "@/components/presence/OnlineIndicator";
 import {
   Menu,
   Search,
@@ -158,6 +159,11 @@ const Header = ({ mobileMenuOpen, setMobileMenuOpen }: HeaderProps) => {
               Eloity
             </span>
           </Link>
+          
+          {/* Online Status */}
+          <div className="hidden lg:block ml-4">
+            <OnlineIndicator showUserList maxVisible={2} />
+          </div>
         </div>
 
         {/* Center section - Main Navigation (Desktop Only) */}

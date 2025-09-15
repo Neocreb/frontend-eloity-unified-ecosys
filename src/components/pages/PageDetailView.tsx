@@ -60,7 +60,7 @@ import {
   Briefcase,
 } from "lucide-react";
 
-import { pages } from "@/data/mockExploreData";
+const pages: any[] = [];
 import { marketplaceSyncService, SyncProduct } from "@/services/marketplaceSyncService";
 import { chatInitiationService } from "@/services/chatInitiationService";
 

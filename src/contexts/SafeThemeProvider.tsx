@@ -1,10 +1,10 @@
-import React, { Component, ReactNode, type ErrorInfo } from "react";
+import React, { Component, type ReactNode, type ErrorInfo, useLayoutEffect } from "react";
 import { ThemeProvider } from "./ThemeContext";
 
 // Fallback theme context that applies light theme without hooks
 const FallbackThemeProvider = ({ children }: { children: ReactNode }) => {
   // Apply fallback theme to DOM immediately on render
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window !== "undefined" && typeof document !== "undefined") {
       try {
         const root = document.documentElement;

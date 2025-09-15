@@ -10,317 +10,10 @@ import {
 } from "@/types/marketplace";
 import { useAuth } from "./AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { realMarketplaceService } from "@/services/realMarketplaceService";
 
-// Mock data for products
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "Wireless Noise Cancelling Headphones",
-    description: "Premium wireless headphones with active noise cancellation for an immersive audio experience. Features 30-hour battery life, touch controls, and voice assistant compatibility.",
-    price: 299.99,
-    discountPrice: 249.99,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D",
-    images: [
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D",
-      "https://images.unsplash.com/photo-1577174881658-0f30ed549adc?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8aGVhZHBob25lc3xlbnwwfHwwfHx8MA%3D%3D",
-      "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D"
-    ],
-    category: "electronics",
-    rating: 4.8,
-    reviewCount: 124,
-    inStock: true,
-    isNew: true,
-    isFeatured: true,
-    isSponsored: true,
-    boostedUntil: "2023-12-31T23:59:59Z",
-    tags: ["audio", "wireless", "noise-cancelling"],
-    sellerId: "seller1",
-    sellerName: "AudioTech",
-    sellerAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    sellerRating: 4.9,
-    sellerVerified: true,
-    createdAt: "2023-01-15T10:30:00Z",
-    updatedAt: "2023-01-15T10:30:00Z"
-  },
-  {
-    id: "2",
-    name: "Smart Watch Series 5",
-    description: "Track your fitness and stay connected with this smart watch. Features heart rate monitoring, GPS, and water resistance up to 50 meters.",
-    price: 199.99,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHByb2R1Y3R8ZW58MHx8MHx8fDA%3D",
-    category: "electronics",
-    rating: 4.5,
-    reviewCount: 89,
-    inStock: true,
-    isFeatured: true,
-    tags: ["wearable", "fitness", "smart-watch"],
-    sellerId: "seller2",
-    sellerName: "TechGadgets",
-    sellerAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    sellerRating: 4.7,
-    sellerVerified: true,
-    createdAt: "2023-02-20T14:45:00Z",
-    updatedAt: "2023-02-20T14:45:00Z"
-  },
-  {
-    id: "3",
-    name: "Premium Cotton T-Shirt",
-    description: "Comfortable 100% cotton t-shirt with modern fit. Available in multiple colors and sizes.",
-    price: 29.99,
-    discountPrice: 19.99,
-    image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHQlMjBzaGlydHxlbnwwfHwwfHx8MA%3D%3D",
-    category: "clothing",
-    rating: 4.2,
-    reviewCount: 215,
-    inStock: true,
-    isFeatured: true,
-    tags: ["apparel", "casual", "cotton"],
-    sellerId: "seller3",
-    sellerName: "FashionHub",
-    sellerAvatar: "https://randomuser.me/api/portraits/women/68.jpg",
-    sellerVerified: false,
-    createdAt: "2023-03-05T09:15:00Z",
-    updatedAt: "2023-03-05T09:15:00Z"
-  },
-  {
-    id: "4",
-    name: "Designer Sunglasses",
-    description: "UV protection sunglasses with polarized lenses. Stylish design with durable metal frame.",
-    price: 159.99,
-    image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D",
-    category: "accessories",
-    rating: 4.7,
-    reviewCount: 56,
-    inStock: false,
-    tags: ["eyewear", "fashion", "summer"],
-    sellerId: "seller4",
-    sellerName: "LuxeStyle",
-    sellerAvatar: "https://randomuser.me/api/portraits/men/42.jpg",
-    sellerRating: 4.8,
-    sellerVerified: true,
-    createdAt: "2023-04-12T11:30:00Z",
-    updatedAt: "2023-04-12T11:30:00Z"
-  },
-  {
-    id: "5",
-    name: "Portable Bluetooth Speaker",
-    description: "Waterproof speaker with 20 hours battery life. Features rich bass and 360-degree sound.",
-    price: 89.99,
-    discountPrice: 69.99,
-    image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Ymx1ZXRvb3RoJTIwc3BlYWtlcnxlbnwwfHwwfHx8MA%3D%3D",
-    category: "electronics",
-    rating: 4.4,
-    reviewCount: 78,
-    inStock: true,
-    isNew: true,
-    isSponsored: true,
-    boostedUntil: "2023-12-15T23:59:59Z",
-    tags: ["audio", "portable", "waterproof"],
-    sellerId: "seller1",
-    sellerName: "AudioTech",
-    sellerAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    sellerRating: 4.9,
-    sellerVerified: true,
-    createdAt: "2023-05-18T15:45:00Z",
-    updatedAt: "2023-05-18T15:45:00Z"
-  },
-  {
-    id: "6",
-    name: "Organic Face Serum",
-    description: "Hydrating serum with natural ingredients. Helps reduce fine lines and improve skin texture.",
-    price: 49.99,
-    image: "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHNraW5jYXJlfGVufDB8fDB8fHww",
-    category: "beauty",
-    rating: 4.9,
-    reviewCount: 103,
-    inStock: true,
-    isFeatured: true,
-    tags: ["skincare", "organic", "face-care"],
-    sellerId: "seller5",
-    sellerName: "NaturalBeauty",
-    sellerAvatar: "https://randomuser.me/api/portraits/women/89.jpg",
-    sellerRating: 4.9,
-    sellerVerified: true,
-    createdAt: "2023-06-22T08:30:00Z",
-    updatedAt: "2023-06-22T08:30:00Z"
-  },
-  {
-    id: "7",
-    name: "Running Shoes",
-    description: "Lightweight breathable shoes for runners. Features cushioned soles and arch support.",
-    price: 129.99,
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2hvZXN8ZW58MHx8MHx8fDA%3D",
-    category: "footwear",
-    rating: 4.6,
-    reviewCount: 187,
-    inStock: true,
-    tags: ["shoes", "sports", "running"],
-    sellerId: "seller6",
-    sellerName: "SportyGear",
-    sellerAvatar: "https://randomuser.me/api/portraits/men/67.jpg",
-    sellerRating: 4.7,
-    sellerVerified: false,
-    createdAt: "2023-07-10T13:15:00Z",
-    updatedAt: "2023-07-10T13:15:00Z"
-  },
-  {
-    id: "8",
-    name: "Coffee Maker",
-    description: "Programmable drip coffee maker with thermal carafe. Brew up to 12 cups at once.",
-    price: 149.99,
-    discountPrice: 119.99,
-    image: "https://images.unsplash.com/photo-1544486361-2ed1d35c1270?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8Y29mZmVlJTIwbWFrZXJ8ZW58MHx8MHx8fDA%3D",
-    category: "home",
-    rating: 4.3,
-    reviewCount: 68,
-    inStock: true,
-    isSponsored: true,
-    boostedUntil: "2023-11-30T23:59:59Z",
-    tags: ["kitchen", "appliance", "coffee"],
-    sellerId: "seller7",
-    sellerName: "HomeEssentials",
-    sellerAvatar: "https://randomuser.me/api/portraits/women/22.jpg",
-    sellerRating: 4.5,
-    sellerVerified: true,
-    createdAt: "2023-08-05T10:45:00Z",
-    updatedAt: "2023-08-05T10:45:00Z"
-  }
-];
 
-// Mock data for sellers
-const mockSellers: SellerProfile[] = [
-  {
-    id: "seller1",
-    username: "audiotech",
-    name: "AudioTech",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    bio: "Providing high-quality audio equipment for over 10 years. Specialists in noise-cancelling technology.",
-    joinedDate: "2020-03-15T00:00:00Z",
-    isVerified: true,
-    rating: 4.9,
-    reviewCount: 342,
-    productCount: 28,
-    salesCount: 1520
-  },
-  {
-    id: "seller2",
-    username: "techgadgets",
-    name: "TechGadgets",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    bio: "Your one-stop shop for all tech accessories and gadgets. Fast shipping and great customer service.",
-    joinedDate: "2019-11-22T00:00:00Z",
-    isVerified: true,
-    rating: 4.7,
-    reviewCount: 215,
-    productCount: 42,
-    salesCount: 980
-  },
-  {
-    id: "seller3",
-    username: "fashionhub",
-    name: "FashionHub",
-    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-    bio: "Trendy clothing at affordable prices. New collections added weekly.",
-    joinedDate: "2021-01-10T00:00:00Z",
-    isVerified: false,
-    rating: 4.5,
-    reviewCount: 178,
-    productCount: 64,
-    salesCount: 823
-  },
-  {
-    id: "seller4",
-    username: "luxestyle",
-    name: "LuxeStyle",
-    avatar: "https://randomuser.me/api/portraits/men/42.jpg",
-    bio: "Curated collection of luxury fashion accessories and designer items.",
-    joinedDate: "2018-06-05T00:00:00Z",
-    isVerified: true,
-    rating: 4.8,
-    reviewCount: 297,
-    productCount: 31,
-    salesCount: 654
-  },
-  {
-    id: "seller5",
-    username: "naturalbeauty",
-    name: "NaturalBeauty",
-    avatar: "https://randomuser.me/api/portraits/women/89.jpg",
-    bio: "Organic skincare products made with natural ingredients. Cruelty-free and eco-friendly.",
-    joinedDate: "2020-09-12T00:00:00Z",
-    isVerified: true,
-    rating: 4.9,
-    reviewCount: 156,
-    productCount: 22,
-    salesCount: 743
-  }
-];
 
-// Mock reviews
-const mockReviews: Review[] = [
-  {
-    id: "r1",
-    productId: "1",
-    userId: "user1",
-    userName: "Sarah Johnson",
-    userAvatar: "https://randomuser.me/api/portraits/women/12.jpg",
-    rating: 5,
-    content: "These headphones are amazing! The noise cancellation works perfectly, and the sound quality is outstanding. Battery life is as advertised, and they're very comfortable to wear for long periods.",
-    createdAt: "2023-02-10T14:30:00Z"
-  },
-  {
-    id: "r2",
-    productId: "1",
-    userId: "user2",
-    userName: "Michael Chen",
-    userAvatar: "https://randomuser.me/api/portraits/men/34.jpg",
-    rating: 4,
-    content: "Great headphones overall. Sound quality is excellent and the ANC works well. Took off one star because they get a bit uncomfortable after several hours of use. Otherwise, highly recommended!",
-    createdAt: "2023-03-05T09:15:00Z"
-  },
-  {
-    id: "r3",
-    productId: "1",
-    userId: "user3",
-    userName: "Emma Williams",
-    userAvatar: "https://randomuser.me/api/portraits/women/22.jpg",
-    rating: 5,
-    content: "Best headphones I've ever owned! They're worth every penny. The sound is crisp and clear, and the noise cancellation is perfect for my commute.",
-    createdAt: "2023-04-12T16:45:00Z"
-  }
-];
-
-// Mock data for boost options
-const mockBoostOptions: BoostOption[] = [
-  {
-    id: "boost1",
-    name: "24-Hour Boost",
-    duration: 1,
-    price: 5,
-    description: "Boost your product visibility for 24 hours"
-  },
-  {
-    id: "boost2",
-    name: "3-Day Boost",
-    duration: 3,
-    price: 12,
-    description: "Boost your product visibility for 3 days"
-  },
-  {
-    id: "boost3",
-    name: "Weekly Boost",
-    duration: 7,
-    price: 25,
-    description: "Boost your product visibility for a full week"
-  },
-  {
-    id: "boost4",
-    name: "Premium Boost",
-    duration: 14,
-    price: 45,
-    description: "Maximum visibility for 2 weeks"
-  }
-];
 
 // Define the context type
 type MarketplaceContextType = {
@@ -370,18 +63,66 @@ export const useMarketplace = () => useContext(MarketplaceContext);
 export const MarketplaceProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [sellers, setSellers] = useState<SellerProfile[]>(mockSellers);
-  const [reviews, setReviews] = useState<Record<string, Review[]>>({
-    "1": mockReviews
-  });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [sellers, setSellers] = useState<SellerProfile[]>([]);
+  const [reviews, setReviews] = useState<Record<string, Review[]>>({});
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [filter, setFilter] = useState<ProductFilter>({});
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [activeSeller, setActiveSeller] = useState<SellerProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [boostOptions] = useState<BoostOption[]>(mockBoostOptions);
+  const [isLoading, setIsLoading] = useState(true);
+  const [boostOptions] = useState<BoostOption[]>([]);
+
+  // Load real products from Supabase
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true);
+        const realProducts = await realMarketplaceService.getProducts({ limit: 50 });
+        
+        // Transform Supabase data to match Product interface
+        const transformedProducts: Product[] = realProducts.map((p: any) => ({
+          id: p.id,
+          name: p.title,
+          description: p.description || '',
+          price: p.price,
+          discountPrice: p.discount_price,
+          image: p.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
+          images: p.images || [],
+          category: p.category || 'general',
+          rating: 4.5, // Default rating
+          reviewCount: 0, // Will be calculated later
+          inStock: p.status === 'active',
+          isNew: new Date(p.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          isFeatured: Math.random() > 0.7, // Random for now
+          isSponsored: false,
+          tags: [p.category || 'general'],
+          sellerId: p.seller_id,
+          sellerName: `Seller ${p.seller_id.slice(0, 8)}`,
+          sellerAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=seller",
+          sellerRating: 4.5,
+          sellerVerified: true,
+          createdAt: p.created_at,
+          updatedAt: p.updated_at || p.created_at
+        }));
+
+        setProducts(transformedProducts);
+      } catch (error) {
+        const msg = (error && (error.message || (typeof error === 'string' ? error : JSON.stringify(error)))) || 'Unknown error';
+        console.error('Error loading products:', msg, error);
+        toast({
+          title: "Error loading products",
+          description: msg,
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [toast]);
 
   // Calculate derived state
   const sponsoredProducts = products.filter(p => p.isSponsored);

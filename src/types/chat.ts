@@ -1,4 +1,4 @@
-export type ChatType = "freelance" | "marketplace" | "p2p" | "social";
+export type ChatType = "freelance" | "marketplace" | "p2p" | "social" | "crypto" | "ai_assistant";
 
 export interface ChatThread {
   id: string;
@@ -20,6 +20,12 @@ export interface ChatThread {
   isArchived?: boolean;
   isMuted?: boolean;
   mutedUntil?: string;
+  title?: string;
+  participant_profile?: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
 }
 
 export interface ChatMessage {
@@ -45,13 +51,15 @@ export interface ChatMessage {
   pinnedBy?: string;
   pinnedAt?: string;
   metadata?: {
+    duration?: number;
+    transcription?: string;
     fileName?: string;
     fileSize?: number;
     fileType?: string;
-    mediaType?: "image" | "video" | "file";
+    mediaType?: 'image' | 'video' | 'file' | 'gif';
     caption?: string;
-    duration?: number;
-    transcription?: string;
+    // System message metadata
+    systemAction?: string;
     // Sticker-specific metadata
     stickerName?: string;
     stickerPackId?: string;
@@ -59,9 +67,14 @@ export interface ChatMessage {
     stickerUrl?: string;
     stickerThumbnailUrl?: string;
     isAnimated?: boolean;
+    animated?: boolean;
     stickerType?: "static" | "animated" | "gif";
     stickerWidth?: number;
     stickerHeight?: number;
+    topText?: string;
+    bottomText?: string;
+    // Mentioned users
+    mentionedUserIds?: string[];
     [key: string]: any;
   };
 }
@@ -97,7 +110,9 @@ export interface ChatParticipant {
   name: string;
   avatar?: string;
   isOnline?: boolean;
+  is_online?: boolean; // For compatibility
   lastSeen?: string;
+  last_seen?: string; // For compatibility
   role?: "admin" | "member"; // For group chats
   username?: string;
   status?: string;
@@ -123,13 +138,20 @@ export interface SendMessageRequest {
     fileName?: string;
     fileSize?: number;
     fileType?: string;
-    mediaType?: "image" | "video" | "file";
+    mediaType?: "image" | "video" | "file" | "gif";
     caption?: string;
     duration?: number;
     transcription?: string;
+    // Sticker metadata
     stickerName?: string;
-    pack?: string;
+    stickerUrl?: string;
+    stickerType?: "static" | "animated" | "gif";
+    stickerWidth?: number;
+    stickerHeight?: number;
     animated?: boolean;
+    topText?: string;
+    bottomText?: string;
+    pack?: string;
     [key: string]: any;
   };
 }

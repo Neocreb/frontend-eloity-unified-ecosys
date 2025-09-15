@@ -9,17 +9,33 @@ import { users } from '../../shared/schema.js';
 
 const router = express.Router();
 
-// Initialize database connection
+// Initialize database connection safely (do not throw during import)
 const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
+let db: any = null;
+if (connectionString) {
+  try {
+    const sql_client = neon(connectionString);
+    db = drizzle(sql_client);
+  } catch (e) {
+    console.warn('Referral route: failed to initialize DB client:', e?.message || e);
+    db = null;
+  }
+} else {
+  console.warn('Referral route: DATABASE_URL not set, referral endpoints will be disabled');
 }
 
-const sql_client = neon(connectionString);
-const db = drizzle(sql_client);
+// Helper to ensure DB available in routes
+const ensureDb = (res: any) => {
+  if (!db) {
+    res.status(503).json({ error: 'Database not configured. Referral service unavailable.' });
+    return false;
+  }
+  return true;
+};
 
 // Generate referral link
 router.post('/generate', authenticateToken, async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -97,6 +113,7 @@ router.post('/generate', authenticateToken, async (req, res) => {
 
 // Get user's referral links
 router.get('/links', authenticateToken, async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -139,6 +156,7 @@ router.get('/links', authenticateToken, async (req, res) => {
 
 // Get referral statistics
 router.get('/stats', authenticateToken, async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -191,6 +209,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
 
 // Track referral click
 router.post('/track-click', async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const { referralCode } = req.body;
     const clientIp = req.ip || req.connection.remoteAddress;
@@ -259,6 +278,7 @@ router.post('/track-click', async (req, res) => {
 
 // Process referral signup
 router.post('/signup', async (req, res) => {
+  if (!ensureDb(res)) return;
   try {
     const { referralCode, newUserId } = req.body;
 

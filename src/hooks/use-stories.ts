@@ -1,8 +1,7 @@
-
 // hooks/use-stories.ts
 import { useEffect, useState } from "react";
 import { Story } from "@/components/feed/Stories";
-import { mockStories } from "@/data/mockFeedData";
+import { apiClient } from "@/lib/api";
 
 export const useStories = () => {
     const [stories, setStories] = useState<Story[]>([]);
@@ -11,12 +10,21 @@ export const useStories = () => {
     useEffect(() => {
         const fetchStories = async () => {
             try {
-                // For now, use mock data since stories table doesn't exist
-                // In the future, implement Supabase integration
-                setStories(mockStories);
+                const data = await apiClient.getPosts(20, 0) as any;
+                const items = (Array.isArray((data as any)?.data) ? (data as any).data : Array.isArray(data) ? data : []) as any[];
+                const mapped: Story[] = items
+                  .filter((p: any) => (p.type || "").toLowerCase() === "story")
+                  .map((p: any) => ({
+                      id: p.id,
+                      username: p.author?.username || "user",
+                      avatar: p.author?.avatar || "/placeholder.svg",
+                      hasNewStory: true,
+                      isUser: false,
+                  }));
+                setStories(mapped);
             } catch (error) {
                 console.error("Error fetching stories:", error);
-                setStories(mockStories);
+                setStories([]);
             } finally {
                 setLoading(false);
             }

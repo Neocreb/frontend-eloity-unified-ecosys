@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -347,7 +347,7 @@ export const MessageForwardingSystem: React.FC<MessageForwardingSystemProps> = (
           </div>
         </div>
         
-        <Checkbox checked={isSelected} readOnly />
+        <Checkbox checked={isSelected} />
       </div>
     </Card>
   );

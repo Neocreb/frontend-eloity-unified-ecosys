@@ -53,8 +53,7 @@ import {
   Clock,
 } from "lucide-react";
 
-import { groups } from "@/data/mockExploreData";
-import { generateMockPosts, generateMockEvents, generateMockMembers } from "@/utils/mockDataGenerator";
+const groups: any[] = [];
 import { eventSyncService, SyncEvent } from "@/services/eventSyncService";
 import { chatInitiationService } from "@/services/chatInitiationService";
 import { QuickMessageButton } from "@/components/chat/QuickMessageButton";

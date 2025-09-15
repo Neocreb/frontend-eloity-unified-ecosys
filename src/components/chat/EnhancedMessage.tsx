@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import { Card, CardContent } from "@/components/ui/card";
 import { MemeGifActionDialog } from "./MemeGifActionDialog";
 import { StickerData } from "@/types/sticker";
@@ -61,10 +61,26 @@ export interface EnhancedChatMessage {
     fileName?: string;
     fileSize?: number;
     fileType?: string;
-    mediaType?: "image" | "video" | "file";
-    stickerName?: string;
+    mediaType?: "image" | "video" | "file" | "gif";
+    caption?: string;
+    // System message metadata
     systemAction?: string;
+    // Sticker-specific metadata
+    stickerName?: string;
+    stickerPackId?: string;
+    stickerPackName?: string;
+    stickerUrl?: string;
+    stickerThumbnailUrl?: string;
+    isAnimated?: boolean;
+    animated?: boolean;
+    stickerType?: "static" | "animated" | "gif";
+    stickerWidth?: number;
+    stickerHeight?: number;
+    topText?: string;
+    bottomText?: string;
+    // Mentioned users
     mentionedUserIds?: string[];
+    [key: string]: any;
   };
   status: "sending" | "sent" | "delivered" | "read";
   reactions?: {
@@ -220,7 +236,7 @@ export const EnhancedMessage: React.FC<EnhancedMessageProps> = ({
       return "sticker";
     }
     if (message.type === "media") {
-      if (message.content.includes('.gif') || message.metadata?.mediaType === "gif") {
+      if (message.content.includes('.gif') || message.metadata?.mediaType === "gif" || message.metadata?.stickerType === "gif") {
         return "gif";
       }
       return "image";
