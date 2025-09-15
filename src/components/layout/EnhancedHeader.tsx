@@ -49,7 +49,7 @@ const EnhancedHeader = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <SoftchatLogo className="h-8 w-8" />
+            <SoftchatLogo className="h-8 w-8" variant="icon" showText={false} />
             <span className="font-bold text-xl hidden sm:inline-block text-eloity-primary">
               Eloity
             </span>
