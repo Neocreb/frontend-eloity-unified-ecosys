@@ -162,30 +162,36 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         console.log("Supabase client initialized with URL:", import.meta.env.VITE_SUPABASE_URL);
 
-        // Get initial session with timeout
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Auth timeout")), 5000),
-        );
+        // Get initial session with timeout fallback (never rejects)
+        const authInitTimeout =
+          Number((import.meta as any).env?.VITE_AUTH_INIT_TIMEOUT_MS) || 8000;
 
-        const {
-          data: { session },
-          error: sessionError,
-        } = (await Promise.race([sessionPromise, timeoutPromise])) as any;
+        const sessionResult = (await Promise.race([
+          supabase.auth.getSession(),
+          new Promise((resolve) =>
+            setTimeout(
+              () => resolve({ data: { session: null }, error: null }),
+              authInitTimeout
+            ),
+          ),
+        ])) as any;
+
+        const session = sessionResult?.data?.session ?? null;
+        const sessionError = sessionResult?.error ?? null;
 
         // Only update state if component is still mounted
         if (!mounted) return;
 
         if (sessionError) {
-          console.error("Error getting session:", sessionError);
+          console.warn("Error getting session:", sessionError);
           // Don't treat auth errors as fatal for public pages
           setError(null);
-        } else {
-          setSession(session);
-          setUser(enhanceUserData(session?.user || null));
         }
+
+        setSession(session);
+        setUser(enhanceUserData(session?.user || null));
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.warn("Auth initialization warning:", error);
         if (mounted) {
           // Don't treat auth initialization errors as fatal
           setError(null);
@@ -236,7 +242,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription && typeof subscription.unsubscribe === "function") {
+        subscription.unsubscribe();
+      }
     };
   }, [enhanceUserData]);
 
