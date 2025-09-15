@@ -387,6 +387,38 @@ const IntegrationManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Payment Method Integrations */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Payment Methods
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {integrations.map(int => (
+            <div key={int.id} className="p-4 border rounded-lg flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="font-medium">{int.name}</div>
+                <Badge variant={int.status === "connected" ? "default" : "secondary"}>
+                  {int.status}
+                </Badge>
+              </div>
+              <div className="text-xs text-gray-600">{int.lastSynced ? `Last synced ${new Date(int.lastSynced).toLocaleString()}` : "Not synced yet"}</div>
+              <div className="flex gap-2 mt-1">
+                <Button size="sm" variant="outline" onClick={() => toggleIntegration(int.id)}>
+                  {int.status === "connected" ? <Unlink className="h-4 w-4 mr-1" /> : <Link className="h-4 w-4 mr-1" />}
+                  {int.status === "connected" ? "Disconnect" : "Connect"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => syncIntegration(int.id)} disabled={int.status !== "connected"}>
+                  Sync
+                </Button>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
