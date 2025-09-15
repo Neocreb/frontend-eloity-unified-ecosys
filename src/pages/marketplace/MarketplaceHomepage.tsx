@@ -220,6 +220,30 @@ const MarketplaceHomepage: React.FC = () => {
         </div>
       </div>
 
+      {/* Header + Search like screenshot */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Marketplace</h1>
+          <Button variant="outline" className="rounded-full">Dashboard</Button>
+        </div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search products..." className="pl-10" />
+          </div>
+          <Button variant="outline" size="icon" className="rounded-lg">
+            <Filter className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-3 overflow-x-auto pb-1">
+          {[{Icon:Grid},{Icon:Zap},{Icon:StarIcon},{Icon:Home},{Icon:Compass}].map(({Icon},i)=> (
+            <button key={i} className="h-10 w-10 flex items-center justify-center rounded-full bg-muted text-foreground">
+              <Icon className="h-4 w-4" />
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-8">
