@@ -79,6 +79,29 @@ interface Subscription {
 
 const IntegrationManager = () => {
   const { toast } = useToast();
+  const [integrations, setIntegrations] = useState(
+    [
+      { id: "paypal", name: "PayPal", status: "disconnected" as const, lastSynced: null as string | null },
+      { id: "applepay", name: "Apple Pay", status: "disconnected" as const, lastSynced: null as string | null },
+      { id: "googlepay", name: "Google Pay", status: "disconnected" as const, lastSynced: null as string | null },
+      { id: "stripe", name: "Stripe", status: "disconnected" as const, lastSynced: null as string | null },
+    ]
+  );
+
+  const toggleIntegration = async (id: string) => {
+    setIntegrations(prev => prev.map(i => i.id === id ? ({
+      ...i,
+      status: i.status === "connected" ? "disconnected" : "connected",
+      lastSynced: i.status === "connected" ? i.lastSynced : new Date().toISOString(),
+    }) : i));
+    const name = id.charAt(0).toUpperCase() + id.slice(1);
+    toast({ title: "Integration updated", description: `${name} ${integrations.find(i => i.id === id)?.status === "connected" ? "disconnected" : "connected"}` });
+  };
+
+  const syncIntegration = async (id: string) => {
+    setIntegrations(prev => prev.map(i => i.id === id ? ({ ...i, lastSynced: new Date().toISOString() }) : i));
+    toast({ title: "Synced", description: `Synced ${id}` });
+  };
   
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
     {
