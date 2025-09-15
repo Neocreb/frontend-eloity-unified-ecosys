@@ -42,7 +42,7 @@ import HybridPostCard from "@/components/feed/HybridPostCard";
 import HybridFeedContent from "@/components/feed/HybridFeedContent";
 import CommentSection from "@/components/feed/CommentSection";
 import ErrorBoundary from "@/components/ui/error-boundary";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLiveNowData } from "@/hooks/use-sidebar-widgets";
 
 // Stories component for the feed
@@ -288,8 +288,23 @@ const FeedSidebar = () => {
 
 // Right sidebar for suggested content
 const SuggestedSidebar = () => {
+  const { user } = useAuth();
   const { data: suggestedUsers } = useSuggestedUsersData(6);
   const { liveStreams } = useLiveNowData();
+  const [following, setFollowing] = React.useState<Record<string, boolean>>({});
+
+  const toggleFollowUser = async (id: string) => {
+    try {
+      const current = !!following[id];
+      setFollowing((prev) => ({ ...prev, [id]: !current }));
+      const { toggleFollow } = await import("@/services/profileService");
+      if (user?.id && id) {
+        await toggleFollow(user.id, id, current);
+      }
+    } catch (e) {
+      console.warn("Follow action failed", e);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -300,12 +315,14 @@ const SuggestedSidebar = () => {
           <div className="space-y-3">
             {(suggestedUsers || []).map((u: any) => {
               const name = u.name || u.profile?.full_name || u.username;
+              const id = u.id || u.profile?.id || (u.username || u.profile?.username || "user");
               const username = u.username || u.profile?.username || "user";
               const avatar = u.avatar || u.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
               const verified = Boolean(u.verified || u.profile?.is_verified);
-              const mutualFriends = u.mutualFriends ?? Math.floor((u.followers || u.profile?.followers_count || 0) % 16);
+              const mutualConnections = u.mutualFriends ?? Math.floor((u.followers || u.profile?.followers_count || 0) % 16);
+              const isFollowing = !!following[id];
               return (
-                <div key={u.id || username} className="flex items-center gap-3">
+                <div key={id} className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={avatar} />
                     <AvatarFallback>{String(name || "U").charAt(0)}</AvatarFallback>
@@ -319,9 +336,11 @@ const SuggestedSidebar = () => {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500">{mutualFriends} mutual friends</p>
+                    <p className="text-xs text-gray-500">{mutualConnections} mutual connections</p>
                   </div>
-                  <Button size="sm" variant="outline" className="text-xs px-2 py-1 h-auto">Add</Button>
+                  <Button size="sm" variant={isFollowing ? "secondary" : "outline"} className="text-xs px-2 py-1 h-auto" onClick={() => toggleFollowUser(id)}>
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
                 </div>
               );
             })}
@@ -366,6 +385,8 @@ const SuggestedSidebar = () => {
 
 // Main enhanced feed component
 const EnhancedFeedWithTabs = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("for-you");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
@@ -374,6 +395,18 @@ const EnhancedFeedWithTabs = () => {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    params.set("tab", activeTab);
+    navigate({ pathname: "/app/feed", search: params.toString() }, { replace: true });
+  }, [activeTab]);
 
   const baseTabs = [
     {
