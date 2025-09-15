@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import PaymentCards from "@/components/wallet/PaymentCards";
 import RecentTransactions from "@/components/wallet/RecentTransactions";
 import SmartRecommendations from "@/components/wallet/SmartRecommendations";
+import QuickActionsWidget from "@/components/wallet/QuickActionsWidget";
 import WithdrawModal from "@/components/wallet/WithdrawModal";
 import DepositModal from "@/components/wallet/DepositModal";
 
