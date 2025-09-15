@@ -81,8 +81,16 @@ export const MarketplaceProvider = ({ children }: { children: React.ReactNode })
     const loadProducts = async () => {
       try {
         setIsLoading(true);
+        if (DEMO_MODE) {
+          const allMock = Object.values(mockUsers).flatMap(u => (u.mock_data?.products || [])) as Product[];
+          if (allMock.length > 0) {
+            setProducts(allMock);
+            return;
+          }
+        }
+
         const realProducts = await realMarketplaceService.getProducts({ limit: 50 });
-        
+
         // Transform Supabase data to match Product interface
         const transformedProducts: Product[] = realProducts.map((p: any) => ({
           id: p.id,
