@@ -455,19 +455,18 @@ const BrowseJobs: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="w-full sm:w-auto"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <div className="w-full sm:w-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold">Browse Jobs</h1>
-          <p className="text-muted-foreground">Find the perfect project for your skills</p>
+      {/* Header matching screenshot */}
+      <div className="flex flex-col gap-3 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">💼</div>
+            <h1 className="text-2xl font-bold">Freelance</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="success">Live</Badge>
+            <Button>+ Post</Button>
+            <Button variant="outline" className="rounded-full">Dashboard</Button>
+          </div>
         </div>
       </div>
 
