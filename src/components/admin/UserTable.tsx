@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import { User } from "@/types/admin";
 
 interface UserTableProps {

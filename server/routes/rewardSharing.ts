@@ -13,26 +13,14 @@ import { users } from '../../shared/schema.js';
 
 const router = express.Router();
 
-// Initialize database connection safely
+// Initialize database connection
 const connectionString = process.env.DATABASE_URL;
-let db: any;
-if (connectionString) {
-  try {
-    const sql_client = neon(connectionString);
-    db = drizzle(sql_client);
-  } catch (e) {
-    console.warn('rewardSharing route: failed to initialize DB client:', e?.message || e);
-    db = null;
-  }
-} else {
-  console.warn('rewardSharing route: DATABASE_URL not set, running in mock mode');
-  db = {
-    select: () => ({ from: () => ({ where: () => ({ limit: async () => [] }) }) }),
-    insert: () => ({ values: () => ({ returning: async () => [] }) }),
-    update: () => ({ set: () => ({ where: () => ({ execute: async () => [] }) }) }),
-    delete: () => ({ where: () => ({ execute: async () => [] }) })
-  };
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is not set');
 }
+
+const sql_client = neon(connectionString);
+const db = drizzle(sql_client);
 
 // Process automatic reward sharing
 router.post('/process-sharing', authenticateToken, async (req, res) => {

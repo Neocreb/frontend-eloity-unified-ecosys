@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -251,15 +251,10 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
   const handleStartVoiceCall = () => {
     if (!selectedChat || !user) return;
 
-    const firstParticipant = selectedChat.participants?.[0];
-    const participantData = typeof firstParticipant === 'string' 
-      ? { id: firstParticipant, name: firstParticipant, avatar: undefined }
-      : firstParticipant;
-    
     const mockParticipant = {
-      id: participantData?.id || "participant-1",
-      name: participantData?.name || selectedChat.title,
-      avatar: participantData?.avatar,
+      id: selectedChat.participants?.[0]?.id || "participant-1",
+      name: selectedChat.participants?.[0]?.name || selectedChat.title,
+      avatar: selectedChat.participants?.[0]?.avatar,
       isAudioMuted: false,
       isVideoEnabled: false,
       isScreenSharing: false,
@@ -292,15 +287,10 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
   const handleStartVideoCall = () => {
     if (!selectedChat || !user) return;
 
-    const firstParticipant = selectedChat.participants?.[0];
-    const participantData = typeof firstParticipant === 'string' 
-      ? { id: firstParticipant, name: firstParticipant, avatar: undefined }
-      : firstParticipant;
-    
     const mockParticipant = {
-      id: participantData?.id || "participant-1", 
-      name: participantData?.name || selectedChat.title,
-      avatar: participantData?.avatar,
+      id: selectedChat.participants?.[0]?.id || "participant-1",
+      name: selectedChat.participants?.[0]?.name || selectedChat.title,
+      avatar: selectedChat.participants?.[0]?.avatar,
       isAudioMuted: false,
       isVideoEnabled: true,
       isScreenSharing: false,
@@ -375,7 +365,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
     setGroupVideoRoom({
       roomId: `room-${selectedChat.id}`,
-      roomName: selectedChat.title || "Chat Room",
+      roomName: selectedChat.title,
       roomType:
         selectedChat.type === "freelance"
           ? "freelance_collab"
@@ -511,8 +501,8 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
           (msg) => ({
             id: msg.id,
             senderId: msg.senderId,
-            senderName: "Unknown User", // Will be fetched from profiles
-            senderAvatar: undefined, // Will be fetched from profiles
+            senderName: msg.sender?.name || msg.sender?.full_name || "Unknown",
+            senderAvatar: msg.sender?.avatar || msg.sender?.avatar_url,
             content: msg.content,
             type:
               msg.messageType === "voice"
@@ -621,7 +611,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       const newMessage: EnhancedChatMessage = {
         id: Date.now().toString(),
         senderId: user.id,
-        senderName: user.profile?.full_name || user.email || "User",
+        senderName: user.profile?.full_name || user.email,
         senderAvatar: user.profile?.avatar_url,
         content,
         type,
@@ -1013,8 +1003,8 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                             </Avatar>
                             <div className="absolute -bottom-0.5 -right-0.5">
                               <OnlineStatusIndicator
-                                isOnline={false}
-                                lastSeen={undefined}
+                                isOnline={conv.participant_profile?.is_online || false}
+                                lastSeen={conv.participant_profile?.last_seen}
                                 size={isMobile ? "sm" : "md"}
                               />
                             </div>
@@ -1052,9 +1042,9 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                                         : "h-5 min-w-[20px] px-1.5"
                                     }`}
                                   >
-                                    {(conv.unreadCount || 0) > 99
+                                    {conv.unreadCount > 99
                                       ? "99+"
-                                      : (conv.unreadCount || 0)}
+                                      : conv.unreadCount}
                                   </Badge>
                                 )}
                               </div>
@@ -1213,8 +1203,8 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <OnlineStatusIndicator
-                                      isOnline={false}
-                                      lastSeen={undefined}
+                                      isOnline={selectedChat.participant_profile?.is_online || false}
+                                      lastSeen={selectedChat.participant_profile?.last_seen}
                                       size="sm"
                                       showLabel={true}
                                     />
@@ -1327,7 +1317,6 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                                         >
                                           <EnhancedMessage
                                             message={msg}
-                                            currentUserId={user?.id || ""}
                                             isCurrentUser={
                                               msg.senderId === user.id
                                             }

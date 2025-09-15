@@ -28,7 +28,6 @@ import {
   Target,
   Lightbulb,
   Sparkles,
-  Receipt,
 
 } from "lucide-react";
 
@@ -118,7 +117,7 @@ const QuickActionsWidget = () => {
     {
       id: "pay-bill",
       label: "Pay Bill",
-      icon: <Receipt className="h-4 w-4" />,
+      icon: <CreditCard className="h-4 w-4" />,
       color: "bg-red-500 hover:bg-red-600",
       action: () => setShowPayBillModal(true),
     },
@@ -406,9 +405,7 @@ const QuickActionsWidget = () => {
 
       <PayBillModal
         isOpen={showPayBillModal}
-        onClose={() => {
-          setShowPayBillModal(false);
-        }}
+        onClose={() => setShowPayBillModal(false)}
       />
 
       <TopUpModal

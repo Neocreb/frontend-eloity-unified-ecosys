@@ -58,10 +58,7 @@ const mockStickers: Record<string, StickerData[]> = {
       fileUrl: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=150&h=150&fit=crop&crop=face",
       thumbnailUrl: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=80&h=80&fit=crop&crop=face",
       width: 150,
-      height: 150,
-      packId: "memes",
-      packName: "Memes",
-      usageCount: 0
+      height: 150
     },
     {
       id: "m2",
@@ -71,23 +68,17 @@ const mockStickers: Record<string, StickerData[]> = {
       fileUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150&h=150&fit=crop&crop=face",
       thumbnailUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=80&h=80&fit=crop&crop=face",
       width: 150,
-      height: 150,
-      packId: "memes",
-      packName: "Memes",
-      usageCount: 0
+      height: 150
     },
     {
       id: "m3",
       name: "Surprised Dog",
       type: "image",
       tags: ["surprised", "dog", "reaction"],
-      fileUrl: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=150&h=150&fit=crop&crop=face", 
+      fileUrl: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=150&h=150&fit=crop&crop=face",
       thumbnailUrl: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=80&h=80&fit=crop&crop=face",
       width: 150,
-      height: 150,
-      packId: "memes",
-      packName: "Memes",
-      usageCount: 0
+      height: 150
     },
     {
       id: "m4",
@@ -97,10 +88,7 @@ const mockStickers: Record<string, StickerData[]> = {
       fileUrl: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=150&h=150&fit=crop&crop=face",
       thumbnailUrl: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=80&h=80&fit=crop&crop=face",
       width: 150,
-      height: 150,
-      packId: "memes",
-      packName: "Memes",
-      usageCount: 0
+      height: 150
     },
     {
       id: "m5",
@@ -110,10 +98,7 @@ const mockStickers: Record<string, StickerData[]> = {
       fileUrl: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=150&h=150&fit=crop&crop=face",
       thumbnailUrl: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=80&h=80&fit=crop&crop=face",
       width: 150,
-      height: 150,
-      packId: "memes",
-      packName: "Memes",
-      usageCount: 0
+      height: 150
     },
     {
       id: "m6",
@@ -123,10 +108,7 @@ const mockStickers: Record<string, StickerData[]> = {
       fileUrl: "https://images.unsplash.com/photo-1571566882372-1598d88abd90?w=150&h=150&fit=crop&crop=face",
       thumbnailUrl: "https://images.unsplash.com/photo-1571566882372-1598d88abd90?w=80&h=80&fit=crop&crop=face",
       width: 150,
-      height: 150,
-      packId: "memes",
-      packName: "Memes",
-      usageCount: 0
+      height: 150
     },
   ],
   gifs: [
@@ -140,10 +122,7 @@ const mockStickers: Record<string, StickerData[]> = {
       thumbnailUrl: "https://media.giphy.com/media/JIX9t2j0ZTN9S/200w_d.gif",
       animated: true,
       width: 200,
-      height: 200,
-      packId: "gifs",
-      packName: "GIFs",
-      usageCount: 0
+      height: 200
     },
     {
       id: "g2",
@@ -154,10 +133,7 @@ const mockStickers: Record<string, StickerData[]> = {
       thumbnailUrl: "https://media.giphy.com/media/111ebonMs90YLu/200w_d.gif",
       animated: true,
       width: 200,
-      height: 200,
-      packId: "gifs",
-      packName: "GIFs",
-      usageCount: 0
+      height: 200
     },
     {
       id: "g3",
@@ -168,24 +144,18 @@ const mockStickers: Record<string, StickerData[]> = {
       thumbnailUrl: "https://media.giphy.com/media/7rj2ZgttvgomY/200w_d.gif",
       animated: true,
       width: 200,
-      height: 200,
-      packId: "gifs",
-      packName: "GIFs",
-      usageCount: 0
+      height: 200
     },
     {
       id: "g4",
-      name: "Mind Blown", 
+      name: "Mind Blown",
       type: "gif",
       tags: ["mind", "blown", "amazed"],
       fileUrl: "https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif",
       thumbnailUrl: "https://media.giphy.com/media/26ufdipQqU2lhNA4g/200w_d.gif",
       animated: true,
       width: 200,
-      height: 200,
-      packId: "gifs",
-      packName: "GIFs",
-      usageCount: 0
+      height: 200
     },
   ],
 };
@@ -209,7 +179,7 @@ export const MobileStickerBottomSheet: React.FC<MobileStickerBottomSheetProps> =
     
     return stickers.filter(sticker => 
       sticker.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (sticker.emoji && sticker.emoji.includes(searchQuery))
+      sticker.emoji.includes(searchQuery)
     );
   }, [activeTab, searchQuery]);
 
@@ -297,7 +267,7 @@ export const MobileStickerBottomSheet: React.FC<MobileStickerBottomSheetProps> =
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
             {/* Tab Navigation */}
             <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <ScrollArea className="w-full">
+              <ScrollArea orientation="horizontal" className="w-full">
                 <TabsList className="inline-flex h-12 w-full bg-transparent p-0 justify-start">
                   {MOBILE_TABS.map((tab) => (
                     <TabsTrigger
@@ -307,7 +277,7 @@ export const MobileStickerBottomSheet: React.FC<MobileStickerBottomSheetProps> =
                         "flex flex-col items-center gap-2 px-8 py-3 text-sm rounded-none border-b-3 transition-all flex-1",
                         "data-[state=active]:border-blue-500 data-[state=active]:text-blue-600 data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-900/20",
                         "data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-500"
-            )}
+                      )}
                     >
                       <span className="text-lg">{tab.icon}</span>
                       <span className="text-xs font-medium leading-none">{tab.label}</span>

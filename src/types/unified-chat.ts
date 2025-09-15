@@ -32,7 +32,7 @@ export interface AIAssistantMessage
 export interface AIAction {
   id: string;
   label: string;
-  action: "navigate" | "execute" | "copy" | "share" | "external";
+  action: "navigate" | "execute" | "copy" | "share";
   data?: any;
   url?: string;
 }

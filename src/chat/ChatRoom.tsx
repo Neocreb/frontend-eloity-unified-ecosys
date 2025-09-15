@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge, badgeVariants } from "@/components/ui";
+import { badgeVariants } from "@/utils/badge-variants";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
@@ -557,7 +557,7 @@ export const ChatRoom: React.FC = () => {
                 <h2 className={`font-semibold truncate ${isMobile ? "text-base" : "text-lg"}`}>{chatTitle}</h2>
                 {!isMobile && (
                   <span
-                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 ${getChatTypeBadgeColor(thread.type)}`}
+                    className={`${badgeVariants({ variant: "secondary" })} text-xs ${getChatTypeBadgeColor(thread.type)}`}
                   >
                     {getChatTypeIcon(thread.type)} {getChatTypeLabel(thread.type)}
                   </span>

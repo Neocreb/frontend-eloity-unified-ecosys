@@ -50,30 +50,6 @@ export type Database = {
         }
         Relationships: []
       }
-      audit_banking_access: {
-        Row: {
-          accessed_at: string
-          accessed_by: string
-          id: string
-          purpose: string | null
-          user_id: string
-        }
-        Insert: {
-          accessed_at?: string
-          accessed_by: string
-          id?: string
-          purpose?: string | null
-          user_id: string
-        }
-        Update: {
-          accessed_at?: string
-          accessed_by?: string
-          id?: string
-          purpose?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       challenges: {
         Row: {
           active_date: string
@@ -1142,9 +1118,7 @@ export type Database = {
       user_banking_info: {
         Row: {
           bank_account_name: string | null
-          bank_account_name_enc: string | null
           bank_account_number: string | null
-          bank_account_number_enc: string | null
           bank_name: string | null
           created_at: string
           id: string
@@ -1153,9 +1127,7 @@ export type Database = {
         }
         Insert: {
           bank_account_name?: string | null
-          bank_account_name_enc?: string | null
           bank_account_number?: string | null
-          bank_account_number_enc?: string | null
           bank_name?: string | null
           created_at?: string
           id?: string
@@ -1164,9 +1136,7 @@ export type Database = {
         }
         Update: {
           bank_account_name?: string | null
-          bank_account_name_enc?: string | null
           bank_account_number?: string | null
-          bank_account_number_enc?: string | null
           bank_name?: string | null
           created_at?: string
           id?: string
@@ -1368,7 +1338,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
-          display_name?: string | null
+          display_name?: never
           is_verified?: boolean | null
           user_id?: string | null
           username?: string | null
@@ -1376,40 +1346,10 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
-          display_name?: string | null
+          display_name?: never
           is_verified?: boolean | null
           user_id?: string | null
           username?: string | null
-        }
-        Relationships: []
-      }
-      user_banking_info_masked: {
-        Row: {
-          bank_account_name_masked: string | null
-          bank_account_number_masked: string | null
-          bank_name: string | null
-          created_at: string | null
-          id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          bank_account_name_masked?: never
-          bank_account_number_masked?: never
-          bank_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          bank_account_name_masked?: never
-          bank_account_number_masked?: never
-          bank_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -1430,32 +1370,8 @@ export type Database = {
         }
         Returns: string
       }
-      get_user_banking_info_full: {
-        Args: { p_purpose?: string; p_user_id: string }
-        Returns: {
-          bank_account_name: string
-          bank_account_number: string
-          bank_name: string
-          created_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }[]
-      }
       is_admin: {
         Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      mask_account_number: {
-        Args: { acct: string }
-        Returns: string
-      }
-      provision_current_user: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      validate_banking_access: {
-        Args: { p_user_id: string }
         Returns: boolean
       }
     }

@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Eye,
 } from "lucide-react";
+import { mockUsers } from "@/data/mockUsers";
 
 export const ProfileDemo: React.FC = () => {
   const navigate = useNavigate();
@@ -22,34 +23,54 @@ export const ProfileDemo: React.FC = () => {
   const demoUsers = [
     {
       key: "sarah_tech",
-      user: { profile: { avatar_url: "/placeholder.svg", full_name: "Sarah Tech", username: "sarah_tech" } },
+      user: mockUsers.sarah_tech,
       title: "Tech Entrepreneur & Seller",
       description: "Marketplace seller with verified business account",
-      features: ["Store Management", "Product Listings", "Customer Reviews", "Business Analytics"],
+      features: [
+        "Store Management",
+        "Product Listings",
+        "Customer Reviews",
+        "Business Analytics",
+      ],
       icon: <Store className="w-6 h-6 text-green-600" />,
     },
     {
       key: "alex_dev",
-      user: { profile: { avatar_url: "/placeholder.svg", full_name: "Alex Dev", username: "alex_dev" } },
+      user: mockUsers.alex_dev,
       title: "Full Stack Developer",
       description: "Professional freelancer offering development services",
-      features: ["Service Offerings", "Portfolio Showcase", "Client Reviews", "Project History"],
+      features: [
+        "Service Offerings",
+        "Portfolio Showcase",
+        "Client Reviews",
+        "Project History",
+      ],
       icon: <Code className="w-6 h-6 text-blue-600" />,
     },
     {
       key: "mike_crypto",
-      user: { profile: { avatar_url: "/placeholder.svg", full_name: "Mike Crypto", username: "mike_crypto" } },
+      user: mockUsers.mike_crypto,
       title: "Crypto Trader",
       description: "Experienced trader with P2P marketplace access",
-      features: ["Trading History", "P2P Rating", "Security Settings", "Portfolio Tracking"],
+      features: [
+        "Trading History",
+        "P2P Rating",
+        "Security Settings",
+        "Portfolio Tracking",
+      ],
       icon: <TrendingUp className="w-6 h-6 text-orange-600" />,
     },
     {
       key: "emma_creates",
-      user: { profile: { avatar_url: "/placeholder.svg", full_name: "Emma Creates", username: "emma_creates" } },
+      user: mockUsers.emma_creates,
       title: "Content Creator",
       description: "Digital artist sharing creative content",
-      features: ["Content Portfolio", "Social Stats", "Brand Partnerships", "Creator Tools"],
+      features: [
+        "Content Portfolio",
+        "Social Stats",
+        "Brand Partnerships",
+        "Creator Tools",
+      ],
       icon: <Camera className="w-6 h-6 text-purple-600" />,
     },
   ];

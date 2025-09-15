@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import { mockVideos } from '@/data/mockVideosData';
 import type { VideoItem as Video } from '@/types/video';
-import { apiClient } from '@/lib/api';
 
 export const useVideoData = () => {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -12,31 +12,14 @@ export const useVideoData = () => {
   useEffect(() => {
     const loadVideos = async () => {
       try {
-        const data = await apiClient.getPosts(50, 0) as any;
-        const items = (Array.isArray((data as any)?.data) ? (data as any).data : Array.isArray(data) ? data : []) as any[];
-        const mapped: Video[] = items
-          .filter((p: any) => (p.type || '').toLowerCase() === 'video')
-          .map((p: any) => ({
-            id: p.id,
-            url: p.media?.[0]?.url || p.video_url || '',
-            thumbnail: p.thumbnail || p.media?.[0]?.thumbnail || '/placeholder.svg',
-            description: p.content || '',
-            likes: p.likes_count || 0,
-            comments: p.comments_count || 0,
-            shares: p.shares_count || 0,
-            author: {
-              name: p.author?.displayName || p.author?.username || 'User',
-              username: p.author?.username || 'user',
-              avatar: p.author?.avatar || '/placeholder.svg',
-              verified: !!p.author?.verified,
-            },
-            isFollowing: false,
-          }));
-        setVideos(mapped);
+        console.log("Loading video data...");
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setVideos(mockVideos);
+        setIsLoading(false);
+        console.log("Video data loaded:", mockVideos.length, "videos");
       } catch (error) {
-        console.error('Error loading videos:', error);
-        setVideos([]);
-      } finally {
+        console.error("Error loading videos:", error);
         setIsLoading(false);
       }
     };
@@ -45,32 +28,57 @@ export const useVideoData = () => {
   }, []);
 
   const handleLike = (videoId: string) => {
+    console.log("Toggling like for video:", videoId);
     setLikedVideos(prev => {
-      const next = new Set(prev);
-      if (next.has(videoId)) next.delete(videoId); else next.add(videoId);
-      return next;
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+      }
+      return newSet;
     });
-    setVideos(prev => prev.map(v => v.id === videoId ? { ...v, likes: likedVideos.has(videoId) ? Math.max(0, v.likes - 1) : v.likes + 1 } : v));
+
+    // Update video likes count
+    setVideos(prev => prev.map(video => 
+      video.id === videoId 
+        ? { 
+            ...video, 
+            likes: likedVideos.has(videoId) ? video.likes - 1 : video.likes + 1 
+          }
+        : video
+    ));
   };
 
   const handleFollow = (username: string) => {
+    console.log("Toggling follow for user:", username);
     setFollowedUsers(prev => {
-      const next = new Set(prev);
-      if (next.has(username)) next.delete(username); else next.add(username);
-      return next;
+      const newSet = new Set(prev);
+      if (newSet.has(username)) {
+        newSet.delete(username);
+      } else {
+        newSet.add(username);
+      }
+      return newSet;
     });
   };
 
   const handleShare = (videoId: string) => {
+    console.log("Sharing video:", videoId);
+    // In a real app, this would open a share dialog or copy link
     navigator.clipboard?.writeText(`https://softchat.com/video/${videoId}`);
   };
 
   const nextVideo = () => {
-    if (currentIndex < videos.length - 1) setCurrentIndex(i => i + 1);
+    if (currentIndex < videos.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    }
   };
 
   const prevVideo = () => {
-    if (currentIndex > 0) setCurrentIndex(i => i - 1);
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    }
   };
 
   return {
@@ -84,6 +92,6 @@ export const useVideoData = () => {
     handleShare,
     nextVideo,
     prevVideo,
-    currentVideo: videos[currentIndex] || null,
+    currentVideo: videos[currentIndex] || null
   };
 };

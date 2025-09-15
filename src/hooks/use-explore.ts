@@ -1,40 +1,40 @@
-import { useMemo, useState } from "react";
+
+import { useState } from "react";
+import { 
+  trendingTopics, 
+  suggestedUsers, 
+  popularHashtags, 
+  groups, 
+  pages 
+} from "@/data/mockExploreData";
 
 export const useExplore = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("trending");
-
-  const topics: { name: string; category: string }[] = [];
-  const users: { name: string; username: string; bio?: string }[] = [];
-  const hashtags: { tag: string }[] = [];
-  const groupsList: { name: string; category: string }[] = [];
-  const pagesList: { name: string; category: string }[] = [];
-
-  const query = searchQuery.toLowerCase();
-
-  const filteredTopics = useMemo(
-    () => topics.filter(t => t.name.toLowerCase().includes(query) || t.category.toLowerCase().includes(query)),
-    [topics, query]
+  
+  const filteredTopics = trendingTopics.filter(topic => 
+    topic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    topic.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const filteredUsers = useMemo(
-    () => users.filter(u => u.name.toLowerCase().includes(query) || u.username.toLowerCase().includes(query) || (u.bio || "").toLowerCase().includes(query)),
-    [users, query]
+  
+  const filteredUsers = suggestedUsers.filter(user => 
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.bio.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const filteredHashtags = useMemo(
-    () => hashtags.filter(h => h.tag.toLowerCase().includes(query)),
-    [hashtags, query]
+  
+  const filteredHashtags = popularHashtags.filter(hashtag => 
+    hashtag.tag.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const filteredGroups = useMemo(
-    () => groupsList.filter(g => g.name.toLowerCase().includes(query) || g.category.toLowerCase().includes(query)),
-    [groupsList, query]
+  
+  const filteredGroups = groups.filter(group => 
+    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    group.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const filteredPages = useMemo(
-    () => pagesList.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)),
-    [pagesList, query]
+  
+  const filteredPages = pages.filter(page => 
+    page.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    page.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return {
@@ -46,6 +46,6 @@ export const useExplore = () => {
     filteredUsers,
     filteredHashtags,
     filteredGroups,
-    filteredPages,
+    filteredPages
   };
 };

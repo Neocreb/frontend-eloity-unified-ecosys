@@ -97,7 +97,151 @@ const LiveCommunityEvents = () => {
   const [savedEvents, setSavedEvents] = useState<string[]>([]);
   const { toast } = useToast();
 
+  // Mock events data
+  const mockEvents: LiveEvent[] = [
+    {
+      id: "1",
+      title: "Live Crypto Trading Session: DeFi Strategies",
+      description:
+        "Join expert traders as we analyze DeFi opportunities in real-time. Learn advanced trading strategies and see live portfolio management.",
+      type: "trading",
+      host: {
+        id: "1",
+        name: "Alex Rivera",
+        avatar:
+          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
+        verified: true,
+      },
+      startTime: "2024-02-15T18:00:00Z",
+      duration: 120,
+      participants: 234,
+      maxParticipants: 500,
+      isLive: true,
+      isPremium: true,
+      tags: ["DeFi", "Trading", "Crypto", "Live"],
+      thumbnail:
+        "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400",
+      category: "Finance",
+      rewards: {
+        type: "crypto",
+        amount: 50,
+        description: "50 SOFT tokens for active participants",
+      },
+      featured: true,
+    },
+    {
+      id: "2",
+      title: "Flash Marketplace Sale: Tech Gadgets",
+      description:
+        "Limited-time group buying event with exclusive discounts. Bid together, save together!",
+      type: "marketplace",
+      host: {
+        id: "2",
+        name: "TechDeals Store",
+        avatar:
+          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100",
+        verified: true,
+      },
+      startTime: "2024-02-15T20:00:00Z",
+      duration: 60,
+      participants: 89,
+      maxParticipants: 200,
+      isLive: false,
+      isPremium: false,
+      tags: ["Shopping", "Deals", "Tech", "Flash Sale"],
+      thumbnail:
+        "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400",
+      category: "Shopping",
+      rewards: {
+        type: "discount",
+        amount: 25,
+        description: "Up to 25% group discount",
+      },
+    },
+    {
+      id: "3",
+      title: "AI Art Creation Workshop",
+      description:
+        "Learn to create stunning AI art with industry experts. Interactive session with live demonstrations.",
+      type: "workshop",
+      host: {
+        id: "3",
+        name: "Sarah Chen",
+        avatar:
+          "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100",
+        verified: true,
+      },
+      startTime: "2024-02-16T15:00:00Z",
+      duration: 90,
+      participants: 156,
+      maxParticipants: 300,
+      isLive: false,
+      isPremium: false,
+      tags: ["AI", "Art", "Workshop", "Creative"],
+      thumbnail:
+        "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400",
+      category: "Creative",
+      requirements: ["Basic Photoshop knowledge", "Stable internet connection"],
+    },
+    {
+      id: "4",
+      title: "Freelance Pitch Battle",
+      description:
+        "Present your services live to potential clients. Real projects, real opportunities, real-time feedback.",
+      type: "freelance",
+      host: {
+        id: "4",
+        name: "FreelanceHub",
+        avatar:
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+        verified: true,
+      },
+      startTime: "2024-02-16T19:00:00Z",
+      duration: 180,
+      participants: 45,
+      maxParticipants: 100,
+      isLive: false,
+      isPremium: false,
+      tags: ["Freelance", "Networking", "Pitch", "Opportunity"],
+      thumbnail:
+        "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400",
+      category: "Professional",
+    },
+    {
+      id: "5",
+      title: "Community Building Challenge",
+      description:
+        "Team up with other members to complete collaborative challenges and earn exclusive rewards!",
+      type: "challenge",
+      host: {
+        id: "5",
+        name: "SoftChat Team",
+        avatar:
+          "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
+        verified: true,
+      },
+      startTime: "2024-02-17T16:00:00Z",
+      duration: 240,
+      participants: 312,
+      maxParticipants: 1000,
+      isLive: false,
+      isPremium: false,
+      tags: ["Challenge", "Community", "Team", "Rewards"],
+      thumbnail:
+        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400",
+      category: "Community",
+      rewards: {
+        type: "nft",
+        amount: 1,
+        description: "Exclusive community NFT badge",
+      },
+      featured: true,
+    },
+  ];
 
+  useEffect(() => {
+    setEvents(mockEvents);
+  }, []);
 
   const getEventTypeIcon = (type: string) => {
     switch (type) {

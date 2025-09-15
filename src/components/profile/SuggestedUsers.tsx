@@ -16,6 +16,7 @@ import {
   Verified,
   Gift,
 } from "lucide-react";
+import { mockUsers } from "@/data/mockUsers";
 import { UserProfile } from "@/types/user";
 
 interface SuggestedUsersProps {
@@ -120,7 +121,7 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
     return num.toString();
   };
 
-  const users: any[] = []; // TODO: replace with profileService.getSuggestedUsers()
+  const users = Object.values(mockUsers).slice(0, maxUsers);
 
   if (variant === "card") {
     return (

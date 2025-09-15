@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-// Temporary fix: remove Badge import
-// import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -234,9 +233,9 @@ export const VoiceVideoCall: React.FC<VoiceVideoCallProps> = ({
                   {chatName || participants[0]?.name}
                 </h3>
                 {participants.length > 1 && (
-                  <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
+                  <Badge variant="secondary">
                     {participants.length} participants
-                  </span>
+                  </Badge>
                 )}
               </div>
               <div className="text-sm text-gray-300">

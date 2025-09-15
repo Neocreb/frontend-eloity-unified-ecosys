@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StickerData, StickerPackData, StickerCategory, StickerUploadMode } from "@/types/sticker";
-// Temporary fix: use span instead of Badge until import issue is resolved
-// import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -57,11 +55,14 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import {
+  StickerData,
+  StickerPackData,
+  StickerCategory,
   StickerPickerTab,
   UserStickerLibrary,
   EMOJI_STICKER_PACKS
 } from "@/types/sticker";
-import { REAL_MEMES, REAL_GIFS, COMMUNITY_REAL_PACKS } from "@/data/realMemesGifsData";
+import { SAMPLE_MEMES, SAMPLE_GIFS, COMMUNITY_MEME_GIF_PACKS } from "@/data/sampleMemesGifsData";
 import { EnhancedMediaCreationPanel } from "./EnhancedMediaCreationPanel";
 import { useUserCollections } from "@/contexts/UserCollectionsContext";
 
@@ -97,10 +98,10 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
   const unifiedMemePack: StickerPackData = {
     id: "memes",
     name: "Memes",
-    description: `All memes (${collections.memes.length + REAL_MEMES.length})`,
+    description: `All memes (${collections.memes.length + SAMPLE_MEMES.length})`,
     category: "memes" as StickerCategory,
     // User memes first, then community memes
-    stickers: [...collections.memes, ...REAL_MEMES],
+    stickers: [...collections.memes, ...SAMPLE_MEMES],
     creatorId: "unified",
     creatorName: "Community",
     downloadCount: 0,
@@ -113,17 +114,17 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
     tags: ["memes", "community", "unified"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    thumbnailUrl: collections.memes[0]?.thumbnailUrl || REAL_MEMES[0]?.thumbnailUrl || "",
+    thumbnailUrl: collections.memes[0]?.thumbnailUrl || SAMPLE_MEMES[0]?.thumbnailUrl || "",
     price: 0,
   };
 
   const unifiedGifPack: StickerPackData = {
     id: "gifs",
     name: "GIFs",
-      description: `All GIFs (${collections.gifs.length + REAL_GIFS.length})`,
-      category: "gifs" as StickerCategory,
-      // User GIFs first, then community GIFs
-      stickers: [...collections.gifs, ...REAL_GIFS],
+    description: `All GIFs (${collections.gifs.length + SAMPLE_GIFS.length})`,
+    category: "gifs" as StickerCategory,
+    // User GIFs first, then community GIFs
+    stickers: [...collections.gifs, ...SAMPLE_GIFS],
     creatorId: "unified",
     creatorName: "Community",
     downloadCount: 0,
@@ -136,7 +137,7 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
     tags: ["gifs", "animated", "community", "unified"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-      thumbnailUrl: collections.gifs[0]?.thumbnailUrl || REAL_GIFS[0]?.thumbnailUrl || "",
+    thumbnailUrl: collections.gifs[0]?.thumbnailUrl || SAMPLE_GIFS[0]?.thumbnailUrl || "",
     price: 0,
   };
 
@@ -157,10 +158,10 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
     const updatedUnifiedMemePack: StickerPackData = {
       id: "memes",
       name: "Memes",
-      description: `All memes (${collections.memes.length + REAL_MEMES.length})`,
+      description: `All memes (${collections.memes.length + SAMPLE_MEMES.length})`,
       category: "memes" as StickerCategory,
       // User memes first, then community memes
-      stickers: [...collections.memes, ...REAL_MEMES],
+      stickers: [...collections.memes, ...SAMPLE_MEMES],
       creatorId: "unified",
       creatorName: "Community",
       downloadCount: 0,
@@ -173,17 +174,17 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       tags: ["memes", "community", "unified"],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      thumbnailUrl: collections.memes[0]?.thumbnailUrl || REAL_MEMES[0]?.thumbnailUrl || "",
+      thumbnailUrl: collections.memes[0]?.thumbnailUrl || SAMPLE_MEMES[0]?.thumbnailUrl || "",
       price: 0,
     };
 
     const updatedUnifiedGifPack: StickerPackData = {
       id: "gifs",
       name: "GIFs",
-      description: `All GIFs (${collections.gifs.length + REAL_GIFS.length})`,
+      description: `All GIFs (${collections.gifs.length + SAMPLE_GIFS.length})`,
       category: "gifs" as StickerCategory,
       // User GIFs first, then community GIFs
-      stickers: [...collections.gifs, ...REAL_GIFS],
+      stickers: [...collections.gifs, ...SAMPLE_GIFS],
       creatorId: "unified",
       creatorName: "Community",
       downloadCount: 0,
@@ -196,7 +197,7 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       tags: ["gifs", "animated", "community", "unified"],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      thumbnailUrl: collections.gifs[0]?.thumbnailUrl || REAL_GIFS[0]?.thumbnailUrl || "",
+      thumbnailUrl: collections.gifs[0]?.thumbnailUrl || SAMPLE_GIFS[0]?.thumbnailUrl || "",
       price: 0,
     };
 
@@ -409,7 +410,7 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
         <div className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <ScrollArea className="w-full">
+          <ScrollArea orientation="horizontal" className="w-full">
             <TabsList className={cn(
               "inline-flex h-auto bg-transparent w-full",
               isMobile ? "p-0.5 justify-start" : "p-1 justify-start"
@@ -433,9 +434,9 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
                     {isMobile ? tab.name.slice(0, 3) : tab.name}
                   </span>
                   {tab.count && tab.count > 0 && (
-                    <span className="bg-secondary text-secondary-foreground rounded-full px-2 py-0.5 text-xs">
+                    <Badge variant="secondary" className="text-xs px-1 py-0 h-3 min-w-[12px]">
                       {tab.count > 9 ? "9+" : tab.count}
-                    </span>
+                    </Badge>
                   )}
                   {tab.premium && (
                     <Crown className="w-2.5 h-2.5 text-yellow-500" />
@@ -761,7 +762,7 @@ const StickerPackCard: React.FC<StickerPackCardProps> = ({
             <CardTitle className="text-sm flex items-center gap-2">
               {pack.name}
               {pack.isPremium && <Crown className="w-4 h-4 text-yellow-500" />}
-              {pack.isOfficial && <span className="bg-secondary text-secondary-foreground rounded-full px-2 py-0.5 text-xs">Official</span>}
+              {pack.isOfficial && <Badge variant="secondary" className="text-xs">Official</Badge>}
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               {pack.stickers.length} stickers
@@ -813,7 +814,7 @@ const StickerPackCreationDialog: React.FC<StickerPackCreationDialogProps> = ({
   const [packName, setPackName] = useState("");
   const [packDescription, setPackDescription] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [creationMethod, setCreationMethod] = useState<StickerUploadMode>("upload");
+  const [creationMethod, setCreationMethod] = useState<"upload" | "camera" | "ai">("upload");
   const [isCreating, setIsCreating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -896,14 +897,14 @@ const StickerPackCreationDialog: React.FC<StickerPackCreationDialogProps> = ({
         creatorName: "You",
         downloadCount: 0,
         rating: 5,
-        ratingCount: 1,
-        tags: ["custom"],
-        price: 0,
-        isPublic: false,
-        isPremium: false,
         isOfficial: false,
+        isPremium: false,
+        isCustom: true,
+        tags: ["custom", "user-generated"],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        thumbnailUrl: stickers[0]?.fileUrl || "",
+        price: 0,
       };
 
       onPackCreated(newPack);

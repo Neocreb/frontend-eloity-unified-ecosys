@@ -87,6 +87,41 @@ interface FullScreenLiveStreamProps {
   className?: string;
 }
 
+const mockChatMessages: LiveChatMessage[] = [
+  {
+    id: '1',
+    user: {
+      id: 'user1',
+      username: 'crypto_king',
+      displayName: 'Crypto King',
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      verified: true,
+      tier: 'gold',
+    },
+    message: 'This stream is fire! 🔥',
+    timestamp: new Date(Date.now() - 10000),
+    type: 'message',
+  },
+  {
+    id: '2',
+    user: {
+      id: 'user2',
+      username: 'trader_pro',
+      displayName: 'Trading Pro',
+      avatar: 'https://i.pravatar.cc/150?img=2',
+      verified: false,
+      tier: 'silver',
+    },
+    message: 'Just sent a gift! 🎁',
+    timestamp: new Date(Date.now() - 5000),
+    type: 'gift',
+    giftInfo: {
+      giftType: 'diamond',
+      value: 100,
+      animation: 'sparkle',
+    },
+  },
+];
 
 const giftTypes = [
   { id: 'heart', emoji: '❤️', name: 'Heart', value: 1, color: 'text-red-400' },
@@ -119,7 +154,7 @@ export const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
   const [streamDuration, setStreamDuration] = useState(0);
   
   // Chat and interactions
-  const [chatMessages, setChatMessages] = useState<LiveChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<LiveChatMessage[]>(mockChatMessages);
   const [chatMessage, setChatMessage] = useState('');
   const [showChat, setShowChat] = useState(true);
   const [showGifts, setShowGifts] = useState(false);
@@ -133,7 +168,7 @@ export const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
 
   // Battle voting state
   const [showVoting, setShowVoting] = useState(false);
-  const [userBalance] = useState(0);
+  const [userBalance] = useState(2500); // Mock user balance
   const [userVotes, setUserVotes] = useState<any[]>([]);
   const [votingPool, setVotingPool] = useState({
     creator1Total: 450,
@@ -161,7 +196,59 @@ export const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  // Real-time chat and interactions should be powered by the live streaming service or websocket integration
+  // Simulate real-time chat messages and interactions
+  useEffect(() => {
+    if (!isActive || !content.isActive) return;
+
+    const interval = setInterval(() => {
+      // Random chat messages
+      if (Math.random() < 0.3) {
+        const mockUsers = [
+          { username: 'viewer123', displayName: 'Viewer 123', avatar: 'https://i.pravatar.cc/150?img=3', verified: false, tier: 'bronze' as const },
+          { username: 'crypto_fan', displayName: 'Crypto Fan', avatar: 'https://i.pravatar.cc/150?img=4', verified: true, tier: 'silver' as const },
+          { username: 'stream_lover', displayName: 'Stream Lover', avatar: 'https://i.pravatar.cc/150?img=5', verified: false, tier: 'gold' as const },
+        ];
+        
+        const mockMessages = [
+          'Amazing content! 🚀',
+          'Love this stream!',
+          'Keep it up! 💪',
+          'This is so helpful',
+          'Great insights!',
+          'Following now! 🔥',
+          'Thanks for the tips!',
+          'Wow! 😍',
+        ];
+
+        const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+        const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)];
+        
+        const newMessage: LiveChatMessage = {
+          id: `msg-${Date.now()}`,
+          user: {
+            id: `user-${Date.now()}`,
+            ...randomUser,
+          },
+          message: randomMessage,
+          timestamp: new Date(),
+          type: 'message',
+        };
+
+        setChatMessages(prev => [...prev.slice(-50), newMessage]); // Keep last 50 messages
+      }
+
+      // Random viewer count changes
+      const viewerChange = Math.floor(Math.random() * 3 - 1);
+      setLocalViewerCount(prev => Math.max(1, prev + viewerChange));
+
+      // Random likes
+      if (Math.random() < 0.2) {
+        setLocalLikes(prev => prev + Math.floor(Math.random() * 3) + 1);
+      }
+    }, 3000 + Math.random() * 4000); // Random interval 3-7 seconds
+
+    return () => clearInterval(interval);
+  }, [isActive, content.isActive]);
 
   // Start camera if user owns this stream
   useEffect(() => {

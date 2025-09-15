@@ -103,8 +103,76 @@ const LiveEventRoom: React.FC<LiveEventRoomProps> = ({
   const chatRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Mock participants data
+  const mockParticipants: Participant[] = [
+    {
+      id: "1",
+      name: "Alex Rivera (Host)",
+      avatar:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
+      role: "host",
+      isVideoOn: true,
+      isAudioOn: true,
+      handRaised: false,
+      reactions: 45,
+    },
+    {
+      id: "2",
+      name: "Sarah Chen",
+      avatar:
+        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100",
+      role: "speaker",
+      isVideoOn: true,
+      isAudioOn: true,
+      handRaised: false,
+      reactions: 23,
+    },
+    {
+      id: "3",
+      name: "Mike Johnson",
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+      role: "viewer",
+      isVideoOn: false,
+      isAudioOn: false,
+      handRaised: true,
+      reactions: 12,
+    },
+  ];
 
+  // Mock chat messages
+  const mockMessages: ChatMessage[] = [
+    {
+      id: "1",
+      userId: "1",
+      userName: "Alex Rivera",
+      message: "Welcome everyone! Let's start with today's DeFi strategies.",
+      timestamp: new Date(Date.now() - 300000),
+      type: "message",
+    },
+    {
+      id: "2",
+      userId: "2",
+      userName: "Sarah Chen",
+      message:
+        "Great presentation! The yield farming section was very insightful.",
+      timestamp: new Date(Date.now() - 240000),
+      type: "message",
+    },
+    {
+      id: "3",
+      userId: "system",
+      userName: "System",
+      message: "Mike Johnson raised their hand",
+      timestamp: new Date(Date.now() - 120000),
+      type: "system",
+    },
+  ];
 
+  useEffect(() => {
+    setParticipants(mockParticipants);
+    setChatMessages(mockMessages);
+  }, []);
 
   useEffect(() => {
     // Auto-scroll chat to bottom

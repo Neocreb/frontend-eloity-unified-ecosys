@@ -569,7 +569,7 @@ export const TransferModal = ({ isOpen, onClose }: TransferModalProps) => {
 export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
   const { toast } = useToast();
   const { walletBalance } = useWalletContext();
-
+  
   const [formData, setFormData] = useState({
     billType: "",
     provider: "",
@@ -577,9 +577,9 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
     amount: "",
     source: "total",
   });
-
+  
   const [isLoading, setIsLoading] = useState(false);
-
+  
   const billTypes = {
     utilities: {
       label: "Utilities & Electricity",

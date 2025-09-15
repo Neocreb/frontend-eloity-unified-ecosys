@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// Temporary fix: remove Badge import
-// import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Smile,
   Heart,
@@ -212,7 +211,7 @@ export const WhatsAppStickerPicker: React.FC<StickerPickerProps> = ({
     )}>
       {/* Pack tabs */}
       <div className="flex items-center border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-        <ScrollArea className="w-full">
+        <ScrollArea orientation="horizontal" className="w-full">
           <div className={cn(
             "flex items-center space-x-1",
             isMobile ? "p-1.5" : "p-2"
@@ -240,9 +239,9 @@ export const WhatsAppStickerPicker: React.FC<StickerPickerProps> = ({
                     <span className="text-xs font-medium">{pack.name}</span>
                   )}
                   {pack.premium && !isMobile && (
-                    <span className="text-xs bg-secondary text-secondary-foreground px-1 py-0 h-4 rounded">
+                    <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
                       Pro
-                    </span>
+                    </Badge>
                   )}
                 </div>
               </Button>
@@ -315,10 +314,10 @@ export const WhatsAppStickerPicker: React.FC<StickerPickerProps> = ({
               {stickerPacks.find(pack => pack.id === selectedPack)?.stickers.length} stickers
             </span>
             {stickerPacks.find(pack => pack.id === selectedPack)?.premium && (
-              <span className="text-xs border border-border px-1.5 py-0 h-5 rounded flex items-center">
+              <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
                 <Star className="w-2.5 h-2.5 mr-1" />
                 Premium
-              </span>
+              </Badge>
             )}
           </div>
         </div>

@@ -6,7 +6,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,

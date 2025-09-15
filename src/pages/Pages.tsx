@@ -58,7 +58,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 
-const mockPages: any[] = [];
+import { pages as mockPages } from "@/data/mockExploreData";
 
 interface Page {
   id: string;
@@ -109,12 +109,11 @@ const Pages = () => {
   });
 
   // Filter and sort pages
-  const pagesList = mockPages; // TODO: replace with API call
-  const filteredPages = pagesList
+  const filteredPages = mockPages
     .filter((page) => {
       const matchesSearch =
         page.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (page.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        page.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         page.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory =
         selectedCategory === "all" || page.category === selectedCategory;

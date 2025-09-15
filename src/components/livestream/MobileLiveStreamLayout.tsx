@@ -56,6 +56,64 @@ interface MobileLiveStreamLayoutProps {
   className?: string;
 }
 
+const mockChatMessages: LiveChatMessage[] = [
+  {
+    id: '1',
+    user: {
+      id: 'user1',
+      username: 'eucilides_vaz',
+      displayName: 'Eucilides Vaz',
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      verified: false,
+      tier: 'gold',
+    },
+    message: 'good cooking 😂😂😂',
+    timestamp: new Date(Date.now() - 10000),
+    type: 'message',
+  },
+  {
+    id: '2',
+    user: {
+      id: 'user2',
+      username: 'brAvO',
+      displayName: 'Tez On The Run',
+      avatar: 'https://i.pravatar.cc/150?img=2',
+      verified: true,
+      tier: 'diamond',
+    },
+    message: '',
+    timestamp: new Date(Date.now() - 5000),
+    type: 'system',
+  },
+  {
+    id: '3',
+    user: {
+      id: 'user3',
+      username: 'miahzinspire',
+      displayName: 'Miahzinspire',
+      avatar: 'https://i.pravatar.cc/150?img=3',
+      verified: false,
+      tier: 'silver',
+    },
+    message: 'joined',
+    timestamp: new Date(Date.now() - 3000),
+    type: 'join',
+  },
+  {
+    id: '4',
+    user: {
+      id: 'user4',
+      username: 'sam',
+      displayName: 'Sam',
+      avatar: 'https://i.pravatar.cc/150?img=4',
+      verified: false,
+      tier: 'bronze',
+    },
+    message: 'liked the LIVE',
+    timestamp: new Date(Date.now() - 1000),
+    type: 'like',
+  },
+];
 
 const quickReactions = ['❤️', '😂', '😮', '���', '��', '💎', '🚀', '👑'];
 
@@ -77,7 +135,7 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
   const [localLikes, setLocalLikes] = useState(Math.floor(content.viewerCount * 0.8));
   
   // Chat and interactions
-  const [chatMessages, setChatMessages] = useState<LiveChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<LiveChatMessage[]>(mockChatMessages);
   const [chatMessage, setChatMessage] = useState('');
   const [showGifts, setShowGifts] = useState(false);
   const [showVoting, setShowVoting] = useState(false);
@@ -95,7 +153,62 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Real-time updates should be provided by the live streaming service or websocket integration
+  // Simulate real-time updates
+  useEffect(() => {
+    if (!isActive || !content.isActive) return;
+
+    const interval = setInterval(() => {
+      // Random chat messages
+      if (Math.random() < 0.4) {
+        const mockUsers = [
+          { username: 'viewer123', displayName: 'Viewer 123', avatar: 'https://i.pravatar.cc/150?img=5', verified: false, tier: 'bronze' as const },
+          { username: 'crypto_fan', displayName: 'Crypto Fan', avatar: 'https://i.pravatar.cc/150?img=6', verified: true, tier: 'gold' as const },
+          { username: 'stream_lover', displayName: 'Stream Lover', avatar: 'https://i.pravatar.cc/150?img=7', verified: false, tier: 'silver' as const },
+        ];
+        
+        const mockMessages = [
+          'Amazing! 🚀',
+          'Love this! ❤️',
+          'Keep it up! 💪',
+          'So cool! 😍',
+          'Great work! 👏',
+          'Fire content! 🔥',
+          'joined',
+          'liked the LIVE',
+        ];
+
+        const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+        const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)];
+        
+        const messageType = randomMessage === 'joined' ? 'join' : 
+                           randomMessage === 'liked the LIVE' ? 'like' : 'message';
+        
+        const newMessage: LiveChatMessage = {
+          id: `msg-${Date.now()}`,
+          user: {
+            id: `user-${Date.now()}`,
+            ...randomUser,
+          },
+          message: randomMessage,
+          timestamp: new Date(),
+          type: messageType,
+        };
+
+        setChatMessages(prev => [...prev.slice(-10), newMessage]); // Keep last 10 messages
+      }
+
+      // Random viewer count changes
+      const viewerChange = Math.floor(Math.random() * 5 - 2);
+      setLocalViewerCount(prev => Math.max(1, prev + viewerChange));
+
+      // Random likes
+      if (Math.random() < 0.3) {
+        setLocalLikes(prev => prev + Math.floor(Math.random() * 3) + 1);
+      }
+    }, 2000 + Math.random() * 3000);
+
+    return () => clearInterval(interval);
+  }, [isActive, content.isActive]);
 
   const handleSendChat = () => {
     if (!chatMessage.trim() || !user) return;

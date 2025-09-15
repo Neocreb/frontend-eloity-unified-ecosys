@@ -6,7 +6,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -648,7 +648,7 @@ const CampaignCenter: React.FC = () => {
       {/* Campaign Creation Wizard */}
       {showCreationWizard && (
         <CampaignCreationWizard 
-          isOpen={showCreationWizard}
+          open={showCreationWizard}
           onClose={() => setShowCreationWizard(false)}
           onCampaignCreated={(newCampaign) => {
             setActiveCampaigns(prev => [...prev, newCampaign]);

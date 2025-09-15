@@ -33,8 +33,6 @@ export interface StickerPackData {
   name: string;
   description?: string;
   coverImageUrl?: string;
-  thumbnailUrl?: string; // Added for compatibility
-  price?: number; // For premium packs
   creatorId: string;
   creatorName?: string;
   isPublic: boolean;
@@ -48,7 +46,6 @@ export interface StickerPackData {
   stickers: StickerData[];
   isDownloaded?: boolean; // For user library
   isFavorite?: boolean;
-  isCustom?: boolean; // For custom packs
   createdAt: string;
   updatedAt: string;
 }
@@ -66,8 +63,7 @@ export type StickerCategory =
   | "custom"
   | "trending"
   | "recent"
-  | "favorites"
-  | "create";
+  | "favorites";
 
 export interface UserStickerLibrary {
   recentStickers: StickerData[];
@@ -83,8 +79,6 @@ export interface StickerPickerTab {
   count?: number;
   premium?: boolean;
 }
-
-export type StickerUploadMode = "upload" | "camera" | "ai" | "photo" | "gif";
 
 export interface StickerUsageData {
   stickerId: string;

@@ -1,4 +1,4 @@
-import { 
+import {
   FreelancerProfile,
   ClientProfile,
   JobPosting,
@@ -7,163 +7,457 @@ import {
   SearchFilters,
   FreelanceStats,
 } from "@/types/freelance";
-import { supabase } from "@/integrations/supabase/client";
-import { realFreelanceService } from "./realFreelanceService";
 
-function mapDatabaseToProject(data: any): Project {
-  return {
-    id: data.id,
-    jobId: data.job_id,
-    clientId: data.client_id,
-    freelancerId: data.freelancer_id,
-    title: data.job?.title || "Project",
-    description: data.job?.description || "",
-    budget: data.agreed_budget || 0,
-    status: data.status,
-    startDate: data.start_date || data.created_at,
-    endDate: data.end_date,
-    milestones:
-      data.milestones?.map((m: any) => ({
-        id: m.id,
-        projectId: data.id,
-        title: m.title,
-        description: m.description,
-        amount: m.amount,
-        dueDate: m.due_date,
-        status: m.status,
-        submissionDate: m.submission_date,
-        approvalDate: m.approval_date,
-        deliverables: m.deliverables || [],
-      })) || [],
-    contractTerms: data.contract_terms,
-    escrowAmount: data.escrow_amount,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-  };
-}
+// Mock data for development
+const mockFreelancers: FreelancerProfile[] = [
+  {
+    id: "1",
+    name: "Sarah Johnson",
+    email: "sarah@example.com",
+    avatar:
+      "https://images.unsplash.com/photo-1494790108755-2616b612b5c5?w=100&h=100&fit=crop&crop=face",
+    location: "Seattle, WA",
+    timezone: "PST",
+    verified: true,
+    joinedDate: "2023-01-15",
+    title: "Full-Stack Developer & DevOps Engineer",
+    bio: "Experienced full-stack developer with 8+ years building scalable web applications. Specialized in React, Node.js, and cloud architecture.",
+    hourlyRate: 85,
+    skills: [
+      "React",
+      "Node.js",
+      "Python",
+      "AWS",
+      "Docker",
+      "PostgreSQL",
+      "TypeScript",
+      "GraphQL",
+    ],
+    rating: 4.9,
+    totalEarned: 247650,
+    completedJobs: 147,
+    successRate: 98.5,
+    languages: ["English (Native)", "Spanish (Conversational)"],
+    education: [
+      {
+        id: "1",
+        institution: "University of Washington",
+        degree: "Bachelor of Science",
+        field: "Computer Science",
+        startYear: 2012,
+        endYear: 2016,
+      },
+    ],
+    certifications: [
+      {
+        id: "1",
+        name: "AWS Solutions Architect",
+        issuer: "Amazon Web Services",
+        issueDate: "2023-03-15",
+        expiryDate: "2026-03-15",
+      },
+    ],
+    portfolio: [
+      {
+        id: "1",
+        title: "E-commerce Platform",
+        description: "Modern e-commerce platform built with React and Node.js",
+        images: [
+          "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
+        ],
+        technologies: ["React", "Node.js", "MongoDB", "Stripe"],
+        liveUrl: "https://example-ecommerce.com",
+        category: "Web Development",
+      },
+    ],
+    availability: "available",
+    responseTime: "within 1 hour",
+  },
+  {
+    id: "2",
+    name: "Alex Chen",
+    email: "alex@example.com",
+    avatar:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+    location: "Los Angeles, CA",
+    timezone: "PST",
+    verified: true,
+    joinedDate: "2022-08-20",
+    title: "Senior UI/UX Designer",
+    bio: "Creative designer focused on user-centered design and modern interfaces. Expert in Figma, user research, and design systems.",
+    hourlyRate: 70,
+    skills: [
+      "Figma",
+      "Adobe XD",
+      "Prototyping",
+      "User Research",
+      "Design Systems",
+      "Webflow",
+    ],
+    rating: 4.8,
+    totalEarned: 156780,
+    completedJobs: 89,
+    successRate: 97.2,
+    languages: ["English (Native)", "Mandarin (Native)"],
+    education: [
+      {
+        id: "1",
+        institution: "Art Center College of Design",
+        degree: "Bachelor of Fine Arts",
+        field: "Graphic Design",
+        startYear: 2016,
+        endYear: 2020,
+      },
+    ],
+    certifications: [
+      {
+        id: "1",
+        name: "Google UX Design Certificate",
+        issuer: "Google",
+        issueDate: "2022-06-10",
+      },
+    ],
+    portfolio: [
+      {
+        id: "1",
+        title: "Mobile Banking App",
+        description: "Complete UI/UX design for a modern banking application",
+        images: [
+          "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=300&fit=crop",
+        ],
+        technologies: ["Figma", "Principle", "InVision"],
+        category: "UI/UX Design",
+      },
+    ],
+    availability: "available",
+    responseTime: "within 2 hours",
+  },
+];
+
+const mockJobs: JobPosting[] = [
+  {
+    id: "1",
+    title: "Full-Stack Web Application Development",
+    description:
+      "Looking for an experienced developer to build a comprehensive e-commerce platform with React, Node.js, and MongoDB. Must have experience with payment integration and user authentication.",
+    category: "Web Development",
+    subcategory: "Full-Stack Development",
+    budget: {
+      type: "fixed",
+      amount: 5000,
+    },
+    deadline: "2024-02-15",
+    duration: "2-3 months",
+    experienceLevel: "expert",
+    skills: ["React", "Node.js", "MongoDB", "Payment Integration"],
+    client: {
+      id: "1",
+      name: "TechCorp Solutions",
+      email: "contact@techcorp.com",
+      avatar:
+        "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop",
+      location: "San Francisco, CA",
+      timezone: "PST",
+      verified: true,
+      joinedDate: "2023-01-01",
+      companyName: "TechCorp Solutions",
+      totalSpent: 47500,
+      jobsPosted: 12,
+      hireRate: 85.5,
+      rating: 4.8,
+      paymentVerified: true,
+    },
+    proposals: [],
+    status: "open",
+    postedDate: "2024-01-10T10:00:00Z",
+    applicationsCount: 12,
+    visibility: "public",
+  },
+  {
+    id: "2",
+    title: "Mobile App UI/UX Design",
+    description:
+      "Need a talented designer to create a modern, user-friendly mobile app interface for a fitness tracking application.",
+    category: "Design",
+    subcategory: "Mobile Design",
+    budget: {
+      type: "hourly",
+      min: 60,
+      max: 80,
+    },
+    deadline: "2024-01-30",
+    duration: "3-4 weeks",
+    experienceLevel: "intermediate",
+    skills: ["UI/UX Design", "Figma", "Mobile Design", "Prototyping"],
+    client: {
+      id: "2",
+      name: "FitLife Startup",
+      email: "hello@fitlife.com",
+      avatar:
+        "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=100&h=100&fit=crop",
+      location: "New York, NY",
+      timezone: "EST",
+      verified: true,
+      joinedDate: "2023-06-15",
+      companyName: "FitLife Inc.",
+      totalSpent: 23400,
+      jobsPosted: 8,
+      hireRate: 90.2,
+      rating: 4.6,
+      paymentVerified: true,
+    },
+    proposals: [],
+    status: "open",
+    postedDate: "2024-01-08T14:30:00Z",
+    applicationsCount: 8,
+    visibility: "public",
+  },
+];
+
+const mockProjects: Project[] = [
+  {
+    id: "1",
+    job: mockJobs[0],
+    freelancer: mockFreelancers[0],
+    client: mockJobs[0].client,
+    status: "active",
+    startDate: "2024-01-15T00:00:00Z",
+    budget: {
+      agreed: 5000,
+      paid: 1500,
+      remaining: 3500,
+    },
+    milestones: [
+      {
+        id: "1",
+        title: "Project Setup & Architecture",
+        description: "Set up development environment and project architecture",
+        amount: 1500,
+        dueDate: "2024-01-22",
+        status: "approved",
+      },
+      {
+        id: "2",
+        title: "Frontend Development",
+        description: "Build React frontend with responsive design",
+        amount: 2000,
+        dueDate: "2024-02-05",
+        status: "in-progress",
+      },
+      {
+        id: "3",
+        title: "Backend & Integration",
+        description: "Complete backend API and third-party integrations",
+        amount: 1500,
+        dueDate: "2024-02-15",
+        status: "pending",
+      },
+    ],
+    timeline: [],
+    files: [],
+    messages: [],
+  },
+];
 
 export const freelanceService = {
-  // Freelancer operations (delegated)
-  async searchFreelancers(filters: SearchFilters): Promise<FreelancerProfile[]> {
-    return realFreelanceService.searchFreelancers(filters);
+  // Freelancer operations
+  async searchFreelancers(
+    filters: SearchFilters,
+  ): Promise<FreelancerProfile[]> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return mockFreelancers.filter((freelancer) => {
+      if (filters.skills && filters.skills.length > 0) {
+        return filters.skills.some((skill) =>
+          freelancer.skills.some((fs) =>
+            fs.toLowerCase().includes(skill.toLowerCase()),
+          ),
+        );
+      }
+      return true;
+    });
   },
 
   async getFreelancerProfile(id: string): Promise<FreelancerProfile | null> {
-    return realFreelanceService.getFreelancerProfile(id);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return mockFreelancers.find((f) => f.id === id) || null;
   },
 
   async updateFreelancerProfile(
     id: string,
-    updates: Partial<FreelancerProfile>
+    updates: Partial<FreelancerProfile>,
   ): Promise<FreelancerProfile> {
-    return realFreelanceService.updateFreelancerProfile(id, updates);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const freelancer = mockFreelancers.find((f) => f.id === id);
+    if (!freelancer) throw new Error("Freelancer not found");
+
+    Object.assign(freelancer, updates);
+    return freelancer;
   },
 
-  // Job operations (delegated)
+  // Job operations
   async searchJobs(filters: SearchFilters): Promise<JobPosting[]> {
-    return realFreelanceService.searchJobs(filters);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return mockJobs.filter((job) => {
+      if (filters.category && job.category !== filters.category) return false;
+      if (filters.experienceLevel && filters.experienceLevel.length > 0) {
+        return filters.experienceLevel.includes(job.experienceLevel);
+      }
+      if (filters.skills && filters.skills.length > 0) {
+        return filters.skills.some((skill) =>
+          job.skills.some((js) =>
+            js.toLowerCase().includes(skill.toLowerCase()),
+          ),
+        );
+      }
+      return true;
+    });
   },
 
   async getJobPosting(id: string): Promise<JobPosting | null> {
-    return realFreelanceService.getJobPosting(id);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return mockJobs.find((j) => j.id === id) || null;
   },
 
   async createJobPosting(
-    job: Omit<JobPosting, "id" | "postedDate" | "applicationsCount" | "proposals">
+    job: Omit<
+      JobPosting,
+      "id" | "postedDate" | "applicationsCount" | "proposals"
+    >,
   ): Promise<JobPosting> {
-    return realFreelanceService.createJobPosting(job);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    const newJob: JobPosting = {
+      ...job,
+      id: `job_${Date.now()}`,
+      postedDate: new Date().toISOString(),
+      applicationsCount: 0,
+      proposals: [],
+    };
+    mockJobs.unshift(newJob);
+    return newJob;
   },
 
-  // Proposal operations (delegated)
+  // Proposal operations
   async submitProposal(
-    proposal: Omit<Proposal, "id" | "submittedDate" | "status">
+    proposal: Omit<Proposal, "id" | "submittedDate" | "status">,
   ): Promise<Proposal> {
-    return realFreelanceService.submitProposal(proposal);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    const newProposal: Proposal = {
+      ...proposal,
+      id: `proposal_${Date.now()}`,
+      submittedDate: new Date().toISOString(),
+      status: "pending",
+    };
+
+    const job = mockJobs.find((j) => j.id === proposal.jobId);
+    if (job) {
+      job.proposals.push(newProposal);
+      job.applicationsCount++;
+    }
+
+    return newProposal;
   },
 
   async getProposals(freelancerId: string): Promise<Proposal[]> {
-    return realFreelanceService.getProposals(freelancerId);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return mockJobs.flatMap((job) =>
+      job.proposals.filter((p) => p.freelancer.id === freelancerId),
+    );
   },
 
-  // Project operations (real implementations)
+  // Project operations
   async getProjects(
     userId: string,
-    userType: "freelancer" | "client"
+    userType: "freelancer" | "client",
   ): Promise<Project[]> {
-    return realFreelanceService.getProjects(userId, userType);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return mockProjects.filter((project) => {
+      if (userType === "freelancer") {
+        return project.freelancer.id === userId;
+      } else {
+        return project.client.id === userId;
+      }
+    });
   },
 
   async getProject(id: string): Promise<Project | null> {
-    const { data, error } = await supabase
-      .from("freelance_projects")
-      .select(
-        `*,
-        job:freelance_jobs!job_id (
-          id,
-          title,
-          description,
-          category,
-          skills
-        ),
-        freelancer:profiles!freelancer_id (
-          id,
-          full_name,
-          username,
-          avatar_url
-        ),
-        client:profiles!client_id (
-          id,
-          full_name,
-          username,
-          avatar_url
-        ),
-        milestones:project_milestones (
-          id,
-          title,
-          description,
-          amount,
-          due_date,
-          status,
-          submission_date,
-          approval_date,
-          deliverables
-        )`
-      )
-      .eq("id", id)
-      .single();
-
-    if (error) return null;
-    return data ? mapDatabaseToProject(data) : null;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return mockProjects.find((p) => p.id === id) || null;
   },
 
   async updateProjectStatus(
     id: string,
-    status: Project["status"]
+    status: Project["status"],
   ): Promise<Project> {
-    return realFreelanceService.updateProjectStatus(id, status);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const project = mockProjects.find((p) => p.id === id);
+    if (!project) throw new Error("Project not found");
+
+    project.status = status;
+    return project;
   },
 
-  // Stats and analytics (delegated)
+  // Stats and analytics
   async getFreelanceStats(freelancerId: string): Promise<FreelanceStats> {
-    return realFreelanceService.getFreelanceStats(freelancerId);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const freelancer = mockFreelancers.find((f) => f.id === freelancerId);
+    const userProjects = mockProjects.filter(
+      (p) => p.freelancer.id === freelancerId,
+    );
+
+    // Use centralized freelance balance instead of calculated from projects
+    const totalEarnings = 12890.67; // Match centralized freelance balance from walletService.ts
+    const activeProjects = userProjects.filter(
+      (p) => p.status === "active",
+    ).length;
+    const completedProjects = userProjects.filter(
+      (p) => p.status === "completed",
+    ).length;
+
+    return {
+      totalEarnings,
+      activeProjects,
+      completedProjects,
+      totalProjects: userProjects.length,
+      rating: freelancer?.rating || 4.8,
+      successRate: freelancer?.successRate || 95,
+      repeatClients: 67,
+    };
   },
 
-  // Categories and skills (delegated with real fallbacks)
+  // Categories and skills
   async getCategories(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('freelance_categories')
-      .select('name')
-      .order('name');
-    if (error) return [];
-    return data?.map((c: any) => c.name) || [];
+    return [
+      "Web Development",
+      "Mobile Development",
+      "Design",
+      "Writing & Content",
+      "Digital Marketing",
+      "Data Science",
+      "DevOps & Cloud",
+      "AI & Machine Learning",
+    ];
   },
 
   async getSkills(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('freelance_skills')
-      .select('name')
-      .order('name');
-    if (error) return [];
-    return data?.map((s: any) => s.name) || [];
+    return [
+      "React",
+      "Node.js",
+      "Python",
+      "TypeScript",
+      "Vue.js",
+      "Angular",
+      "Figma",
+      "Adobe XD",
+      "Photoshop",
+      "Illustrator",
+      "Content Writing",
+      "SEO",
+      "Social Media Marketing",
+      "AWS",
+      "Docker",
+      "Kubernetes",
+      "PostgreSQL",
+      "MongoDB",
+    ];
   },
 };

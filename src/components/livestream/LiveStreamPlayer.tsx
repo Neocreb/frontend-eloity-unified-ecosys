@@ -75,9 +75,61 @@ export function LiveStreamPlayer({
 
     loadMessages();
 
-    // No simulated messages; real-time messages should come from liveStreamingService/websocket
+    // Simulate real-time messages
+    const messageInterval = setInterval(
+      () => {
+        const mockMessages = [
+          "Great stream! 🔥",
+          "Love this content",
+          "Thanks for the tips!",
+          "Amazing work!",
+          "Keep it up! 💪",
+          "This is so helpful",
+          "Wow! 😍",
+          "Learning so much",
+        ];
 
-    // cleanup not required here
+        const mockUsers = [
+          {
+            name: "CryptoFan",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user1",
+          },
+          {
+            name: "TechGuru",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user2",
+          },
+          {
+            name: "StreamLover",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user3",
+          },
+          {
+            name: "Viewer123",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user4",
+          },
+        ];
+
+        const randomUser =
+          mockUsers[Math.floor(Math.random() * mockUsers.length)];
+        const randomMessage =
+          mockMessages[Math.floor(Math.random() * mockMessages.length)];
+
+        const newMsg: StreamMessage = {
+          id: `msg-${Date.now()}`,
+          streamId: stream.id,
+          userId: `user-${Date.now()}`,
+          username: randomUser.name,
+          userAvatar: randomUser.avatar,
+          message: randomMessage,
+          timestamp: new Date(),
+          type: "message",
+        };
+
+        setChatMessages((prev) => [...prev, newMsg]);
+      },
+      5000 + Math.random() * 10000,
+    ); // Random interval between 5-15 seconds
+
+    return () => clearInterval(messageInterval);
   }, [stream.id]);
 
   // Auto-scroll chat to bottom
@@ -211,7 +263,7 @@ export function LiveStreamPlayer({
     >
       {/* Video Player */}
       <div className="flex-1 relative bg-black rounded-lg overflow-hidden">
-        {/* Video placeholder - in real app this would be actual video stream */}
+        {/* Mock video placeholder - in real app this would be actual video stream */}
         <div className="relative w-full aspect-video bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
           <img
             src={stream.thumbnailUrl}
