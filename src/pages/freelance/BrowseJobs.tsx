@@ -477,7 +477,7 @@ const BrowseJobs: React.FC = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search jobs by title, skills, or description..."
+                placeholder="Search jobs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -512,6 +512,24 @@ const BrowseJobs: React.FC = () => {
             <Button variant="outline">
               <FilterIcon className="w-4 h-4" />
             </Button>
+          </div>
+        </div>
+
+        {/* Tabs and view toggles */}
+        <div className="flex items-center justify-between">
+          <Tabs defaultValue="jobs" className="w-full">
+            <TabsList className="w-fit">
+              <TabsTrigger value="jobs">Jobs</TabsTrigger>
+              <TabsTrigger value="talent">Talent</TabsTrigger>
+              <TabsTrigger value="props">Props</TabsTrigger>
+              <TabsTrigger value="saved">Saved</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="flex items-center gap-2">
+            <Button variant={viewMode === "card" ? "default" : "outline"} size="icon" onClick={()=>setViewMode("card")}>▦</Button>
+            <Button variant={viewMode === "list" ? "default" : "outline"} size="icon" onClick={()=>setViewMode("list")}>≣</Button>
+            <Button variant="outline" size="icon"><RefreshCw className="w-4 h-4" /></Button>
+            <Button variant="outline" className="ml-1">Filters</Button>
           </div>
         </div>
 
