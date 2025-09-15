@@ -5,14 +5,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Settings, Users, Video, Phone, Search, MoreVertical } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Settings, Users, Video, Phone, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { UnifiedChatThread, UnifiedChatType } from "@/types/unified-chat";
-import { ChatMessage, ChatParticipant } from "@/types/chat";
+import { DEFAULT_CHAT_TABS, UnifiedChatThread, UnifiedChatType } from "@/types/unified-chat";
+import { ChatMessage } from "@/types/chat";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { GroupSettingsPanel } from "./GroupSettingsPanel";
 import { ChatListItem } from "./ChatListItem";
+import { ChatTabs } from "@/components/chat/ChatTabs";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EnhancedChatInterfaceProps {
@@ -35,6 +37,13 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [tabCounts, setTabCounts] = useState<Record<UnifiedChatType, number>>({
+    social: 0,
+    freelance: 0,
+    marketplace: 0,
+    p2p: 0,
+    ai_assistant: 0,
+  });
 
   // Load conversations from Supabase
   useEffect(() => {
@@ -44,8 +53,7 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   const loadConversations = async () => {
     try {
       setLoading(true);
-      
-      // Load chat conversations from Supabase
+
       const { data: chatData, error: chatError } = await supabase
         .from('chat_conversations')
         .select('*')
@@ -53,23 +61,68 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
 
       if (chatError) throw chatError;
 
-      // Transform to UnifiedChatThread format
-      const transformedChats: UnifiedChatThread[] = (chatData || []).map(chat => ({
+      const transformedChats: UnifiedChatThread[] = (chatData || []).map((chat: any) => ({
         id: chat.id,
         type: activeTab,
         isAI: false,
         referenceId: null,
         participants: chat.participants,
-        lastMessage: "No messages yet",
-        lastMessageAt: chat.updated_at,
+        lastMessage: chat.last_message || "No messages yet",
+        lastMessageAt: chat.updated_at || chat.created_at,
         updatedAt: chat.updated_at,
         createdAt: chat.created_at,
-        isGroup: chat.participants.length > 2,
-        title: `Chat ${chat.id.slice(0, 8)}`,
-        unreadCount: 0,
+        isGroup: (chat.participants || []).length > 2,
+        title: chat.title || `Chat ${String(chat.id).slice(0, 8)}`,
+        unreadCount: chat.unread_count || 0,
       }));
 
-      setConversations(transformedChats);
+      const fallbackChats: UnifiedChatThread[] = transformedChats.length > 0 ? transformedChats : [
+        {
+          id: "alice",
+          type: activeTab,
+          isAI: false,
+          referenceId: null,
+          participants: [currentUserId, "alice"],
+          lastMessage: "Hey! How was your weekend?",
+          lastMessageAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          isGroup: false,
+          title: "Alice Johnson",
+          unreadCount: 2,
+        },
+        {
+          id: "family-group",
+          type: activeTab,
+          isAI: false,
+          referenceId: null,
+          participants: [currentUserId, "anna", "john"],
+          lastMessage: "Let's plan the family dinner!",
+          lastMessageAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          isGroup: true,
+          title: "Family Group",
+          unreadCount: 3,
+        },
+        {
+          id: "mike",
+          type: activeTab,
+          isAI: false,
+          referenceId: null,
+          participants: [currentUserId, "mike"],
+          lastMessage: "Thanks for the recommendation!",
+          lastMessageAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          isGroup: false,
+          title: "Mike Chen",
+          unreadCount: 0,
+        },
+      ];
+
+      setConversations(fallbackChats);
+      setTabCounts((prev) => ({ ...prev, [activeTab]: fallbackChats.length }));
     } catch (error) {
       console.error('Error loading conversations:', error);
       toast({
@@ -225,11 +278,11 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
       {/* Chat List Sidebar */}
       <div className={cn(
         "border-r bg-background",
-        isMobile ? "h-1/2" : "w-80 flex-shrink-0"
+        isMobile ? "h-1/2" : "w-96 flex-shrink-0"
       )}>
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold capitalize">{activeTab} Chat</h2>
+        <div className="p-4 border-b space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Messages</h2>
             <Button
               variant="outline"
               size="icon"
@@ -239,7 +292,14 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          
+
+          <ChatTabs
+            tabs={DEFAULT_CHAT_TABS.map((t) => ({ ...t, count: tabCounts[t.id as UnifiedChatType] }))}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            className=""
+          />
+
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -248,6 +308,14 @@ export const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <Badge variant="outline">All {conversations.length}</Badge>
+            <Badge variant="secondary">Unread {conversations.reduce((sum,c)=>sum+(c.unreadCount||0),0)}</Badge>
+            <Badge variant="outline">Groups {conversations.filter(c=>c.isGroup).length}</Badge>
+            <Badge variant="outline">Pinned 0</Badge>
+            <Badge variant="outline">Requests 0</Badge>
           </div>
         </div>
 
