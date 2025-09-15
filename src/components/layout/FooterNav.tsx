@@ -38,10 +38,10 @@ const FooterNav = () => {
       special: true,
     },
     {
-      icon: Video,
-      label: "Videos",
-      href: "/app/videos",
-      active: location.pathname === "/app/videos",
+      icon: Users,
+      label: "Connections",
+      href: "/app/friends",
+      active: location.pathname === "/app/friends",
     },
     {
       icon: ShoppingCart,
@@ -61,7 +61,7 @@ const FooterNav = () => {
 
   return (
     <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t md:hidden z-[100] safe-area-pb">
-      <div className="grid grid-cols-6 h-14 sm:h-16 px-1 w-full max-w-full">
+      <div className="grid h-14 sm:h-16 px-1 w-full max-w-full" style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>
         {navItems.map((item) => (
           <Link key={item.href} to={item.href} className="w-full min-w-0">
             <Button
