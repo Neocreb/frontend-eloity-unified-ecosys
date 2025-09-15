@@ -38,12 +38,12 @@ export function useQuickLinksStats(): QuickLinkItem[] {
   const memoriesCount = Number(localStorage.getItem("eloity_memories_count") || 0);
 
   const links: QuickLinkItem[] = [
-    { name: "Friends", icon: Users, route: "/app/friends", count: friendsCount },
-    { name: "Groups", icon: Users, route: "/app/groups", count: groupsCount },
-    { name: "Pages", icon: Building, route: "/app/pages", count: pagesCount },
+    { name: "Connections", icon: Users, route: "/app/friends", count: friendsCount },
+    { name: "Groups", icon: Users, route: "/app/feed?tab=groups", count: groupsCount },
+    { name: "Pages", icon: Building, route: "/app/feed?tab=pages", count: pagesCount },
     { name: "Marketplace", icon: Building, route: "/app/marketplace", count: wishlistCount || null },
     { name: "Memories", icon: Building, route: "/app/memories", count: memoriesCount || null },
-    { name: "Saved", icon: Bookmark, route: "/app/saved", count: savedCount },
+    { name: "Saved", icon: Bookmark, route: "/app/feed?tab=saved", count: savedCount },
   ];
 
   // Attach navigation handlers via Link on the consumer; this is just data
