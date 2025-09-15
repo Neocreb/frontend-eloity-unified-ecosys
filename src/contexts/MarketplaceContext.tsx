@@ -12,8 +12,9 @@ import {
 import { useAuth } from "./AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { realMarketplaceService } from "@/services/realMarketplaceService";
+import { mockUsers } from "@/data/mockUsers";
 
-
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 
 // Define the context type
