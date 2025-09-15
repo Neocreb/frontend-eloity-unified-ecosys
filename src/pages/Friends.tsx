@@ -132,7 +132,7 @@ const Friends: React.FC = () => {
               <p className="text-sm text-muted-foreground truncate">{friend.bio}</p>
               <div className="flex items-center gap-4 mt-1">
                 <span className="text-xs text-muted-foreground">
-                  {friend.mutualFriends} mutual friends
+                  {friend.mutualFriends} mutual connections
                 </span>
                 {friend.lastActive && (
                   <>
@@ -177,7 +177,7 @@ const Friends: React.FC = () => {
                   </Button>
                   <Button size="sm">
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Add Friend
+                    Connect
                   </Button>
                 </>
               )}
@@ -195,7 +195,7 @@ const Friends: React.FC = () => {
         <div className="flex items-center gap-4">
           <Users className="w-8 h-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold">Friends</h1>
+            <h1 className="text-3xl font-bold">Connections</h1>
             <p className="text-muted-foreground">
               Manage your connections and discover new people
             </p>
@@ -208,7 +208,7 @@ const Friends: React.FC = () => {
           </Button>
           <Button>
             <UserPlus className="w-4 h-4 mr-2" />
-            Find Friends
+            Find Connections
           </Button>
         </div>
       </div>
@@ -233,13 +233,13 @@ const Friends: React.FC = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-primary">{friends.length}</div>
-            <div className="text-sm text-muted-foreground">Total Friends</div>
+            <div className="text-sm text-muted-foreground">Total Connections</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">{friendRequests.length}</div>
-            <div className="text-sm text-muted-foreground">Friend Requests</div>
+            <div className="text-sm text-muted-foreground">Connection Requests</div>
           </CardContent>
         </Card>
         <Card>
@@ -253,7 +253,7 @@ const Friends: React.FC = () => {
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">All Friends ({friends.length})</TabsTrigger>
+          <TabsTrigger value="all">All Connections ({friends.length})</TabsTrigger>
           <TabsTrigger value="requests">
             Requests ({friendRequests.length})
             {friendRequests.length > 0 && (
@@ -271,7 +271,7 @@ const Friends: React.FC = () => {
               <CardContent className="p-8 text-center">
                 <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">
-                  {searchQuery ? 'No friends found' : 'No friends yet'}
+                  {searchQuery ? 'No connections found' : 'No connections yet'}
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchQuery 
@@ -282,7 +282,7 @@ const Friends: React.FC = () => {
                 {!searchQuery && (
                   <Button>
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Find Friends
+                    Find Connections
                   </Button>
                 )}
               </CardContent>
@@ -301,9 +301,9 @@ const Friends: React.FC = () => {
             <Card>
               <CardContent className="p-8 text-center">
                 <UserPlus className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No friend requests</h3>
+                <h3 className="text-lg font-semibold mb-2">No connection requests</h3>
                 <p className="text-muted-foreground">
-                  When people send you friend requests, they'll appear here
+                  When people send you connection requests, they'll appear here
                 </p>
               </CardContent>
             </Card>
