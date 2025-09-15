@@ -8,7 +8,7 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Custom fetch to surface detailed error payloads from Supabase in the console
+// Custom fetch that logs failures without consuming the response body (so Supabase can parse it)
 const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
@@ -16,26 +16,16 @@ const debugFetch: typeof fetch = async (input, init) => {
       try {
         const url = typeof input === 'string' ? input : (input as Request).url;
         const ct = res.headers.get('content-type') || '';
-        const isParsable = res.type === 'basic' || res.type === 'cors';
-        let body: any = null;
-        if (isParsable && ct.includes('application/json')) {
-          body = await res.clone().json();
-        } else if (isParsable) {
-          body = await res.clone().text();
-        } else {
-          body = '[opaque response: body not readable]';
-        }
-        // Log structured details to aid debugging auth/API errors
+        // Do NOT read the body here to avoid locking the stream for Supabase internals
         console.error('Supabase request failed', {
           url,
           status: res.status,
           statusText: res.statusText,
           type: res.type,
           contentType: ct,
-          body,
         });
       } catch (e) {
-        console.error('Supabase request failed and response could not be parsed', e);
+        console.error('Supabase request failed (metadata logging error)', e);
       }
     }
     return res;
