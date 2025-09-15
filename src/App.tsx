@@ -83,6 +83,7 @@ import WalletAnalyticsPage from "./pages/wallet/WalletAnalytics";
 import WalletTransactionsPage from "./pages/wallet/WalletTransactions";
 import WalletIntegrationsPage from "./pages/wallet/WalletIntegrations";
 import WalletConvertPage from "./pages/wallet/WalletConvert";
+import WalletCardsPage from "./pages/wallet/WalletCards";
 import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
