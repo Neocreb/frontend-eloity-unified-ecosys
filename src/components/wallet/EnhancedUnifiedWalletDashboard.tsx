@@ -93,7 +93,7 @@ const EnhancedWalletDashboardContent = () => {
               <div className="text-sm text-white/90">Total Balance</div>
               <div className="flex items-center gap-3">
                 <div className="text-4xl md:text-5xl font-bold">
-                  {balanceVisible ? `$${displayedBalance.toFixed(2)}` : "��•••••"}
+                  {balanceVisible ? `$${displayedBalance.toFixed(2)}` : "•••••"}
                 </div>
                 <button
                   aria-label="Toggle balance visibility"
@@ -125,7 +125,7 @@ const EnhancedWalletDashboardContent = () => {
           {/* Primary Actions */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Button onClick={() => setShowDepositModal(true)} className="bg-white/10 hover:bg-white/20 text-white h-16">
-              <Plus className="h-4 w-4 mr-2" /> Add Money
+              <Plus className="h-4 w-4 mr-2" /> Deposit
             </Button>
             <Button onClick={() => navigate("/app/wallet/convert")} className="bg-white/10 hover:bg-white/20 text-white h-16">
               <Repeat className="h-4 w-4 mr-2" /> Convert
@@ -155,11 +155,13 @@ const EnhancedWalletDashboardContent = () => {
       {/* Quick Actions */}
       <QuickActionsWidget />
 
-      {/* My Cards - coming soon */}
+      {/* My Cards */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>My Cards</CardTitle>
-          <Badge variant="secondary">Coming soon</Badge>
+          <Button variant="ghost" className="h-8 px-2" onClick={() => navigate("/app/wallet/cards")}>
+            See All
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="rounded-xl p-5 text-white bg-gradient-to-r from-indigo-500 to-purple-500">
