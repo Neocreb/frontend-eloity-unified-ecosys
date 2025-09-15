@@ -1,9 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { realSocialService } from '@/services/realSocialService';
 import { realMarketplaceService } from '@/services/realMarketplaceService';
 import { realFreelanceService } from '@/services/realFreelanceService';
+import { mockPosts } from '@/data/mockFeedData';
+import { getRandomMockUsers } from '@/data/mockUsers';
+import { groups, pages } from '@/data/mockExploreData';
+
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 interface UnifiedFeedItem {
   id: string;
@@ -222,6 +228,43 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
+      if (DEMO_MODE) {
+        const mockItems: UnifiedFeedItem[] = mockPosts.map((p, idx) => ({
+          id: p.id,
+          type: 'post',
+          timestamp: new Date(Date.now() - (idx + 1) * 60 * 60 * 1000),
+          priority: 8,
+          author: {
+            id: `mock-${p.author.username}`,
+            name: p.author.name,
+            username: p.author.username,
+            avatar: p.author.avatar,
+            verified: p.author.verified,
+          },
+          content: { text: p.content, media: p.image ? [{ type: 'image', url: p.image, alt: 'Post media' }] : [] },
+          interactions: { likes: p.likes, comments: p.comments, shares: p.shares },
+          userInteracted: { liked: false, commented: false, shared: false, saved: false },
+        }));
+
+        // add a couple of recommended users
+        const rec = getRandomMockUsers(2);
+        rec.forEach((u, i) => mockItems.push({
+          id: `recommended-${i}`,
+          type: 'recommended_user',
+          timestamp: new Date(Date.now() - (i + 1) * 45 * 60 * 1000),
+          priority: 5,
+          author: { id: u.id, name: u.name, username: u.profile?.username || 'user', avatar: u.avatar, verified: !!u.profile?.is_verified },
+          content: { bio: u.profile?.bio },
+          interactions: { likes: 0, comments: 0, shares: 0 },
+          userInteracted: { liked: false, commented: false, shared: false, saved: false },
+        }));
+
+        if (append) setUserPosts(prev => [...prev, ...mockItems]); else setUserPosts(mockItems);
+        setHasMore(false);
+        setCurrentPage(page);
+        return;
+      }
+
       const newPosts = await loadRealFeedData(page, PAGE_SIZE);
 
       if (append) {
@@ -230,18 +273,33 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
         setUserPosts(newPosts);
       }
 
-      // Real pagination logic based on actual data
       setHasMore(newPosts.length === PAGE_SIZE);
       setCurrentPage(page);
 
     } catch (err) {
       console.error('Error loading feed:', err);
-      setError('Failed to load feed content');
-      toast({
-        title: "Error loading feed",
-        description: "Unable to load posts. Please try again.",
-        variant: "destructive",
-      });
+      if (DEMO_MODE || userPosts.length === 0) {
+        const mockItems: UnifiedFeedItem[] = mockPosts.map((p, idx) => ({
+          id: p.id,
+          type: 'post',
+          timestamp: new Date(Date.now() - (idx + 1) * 60 * 60 * 1000),
+          priority: 8,
+          author: { id: `mock-${p.author.username}`, name: p.author.name, username: p.author.username, avatar: p.author.avatar, verified: p.author.verified },
+          content: { text: p.content, media: p.image ? [{ type: 'image', url: p.image, alt: 'Post media' }] : [] },
+          interactions: { likes: p.likes, comments: p.comments, shares: p.shares },
+          userInteracted: { liked: false, commented: false, shared: false, saved: false },
+        }));
+        setUserPosts(mockItems);
+        setHasMore(false);
+        setError(null);
+      } else {
+        setError('Failed to load feed content');
+        toast({
+          title: "Error loading feed",
+          description: "Unable to load posts. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
