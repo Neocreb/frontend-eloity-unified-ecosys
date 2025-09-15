@@ -604,7 +604,7 @@ const UnifiedHeader = ({
             </Button>
 
             <Link to="/app/feed" className="flex items-center gap-2">
-              <SoftchatLogo className="h-8 w-8" />
+              <SoftchatLogo className="h-8 w-8" variant="icon" showText={false} />
               <span className="font-bold text-lg hidden sm:block bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                 Eloity
               </span>
