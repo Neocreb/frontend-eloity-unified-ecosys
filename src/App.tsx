@@ -444,6 +444,10 @@ const AppRoutes = () => {
           <Route path="unified-profile/:username" element={<UnifiedProfile />} />
           <Route path="demo/profiles" element={<ProfileDemo />} />
           <Route path="wallet" element={<Wallet />} />
+          <Route path="wallet/analytics" element={<WalletAnalytics />} />
+          <Route path="wallet/transactions" element={<WalletTransactions />} />
+          <Route path="wallet/integrations" element={<WalletIntegrations />} />
+          <Route path="wallet/cards" element={<WalletCards />} />
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}

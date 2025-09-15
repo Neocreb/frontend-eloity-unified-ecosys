@@ -1,7 +1,7 @@
-import EnhancedUnifiedWalletDashboard from "@/components/wallet/EnhancedUnifiedWalletDashboard";
+import WalletDashboard from "@/pages/wallet/WalletDashboard";
 
 const Wallet = () => {
-  return <EnhancedUnifiedWalletDashboard />;
+  return <WalletDashboard />;
 };
 
 export default Wallet;

@@ -79,7 +79,21 @@ interface Subscription {
 
 const IntegrationManager = () => {
   const { toast } = useToast();
-  
+
+  // Payment method connections
+  const [paymentMethods, setPaymentMethods] = useState([
+    { id: 'paypal', name: 'PayPal', connected: true },
+    { id: 'apple', name: 'Apple Pay', connected: false },
+    { id: 'google', name: 'Google Pay', connected: true },
+    { id: 'stripe', name: 'Stripe', connected: false },
+  ]);
+
+  const toggleConnection = (id: string) => {
+    setPaymentMethods(prev => prev.map(pm => pm.id === id ? { ...pm, connected: !pm.connected } : pm));
+    const pm = paymentMethods.find(p => p.id === id);
+    toast({ title: pm?.connected ? 'Disconnected' : 'Connected', description: `${pm?.name} ${pm?.connected ? 'disconnected' : 'connected'} successfully` });
+  };
+
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
     {
       id: "1",
@@ -364,6 +378,28 @@ const IntegrationManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Payment Method Connections */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" />
+            Payment Method Connections
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {paymentMethods.map(pm => (
+            <div key={pm.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className={`h-2 w-2 rounded-full ${pm.connected ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                <div className="font-medium">{pm.name}</div>
+              </div>
+              <Button size="sm" variant={pm.connected ? 'outline' : 'default'} onClick={()=>toggleConnection(pm.id)}>
+                {pm.connected ? 'Disconnect' : 'Connect'}
+              </Button>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
