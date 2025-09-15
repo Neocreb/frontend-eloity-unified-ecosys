@@ -121,6 +121,13 @@ export const MarketplaceProvider = ({ children }: { children: React.ReactNode })
       } catch (error) {
         const msg = (error && (error.message || (typeof error === 'string' ? error : JSON.stringify(error)))) || 'Unknown error';
         console.error('Error loading products:', msg, error);
+        if (DEMO_MODE) {
+          const allMock = Object.values(mockUsers).flatMap(u => (u.mock_data?.products || [])) as Product[];
+          if (allMock.length > 0) {
+            setProducts(allMock);
+            return;
+          }
+        }
         toast({
           title: "Error loading products",
           description: msg,
