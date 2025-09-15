@@ -457,6 +457,7 @@ const AppRoutes = () => {
           <Route path="wallet/transactions" element={<WalletTransactionsPage />} />
           <Route path="wallet/integrations" element={<WalletIntegrationsPage />} />
           <Route path="wallet/convert" element={<WalletConvertPage />} />
+          <Route path="wallet/cards" element={<WalletCardsPage />} />
           <Route path="notifications" element={<RealNotifications />} />
 
           {/* Marketplace routes */}
