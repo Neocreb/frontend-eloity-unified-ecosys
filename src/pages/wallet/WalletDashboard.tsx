@@ -109,12 +109,9 @@ const DashboardInner = () => {
 
       {/* Quick Actions Grid and sections */}
       <div className="space-y-6">
-        {/* We keep existing widget for actions */}
-        {/* Cards section */}
+        <QuickActionsWidget />
         <PaymentCards />
-        {/* Recent transactions */}
         <RecentTransactions />
-        {/* Recommendations */}
         <SmartRecommendations />
       </div>
 
