@@ -1,8 +1,8 @@
-import React, { Component, ReactNode, type ErrorInfo } from "react";
+import * as React from "react";
 import { ThemeProvider } from "./ThemeContext";
 
 // Fallback theme context that applies light theme without hooks
-const FallbackThemeProvider = ({ children }: { children: ReactNode }) => {
+const FallbackThemeProvider = ({ children }: { children: React.ReactNode }) => {
   // Apply fallback theme to DOM immediately on render
   React.useLayoutEffect(() => {
     if (typeof window !== "undefined" && typeof document !== "undefined") {
@@ -25,10 +25,10 @@ interface SafeThemeProviderState {
 }
 
 interface SafeThemeProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-class SafeThemeProvider extends Component<
+class SafeThemeProvider extends React.Component<
   SafeThemeProviderProps,
   SafeThemeProviderState
 > {
@@ -42,7 +42,7 @@ class SafeThemeProvider extends Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ThemeProvider Error:", error, errorInfo);
 
     // Apply fallback light theme immediately

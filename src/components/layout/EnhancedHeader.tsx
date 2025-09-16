@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
-import SoftchatLogo from "@/components/ui/logo";
 import NotificationsDropdown from "./NotificationsDropdown";
 
 const EnhancedHeader = () => {
@@ -49,10 +48,7 @@ const EnhancedHeader = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <SoftchatLogo className="h-8 w-8" />
-            <span className="font-bold text-xl hidden sm:inline-block text-eloity-primary">
-              Eloity
-            </span>
+            <span className="font-bold text-xl text-eloity-primary">Eloity</span>
           </Link>
         </div>
 

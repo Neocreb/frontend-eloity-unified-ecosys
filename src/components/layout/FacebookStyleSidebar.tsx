@@ -214,6 +214,11 @@ const FacebookStyleSidebar: React.FC<FacebookStyleSidebarProps> = ({
       href: "/app/feed",
     },
     {
+      icon: <Users className="w-6 h-6 text-blue-600" />,
+      label: "Connections",
+      href: "/app/friends",
+    },
+    {
       icon: <MessageCircle className="w-6 h-6 text-blue-600" />,
       label: "Messages",
       href: "/app/chat",

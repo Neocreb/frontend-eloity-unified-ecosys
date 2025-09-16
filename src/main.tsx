@@ -4,10 +4,6 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
-// Ensure React is properly available globally
-if (typeof window !== "undefined") {
-  (window as any).React = React;
-}
 
 // Error boundary component
 class ErrorBoundary extends React.Component<

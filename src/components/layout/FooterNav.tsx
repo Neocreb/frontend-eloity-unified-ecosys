@@ -6,8 +6,6 @@ import {
   ShoppingCart,
   TrendingUp,
   Wallet,
-  Plus,
-  Zap,
 } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { Button } from "@/components/ui/button";
@@ -29,15 +27,6 @@ const FooterNav = () => {
       active: location.pathname === "/app/explore",
     },
     {
-      icon: Plus,
-      label: "Freelance",
-      href: "/app/freelance",
-      active:
-        location.pathname === "/app/freelance" ||
-        location.pathname.startsWith("/app/freelance"),
-      special: true,
-    },
-    {
       icon: Video,
       label: "Videos",
       href: "/app/videos",
@@ -47,7 +36,9 @@ const FooterNav = () => {
       icon: ShoppingCart,
       label: "Market",
       href: "/app/marketplace",
-      active: location.pathname === "/app/marketplace",
+      active:
+        location.pathname === "/app/marketplace" ||
+        location.pathname.startsWith("/app/marketplace"),
     },
     {
       icon: TrendingUp,
@@ -56,6 +47,12 @@ const FooterNav = () => {
       active:
         location.pathname === "/app/crypto" ||
         location.pathname.startsWith("/app/crypto"),
+    },
+    {
+      icon: Wallet,
+      label: "Wallet",
+      href: "/app/wallet",
+      active: location.pathname === "/app/wallet",
     },
   ];
 
@@ -70,14 +67,12 @@ const FooterNav = () => {
               className={cn(
                 "w-full flex flex-col items-center justify-center py-1 px-0.5 h-full rounded-none text-center min-w-0",
                 item.active ? "text-primary" : "text-muted-foreground",
-                item.special && item.active && "bg-primary/10",
               )}
             >
               <item.icon
                 className={cn(
                   "h-3 w-3 sm:h-4 sm:w-4 mb-0.5 sm:mb-1 flex-shrink-0",
                   item.active ? "text-primary" : "text-muted-foreground",
-                  item.special && "h-4 w-4 sm:h-5 sm:w-5",
                 )}
               />
               <span className="text-[10px] sm:text-xs leading-none truncate w-full">

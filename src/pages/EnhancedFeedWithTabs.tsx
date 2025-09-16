@@ -42,6 +42,8 @@ import HybridPostCard from "@/components/feed/HybridPostCard";
 import HybridFeedContent from "@/components/feed/HybridFeedContent";
 import CommentSection from "@/components/feed/CommentSection";
 import ErrorBoundary from "@/components/ui/error-boundary";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLiveNowData } from "@/hooks/use-sidebar-widgets";
 
 // Stories component for the feed
 const StoriesSection = ({
@@ -201,23 +203,9 @@ const StoriesSection = ({
 // Sidebar for desktop view
 const FeedSidebar = () => {
   const { user } = useAuth();
-
-  const shortcuts = [
-    { name: "Friends", icon: Users, count: 127 },
-    { name: "Groups", icon: Users, count: 8 },
-    { name: "Pages", icon: Building, count: 4 },
-    { name: "Marketplace", icon: Building, count: null },
-    { name: "Memories", icon: Building, count: null },
-    { name: "Saved", icon: Bookmark, count: 15 },
-  ];
-
-  const trendingTopics = [
-    "#ReactJS",
-    "#WebDevelopment", 
-    "#TechNews",
-    "#Startup",
-    "#Design",
-  ];
+  const navigate = useNavigate();
+  const quickLinks = useQuickLinksStats();
+  const { data: trendingTopics } = useTrendingTopicsData();
 
   return (
     <div className="space-y-4">
@@ -256,18 +244,19 @@ const FeedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Quick Links</h3>
           <div className="space-y-2">
-            {shortcuts.map((shortcut) => (
+            {quickLinks.map((item) => (
               <button
-                key={shortcut.name}
+                key={item.name}
                 className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 text-left"
+                onClick={() => navigate(item.route)}
               >
                 <div className="flex items-center gap-3">
-                  <shortcut.icon className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm">{shortcut.name}</span>
+                  <item.icon className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm">{item.name}</span>
                 </div>
-                {shortcut.count && (
+                {typeof item.count === "number" && item.count > 0 && (
                   <Badge variant="secondary" className="text-xs">
-                    {shortcut.count}
+                    {item.count}
                   </Badge>
                 )}
               </button>
@@ -281,12 +270,12 @@ const FeedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Trending Topics</h3>
           <div className="space-y-2">
-            {trendingTopics.map((topic, index) => (
+            {(trendingTopics || []).map((topic: any) => (
               <button
-                key={topic}
+                key={topic.id || topic.name}
                 className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 text-left"
               >
-                <span className="text-sm text-blue-600">{topic}</span>
+                <span className="text-sm text-blue-600">#{topic.name || topic}</span>
                 <TrendingUp className="w-3 h-3 text-gray-400" />
               </button>
             ))}
@@ -299,49 +288,23 @@ const FeedSidebar = () => {
 
 // Right sidebar for suggested content
 const SuggestedSidebar = () => {
-  const suggestedUsers = [
-    {
-      id: "1",
-      name: "Alex Chen",
-      username: "alexchen",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
-      verified: true,
-      mutualFriends: 12,
-    },
-    {
-      id: "2", 
-      name: "Maria Garcia",
-      username: "mariagarcia",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maria",
-      verified: false,
-      mutualFriends: 8,
-    },
-    {
-      id: "3",
-      name: "John Smith",
-      username: "johnsmith",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-      verified: true,
-      mutualFriends: 15,
-    },
-  ];
+  const { user } = useAuth();
+  const { data: suggestedUsers } = useSuggestedUsersData(6);
+  const { liveStreams } = useLiveNowData();
+  const [following, setFollowing] = React.useState<Record<string, boolean>>({});
 
-  const liveStreams = [
-    {
-      id: "1",
-      title: "React Masterclass",
-      creator: "DevTutor",
-      viewers: 234,
-      thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=300&h=200&fit=crop",
-    },
-    {
-      id: "2",
-      title: "Design Workshop",
-      creator: "DesignPro",
-      viewers: 156,
-      thumbnail: "https://images.unsplash.com/photo-1558618734-fbd6c5d20cc8?w=300&h=200&fit=crop",
-    },
-  ];
+  const toggleFollowUser = async (id: string) => {
+    try {
+      const current = !!following[id];
+      setFollowing((prev) => ({ ...prev, [id]: !current }));
+      const { toggleFollow } = await import("@/services/profileService");
+      if (user?.id && id) {
+        await toggleFollow(user.id, id, current);
+      }
+    } catch (e) {
+      console.warn("Follow action failed", e);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -350,30 +313,37 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">People You May Know</h3>
           <div className="space-y-3">
-            {suggestedUsers.map((suggestedUser) => (
-              <div key={suggestedUser.id} className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={suggestedUser.avatar} />
-                  <AvatarFallback>{suggestedUser.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1">
-                    <p className="font-medium text-sm truncate">{suggestedUser.name}</p>
-                    {suggestedUser.verified && (
-                      <Badge variant="secondary" className="h-3 w-3 p-0 rounded-full bg-blue-500">
-                        <span className="text-white text-xs">✓</span>
-                      </Badge>
-                    )}
+            {(suggestedUsers || []).map((u: any) => {
+              const name = u.name || u.profile?.full_name || u.username;
+              const id = u.id || u.profile?.id || (u.username || u.profile?.username || "user");
+              const username = u.username || u.profile?.username || "user";
+              const avatar = u.avatar || u.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+              const verified = Boolean(u.verified || u.profile?.is_verified);
+              const mutualConnections = u.mutualFriends ?? Math.floor((u.followers || u.profile?.followers_count || 0) % 16);
+              const isFollowing = !!following[id];
+              return (
+                <div key={id} className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={avatar} />
+                    <AvatarFallback>{String(name || "U").charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium text-sm truncate">{name}</p>
+                      {verified && (
+                        <Badge variant="secondary" className="h-3 w-3 p-0 rounded-full bg-blue-500">
+                          <span className="text-white text-xs">✓</span>
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{mutualConnections} mutual connections</p>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    {suggestedUser.mutualFriends} mutual friends
-                  </p>
+                  <Button size="sm" variant={isFollowing ? "secondary" : "outline"} className="text-xs px-2 py-1 h-auto" onClick={() => toggleFollowUser(id)}>
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
                 </div>
-                <Button size="sm" variant="outline" className="text-xs px-2 py-1 h-auto">
-                  Add
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -383,31 +353,26 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Live Now</h3>
           <div className="space-y-3">
-            {liveStreams.map((stream) => (
-              <div key={stream.id} className="relative cursor-pointer group">
+            {liveStreams.map((content) => (
+              <div key={content.id} className="relative cursor-pointer group">
                 <div className="relative">
                   <img
-                    src={stream.thumbnail}
-                    alt={stream.title}
+                    src={content.user.avatar}
+                    alt={content.title}
                     className="w-full h-24 object-cover rounded-lg"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Play className="w-6 h-6 text-white" />
                   </div>
-                  <Badge
-                    variant="destructive"
-                    className="absolute top-2 right-2 text-xs animate-pulse"
-                  >
-                    LIVE
-                  </Badge>
-                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 px-2 py-1 rounded text-white text-xs flex items-center gap-1">
+                  <Badge variant="destructive" className="absolute top-2 right-2 text-xs animate-pulse">LIVE</Badge>
+                  <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-white text-xs flex items-center gap-1">
                     <Users className="w-3 h-3" />
-                    {stream.viewers}
+                    {content.viewerCount}
                   </div>
                 </div>
                 <div className="mt-2">
-                  <p className="font-medium text-sm truncate">{stream.title}</p>
-                  <p className="text-xs text-gray-500">{stream.creator}</p>
+                  <p className="font-medium text-sm truncate">{content.title}</p>
+                  <p className="text-xs text-gray-500">{content.user.displayName}</p>
                 </div>
               </div>
             ))}
@@ -420,6 +385,8 @@ const SuggestedSidebar = () => {
 
 // Main enhanced feed component
 const EnhancedFeedWithTabs = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("for-you");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
@@ -428,6 +395,18 @@ const EnhancedFeedWithTabs = () => {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    params.set("tab", activeTab);
+    navigate({ pathname: "/app/feed", search: params.toString() }, { replace: true });
+  }, [activeTab]);
 
   const baseTabs = [
     {
