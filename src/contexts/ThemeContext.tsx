@@ -52,7 +52,7 @@ export const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
   // Remove the initialization effect since we're handling it in useState
 
   // Determine if dark mode is active
-  useEffect(() => {
+  React.useEffect(() => {
     const updateDarkMode = () => {
       try {
         let isDarkMode = false;
