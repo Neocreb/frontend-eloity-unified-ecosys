@@ -5,7 +5,7 @@ import {
   Video,
   ShoppingCart,
   TrendingUp,
-  Wallet,
+  Briefcase,
 } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,14 @@ const FooterNav = () => {
       label: "Explore",
       href: "/app/explore",
       active: location.pathname === "/app/explore",
+    },
+    {
+      icon: Briefcase,
+      label: "Freelance",
+      href: "/app/freelance",
+      active:
+        location.pathname === "/app/freelance" ||
+        location.pathname.startsWith("/app/freelance"),
     },
     {
       icon: Video,
@@ -47,12 +55,6 @@ const FooterNav = () => {
       active:
         location.pathname === "/app/crypto" ||
         location.pathname.startsWith("/app/crypto"),
-    },
-    {
-      icon: Wallet,
-      label: "Wallet",
-      href: "/app/wallet",
-      active: location.pathname === "/app/wallet",
     },
   ];
 
