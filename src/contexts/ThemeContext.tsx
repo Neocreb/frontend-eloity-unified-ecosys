@@ -115,7 +115,7 @@ export const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
   }, [theme]);
 
   // Save theme to localStorage when it changes
-  useEffect(() => {
+  React.useEffect(() => {
     try {
       if (typeof window !== "undefined" && window.localStorage) {
         localStorage.setItem("theme", theme);
