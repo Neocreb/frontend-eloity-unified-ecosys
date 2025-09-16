@@ -39,7 +39,6 @@ import {
   Award,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import SoftchatLogo from "@/components/ui/logo";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationCount } from "@/contexts/UnifiedNotificationContext";
 import { cn } from "@/lib/utils";
