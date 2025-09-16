@@ -27,6 +27,14 @@ const FooterNav = () => {
       active: location.pathname === "/app/explore",
     },
     {
+      icon: Briefcase,
+      label: "Freelance",
+      href: "/app/freelance",
+      active:
+        location.pathname === "/app/freelance" ||
+        location.pathname.startsWith("/app/freelance"),
+    },
+    {
       icon: Video,
       label: "Videos",
       href: "/app/videos",
@@ -47,14 +55,6 @@ const FooterNav = () => {
       active:
         location.pathname === "/app/crypto" ||
         location.pathname.startsWith("/app/crypto"),
-    },
-    {
-      icon: Briefcase,
-      label: "Freelance",
-      href: "/app/freelance",
-      active:
-        location.pathname === "/app/freelance" ||
-        location.pathname.startsWith("/app/freelance"),
     },
   ];
 
