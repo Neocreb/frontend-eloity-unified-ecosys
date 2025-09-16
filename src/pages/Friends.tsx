@@ -21,7 +21,6 @@ const Friends: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
-  // TODO: Replace with real API data
   const friends = [
     {
       id: '1',
@@ -191,22 +190,22 @@ const Friends: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Users className="w-8 h-8 text-primary" />
+      <div className="flex items-start md:items-center justify-between mb-6 flex-col md:flex-row gap-4">
+        <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
+          <Users className="w-8 h-8 text-primary flex-shrink-0" />
           <div>
-            <h1 className="text-3xl font-bold">Connections</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold">Connections</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Manage your connections and discover new people
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end md:justify-start flex-wrap">
+          <Button variant="outline" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
-          <Button>
+          <Button size="sm">
             <UserPlus className="w-4 h-4 mr-2" />
             Find Connections
           </Button>
@@ -219,7 +218,7 @@ const Friends: React.FC = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search friends by name or username..."
+              placeholder="Search connections by name or username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -229,7 +228,7 @@ const Friends: React.FC = () => {
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6">
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-primary">{friends.length}</div>
@@ -252,7 +251,7 @@ const Friends: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="w-full overflow-x-auto whitespace-nowrap md:grid md:grid-cols-3">
           <TabsTrigger value="all">All Connections ({friends.length})</TabsTrigger>
           <TabsTrigger value="requests">
             Requests ({friendRequests.length})
