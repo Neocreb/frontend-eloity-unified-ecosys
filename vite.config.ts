@@ -30,6 +30,9 @@ export default defineConfig(({ mode }) => ({
       // update/remove these if you don't have shared or attached_assets in root
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
+      react: path.resolve(__dirname, "node_modules/react"),
+      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
+      "react-dom/client": path.resolve(__dirname, "node_modules/react-dom/client"),
     },
     dedupe: ["react", "react-dom"],
   },
