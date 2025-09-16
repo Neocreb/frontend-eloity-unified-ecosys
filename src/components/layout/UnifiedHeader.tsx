@@ -78,7 +78,6 @@ import {
   MapPin,
   ToggleLeft,
 } from "lucide-react";
-import SoftchatLogo from "@/components/ui/logo";
 import NotificationsDropdown from "./NotificationsDropdown";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
