@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,7 @@ interface LoginFormProps {
   error: string | null;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onDemoLogin: () => Promise<void>;
+  onForgotPassword: () => Promise<void> | void;
 }
 
 const LoginForm = ({
@@ -30,6 +30,7 @@ const LoginForm = ({
   error,
   onSubmit,
   onDemoLogin,
+  onForgotPassword,
 }: LoginFormProps) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -47,7 +48,7 @@ const LoginForm = ({
       <div className="space-y-2">
         <div className="flex justify-between">
           <Label htmlFor="password">Password</Label>
-          <Button variant="link" className="p-0 h-auto text-xs">
+          <Button variant="link" className="p-0 h-auto text-xs" type="button" onClick={onForgotPassword}>
             Forgot password?
           </Button>
         </div>
