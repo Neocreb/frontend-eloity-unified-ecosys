@@ -140,6 +140,45 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     [],
   );
 
+  // Ensure a profile row exists for the authenticated user
+  const ensureProfileExists = useCallback(async (rawUser: User | null | undefined) => {
+    try {
+      if (!rawUser) return;
+      const userId = rawUser.id;
+      const { data: existing, error: fetchError } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.warn("Profile fetch error:", fetchError.message);
+      }
+      if (!existing) {
+        const username = (rawUser.user_metadata?.username || (rawUser.email || "").split("@")[0] || `user_${userId.slice(0,6)}`).toString();
+        const full_name = rawUser.user_metadata?.name || rawUser.user_metadata?.full_name || username;
+        const avatar_url = rawUser.user_metadata?.avatar || rawUser.user_metadata?.avatar_url || null;
+        const { error: insertError } = await supabase.from("profiles").insert({
+          user_id: userId,
+          username,
+          full_name,
+          avatar_url,
+          is_verified: false,
+          role: "user",
+          points: 0,
+          level: "bronze",
+        });
+        if (insertError) {
+          console.warn("Profile insert error:", insertError.message);
+        } else {
+          console.log("Profile created for user", userId);
+        }
+      }
+    } catch (e) {
+      console.warn("ensureProfileExists error:", (e as any)?.message || e);
+    }
+  }, []);
+
   // Check for an existing session on component mount
   useEffect(() => {
     console.log("AuthProvider: Initializing");
@@ -190,6 +229,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         setSession(session);
         setUser(enhanceUserData(session?.user || null));
+        await ensureProfileExists(session?.user || null);
       } catch (error) {
         console.warn("Auth initialization warning:", error);
         if (mounted) {
@@ -219,6 +259,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         try {
           setSession(session);
           setUser(enhanceUserData(session?.user || null));
+          await ensureProfileExists(session?.user || null);
           setError(null);
         } catch (error) {
           console.error("Auth state change error:", error);
