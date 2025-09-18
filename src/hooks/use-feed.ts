@@ -212,6 +212,40 @@ export const useFeed = () => {
     }
   }, [user, notification, posts]);
 
+  // Realtime: comments and likes
+  useEffect(() => {
+    const channel = supabase.channel('realtime_feed');
+
+    channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, (payload: any) => {
+      const row = payload.new;
+      setPostComments(prev => ({
+        ...prev,
+        [row.post_id]: [...(prev[row.post_id] || []), {
+          id: row.id,
+          post_id: row.post_id,
+          user_id: row.user_id,
+          content: row.content,
+          created_at: row.created_at,
+          user: { name: 'Someone', username: 'user', avatar: '/placeholder.svg', is_verified: false },
+        }],
+      }));
+      setPosts(prev => prev.map(p => p.id === row.post_id ? { ...p, comments: p.comments + 1 } : p));
+    });
+
+    channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_likes' }, (payload: any) => {
+      const row = payload.new;
+      setPosts(prev => prev.map(p => p.id === row.post_id ? { ...p, likes: p.likes + 1 } : p));
+    });
+
+    channel.on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'post_likes' }, (payload: any) => {
+      const row = payload.old;
+      setPosts(prev => prev.map(p => p.id === row.post_id ? { ...p, likes: Math.max(0, p.likes - 1) } : p));
+    });
+
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   return {
     posts,
     isLoading,
