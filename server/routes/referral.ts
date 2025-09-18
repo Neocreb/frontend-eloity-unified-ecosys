@@ -17,8 +17,20 @@ if (!connectionString) {
   // Return 503 for all referral routes
   router.use((req, res) => res.status(503).json({ error: 'Referral routes disabled - DATABASE_URL not configured' }));
 } else {
-  const sql_client = neon(connectionString);
-  db = drizzle(sql_client);
+  // Validate basic format: require protocol and database name
+  const isValid = /^postgres(ql)?:\/\/.+@.+\/.+/.test(connectionString);
+  if (!isValid) {
+    console.warn('DATABASE_URL format invalid - disabling referral DB routes');
+    router.use((req, res) => res.status(503).json({ error: 'Referral routes disabled - invalid DATABASE_URL format' }));
+  } else {
+    try {
+      const sql_client = neon(connectionString);
+      db = drizzle(sql_client);
+    } catch (e) {
+      console.error('Failed to initialize neon client for referral routes:', e);
+      router.use((req, res) => res.status(503).json({ error: 'Referral routes disabled - DB init failed' }));
+    }
+  }
 }
 
 // Generate referral link
