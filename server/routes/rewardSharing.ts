@@ -15,12 +15,17 @@ const router = express.Router();
 
 // Initialize database connection
 const connectionString = process.env.DATABASE_URL;
+let db: any = null;
 if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
+  console.warn('DATABASE_URL environment variable is not set - disabling reward sharing routes');
+  // Return 503 for all reward sharing routes when DB is not configured
+  router.use((req, res) =>
+    res.status(503).json({ error: 'Reward sharing routes disabled - DATABASE_URL not configured' })
+  );
+} else {
+  const sql_client = neon(connectionString);
+  db = drizzle(sql_client);
 }
-
-const sql_client = neon(connectionString);
-const db = drizzle(sql_client);
 
 // Process automatic reward sharing
 router.post('/process-sharing', authenticateToken, async (req, res) => {
