@@ -16,7 +16,7 @@ const debugFetch: typeof fetch = async (input, init) => {
       try {
         const url = typeof input === 'string' ? input : (input as Request).url;
         const ct = res.headers.get('content-type') || '';
-        // Do NOT read the body here to avoid locking the stream for Supabase internals
+        // Log only metadata to avoid touching the body stream which Supabase will read
         console.error('Supabase request failed', {
           url,
           status: res.status,
@@ -28,7 +28,13 @@ const debugFetch: typeof fetch = async (input, init) => {
         console.error('Supabase request failed (metadata logging error)', e);
       }
     }
-    return res;
+    // Return a clone to ensure consumers (including Supabase internals) receive a fresh stream
+    try {
+      return res.clone();
+    } catch (cloneError) {
+      // Cloning can fail in some environments; fall back to returning original response
+      return res;
+    }
   } catch (networkError) {
     console.error('Supabase network error', networkError);
     throw networkError;
