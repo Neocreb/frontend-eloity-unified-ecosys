@@ -11,12 +11,15 @@ const router = express.Router();
 
 // Initialize database connection
 const connectionString = process.env.DATABASE_URL;
+let db: any = null;
 if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
+  console.warn('DATABASE_URL environment variable is not set - disabling referral DB routes');
+  // Return 503 for all referral routes
+  router.use((req, res) => res.status(503).json({ error: 'Referral routes disabled - DATABASE_URL not configured' }));
+} else {
+  const sql_client = neon(connectionString);
+  db = drizzle(sql_client);
 }
-
-const sql_client = neon(connectionString);
-const db = drizzle(sql_client);
 
 // Generate referral link
 router.post('/generate', authenticateToken, async (req, res) => {
