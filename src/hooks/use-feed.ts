@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Post } from "@/types/post";
 import { PostComment } from "@/types/user";
 import { useNotification } from "@/hooks/use-notification";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockPosts, mockComments } from "@/data/mockFeedData";
+import { supabase } from "@/integrations/supabase/client";
 import { CreatePost } from "@/types/post";
 import { notificationService } from "@/services/notificationService";
 
@@ -42,27 +41,55 @@ export const useFeed = () => {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  // Load posts with pagination
+  // Load posts with pagination from Supabase
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Simulate paginated data
-      const startIndex = (page - 1) * PAGE_SIZE;
-      const endIndex = startIndex + PAGE_SIZE;
-      const paginatedPosts = mockPosts.slice(0, endIndex);
+    let aborted = false;
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const from = (page - 1) * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+        const { data, error } = await supabase
+          .from('posts')
+          .select('id, content, image_url, created_at, location, tagged_users, profiles:user_id(full_name, username, avatar_url, is_verified)')
+          .order('created_at', { ascending: false })
+          .range(from, to);
+        if (error) throw error;
 
-      setPosts(paginatedPosts);
-      setHasMore(endIndex < mockPosts.length);
+        if (aborted) return;
+        const mapped: Post[] = (data || []).map((row: any) => ({
+          id: row.id,
+          author: {
+            name: row.profiles?.full_name || 'User',
+            username: row.profiles?.username || 'user',
+            avatar: row.profiles?.avatar_url || '/placeholder.svg',
+            verified: !!row.profiles?.is_verified,
+          },
+          content: row.content,
+          image: row.image_url || undefined,
+          location: row.location || null,
+          taggedUsers: row.tagged_users || null,
+          createdAt: row.created_at,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+        }));
 
-      const initialComments: Record<string, PostComment[]> = {};
-      paginatedPosts.forEach(post => {
-        initialComments[post.id] = post.id === "1" ? mockComments : [];
-      });
-      setPostComments(initialComments);
+        // Initialize comments map for these posts
+        const initialComments: Record<string, PostComment[]> = {};
+        mapped.forEach(p => { initialComments[p.id] = []; });
+        setPostComments(prev => page === 1 ? initialComments : { ...prev, ...initialComments });
 
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+        setPosts(prev => page === 1 ? mapped : [...prev, ...mapped]);
+        setHasMore((data || []).length === PAGE_SIZE);
+      } catch (e) {
+        console.error('Error loading posts from Supabase:', e);
+      } finally {
+        if (!aborted) setIsLoading(false);
+      }
+    };
+    load();
+    return () => { aborted = true; };
   }, [page]);
 
   const loadMorePosts = () => {
@@ -71,85 +98,153 @@ export const useFeed = () => {
     }
   };
 
-  // Enhanced post creation with all metadata
-  const handleCreatePost = useCallback(({
+  // Create a post in Supabase (use CreatePostFlow for media uploads)
+  const handleCreatePost = useCallback(async ({
     content,
     mediaUrl,
     location,
     taggedUsers = [],
     poll
   }: CreatePostParams) => {
-    const newPost: Post = {
-      id: `new-${Date.now()}`,
-      author: {
-        name: user?.name || "John Doe",
-        username: user?.profile?.username || "johndoe",
-        avatar: user?.avatar || "/placeholder.svg",
-        verified: !!user?.profile?.is_verified,
-      },
-      content,
-      image: mediaUrl,
-      location: location || null,
-      taggedUsers: taggedUsers || null,
-      createdAt: "Just now",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      poll: poll
-    };
+    if (!user?.id) {
+      notification.error('Please sign in to post');
+      return;
+    }
 
-    setPosts(prev => [newPost, ...prev]);
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          content,
+          image_url: mediaUrl || null,
+          location: location || null,
+          tagged_users: taggedUsers || null,
+        })
+        .select('*, profiles:user_id(full_name, username, avatar_url, is_verified)')
+        .single();
 
-    // Initialize empty comments for the new post
-    setPostComments(prev => ({
-      ...prev,
-      [newPost.id]: []
-    }));
+      if (error) throw error;
 
-    notification.success("Post created successfully");
+      const newPost: Post = {
+        id: data.id,
+        author: {
+          name: data.profiles?.full_name || user.name || 'You',
+          username: data.profiles?.username || user.profile?.username || 'you',
+          avatar: data.profiles?.avatar_url || user.avatar || '/placeholder.svg',
+          verified: !!data.profiles?.is_verified,
+        },
+        content: data.content,
+        image: data.image_url || undefined,
+        location: data.location || null,
+        taggedUsers: data.tagged_users || null,
+        createdAt: data.created_at,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        poll,
+      };
+
+      setPosts(prev => [newPost, ...prev]);
+      setPostComments(prev => ({ ...prev, [newPost.id]: [] }));
+      notification.success('Post created successfully');
+    } catch (e: any) {
+      console.error('Create post failed:', e?.message || e);
+      notification.error(e?.message || 'Failed to create post');
+    }
   }, [user, notification]);
 
   const handleAddComment = useCallback(async (postId: string, commentText: string) => {
     if (!commentText || !commentText.trim()) return;
-
-    const newComment: PostComment = {
-      id: `new-${Date.now()}`,
-      post_id: postId,
-      user_id: user?.id || "current-user",
-      content: commentText,
-      created_at: new Date().toISOString(),
-      user: {
-        name: user?.name || "You",
-        username: user?.profile?.username || "you",
-        avatar: user?.avatar || "/placeholder.svg",
-        is_verified: !!user?.profile?.is_verified
-      }
-    };
-
-    setPostComments(prev => ({
-      ...prev,
-      [postId]: [...(prev[postId] || []), newComment]
-    }));
-
-    setPosts(prev => prev.map(post =>
-      post.id === postId
-        ? { ...post, comments: post.comments + 1 }
-        : post
-    ));
-
-    // Create notification for post author (if not commenting on own post)
-    const post = posts.find(p => p.id === postId);
-    if (post && post.author.username !== user?.profile?.username) {
-      await notificationService.createNotification(
-        'post-author-id', // In real app, get actual post author ID
-        'comment',
-        'New comment on your post',
-        `${user?.name || 'Someone'} commented on your post: ${commentText.substring(0, 50)}...`
-      );
+    if (!user?.id) {
+      notification.error('Please sign in to comment');
+      return;
     }
 
-    notification.success("Comment added");
+    try {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .insert({ post_id: postId, user_id: user.id, content: commentText })
+        .select('*, profiles:user_id(full_name, username, avatar_url, is_verified)')
+        .single();
+      if (error) throw error;
+
+      const newComment: PostComment = {
+        id: data.id,
+        post_id: data.post_id,
+        user_id: data.user_id,
+        content: data.content,
+        created_at: data.created_at,
+        user: {
+          name: data.profiles?.full_name || user.name || 'You',
+          username: data.profiles?.username || user.profile?.username || 'you',
+          avatar: data.profiles?.avatar_url || user.avatar || '/placeholder.svg',
+          is_verified: !!data.profiles?.is_verified,
+        },
+      };
+
+      setPostComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newComment]
+      }));
+
+      setPosts(prev => prev.map(post =>
+        post.id === postId
+          ? { ...post, comments: post.comments + 1 }
+          : post
+      ));
+
+      // Optional: notify post author via existing service (needs real author id)
+      const post = posts.find(p => p.id === postId);
+      if (post && post.author.username !== user?.profile?.username) {
+        await notificationService.createNotification(
+          'post-author-id',
+          'comment',
+          'New comment on your post',
+          `${user?.name || 'Someone'} commented on your post: ${commentText.substring(0, 50)}...`
+        );
+      }
+
+      notification.success('Comment added');
+    } catch (e: any) {
+      console.error('Add comment failed:', e?.message || e);
+      notification.error(e?.message || 'Failed to add comment');
+    }
   }, [user, notification, posts]);
+
+  // Realtime: comments and likes
+  useEffect(() => {
+    const channel = supabase.channel('realtime_feed');
+
+    channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, (payload: any) => {
+      const row = payload.new;
+      setPostComments(prev => ({
+        ...prev,
+        [row.post_id]: [...(prev[row.post_id] || []), {
+          id: row.id,
+          post_id: row.post_id,
+          user_id: row.user_id,
+          content: row.content,
+          created_at: row.created_at,
+          user: { name: 'Someone', username: 'user', avatar: '/placeholder.svg', is_verified: false },
+        }],
+      }));
+      setPosts(prev => prev.map(p => p.id === row.post_id ? { ...p, comments: p.comments + 1 } : p));
+    });
+
+    channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_likes' }, (payload: any) => {
+      const row = payload.new;
+      setPosts(prev => prev.map(p => p.id === row.post_id ? { ...p, likes: p.likes + 1 } : p));
+    });
+
+    channel.on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'post_likes' }, (payload: any) => {
+      const row = payload.old;
+      setPosts(prev => prev.map(p => p.id === row.post_id ? { ...p, likes: Math.max(0, p.likes - 1) } : p));
+    });
+
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   return {
     posts,

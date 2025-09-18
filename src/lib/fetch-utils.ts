@@ -57,11 +57,13 @@ export async function fetchWithTimeout(
   }
 }
 
+import React, { useRef, useEffect, useCallback } from "react";
+
 // Hook for creating abort controller that cleans up on unmount
 export function useAbortController() {
-  const controllerRef = React.useRef<AbortController | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Create controller on mount
     controllerRef.current = new AbortController();
 
@@ -73,11 +75,11 @@ export function useAbortController() {
     };
   }, []);
 
-  const getSignal = React.useCallback(() => {
+  const getSignal = useCallback(() => {
     return controllerRef.current?.signal;
   }, []);
 
-  const abort = React.useCallback(() => {
+  const abort = useCallback(() => {
     if (controllerRef.current) {
       controllerRef.current.abort();
       controllerRef.current = new AbortController();
@@ -114,8 +116,6 @@ export async function safeJsonParse<T>(response: Response): Promise<T> {
     throw new Error(`Failed to parse JSON response: ${error}`);
   }
 }
-
-import React from "react";
 
 // Authentication-aware fetch wrapper
 export async function fetchWithAuth(

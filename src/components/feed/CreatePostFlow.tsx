@@ -42,6 +42,7 @@ import { format } from "date-fns";
 import TagPeopleModal from "./TagPeopleModal";
 import FeelingActivityModal from "./FeelingActivityModal";
 import CheckInModal from "./CheckInModal";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CreatePostFlowProps {
   isOpen: boolean;
@@ -153,101 +154,92 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
   };
 
   const handlePost = async () => {
-    const postId = `post-${Date.now()}`;
+    if (!user?.id) {
+      toast({ title: "Sign in required", description: "Please sign in to post.", variant: "destructive" });
+      return;
+    }
 
-    const newPost = {
-      id: postId,
-      type: "post" as const,
-      timestamp: scheduleDate || new Date(),
-      priority: 8,
-      author: {
-        id: user?.id || "current-user",
-        name: user?.name || "You",
-        username: user?.username || "user",
-        avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-        verified: user?.verified || false,
-        badges: user?.badges || [],
-      },
-      content: {
-        text: content,
-        media: mediaPreview ? [{
-          type: mediaType || 'image',
-          url: mediaPreview,
-          alt: "User uploaded media",
-        }] : [],
-        location: location || undefined,
-        feeling: feeling || undefined,
-        activity: activity || undefined,
-        taggedUsers: taggedUsers,
-        audience: audience,
-        monetized: enableMonetization,
-        boosted: enableBoost,
-        collaborative: enableCollaborator,
-        collaborator: collaboratorEmail || undefined,
-      },
-      interactions: {
-        likes: 0,
-        comments: enableComments ? 0 : -1, // -1 means comments disabled
-        shares: 0,
-        views: 0,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
-    };
+    try {
+      let publicUrl: string | null = null;
 
-    addPost(newPost);
-
-    // Track post creation for rewards
-    if (user?.id) {
-      try {
-        const { UnifiedActivityService } = await import('@/services/unifiedActivityService');
-        await UnifiedActivityService.trackPost(user.id, postId, {
-          hasMedia: !!mediaPreview,
-          mediaType: mediaType || undefined,
-          isMonetized: enableMonetization,
-          isBoosted: enableBoost,
-          isCollaborative: enableCollaborator,
-          audience,
-          contentLength: content.length,
-          taggedCount: taggedUsers.length,
-          hasLocation: !!location,
-          hasFeeling: !!(feeling || activity),
-          isScheduled: !!scheduleDate
+      if (selectedMedia) {
+        const bucket = "posts"; // Ensure a public bucket named "posts" exists in Supabase Storage
+        const path = `${user.id}/${Date.now()}-${selectedMedia.name}`;
+        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, selectedMedia, {
+          upsert: false,
+          cacheControl: "3600",
+          contentType: selectedMedia.type,
         });
-      } catch (error) {
-        console.error('Failed to track post creation reward:', error);
+        if (uploadError) {
+          console.error("Upload error:", uploadError.message);
+          toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+          return;
+        }
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        publicUrl = data.publicUrl;
       }
-    }
-    
-    // Show different success messages based on settings
-    if (scheduleDate) {
-      toast({
-        title: "Post scheduled!",
-        description: `Your post will be published on ${format(scheduleDate, "PPP")}`,
-      });
-    } else if (shareToStory && enableBoost) {
-      toast({
-        title: "Post published & boosted!",
-        description: "Your post has been shared to your story and boost campaign started.",
-      });
-    } else if (shareToStory) {
-      toast({
-        title: "Post published!",
-        description: "Your post has been shared to your story as well.",
-      });
-    } else {
-      toast({
-        title: "Post published!",
-        description: "Your post has been shared with your audience.",
-      });
-    }
 
-    // Reset and close
-    handleClose();
+      const { data: inserted, error } = await supabase
+        .from("posts")
+        .insert({
+          user_id: user.id,
+          content: content,
+          image_url: publicUrl,
+          location: location || null,
+          tagged_users: taggedUsers.map((t: any) => t.id || t.username || t.name).slice(0, 20),
+        })
+        .select("*, profiles:user_id(full_name, username, avatar_url, is_verified)")
+        .single();
+
+      if (error) {
+        console.error("Create post error:", error.message);
+        toast({ title: "Post failed", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      const newPost = {
+        id: inserted.id,
+        type: "post" as const,
+        timestamp: new Date(inserted.created_at),
+        priority: 8,
+        author: {
+          id: user.id,
+          name: inserted.profiles?.full_name || user.name || "You",
+          username: inserted.profiles?.username || user.username || "you",
+          avatar: inserted.profiles?.avatar_url || user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          verified: !!inserted.profiles?.is_verified,
+          badges: [],
+        },
+        content: {
+          text: inserted.content,
+          media: inserted.image_url ? [{ type: mediaType || 'image', url: inserted.image_url, alt: "User uploaded media" }] : [],
+          location: inserted.location || undefined,
+          feeling: feeling || undefined,
+          activity: activity || undefined,
+          taggedUsers: taggedUsers,
+          audience: audience,
+          monetized: enableMonetization,
+          boosted: enableBoost,
+          collaborative: enableCollaborator,
+          collaborator: collaboratorEmail || undefined,
+        },
+        interactions: { likes: 0, comments: enableComments ? 0 : -1, shares: 0, views: 0 },
+        userInteracted: { liked: false, commented: false, shared: false, saved: false },
+      } as const;
+
+      addPost(newPost);
+
+      if (scheduleDate) {
+        toast({ title: "Post scheduled!", description: `Your post will be published on ${format(scheduleDate, "PPP")}` });
+      } else {
+        toast({ title: "Post published!", description: "Your post has been shared with your audience." });
+      }
+
+      handleClose();
+    } catch (e: any) {
+      console.error("Post creation error:", e?.message || e);
+      toast({ title: "Post failed", description: e?.message || "Unexpected error" , variant: "destructive"});
+    }
   };
 
   const handleClose = () => {

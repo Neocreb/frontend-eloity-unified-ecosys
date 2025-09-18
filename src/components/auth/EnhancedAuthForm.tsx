@@ -9,6 +9,7 @@ import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 import SocialAuth from "./SocialAuth";
 import AuthFooter from "./AuthFooter";
+import { supabase } from "@/integrations/supabase/client";
 
 const EnhancedAuthForm = () => {
   const [searchParams] = useSearchParams();
@@ -99,6 +100,23 @@ const EnhancedAuthForm = () => {
       notification.error(errorMessage);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      if (!email) {
+        const msg = "Enter your email to reset your password";
+        setError(msg);
+        notification.info(msg);
+        return;
+      }
+      await supabase.auth.resetPasswordForEmail(email);
+      notification.success("Password reset email sent. Check your inbox.");
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to send reset email";
+      setError(errorMessage);
+      notification.error(errorMessage);
     }
   };
 
@@ -197,6 +215,7 @@ const EnhancedAuthForm = () => {
               error={displayError}
               onSubmit={handleSubmit}
               onDemoLogin={handleDemoLogin}
+              onForgotPassword={handleForgotPassword}
             />
           </TabsContent>
 

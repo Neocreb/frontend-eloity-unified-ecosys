@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 
+import { supabase } from "@/integrations/supabase/client";
+
 export interface NotificationData {
   id: string;
   user_id: string;
