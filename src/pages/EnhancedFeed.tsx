@@ -1017,7 +1017,7 @@ const PostCard = ({
     setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
 
     try {
-      const result = await feedService.toggleLike(post.id, isLiked);
+      const result = await feedService.toggleLike(post.id, user?.id || '', isLiked);
       setLikesCount(result.likesCount);
     } catch (error) {
       // Revert on error
