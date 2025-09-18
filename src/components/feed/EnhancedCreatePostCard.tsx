@@ -192,6 +192,7 @@ const EnhancedCreatePostCard: React.FC<EnhancedCreatePostCardProps> = ({ onPostC
 
   const removePreviewImage = () => {
     setPreviewImage(null);
+    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
