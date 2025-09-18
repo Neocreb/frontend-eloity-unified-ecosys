@@ -159,7 +159,6 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const PAGE_SIZE = 10;
 
   // Load initial feed data (from Supabase)
   const loadFeedData = useCallback(async (page: number = 1, append: boolean = false) => {
