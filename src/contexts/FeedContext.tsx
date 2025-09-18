@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UnifiedFeedItem {
   id: string;
@@ -70,122 +71,81 @@ interface FeedProviderProps {
   children: ReactNode;
 }
 
-// Mock feed data generator (will be replaced with real API calls)
-const generateMockFeedData = (page: number = 1, limit: number = 10): UnifiedFeedItem[] => {
-  const baseItems = [
-    {
-      id: `post-${page}-1`,
-      type: "post" as const,
-      timestamp: new Date(Date.now() - (page * 2 * 60 * 60 * 1000)),
-      priority: 8,
-      author: {
-        id: "user-1",
-        name: "Sarah Johnson",
-        username: "sarahj",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-        verified: true,
-        badges: ["Creator"],
-      },
-      content: {
-        text: `Amazing new project launch! 🚀 This is post ${page} - Working on something exciting that will change how we work remotely.`,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=600&fit=crop",
-            alt: "Project screenshot",
-          },
-        ],
-        location: "San Francisco, CA",
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 500) + 50,
-        comments: Math.floor(Math.random() * 50) + 5,
-        shares: Math.floor(Math.random() * 25) + 2,
-        views: Math.floor(Math.random() * 2000) + 100,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
+const mapRowToUnifiedFeedItem = (row: any, profilesById: Record<string, any>): UnifiedFeedItem => {
+  const authorProfile = profilesById[row.user_id] || null;
+  return {
+    id: String(row.id),
+    type: 'post',
+    timestamp: row.created_at ? new Date(row.created_at) : new Date(),
+    priority: row.priority ?? 0,
+    author: authorProfile
+      ? {
+          id: authorProfile.id,
+          name: authorProfile.name || authorProfile.username || 'Unknown',
+          username: authorProfile.username || 'unknown',
+          avatar: authorProfile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authorProfile.id}`,
+          verified: !!authorProfile.verified,
+          badges: authorProfile.badges || [],
+        }
+      : undefined,
+    content: {
+      text: row.content_text ?? row.text ?? '',
+      media: row.media ?? [],
+      location: row.location ?? null,
     },
-    {
-      id: `product-${page}-1`,
-      type: "product" as const,
-      timestamp: new Date(Date.now() - (page * 3 * 60 * 60 * 1000)),
-      priority: 6,
-      author: {
-        id: "seller-1",
-        name: "TechGear Store",
-        username: "techgear",
-        avatar: "https://api.dicebear.com/7.x/initials/svg?seed=TG",
-        verified: true,
-        badges: ["Trusted Seller"],
-      },
-      content: {
-        title: `Premium Wireless Headphones - Page ${page}`,
-        description: "High-quality wireless headphones with noise cancellation and 30-hour battery life.",
-        price: 129.99,
-        originalPrice: 199.99,
-        discount: 35,
-        images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop"],
-        rating: 4.8,
-        reviews: Math.floor(Math.random() * 3000) + 500,
-        category: "Electronics",
-        inStock: true,
-        fastShipping: true,
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 200) + 20,
-        comments: Math.floor(Math.random() * 30) + 3,
-        shares: Math.floor(Math.random() * 15) + 1,
-        saves: Math.floor(Math.random() * 100) + 10,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: Math.random() > 0.7,
-      },
+    interactions: {
+      likes: Number(row.likes_count ?? 0),
+      comments: Number(row.comments_count ?? 0),
+      shares: Number(row.shares_count ?? 0) || 0,
+      views: Number(row.views_count ?? 0) || 0,
     },
-    {
-      id: `post-${page}-2`,
-      type: "post" as const,
-      timestamp: new Date(Date.now() - (page * 4 * 60 * 60 * 1000)),
-      priority: 7,
-      author: {
-        id: "user-2",
-        name: "Mike Chen",
-        username: "mikechen",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-        verified: false,
-      },
-      content: {
-        text: `Beautiful sunset from the office today! Sometimes you need to step back and appreciate the simple things. Page ${page} memories 🌅✨`,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop",
-            alt: "Sunset view",
-          },
-        ],
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 300) + 30,
-        comments: Math.floor(Math.random() * 40) + 5,
-        shares: Math.floor(Math.random() * 10) + 1,
-      },
-      userInteracted: {
-        liked: Math.random() > 0.5,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
+    userInteracted: {
+      liked: false,
+      commented: false,
+      shared: false,
+      saved: false,
     },
-  ];
+  };
+};
 
-  return baseItems.slice(0, limit);
+const loadPostsFromSupabase = async (page: number, currentUserId?: string) => {
+  const start = (page - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE - 1;
+
+  const { data: postsData, error: postsError } = await supabase
+    .from('posts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(start, end);
+
+  if (postsError) throw postsError;
+  const posts = postsData ?? [];
+
+  const userIds = Array.from(new Set(posts.map((p: any) => p.user_id).filter(Boolean)));
+  let profilesById: Record<string, any> = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase.from('profiles').select('*').in('id', userIds);
+    (profiles ?? []).forEach((p: any) => (profilesById[p.id] = p));
+  }
+
+  const postIds = posts.map((p: any) => p.id);
+  const likesByPostId = new Set<string>();
+  if (currentUserId && postIds.length > 0) {
+    const { data: likes } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .in('post_id', postIds)
+      .eq('user_id', currentUserId);
+    (likes ?? []).forEach((l: any) => likesByPostId.add(String(l.post_id)));
+  }
+
+  const items: UnifiedFeedItem[] = posts.map((row: any) => {
+    const item = mapRowToUnifiedFeedItem(row, profilesById);
+    if (currentUserId && likesByPostId.has(String(row.id))) item.userInteracted.liked = true;
+    return item;
+  });
+
+  return items;
 };
 
 export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
@@ -199,43 +159,92 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
 
   const PAGE_SIZE = 10;
 
-  // Load initial feed data
+  // Load initial feed data (from Supabase)
   const loadFeedData = useCallback(async (page: number = 1, append: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // For now, use mock data. In production, this would be:
-      // const response = await fetch(`/api/posts?page=${page}&limit=${PAGE_SIZE}`);
-      // const data = await response.json();
-      
-      const newPosts = generateMockFeedData(page, PAGE_SIZE);
+      const result = await loadPostsFromSupabase(page, user?.id);
 
       if (append) {
-        setUserPosts(prev => [...prev, ...newPosts]);
+        setUserPosts(prev => [...prev, ...result]);
       } else {
-        setUserPosts(newPosts);
+        setUserPosts(result);
       }
 
-      // Simulate pagination logic
-      setHasMore(page < 5); // Assume we have 5 pages of content
+      setHasMore(result.length === PAGE_SIZE);
       setCurrentPage(page);
-
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading feed:', err);
-      setError('Failed to load feed content');
+      setError(err?.message || 'Failed to load feed content');
       toast({
-        title: "Error loading feed",
-        description: "Unable to load posts. Please try again.",
-        variant: "destructive",
+        title: 'Error loading feed',
+        description: err?.message || 'Unable to load posts. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, user?.id]);
+
+  // Realtime subscriptions for posts, comments and likes
+  useEffect(() => {
+    let channel: any;
+    try {
+      channel = supabase.channel('public:feed');
+
+      channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload: any) => {
+        const newPost = payload.new;
+        // Fetch author profile and map
+        (async () => {
+          try {
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', newPost.user_id).maybeSingle();
+            const item = mapRowToUnifiedFeedItem(newPost, profile ? { [profile.id]: profile } : {});
+            setUserPosts(prev => [item, ...prev]);
+          } catch (e) {
+            console.error('Error handling new post realtime:', e);
+          }
+        })();
+      }).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload: any) => {
+        const updated = payload.new;
+        setUserPosts(prev => prev.map(p => (p.id === String(updated.id) ? { ...p, interactions: { ...p.interactions, likes: Number(updated.likes_count ?? p.interactions.likes), comments: Number(updated.comments_count ?? p.interactions.comments) } } : p)));
+      }).on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload: any) => {
+        const deleted = payload.old;
+        setUserPosts(prev => prev.filter(p => p.id !== String(deleted.id)));
+      });
+
+      // comments
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, (payload: any) => {
+        if (payload.eventType === 'INSERT') {
+          const comment = payload.new;
+          setUserPosts(prev => prev.map(p => p.id === String(comment.post_id) ? { ...p, interactions: { ...p.interactions, comments: p.interactions.comments + 1 } } : p));
+        }
+      });
+
+      // likes
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, (payload: any) => {
+        const ev = payload;
+        if (ev.eventType === 'INSERT') {
+          const like = ev.new;
+          setUserPosts(prev => prev.map(p => p.id === String(like.post_id) ? { ...p, interactions: { ...p.interactions, likes: p.interactions.likes + 1 }, userInteracted: { ...p.userInteracted, liked: user?.id === like.user_id ? true : p.userInteracted.liked } } : p));
+        } else if (ev.eventType === 'DELETE') {
+          const old = ev.old;
+          setUserPosts(prev => prev.map(p => p.id === String(old.post_id) ? { ...p, interactions: { ...p.interactions, likes: Math.max(0, p.interactions.likes - 1) }, userInteracted: { ...p.userInteracted, liked: user?.id === old.user_id ? false : p.userInteracted.liked } } : p));
+        }
+      });
+
+      channel.subscribe();
+    } catch (e) {
+      console.error('Failed to setup realtime feed subscriptions', e);
+    }
+
+    return () => {
+      if (channel) {
+        try { supabase.removeChannel(channel); } catch (e) { /* ignore */ }
+      }
+    };
+  }, [user?.id]);
 
   // Load more posts (pagination)
   const loadMorePosts = useCallback(() => {
