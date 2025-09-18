@@ -23,8 +23,23 @@ if (!connectionString) {
     res.status(503).json({ error: 'Reward sharing routes disabled - DATABASE_URL not configured' })
   );
 } else {
-  const sql_client = neon(connectionString);
-  db = drizzle(sql_client);
+  const isValid = /^postgres(ql)?:\/\/.+@.+\/.+/.test(connectionString);
+  if (!isValid) {
+    console.warn('DATABASE_URL format invalid - disabling reward sharing routes');
+    router.use((req, res) =>
+      res.status(503).json({ error: 'Reward sharing routes disabled - invalid DATABASE_URL format' })
+    );
+  } else {
+    try {
+      const sql_client = neon(connectionString);
+      db = drizzle(sql_client);
+    } catch (e) {
+      console.error('Failed to initialize neon client for reward sharing routes:', e);
+      router.use((req, res) =>
+        res.status(503).json({ error: 'Reward sharing routes disabled - DB init failed' })
+      );
+    }
+  }
 }
 
 // Process automatic reward sharing
