@@ -31,7 +31,7 @@ const feelings = [
   { id: "love", emoji: "❤️", label: "in love" },
   { id: "sad", emoji: "😢", label: "sad" },
   { id: "angry", emoji: "😠", label: "angry" },
-  { id: "tired", emoji: "😴", label: "tired" },
+  { id: "tired", emoji: "��", label: "tired" },
   { id: "motivated", emoji: "💪", label: "motivated" },
   { id: "peaceful", emoji: "😌", label: "peaceful" },
   { id: "confused", emoji: "🤔", label: "confused" },
@@ -86,7 +86,7 @@ const EnhancedCreatePostCard: React.FC<EnhancedCreatePostCardProps> = ({ onPostC
   const { user } = useAuth();
   const { addPost } = useFeed();
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!content.trim() && !previewImage && !linkUrl) {
       toast({
         title: "Post cannot be empty",
@@ -98,55 +98,84 @@ const EnhancedCreatePostCard: React.FC<EnhancedCreatePostCardProps> = ({ onPostC
 
     setIsPosting(true);
 
-    // Create new post object
-    const newPost = {
-      id: `post-${Date.now()}`,
-      type: "post",
-      timestamp: new Date(),
-      priority: 8,
-      author: {
-        id: user?.id || "current-user",
-        name: user?.name || "You",
-        username: user?.username || "user",
-        avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-        verified: user?.verified || false,
-        badges: user?.badges || [],
-      },
-      content: {
-        text: content,
-        media: previewImage ? [{
-          type: "image",
-          url: previewImage,
-          alt: "User uploaded image",
-        }] : [],
-        location: location || undefined,
-        feeling: selectedFeeling ? `feeling ${selectedFeeling.label} ${selectedFeeling.emoji}` : undefined,
-        link: linkUrl || undefined,
-      },
-      interactions: {
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        views: 0,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
-    };
+    try {
+      let mediaUrls: any[] = [];
 
-    // Simulate post creation
-    setTimeout(() => {
-      setIsPosting(false);
+      // Upload selected file to Supabase storage if present
+      if (selectedFile) {
+        setIsUploading(true);
+        const ext = selectedFile.name.split('.').pop();
+        const filePath = `posts/${user?.id || 'anon'}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('posts').upload(filePath, selectedFile, { cacheControl: '604800', upsert: false });
+        if (uploadError) throw uploadError;
+        const { publicURL } = supabase.storage.from('posts').getPublicUrl(filePath);
+        mediaUrls.push({ type: selectedFile.type.startsWith('video/') ? 'video' : 'image', url: publicURL });
+        setIsUploading(false);
+      }
+
+      // Insert post into Supabase posts table
+      const { data, error } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user?.id || null,
+          content_text: content,
+          media: mediaUrls.length > 0 ? mediaUrls : null,
+          location: location || null,
+        })
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      // Fetch author profile if available
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user?.id).maybeSingle();
+
+      const newPostItem = {
+        id: String(data.id),
+        type: 'post',
+        timestamp: data.created_at ? new Date(data.created_at) : new Date(),
+        priority: data.priority ?? 0,
+        author: profile ? {
+          id: profile.id,
+          name: profile.full_name || profile.username || 'Unknown',
+          username: profile.username || 'unknown',
+          avatar: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`,
+          verified: !!profile.is_verified,
+          badges: profile.badges || [],
+        } : {
+          id: user?.id || 'anon',
+          name: user?.name || 'You',
+          username: user?.username || 'you',
+          avatar: user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'anon'}`,
+          verified: false,
+          badges: [],
+        },
+        content: {
+          text: data.content_text || data.text || content,
+          media: data.media ?? mediaUrls,
+          location: data.location || location || null,
+        },
+        interactions: {
+          likes: Number(data.likes_count ?? 0),
+          comments: Number(data.comments_count ?? 0),
+          shares: Number(data.shares_count ?? 0) || 0,
+          views: Number(data.views_count ?? 0) || 0,
+        },
+        userInteracted: {
+          liked: false,
+          commented: false,
+          shared: false,
+          saved: false,
+        },
+      };
 
       // Add post to feed context
-      addPost(newPost);
+      addPost(newPostItem);
 
       // Reset form
       setContent("");
       setPreviewImage(null);
+      setSelectedFile(null);
       setSelectedFeeling(null);
       setLocation("");
       setLinkUrl("");
@@ -154,14 +183,20 @@ const EnhancedCreatePostCard: React.FC<EnhancedCreatePostCardProps> = ({ onPostC
 
       // Notify parent component
       if (onPostCreated) {
-        onPostCreated(newPost);
+        onPostCreated(newPostItem);
       }
 
       toast({
         title: "Post created!",
         description: "Your post has been published to the feed.",
       });
-    }, 1000);
+    } catch (e: any) {
+      console.error('Failed to create post:', e);
+      toast({ title: 'Failed to create post', description: e?.message || String(e), variant: 'destructive' });
+    } finally {
+      setIsPosting(false);
+      setIsUploading(false);
+    }
   };
 
   const handleFileUpload = (type: 'image' | 'video' | 'audio') => {
