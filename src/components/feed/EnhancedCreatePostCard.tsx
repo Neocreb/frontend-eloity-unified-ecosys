@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeed } from "@/contexts/FeedContext";
+import { supabase } from '@/integrations/supabase/client';
 
 // Available feelings
 const feelings = [
