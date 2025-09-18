@@ -80,9 +80,6 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
-    global: {
-      fetch: debugFetch,
-    },
   }
 );
 
