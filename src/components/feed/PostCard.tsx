@@ -6,6 +6,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
 import { cn } from "@/utils/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Post = {
   id: string;
@@ -38,17 +40,53 @@ interface PostCardProps {
 
 const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes);
   const [bookmarked, setBookmarked] = useState(post.bookmarked || false);
 
-  const handleLike = () => {
-    if (liked) {
-      setLikesCount(likesCount - 1);
-    } else {
-      setLikesCount(likesCount + 1);
+  // Load like state and count from Supabase
+  useEffect(() => {
+    let aborted = false;
+    const load = async () => {
+      try {
+        const [{ count }, { data: myLike, error: myErr }] = await Promise.all([
+          supabase.from('post_likes').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
+          user?.id ? supabase.from('post_likes').select('id').eq('post_id', post.id).eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null, error: null } as any),
+        ]);
+        if (aborted) return;
+        setLikesCount(count || 0);
+        setLiked(!!myLike);
+      } catch (e) {
+        // ignore
+      }
+    };
+    load();
+    return () => { aborted = true; };
+  }, [post.id, user?.id]);
+
+  const handleLike = async () => {
+    if (!user?.id) {
+      // optimistic UI but no server write if not logged in
+      return;
     }
-    setLiked(!liked);
+    try {
+      if (liked) {
+        setLiked(false);
+        setLikesCount((c) => Math.max(0, c - 1));
+        const { error } = await supabase.from('post_likes').delete().eq('post_id', post.id).eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        setLiked(true);
+        setLikesCount((c) => c + 1);
+        const { error } = await supabase.from('post_likes').insert({ post_id: post.id, user_id: user.id });
+        if (error) throw error;
+      }
+    } catch (e) {
+      // revert on error
+      setLiked((v) => !v);
+      setLikesCount((c) => (liked ? c + 1 : Math.max(0, c - 1)));
+    }
   };
 
   const handleBookmark = () => {
