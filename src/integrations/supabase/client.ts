@@ -12,29 +12,54 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
+
     if (!res.ok) {
       try {
         const url = typeof input === 'string' ? input : (input as Request).url;
         const ct = res.headers.get('content-type') || '';
-        // Log only metadata to avoid touching the body stream which Supabase will read
+
+        // Buffer the body text from a clone so we can log it, then
+        // return a fresh Response built from that same buffered text
+        let bodyText = '';
+        try {
+          bodyText = await res.clone().text();
+        } catch (e) {
+          bodyText = '<unable to read body>';
+        }
+
+        // Truncate long bodies to avoid huge logs
+        const truncated = typeof bodyText === 'string' && bodyText.length > 2000
+          ? bodyText.substring(0, 2000) + '... (truncated)'
+          : bodyText;
+
         console.error('Supabase request failed', {
           url,
           status: res.status,
           statusText: res.statusText,
           type: res.type,
           contentType: ct,
+          bodyPreview: truncated,
         });
+
+        // Create a fresh Response from the buffered text so callers can still parse JSON
+        const encoder = new TextEncoder();
+        const bodyBuffer = encoder.encode(bodyText);
+        const fresh = new Response(bodyBuffer, {
+          status: res.status,
+          statusText: res.statusText,
+          headers: res.headers,
+        });
+
+        return fresh;
       } catch (e) {
         console.error('Supabase request failed (metadata logging error)', e);
+        // On failure to log, still return original response to not break behavior
+        return res;
       }
     }
-    // Return a clone to ensure consumers (including Supabase internals) receive a fresh stream
-    try {
-      return res.clone();
-    } catch (cloneError) {
-      // Cloning can fail in some environments; fall back to returning original response
-      return res;
-    }
+
+    // For successful responses, return the original response
+    return res;
   } catch (networkError) {
     console.error('Supabase network error', networkError);
     throw networkError;
