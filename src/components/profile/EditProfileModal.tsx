@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onClose,
   profile
 }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     displayName: profile.displayName,
     username: profile.username,
@@ -39,6 +42,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     company: profile.company,
     education: profile.education
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>(profile.avatar);
+  const [saving, setSaving] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -47,10 +53,53 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }));
   };
 
-  const handleSave = () => {
-    // In a real app, this would save to the backend
-    console.log('Saving profile:', formData);
-    onClose();
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onload = () => setAvatarPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user?.id) return;
+    setSaving(true);
+    try {
+      let avatar_url: string | null = null;
+      if (avatarFile) {
+        const bucket = 'avatars'; // Create a public bucket named "avatars" in Supabase Storage
+        const path = `${user.id}/${Date.now()}-${avatarFile.name}`;
+        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, avatarFile, {
+          upsert: false,
+          cacheControl: '3600',
+          contentType: avatarFile.type,
+        });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        avatar_url = data.publicUrl;
+      }
+
+      const updates: any = {
+        full_name: formData.displayName,
+        username: formData.username,
+        bio: formData.bio,
+      };
+      if (avatar_url) updates.avatar_url = avatar_url;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      onClose();
+    } catch (e) {
+      console.error('Profile save failed:', (e as any)?.message || e);
+      alert((e as any)?.message || 'Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -65,17 +114,20 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <div className="flex items-center gap-4">
             <div className="relative">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={profile.avatar} alt={profile.displayName} />
+                <AvatarImage src={avatarPreview} alt={profile.displayName} />
                 <AvatarFallback className="text-2xl">
                   {profile.displayName.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
+              <input type="file" accept="image/*" className="hidden" id="avatar-input" onChange={handleAvatarSelect} />
               <Button
                 size="icon"
                 variant="secondary"
                 className="absolute bottom-0 right-0 h-6 w-6 rounded-full"
+                onClick={() => document.getElementById('avatar-input')?.click()}
               >
                 <Camera className="h-3 w-3" />
+                <span className="sr-only">Change avatar</span>
               </Button>
             </div>
             <div>
@@ -162,11 +214,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              Save Changes
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </div>
