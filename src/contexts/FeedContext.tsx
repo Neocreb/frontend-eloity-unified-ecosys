@@ -108,6 +108,8 @@ const mapRowToUnifiedFeedItem = (row: any, profilesById: Record<string, any>): U
   };
 };
 
+const PAGE_SIZE = 10;
+
 const loadPostsFromSupabase = async (page: number, currentUserId?: string) => {
   const start = (page - 1) * PAGE_SIZE;
   const end = start + PAGE_SIZE - 1;
