@@ -74,6 +74,8 @@ export const LOCATION_SUGGESTIONS = [
   { name: "Denver, CO", coordinates: { lat: 39.7392, lng: -104.9903 } },
 ];
 
+import { supabase } from '@/integrations/supabase/client';
+
 class FeedService {
   // Helper method for delays with abort support
   private delay(ms: number, signal?: AbortSignal): Promise<void> {
@@ -94,12 +96,13 @@ class FeedService {
     });
   }
 
-  // Media upload functionality
+  // Media upload functionality: upload files to Supabase storage 'posts' bucket
   async uploadMedia(
     files: File[],
+    userId?: string,
     signal?: AbortSignal,
-  ): Promise<MediaUpload[]> {
-    const uploads: MediaUpload[] = [];
+  ): Promise<{ type: string; url: string }[]> {
+    const uploads: { type: string; url: string }[] = [];
 
     for (const file of files) {
       const isVideo = file.type.startsWith("video/");
@@ -109,70 +112,82 @@ class FeedService {
         throw new Error("Only image and video files are supported");
       }
 
-      // Create preview URL
-      const preview = URL.createObjectURL(file);
-
-      uploads.push({
-        type: isVideo ? "video" : "image",
-        file,
-        preview,
-      });
+      const ext = file.name.split('.').pop();
+      const filePath = `posts/${userId || 'anon'}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('posts').upload(filePath, file, { cacheControl: '604800', upsert: false });
+      if (uploadError) throw uploadError;
+      const { publicURL } = supabase.storage.from('posts').getPublicUrl(filePath);
+      uploads.push({ type: isVideo ? 'video' : 'image', url: publicURL });
     }
 
     return uploads;
   }
 
-  // Create a new post
+  // Create a new post (persist to Supabase)
   async createPost(
     postData: PostCreationData,
+    userId?: string,
     signal?: AbortSignal,
   ): Promise<any> {
-    // Simulate API call with abort support
-    await this.delay(1000, signal);
+    // If media files present in postData.media, upload them first
+    let mediaRecords: any[] | null = null;
+    if (postData.media && postData.media.length > 0) {
+      const files = postData.media.map(m => m.file);
+      const uploaded = await this.uploadMedia(files as File[], userId, signal);
+      mediaRecords = uploaded.map(u => ({ type: u.type, url: u.url }));
+    }
 
-    const newPost = {
-      id: Date.now().toString(),
-      user: {
-        id: "current-user",
-        name: "You",
-        username: "you",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-        isVerified: false,
-      },
-      content: postData.content,
-      media:
-        postData.media?.map((m) => ({
-          type: m.type,
-          url: m.preview || "",
-          alt: `${m.type} post`,
-        })) || [],
-      timestamp: "Just now",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      isLiked: false,
-      isSaved: false,
-      location: postData.location?.name,
-      privacy: postData.privacy,
-      feeling: postData.feeling,
-    };
+    // Insert into posts table
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        user_id: userId || null,
+        content_text: postData.content,
+        media: mediaRecords,
+        location: postData.location?.name || null,
+        privacy: postData.privacy || 'public',
+      })
+      .select('*')
+      .single();
 
-    return newPost;
+    if (error) throw error;
+
+    return data;
   }
 
-  // Like/unlike a post
+  // Like/unlike a post (uses post_likes table)
   async toggleLike(
     postId: string,
+    userId: string,
     currentlyLiked: boolean,
     signal?: AbortSignal,
   ): Promise<{ isLiked: boolean; likesCount: number }> {
-    // Simulate API call with abort support
-    await this.delay(300, signal);
+    if (!userId) throw new Error('Not authenticated');
 
-    return {
-      isLiked: !currentlyLiked,
-      likesCount: currentlyLiked ? -1 : 1, // This would be the actual count from API
-    };
+    if (currentlyLiked) {
+      // Delete like
+      const { error: delError } = await supabase
+        .from('post_likes')
+        .delete()
+        .match({ post_id: postId, user_id: userId });
+      if (delError) throw delError;
+    } else {
+      // Insert like
+      const { error: insertError } = await supabase
+        .from('post_likes')
+        .insert({ post_id: postId, user_id: userId });
+      if (insertError) throw insertError;
+    }
+
+    // Get updated count
+    const { count, error: countError } = await supabase
+      .from('post_likes')
+      .select('id', { count: 'exact', head: false })
+      .eq('post_id', postId);
+    if (countError) throw countError;
+
+    const likesCount = (count as number) || 0;
+    return { isLiked: !currentlyLiked, likesCount };
   }
 
   // Save/unsave a post
@@ -213,22 +228,28 @@ class FeedService {
     return [];
   }
 
-  // Add a comment
+  // Add a comment (persist to Supabase)
   async addComment(
     postId: string,
     content: string,
+    userId?: string,
     signal?: AbortSignal,
   ): Promise<Comment> {
-    // Simulate API call with abort support
-    await this.delay(400, signal);
+    if (!userId) throw new Error('Not authenticated');
+    const { data, error } = await supabase
+      .from('post_comments')
+      .insert({ post_id: postId, user_id: userId, content })
+      .select('*')
+      .single();
+    if (error) throw error;
 
     return {
-      id: Date.now().toString(),
-      userId: "current-user",
-      userName: "You",
-      userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-      content,
-      timestamp: "Just now",
+      id: data.id,
+      userId: data.user_id,
+      userName: data.user_name || 'User',
+      userAvatar: data.user_avatar || '/placeholder.svg',
+      content: data.content,
+      timestamp: data.created_at,
       likes: 0,
       isLiked: false,
     };
