@@ -53,7 +53,7 @@ import {
   Clock,
 } from "lucide-react";
 
-import { groups } from "@/data/mockExploreData";
+// Removed mock data import - using API integration
 import { generateMockPosts, generateMockEvents, generateMockMembers } from "@/utils/mockDataGenerator";
 import { eventSyncService, SyncEvent } from "@/services/eventSyncService";
 import { chatInitiationService } from "@/services/chatInitiationService";

@@ -5,22 +5,50 @@ import { Button } from '@/components/ui/button';
 import { FeedUserCard, FeedGroupCard, FeedPageCard } from '@/components/feed/FeedEntityCards';
 import { useEntityFollowHandlers } from '@/components/feed/UnifiedFeedHandlers';
 import { groups, pages } from '@/data/mockExploreData';
-import { getRandomMockUsers } from '@/data/mockUsers';
 import { Users, Building, UserPlus } from 'lucide-react';
 
 const FeedWithFollowDemo: React.FC = () => {
   const { handleUserFollow, handleGroupJoin, handlePageFollow } = useEntityFollowHandlers();
   
-  // Get sample data
-  const sampleUsers = getRandomMockUsers(3).map(mockUser => ({
-    ...mockUser.profile!,
-    isFollowing: Math.random() > 0.5,
-    followers: Math.floor(Math.random() * 10000) + 100,
-    mutualConnections: Math.floor(Math.random() * 50) + 1,
-    bio: "Passionate developer and tech enthusiast. Building the future one line of code at a time.",
-    location: "San Francisco, CA",
-    isOnline: Math.random() > 0.5,
-  }));
+  // Get sample data - using inline demo data instead of mockUsers
+  const sampleUsers = [
+    {
+      id: 'demo1',
+      username: 'sarah_tech',
+      full_name: 'Sarah Johnson',
+      avatar_url: '/api/placeholder/150/150',
+      isFollowing: false,
+      followers: 1250,
+      mutualConnections: 12,
+      bio: "Passionate developer and tech enthusiast. Building the future one line of code at a time.",
+      location: "San Francisco, CA",
+      isOnline: true,
+    },
+    {
+      id: 'demo2', 
+      username: 'alex_dev',
+      full_name: 'Alex Chen',
+      avatar_url: '/api/placeholder/150/150',
+      isFollowing: true,
+      followers: 890,
+      mutualConnections: 8,
+      bio: "Full-stack developer specializing in React and Node.js.",
+      location: "New York, NY",
+      isOnline: false,
+    },
+    {
+      id: 'demo3',
+      username: 'mike_crypto', 
+      full_name: 'Mike Rodriguez',
+      avatar_url: '/api/placeholder/150/150',
+      isFollowing: false,
+      followers: 2100,
+      mutualConnections: 25,
+      bio: "Cryptocurrency trader and blockchain enthusiast.",
+      location: "Austin, TX",
+      isOnline: true,
+    }
+  ];
 
   const sampleGroups = groups.slice(0, 3).map(group => ({
     ...group,

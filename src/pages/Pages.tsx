@@ -58,7 +58,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 
-import { pages as mockPages } from "@/data/mockExploreData";
+// Removed mock data import - using API integration
 
 interface Page {
   id: string;

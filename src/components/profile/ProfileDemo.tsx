@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users,
@@ -16,6 +15,19 @@ import {
   Eye,
 } from "lucide-react";
 import { mockUsers } from "@/data/mockUsers";
+
+// Simple Badge component since import is failing
+const SimpleBadge = ({ children, variant = "secondary", className = "" }: { 
+  children: React.ReactNode; 
+  variant?: string; 
+  className?: string; 
+}) => (
+  <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors 
+    ${variant === "secondary" ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : ""} 
+    ${className}`}>
+    {children}
+  </div>
+);
 
 export const ProfileDemo: React.FC = () => {
   const navigate = useNavigate();
@@ -103,7 +115,7 @@ export const ProfileDemo: React.FC = () => {
                   <AvatarFallback className="text-lg">
                     {demo.user.profile?.full_name
                       ?.split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("") || "U"}
                   </AvatarFallback>
                 </Avatar>
@@ -148,9 +160,9 @@ export const ProfileDemo: React.FC = () => {
                 <h4 className="font-medium mb-2">Profile Features:</h4>
                 <div className="grid grid-cols-2 gap-1">
                   {demo.features.map((feature, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
+                    <SimpleBadge key={index} variant="secondary" className="text-xs">
                       {feature}
-                    </Badge>
+                    </SimpleBadge>
                   ))}
                 </div>
               </div>
@@ -198,9 +210,6 @@ export const ProfileDemo: React.FC = () => {
             onClick={() => navigate("/app/profile/crypto_master")}
           >
             Try: crypto_master
-          </Button>
-          <Button variant="outline" onClick={() => navigate("/app/explore")}>
-            Explore More Users
           </Button>
         </div>
       </div>

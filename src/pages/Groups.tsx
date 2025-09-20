@@ -51,7 +51,7 @@ import {
   Activity,
 } from "lucide-react";
 
-import { groups as mockGroups } from "@/data/mockExploreData";
+// Removed mock data import - using API integration
 
 interface Group {
   id: string;

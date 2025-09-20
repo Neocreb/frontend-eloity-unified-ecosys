@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Store,
   Code,
@@ -16,7 +15,7 @@ import {
   Verified,
   Gift,
 } from "lucide-react";
-import { mockUsers } from "@/data/mockUsers";
+import { apiClient } from "@/lib/api";
 import { UserProfile } from "@/types/user";
 
 interface SuggestedUsersProps {
@@ -29,6 +28,13 @@ interface SuggestedUsersProps {
   onSendGift?: (user: any) => void;
 }
 
+// Simple badge component since import is failing
+const SimpleBadge = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${className || ""}`}>
+    {children}
+  </div>
+);
+
 export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
   title = "Discover Users",
   maxUsers = 6,
@@ -39,6 +45,33 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
   onSendGift,
 }) => {
   const navigate = useNavigate();
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.getSuggestedUsers(maxUsers);
+        
+        if (response?.users) {
+          setUsers(response.users);
+        } else {
+          // Following project specification: return empty results when API fails
+          console.warn('No suggested users data received from API');
+          setUsers([]);
+        }
+      } catch (error) {
+        // Following project specification: log warnings and return empty results
+        console.warn('Failed to fetch suggested users:', error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSuggestedUsers();
+  }, [maxUsers]);
 
   const handleUserClick = (username: string) => {
     if (onUserClick) {
@@ -48,70 +81,58 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
     }
   };
 
-  const getUserTypeIcon = (profile: UserProfile) => {
-    if (profile.marketplace_profile)
+  const getUserTypeIcon = (profile: any) => {
+    if (profile?.marketplace_profile)
       return <Store className="w-4 h-4 text-green-600" />;
-    if (profile.freelance_profile)
+    if (profile?.freelance_profile)
       return <Code className="w-4 h-4 text-blue-600" />;
-    if (profile.crypto_profile)
+    if (profile?.crypto_profile)
       return <TrendingUp className="w-4 h-4 text-orange-600" />;
-    if (profile.social_profile)
+    if (profile?.social_profile)
       return <Camera className="w-4 h-4 text-purple-600" />;
-    if (profile.business_profile)
+    if (profile?.business_profile)
       return <Briefcase className="w-4 h-4 text-gray-600" />;
     return <Users className="w-4 h-4 text-gray-500" />;
   };
 
-  const getUserTypeBadge = (profile: UserProfile) => {
-    if (profile.marketplace_profile) {
+  const getUserTypeBadge = (profile: any) => {
+    if (profile?.marketplace_profile) {
       return (
-        <Badge
-          variant="outline"
-          className="border-green-400 text-green-600 text-xs"
-        >
+        <SimpleBadge className="border-green-400 text-green-600">
           <Store className="w-3 h-3 mr-1" />
           Seller
-        </Badge>
+        </SimpleBadge>
       );
     }
-    if (profile.freelance_profile) {
+    if (profile?.freelance_profile) {
       return (
-        <Badge
-          variant="outline"
-          className="border-blue-400 text-blue-600 text-xs"
-        >
+        <SimpleBadge className="border-blue-400 text-blue-600">
           <Code className="w-3 h-3 mr-1" />
           Freelancer
-        </Badge>
+        </SimpleBadge>
       );
     }
-    if (profile.crypto_profile) {
+    if (profile?.crypto_profile) {
       return (
-        <Badge
-          variant="outline"
-          className="border-orange-400 text-orange-600 text-xs"
-        >
+        <SimpleBadge className="border-orange-400 text-orange-600">
           <TrendingUp className="w-3 h-3 mr-1" />
           Trader
-        </Badge>
+        </SimpleBadge>
       );
     }
-    if (profile.social_profile) {
+    if (profile?.social_profile) {
       return (
-        <Badge
-          variant="outline"
-          className="border-purple-400 text-purple-600 text-xs"
-        >
+        <SimpleBadge className="border-purple-400 text-purple-600">
           <Camera className="w-3 h-3 mr-1" />
           Creator
-        </Badge>
+        </SimpleBadge>
       );
     }
     return (
-      <Badge variant="outline" className="text-xs">
+      <SimpleBadge>
         <Users className="w-3 h-3 mr-1" />
         User
-      </Badge>
+      </SimpleBadge>
     );
   };
 
@@ -121,9 +142,8 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
     return num.toString();
   };
 
-  const users = Object.values(mockUsers).slice(0, maxUsers);
-
-  if (variant === "card") {
+  // Early return for loading state
+  if (loading) {
     return (
       <Card>
         {showTitle && (
@@ -135,69 +155,12 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
           </CardHeader>
         )}
         <CardContent className="space-y-4">
-          {users.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-              onClick={() =>
-                handleUserClick(user.profile?.username || user.name)
-              }
-            >
-              <Avatar className="w-12 h-12">
-                <AvatarImage
-                  src={user.profile?.avatar_url}
-                  alt={user.profile?.full_name}
-                />
-                <AvatarFallback>
-                  {user.profile?.full_name
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("") || "U"}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-sm truncate">
-                    {user.profile?.full_name}
-                  </span>
-                  {user.profile?.is_verified && (
-                    <Verified className="w-4 h-4 text-blue-500" />
-                  )}
-                  {getUserTypeIcon(user.profile!)}
-                </div>
-
-                <p className="text-xs text-muted-foreground mb-1">
-                  @{user.profile?.username}
-                </p>
-
-                <div className="flex items-center gap-2">
-                  {getUserTypeBadge(user.profile!)}
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    {user.profile?.reputation || 0}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {showGiftButton && onSendGift && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSendGift(user);
-                    }}
-                    className="text-pink-600 border-pink-200 hover:bg-pink-50"
-                  >
-                    <Gift className="h-3 w-3 mr-1" />
-                    Gift
-                  </Button>
-                )}
-                <Button size="sm" variant="outline">
-                  View
-                </Button>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-3 p-3 rounded-lg">
+              <div className="w-12 h-12 bg-muted rounded-full animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-muted rounded animate-pulse" />
+                <div className="h-3 bg-muted rounded w-3/4 animate-pulse" />
               </div>
             </div>
           ))}
@@ -206,156 +169,105 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
     );
   }
 
-  if (variant === "grid") {
+  // Early return for empty state
+  if (users.length === 0) {
     return (
-      <div className="space-y-4">
+      <Card>
         {showTitle && (
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            {title}
-          </h2>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              {title}
+            </CardTitle>
+          </CardHeader>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {users.map((user) => (
-            <Card
-              key={user.id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() =>
-                handleUserClick(user.profile?.username || user.name)
-              }
-            >
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <Avatar className="w-16 h-16 mx-auto mb-3">
-                    <AvatarImage
-                      src={user.profile?.avatar_url}
-                      alt={user.profile?.full_name}
-                    />
-                    <AvatarFallback className="text-lg">
-                      {user.profile?.full_name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("") || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <h3 className="font-semibold truncate">
-                        {user.profile?.full_name}
-                      </h3>
-                      {user.profile?.is_verified && (
-                        <Verified className="w-4 h-4 text-blue-500" />
-                      )}
-                    </div>
-
-                    <p className="text-sm text-muted-foreground">
-                      @{user.profile?.username}
-                    </p>
-
-                    {user.profile?.location && (
-                      <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
-                        {user.profile.location}
-                      </div>
-                    )}
-
-                    <div className="flex justify-center">
-                      {getUserTypeBadge(user.profile!)}
-                    </div>
-
-                    <div className="flex justify-center items-center gap-4 text-xs">
-                      <div className="text-center">
-                        <div className="font-semibold">
-                          {formatNumber(user.profile?.followers_count || 0)}
-                        </div>
-                        <div className="text-muted-foreground">Followers</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold flex items-center gap-1 justify-center">
-                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          {user.profile?.reputation || 0}
-                        </div>
-                        <div className="text-muted-foreground">Rating</div>
-                      </div>
-                    </div>
-
-                    {showGiftButton && onSendGift && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSendGift(user);
-                        }}
-                        className="mt-3 w-full text-pink-600 border-pink-200 hover:bg-pink-50"
-                      >
-                        <Gift className="h-4 w-4 mr-2" />
-                        Send Gift
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+        <CardContent className="text-center py-8">
+          <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">No suggested users available</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  // List variant
   return (
-    <div className="space-y-3">
+    <Card>
       {showTitle && (
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          {title}
-        </h2>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            {title}
+          </CardTitle>
+        </CardHeader>
       )}
-      <div className="space-y-2">
-        {users.map((user) => (
+      <CardContent className="space-y-4">
+        {users.map((user, index) => (
           <div
-            key={user.id}
-            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-            onClick={() => handleUserClick(user.profile?.username || user.name)}
+            key={user.id || index}
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+            onClick={() =>
+              handleUserClick(user.username || user.profile?.username || user.name || `user-${index}`)
+            }
           >
-            <Avatar className="w-10 h-10">
+            <Avatar className="w-12 h-12">
               <AvatarImage
-                src={user.profile?.avatar_url}
-                alt={user.profile?.full_name}
+                src={user.avatar_url || user.profile?.avatar_url}
+                alt={user.full_name || user.profile?.full_name || user.name || "User"}
               />
               <AvatarFallback>
-                {user.profile?.full_name
-                  ?.split(" ")
-                  .map((n) => n[0])
-                  .join("") || "U"}
+                {(user.full_name || user.profile?.full_name || user.name || "U")
+                  .split(" ")
+                  .map((n: string) => n[0])
+                  .join("")}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-sm truncate">
-                  {user.profile?.full_name}
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-sm truncate">
+                  {user.full_name || user.profile?.full_name || user.name || "Anonymous User"}
                 </span>
-                {user.profile?.is_verified && (
-                  <Verified className="w-3 h-3 text-blue-500" />
+                {(user.is_verified || user.profile?.is_verified) && (
+                  <Verified className="w-4 h-4 text-blue-500" />
                 )}
-                {getUserTypeIcon(user.profile!)}
+                {getUserTypeIcon(user.profile || user)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                @{user.profile?.username}
+
+              <p className="text-xs text-muted-foreground mb-1">
+                @{user.username || user.profile?.username || user.name || `user-${index}`}
               </p>
+
+              <div className="flex items-center gap-2">
+                {getUserTypeBadge(user.profile || user)}
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                  {user.reputation || user.profile?.reputation || 0}
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1 text-xs">
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              {user.profile?.reputation || 0}
+            <div className="flex items-center gap-2">
+              {showGiftButton && onSendGift && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSendGift(user);
+                  }}
+                  className="text-pink-600 border-pink-200 hover:bg-pink-50"
+                >
+                  <Gift className="h-3 w-3 mr-1" />
+                  Gift
+                </Button>
+              )}
+              <Button size="sm" variant="outline">
+                View
+              </Button>
             </div>
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

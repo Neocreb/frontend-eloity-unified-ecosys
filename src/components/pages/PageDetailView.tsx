@@ -60,7 +60,7 @@ import {
   Briefcase,
 } from "lucide-react";
 
-import { pages } from "@/data/mockExploreData";
+// Removed mock data import - using API integration
 import { marketplaceSyncService, SyncProduct } from "@/services/marketplaceSyncService";
 import { chatInitiationService } from "@/services/chatInitiationService";
 
