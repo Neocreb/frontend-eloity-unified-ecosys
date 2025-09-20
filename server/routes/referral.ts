@@ -310,7 +310,7 @@ router.post('/signup', async (req, res) => {
 
       if (referrerUser.length > 0) {
         const user = referrerUser[0];
-        const baseRewardAmount = 20; // From setup-reward-rules.ts: baseSoftPoints: "20.0"
+        const baseRewardAmount = 20; // From setup-reward-rules.ts: baseEloits: "20.0"
 
         // Anti-abuse checks
         const now = new Date();
@@ -373,7 +373,7 @@ router.post('/signup', async (req, res) => {
           referee_id: newUserId,
           event_type: 'signup',
           reward_amount: finalRewardAmount,
-          reward_currency: 'SP', // SoftPoints
+          reward_currency: 'EP', // Eloits
           is_reward_claimed: false, // Pending - will be credited after activity validation
           metadata: {
             timestamp: new Date().toISOString(),

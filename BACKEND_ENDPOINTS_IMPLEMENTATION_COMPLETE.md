@@ -236,5 +236,5 @@ app.use('/api/follow', followRouter);
 ---
 
 *Implementation completed: December 2024*  
-*Platform: Softchat Social Media & Marketplace*  
+*Platform: Eloity Social Media & Marketplace*  
 *Status: Backend APIs Complete, Navigation Fixed, Ready for Live Integration*

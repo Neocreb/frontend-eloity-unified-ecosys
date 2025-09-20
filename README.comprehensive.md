@@ -1,4 +1,4 @@
-# 🚀 SoftChat Comprehensive Platform
+# 🚀 Eloity Comprehensive Platform
 
 A unified multi-module platform combining social networking, freelance marketplace, P2P cryptocurrency trading, e-commerce, and advanced admin management.
 
@@ -11,7 +11,7 @@ A unified multi-module platform combining social networking, freelance marketpla
 - **💼 Freelance Marketplace** - Job posting, proposals, project management with escrow
 - **🛒 E-commerce Marketplace** - Product listings, orders, reviews, and seller management
 - **🔄 P2P Crypto Trading** - Peer-to-peer trading for USDT, ETH, BTC with dispute resolution
-- **💰 Multi-Currency Wallet** - Support for crypto + SoftPoints with escrow integration
+- **💰 Multi-Currency Wallet** - Support for crypto + Eloits with escrow integration
 - **🚀 Boost & Premium System** - Content promotion and subscription tiers
 - **🛡️ Multi-Admin Dashboard** - Role-based admin system with comprehensive controls
 
@@ -40,7 +40,7 @@ A unified multi-module platform combining social networking, freelance marketpla
 
    ```bash
    git clone <repository-url>
-   cd softchat-platform
+   cd eloity-platform
    ```
 
 2. **Install dependencies**
@@ -310,7 +310,7 @@ POST /api/admin/boosts/:id/approve   # Approve boost
 - Priority support
 - Custom thumbnails
 - 100 AI credits monthly
-- SoftPoints bonus and cashback
+- Eloits bonus and cashback
 - Scheduled content
 - Advanced analytics
 - Verified spotlight in feeds
@@ -449,27 +449,27 @@ CMD ["npm", "start"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: softchat-app
+  name: eloity-app
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: softchat
+      app: eloity
   template:
     metadata:
       labels:
-        app: softchat
+        app: eloity
     spec:
       containers:
-        - name: softchat
-          image: softchat:latest
+        - name: eloity
+          image: eloity:latest
           ports:
             - containerPort: 3000
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: softchat-secrets
+                  name: eloity-secrets
                   key: database-url
 ```
 
@@ -633,4 +633,4 @@ Common issues and solutions:
 
 ---
 
-**SoftChat Platform** - Unifying social interaction, commerce, and cryptocurrency in one comprehensive platform.
+**Eloity Platform** - Unifying social interaction, commerce, and cryptocurrency in one comprehensive platform.

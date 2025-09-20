@@ -173,10 +173,10 @@ export default function Blog() {
             <div className="flex items-center gap-6">
               <Link
                 to="/"
-                className="flex items-center gap-2 text-lg font-bold text-softchat-700 hover:text-softchat-600 transition-colors"
+                className="flex items-center gap-2 text-lg font-bold text-blue-700 hover:text-blue-600 transition-colors"
               >
                 <Home className="h-5 w-5" />
-                Softchat
+                Eloity
               </Link>
               <span className="text-gray-300">|</span>
               <span className="text-gray-600 font-medium">Blog</span>
@@ -186,22 +186,22 @@ export default function Blog() {
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/#features"
-                className="text-gray-600 hover:text-softchat-600 transition-colors"
+                className="text-gray-600 hover:text-blue-600 transition-colors"
               >
                 Features
               </Link>
               <Link
-                to="/#why-softchat"
-                className="text-gray-600 hover:text-softchat-600 transition-colors"
+                to="/#why-eloity"
+                className="text-gray-600 hover:text-blue-600 transition-colors"
               >
-                Why Softchat
+                Why Eloity
               </Link>
-              <Link to="/blog" className="text-softchat-600 font-medium">
+              <Link to="/blog" className="text-blue-600 font-medium">
                 Blog
               </Link>
               <Link
                 to="/#contact"
-                className="text-gray-600 hover:text-softchat-600 transition-colors"
+                className="text-gray-600 hover:text-blue-600 transition-colors"
               >
                 Newsletter
               </Link>
@@ -228,7 +228,7 @@ export default function Blog() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              SoftChat Blog
+              Eloity Blog
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-8">
               Stay informed with the latest insights on cryptocurrency, trading,

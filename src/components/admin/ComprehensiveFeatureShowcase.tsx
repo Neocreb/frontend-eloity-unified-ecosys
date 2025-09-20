@@ -62,7 +62,7 @@ const comprehensiveFeatures = [
   },
   {
     title: "Multi-Currency Wallet",
-    description: "USDT, ETH, BTC + SoftPoints",
+    description: "USDT, ETH, BTC + Eloits",
     icon: CreditCard,
     status: "ready",
     details: "Secure transfers, escrow integration, transaction history",

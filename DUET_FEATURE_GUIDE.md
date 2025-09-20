@@ -375,7 +375,7 @@ localStorage.setItem('duet-debug', 'true');
 
 ## 📄 License
 
-This duet feature implementation is part of the SoftChat platform and follows the same licensing terms.
+This duet feature implementation is part of the Eloity platform and follows the same licensing terms.
 
 ---
 

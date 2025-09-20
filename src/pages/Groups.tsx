@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -49,9 +48,33 @@ import {
   Share2,
   BookOpen,
   Activity,
+  Loader2,
 } from "lucide-react";
+import { apiClient } from "@/lib/api";
 
-// Removed mock data import - using API integration
+// Simple Badge component since import is having issues
+interface BadgeProps {
+  children: React.ReactNode;
+  className?: string;
+  variant?: 'default' | 'outline' | 'secondary' | 'destructive';
+}
+
+const Badge: React.FC<BadgeProps> = ({ children, className, variant }) => {
+  const baseClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold";
+  
+  const variantClasses = {
+    default: "border-transparent bg-primary text-primary-foreground",
+    outline: "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300",
+    secondary: "border-transparent bg-secondary text-secondary-foreground",
+    destructive: "border-transparent bg-destructive text-destructive-foreground",
+  }[variant || 'default'] || "";
+  
+  return (
+    <span className={`${baseClasses} ${variantClasses} ${className || ''}`}>
+      {children}
+    </span>
+  );
+};
 
 interface Group {
   id: string;
@@ -66,6 +89,7 @@ interface Group {
   isAdmin?: boolean;
   location?: string;
   createdAt?: string;
+  // Remove recentActivity as it's not in the interface
 }
 
 const Groups = () => {
@@ -78,6 +102,8 @@ const Groups = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [joinedGroups, setJoinedGroups] = useState<Group[]>([]);
   const [myGroups, setMyGroups] = useState<Group[]>([]);
+  const [allGroups, setAllGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(true);
   const [groupForm, setGroupForm] = useState({
     name: "",
     description: "",
@@ -87,25 +113,52 @@ const Groups = () => {
     cover: "",
   });
 
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      // Fetch real data from the API
+      const response = await apiClient.getGroups();
+      const groupsData = response.data || response;
+      
+      setAllGroups(groupsData);
+      setJoinedGroups(groupsData.filter((g: Group) => g.isJoined));
+      setMyGroups(groupsData.filter((g: Group) => g.isOwner));
+    } catch (error) {
+      console.error('Error loading groups:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load groups",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter and sort groups
-  const filteredGroups = mockGroups
-    .filter((group) => {
+  const filteredGroups = allGroups
+    .filter((group: Group) => {
       const matchesSearch =
         group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        group.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (group.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
         group.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory =
         selectedCategory === "all" || group.category === selectedCategory;
       return matchesSearch && matchesCategory;
     })
-    .sort((a, b) => {
+    .sort((a: Group, b: Group) => {
       switch (sortBy) {
         case "members":
           return b.members - a.members;
         case "recent":
           return (
-            new Date(b.createdAt || 0).getTime() -
-            new Date(a.createdAt || 0).getTime()
+            new Date(b.createdAt || new Date().toISOString()).getTime() -
+            new Date(a.createdAt || new Date().toISOString()).getTime()
           );
         case "name":
           return a.name.localeCompare(b.name);
@@ -129,7 +182,7 @@ const Groups = () => {
     "Lifestyle",
   ];
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     if (!groupForm.name || !groupForm.category) {
       toast({
         title: "Error",
@@ -139,56 +192,90 @@ const Groups = () => {
       return;
     }
 
-    const newGroup: Group = {
-      id: `group-${Date.now()}`,
-      name: groupForm.name,
-      description: groupForm.description,
-      category: groupForm.category,
-      privacy: groupForm.privacy as "public" | "private",
-      location: groupForm.location,
-      cover:
-        groupForm.cover ||
-        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400",
-      members: 1,
-      isOwner: true,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      // Call the API to create a new group
+      const response = await apiClient.request('/groups', {
+        method: 'POST',
+        body: JSON.stringify(groupForm),
+      });
+      
+      const newGroup: Group = response.data || response;
 
-    setMyGroups((prev) => [...prev, newGroup]);
-    setGroupForm({
-      name: "",
-      description: "",
-      category: "",
-      privacy: "public",
-      location: "",
-      cover: "",
-    });
-    setShowCreateDialog(false);
+      setMyGroups((prev) => [...prev, newGroup]);
+      setAllGroups((prev) => [...prev, newGroup]);
+      setGroupForm({
+        name: "",
+        description: "",
+        category: "",
+        privacy: "public",
+        location: "",
+        cover: "",
+      });
+      setShowCreateDialog(false);
 
-    toast({
-      title: "Group Created",
-      description: `${newGroup.name} has been created successfully!`,
-    });
+      toast({
+        title: "Group Created",
+        description: `${newGroup.name} has been created successfully!`,
+      });
+    } catch (error) {
+      console.error('Error creating group:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create group",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleJoinGroup = (group: Group) => {
+  const handleJoinGroup = async (group: Group) => {
     if (group.isJoined) return;
 
-    const updatedGroup = { ...group, isJoined: true };
-    setJoinedGroups((prev) => [...prev, updatedGroup]);
+    try {
+      // Call the API to join the group
+      await apiClient.request(`/groups/${group.id}/join`, {
+        method: 'POST',
+      });
+      
+      const updatedGroup = { ...group, isJoined: true };
+      setJoinedGroups((prev) => [...prev, updatedGroup]);
+      setAllGroups(prev => prev.map(g => g.id === group.id ? updatedGroup : g));
 
-    toast({
-      title: "Joined Group",
-      description: `You've successfully joined ${group.name}!`,
-    });
+      toast({
+        title: "Joined Group",
+        description: `You've successfully joined ${group.name}!`,
+      });
+    } catch (error) {
+      console.error('Error joining group:', error);
+      toast({
+        title: "Error",
+        description: "Failed to join group",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleLeaveGroup = (groupId: string) => {
-    setJoinedGroups((prev) => prev.filter((g) => g.id !== groupId));
-    toast({
-      title: "Left Group",
-      description: "You've left the group successfully",
-    });
+  const handleLeaveGroup = async (groupId: string) => {
+    try {
+      // Call the API to leave the group
+      await apiClient.request(`/groups/${groupId}/leave`, {
+        method: 'POST',
+      });
+      
+      setJoinedGroups((prev) => prev.filter((g) => g.id !== groupId));
+      setAllGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: false } : g));
+      
+      toast({
+        title: "Left Group",
+        description: "You've left the group successfully",
+      });
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      toast({
+        title: "Error",
+        description: "Failed to leave group",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewGroup = (groupId: string) => {
@@ -214,7 +301,6 @@ const Groups = () => {
           {group.privacy === "private" && (
             <Badge
               variant="secondary"
-              className="bg-gray-900/80 text-white border-0"
             >
               <Lock className="w-3 h-3 mr-1" />
               Private
@@ -335,11 +421,11 @@ const Groups = () => {
   );
 
   const getJoinedGroupsData = () => {
-    return [...joinedGroups, ...mockGroups.filter((g) => g.isJoined)];
+    return [...joinedGroups, ...allGroups.filter((g) => g.isJoined)];
   };
 
   const getMyGroupsData = () => {
-    return [...myGroups, ...mockGroups.filter((g) => g.isOwner)];
+    return [...myGroups, ...allGroups.filter((g) => g.isOwner)];
   };
 
   return (
@@ -545,162 +631,171 @@ const Groups = () => {
           </div>
         </div>
 
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
+
         {/* Group Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="discover" className="flex items-center gap-2">
-              <Eye className="w-4 h-4" />
-              Discover
-            </TabsTrigger>
-            <TabsTrigger value="joined" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              My Groups ({getJoinedGroupsData().length})
-            </TabsTrigger>
-            <TabsTrigger value="owned" className="flex items-center gap-2">
-              <Crown className="w-4 h-4" />
-              Created ({getMyGroupsData().length})
-            </TabsTrigger>
-          </TabsList>
+        {!loading && (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="discover" className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                Discover
+              </TabsTrigger>
+              <TabsTrigger value="joined" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                My Groups ({getJoinedGroupsData().length})
+              </TabsTrigger>
+              <TabsTrigger value="owned" className="flex items-center gap-2">
+                <Crown className="w-4 h-4" />
+                Created ({getMyGroupsData().length})
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="discover" className="space-y-6">
-            {/* Quick stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="w-5 h-5 text-blue-600" />
+            <TabsContent value="discover" className="space-y-6">
+              {/* Quick stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Users className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{allGroups.length}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Groups
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">{mockGroups.length}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Total Groups
+                </Card>
+
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <TrendingUp className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{categories.length}</p>
+                      <p className="text-sm text-muted-foreground">Categories</p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Activity className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {allGroups.filter((g) => g.privacy === "public").length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Public Groups
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <Star className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {Math.round(
+                          allGroups.reduce((acc, g) => acc + g.members, 0) /
+                            1000,
+                        )}
+                        K
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Members
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                {filteredGroups.length > 0 ? (
+                  filteredGroups.map((group) => renderGroupCard(group))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      No groups found
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Try adjusting your search criteria or browse different
+                      categories
                     </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedCategory("all");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
                   </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="joined" className="space-y-6">
+              {getJoinedGroupsData().length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                  {getJoinedGroupsData().map((group) =>
+                    renderGroupCard(group, true),
+                  )}
                 </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{categories.length}</p>
-                    <p className="text-sm text-muted-foreground">Categories</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Activity className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {mockGroups.filter((g) => g.privacy === "public").length}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Public Groups
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Star className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {Math.round(
-                        mockGroups.reduce((acc, g) => acc + g.members, 0) /
-                          1000,
-                      )}
-                      K
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Total Members
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-              {filteredGroups.length > 0 ? (
-                filteredGroups.map((group) => renderGroupCard(group))
               ) : (
-                <div className="col-span-full text-center py-12">
+                <div className="text-center py-12">
                   <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">
-                    No groups found
+                    You haven't joined any groups yet
                   </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Try adjusting your search criteria or browse different
-                    categories
+                  <p className="text-muted-foreground mb-6">
+                    Explore groups that match your interests and connect with
+                    like-minded people
                   </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSelectedCategory("all");
-                    }}
-                  >
-                    Clear Filters
+                  <Button onClick={() => setActiveTab("discover")}>
+                    Discover Groups
                   </Button>
                 </div>
               )}
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="joined" className="space-y-6">
-            {getJoinedGroupsData().length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                {getJoinedGroupsData().map((group) =>
-                  renderGroupCard(group, true),
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  You haven't joined any groups yet
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Explore groups that match your interests and connect with
-                  like-minded people
-                </p>
-                <Button onClick={() => setActiveTab("discover")}>
-                  Discover Groups
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="owned" className="space-y-6">
-            {getMyGroupsData().length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                {getMyGroupsData().map((group) => renderGroupCard(group, true))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Crown className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  You haven't created any groups yet
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Start building your own community by creating your first group
-                </p>
-                <Button onClick={() => setShowCreateDialog(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Group
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="owned" className="space-y-6">
+              {getMyGroupsData().length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                  {getMyGroupsData().map((group) => renderGroupCard(group, true))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Crown className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    You haven't created any groups yet
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Start building your own community by creating your first group
+                  </p>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Group
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

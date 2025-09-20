@@ -54,7 +54,7 @@ USING (public.is_admin());
 DROP POLICY IF EXISTS "Anyone can view posts" ON public.posts;
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.posts;
 
--- Create new policy that hides softpoints from public view
+-- Create new policy that hides eloits from public view
 CREATE POLICY "Users can view posts with limited financial data" 
 ON public.posts 
 FOR SELECT 

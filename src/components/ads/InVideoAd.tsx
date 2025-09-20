@@ -133,7 +133,7 @@ export const InVideoAd: React.FC<InVideoAdProps> = ({
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-pulse">
           <div className="text-center">
             <div className="text-lg font-bold">
-              {rewardAmount > 0 ? `+${rewardAmount} SoftPoints earned!` : 'Ad Completed'}
+              {rewardAmount > 0 ? `+${rewardAmount} Eloits earned!` : 'Ad Completed'}
             </div>
             <div className="text-sm opacity-90">
               {rewardMessage || 'Thanks for watching'}

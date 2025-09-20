@@ -1,6 +1,6 @@
 # Enhanced Video Platform Features
 
-This document outlines the comprehensive video platform enhancements implemented in the Softchat application, transforming it into a modern, feature-rich video sharing platform similar to TikTok, Instagram Reels, and YouTube Shorts.
+This document outlines the comprehensive video platform enhancements implemented in the Eloity application, transforming it into a modern, feature-rich video sharing platform similar to TikTok, Instagram Reels, and YouTube Shorts.
 
 ## 🎥 Video Creation & Recording
 
@@ -391,4 +391,4 @@ The video platform seamlessly integrates with the existing design system:
 - Advanced AI moderation
 - Edge computing for global performance
 
-This enhanced video platform positions Softchat as a comprehensive social media solution with cutting-edge video capabilities, rivaling the best-in-class platforms while maintaining the unique features that make Softchat special.
+This enhanced video platform positions Eloity as a comprehensive social media solution with cutting-edge video capabilities, rivaling the best-in-class platforms while maintaining the unique features that make Eloity special.

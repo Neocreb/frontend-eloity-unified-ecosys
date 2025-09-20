@@ -7,8 +7,8 @@
 Once your database is set up, you can use these default admin credentials:
 
 ```
-Email: admin@softchat.com
-Password: SoftChat2024!
+Email: admin@eloity.com
+Password: Eloity2024!
 ```
 
 **🔗 Admin Login URL:** `/admin/login`
@@ -60,10 +60,10 @@ sudo apt-get install postgresql postgresql-contrib
 sudo systemctl start postgresql
 
 # Create database
-createdb softchat
+createdb eloity
 
 # Update .env with local database URL
-DATABASE_URL=postgresql://username:password@localhost:5432/softchat
+DATABASE_URL=postgresql://username:password@localhost:5432/eloity
 ```
 
 ### Step 4: Initialize Database and Admin
@@ -114,8 +114,8 @@ VALUES (
 INSERT INTO users (id, email, password, email_confirmed)
 VALUES (
   gen_random_uuid(),
-  'admin@softchat.com',
-  '$2b$12$hash-of-SoftChat2024!', -- Use bcrypt to hash the password
+  'admin@eloity.com',
+  '$2b$12$hash-of-Eloity2024!', -- Use bcrypt to hash the password
   true
 );
 
@@ -123,7 +123,7 @@ VALUES (
 INSERT INTO admin_users (user_id, role_id, is_active)
 SELECT u.id, r.id, true
 FROM users u, admin_roles r
-WHERE u.email = 'admin@softchat.com'
+WHERE u.email = 'admin@eloity.com'
 AND r.name = 'super_admin';
 ```
 
@@ -146,7 +146,7 @@ Once set up, access the admin panel at:
 
 ## Troubleshooting
 
-### "Loading Softchat..." on Admin Login
+### "Loading Eloity..." on Admin Login
 
 This usually means:
 
@@ -157,7 +157,7 @@ This usually means:
 ### "Invalid credentials" Error
 
 1. Verify admin user exists in database
-2. Check password is correct: `SoftChat2024!`
+2. Check password is correct: `Eloity2024!`
 3. Ensure database connection is working
 
 ### Database Connection Issues

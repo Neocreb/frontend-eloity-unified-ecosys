@@ -1,4 +1,4 @@
-# Softchat Backend Implementation Guide
+# Eloity Backend Implementation Guide
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@
 
 ## Architecture Overview
 
-Softchat is a comprehensive social media and marketplace platform built with a modern **Express.js + TypeScript** backend architecture. The platform integrates multiple features including:
+Eloity is a comprehensive social media and marketplace platform built with a modern **Express.js + TypeScript** backend architecture. The platform integrates multiple features including:
 
 - **Social Media Feed** - Posts, comments, likes, follows
 - **Marketplace** - Product listings, orders, payments
@@ -124,7 +124,7 @@ posts (
   video_url: text,
   type: text DEFAULT 'post',
   tags: text[],
-  softpoints: integer,
+  eloits: integer,
   created_at: timestamp DEFAULT now()
 )
 
@@ -757,7 +757,7 @@ export const emailService = {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: user.email,
-      subject: "Welcome to Softchat!",
+      subject: "Welcome to Eloity!",
       html: generateWelcomeEmailHTML(user),
     });
   },
@@ -782,4 +782,4 @@ export const emailService = {
 4. **Analytics**: Custom analytics or Google Analytics
 5. **Logging**: Winston or structured logging
 
-This comprehensive guide provides everything needed to understand, extend, and deploy the Softchat backend. The platform has a solid foundation but requires security improvements and additional integrations for production readiness.
+This comprehensive guide provides everything needed to understand, extend, and deploy the Eloity backend. The platform has a solid foundation but requires security improvements and additional integrations for production readiness.

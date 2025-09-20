@@ -178,7 +178,7 @@ export class RealTimeAIService {
         "Highlight relevant experience",
         "Build client relationships",
       ],
-      "earn softpoints": [
+      "earn eloits": [
         "Stay active by posting and engaging daily",
         "Complete your profile 100%",
         "Refer friends to join SoftChat",
@@ -606,7 +606,13 @@ export class RealTimeAIService {
         url: "/crypto",
       });
     } else {
-      response = `I can provide real-time cryptocurrency prices! Here are the current top prices:\n\n• Bitcoin: $${mockPrices.bitcoin.price.toFixed(2)}\n• Ethereum: $${mockPrices.ethereum.price.toFixed(2)}\n• BNB: $${mockPrices.binancecoin.price.toFixed(2)}\n\nLast updated: ${now.toLocaleTimeString()}`;
+      response = `I can provide real-time cryptocurrency prices! Here are the current top prices:
+
+• Bitcoin: $${mockPrices.bitcoin.price.toFixed(2)}
+• Ethereum: $${mockPrices.ethereum.price.toFixed(2)}
+• BNB: $${mockPrices.binancecoin.price.toFixed(2)}
+
+Last updated: ${now.toLocaleTimeString()}`;
 
       actions.push({
         id: "view-crypto",
@@ -722,7 +728,11 @@ export class RealTimeAIService {
       "Social media platforms introduce new creator tools",
     ];
 
-    const response = `Here are the latest news headlines:\n\n${mockNews.map((headline, i) => `${i + 1}. ${headline}`).join("\n")}\n\nStay informed with real-time updates on SoftChat!`;
+    const response = `Here are the latest news headlines:
+
+${mockNews.map((headline, i) => `${i + 1}. ${headline}`).join("\n")}
+
+Stay informed with real-time updates on SoftChat!`;
 
     return {
       message: response,
@@ -778,7 +788,13 @@ export class RealTimeAIService {
       dow: 34800 + Math.random() * 500,
     };
 
-    const response = `Current market overview:\n\n• S&P 500: ${mockMarket.sp500.toFixed(2)}\n• NASDAQ: ${mockMarket.nasdaq.toFixed(2)}\n• Dow Jones: ${mockMarket.dow.toFixed(2)}\n\nMarkets updated in real-time.`;
+    const response = `Current market overview:
+
+• S&P 500: ${mockMarket.sp500.toFixed(2)}
+• NASDAQ: ${mockMarket.nasdaq.toFixed(2)}
+• Dow Jones: ${mockMarket.dow.toFixed(2)}
+
+Markets updated in real-time.`;
 
     return {
       message: response,
@@ -1055,7 +1071,14 @@ export class RealTimeAIService {
     const dailyTips = softChatKnowledgeService.getDailyEngagementTips();
 
     return {
-      message: `${greeting} ${user.name || "friend"}! ${enthusiasm} SoftChat is your all-in-one platform where you can connect socially, trade crypto, buy/sell in the marketplace, find freelance work, and so much more! \n\nThink of it as your digital life hub - everything you need is right here. Here are today's personalized tips for you:\n\n• ${dailyTips[0]}\n• ${dailyTips[1]}\n\nWhat specific feature would you like to explore? I'm here to guide you through everything! 😊`,
+      message: `${greeting} ${user.name || "friend"}! ${enthusiasm} SoftChat is your all-in-one platform where you can connect socially, trade crypto, buy/sell in the marketplace, find freelance work, and so much more! 
+
+Think of it as your digital life hub - everything you need is right here. Here are today's personalized tips for you:
+
+• ${dailyTips[0]}
+• ${dailyTips[1]}
+
+What specific feature would you like to explore? I'm here to guide you through everything! 😊`,
       confidence: 95,
       sources: ["Comprehensive SoftChat Knowledge"],
       category: "softchat",
@@ -1072,7 +1095,7 @@ export class RealTimeAIService {
           action: "navigate",
           url: "/ai-assistant",
         },
-        { id: "feed", label: "Visit Feed", action: "navigate", url: "/feed" },
+        { id: "feed", label: "Visit Feed", action: "navigate", url: "/app/feed" },
       ],
       followUpQuestions: [
         "How do I create my first post?",
@@ -1104,7 +1127,10 @@ export class RealTimeAIService {
         const tips = this.softchatKnowledge.tips[topic.split(" ")[0]] || [];
         const tipText =
           tips.length > 0
-            ? `\n\n💡 Pro tips:\n• ${tips.slice(0, 3).join("\n• ")}`
+            ? `
+
+💡 Pro tips:
+• ${tips.slice(0, 3).join("\n• ")}`
             : "";
 
         return {
@@ -1131,7 +1157,16 @@ export class RealTimeAIService {
     }
 
     return {
-      message: `${supportive} I'd love to help you with that! Could you be a bit more specific about what you'd like to learn? I can guide you through:\n\n• Creating content and posts\n• Trading cryptocurrency\n• Selling on the marketplace\n• Finding freelance work\n• Earning SoftPoints\n• Setting up your profile\n\nJust let me know what interests you most! 🌟`,
+      message: `${supportive} I'd love to help you with that! Could you be a bit more specific about what you'd like to learn? I can guide you through:
+
+• Creating content and posts
+• Trading cryptocurrency
+• Selling on the marketplace
+• Finding freelance work
+• Earning SoftPoints
+• Setting up your profile
+
+Just let me know what interests you most! 🌟`,
       confidence: 85,
       sources: ["SoftChat Help"],
       category: "softchat",
@@ -1216,7 +1251,7 @@ export class RealTimeAIService {
             id: "community",
             label: "Connect with Community",
             action: "navigate",
-            url: "/feed",
+            url: "/app/feed",
           },
         ],
         followUpQuestions: [
@@ -1440,7 +1475,16 @@ export class RealTimeAIService {
   private handleSocialQuery(user: User): IntelligentAIResponse {
     const enthusiasm = this.getRandomItem(this.personalityTraits.enthusiasm);
     return {
-      message: `${enthusiasm} The social features are my favorite part of SoftChat! 🌟 You can share posts, stories, connect with friends, and build an amazing community! \n\nHere's what you can do:\n• Create engaging posts with photos and videos\n• Share stories that disappear after 24 hours\n• Follow interesting people and make new friends\n• Join groups based on your interests\n• Go live and connect in real-time\n\nReady to start sharing your world? 📸`,
+      message: `${enthusiasm} The social features are my favorite part of SoftChat! 🌟 You can share posts, stories, connect with friends, and build an amazing community! 
+
+Here's what you can do:
+• Create engaging posts with photos and videos
+• Share stories that disappear after 24 hours
+• Follow interesting people and make new friends
+• Join groups based on your interests
+• Go live and connect in real-time
+
+Ready to start sharing your world? 📸`,
       confidence: 98,
       sources: ["Social Features Guide"],
       category: "softchat",
@@ -1451,7 +1495,7 @@ export class RealTimeAIService {
           action: "navigate",
           url: "/create",
         },
-        { id: "feed", label: "Explore Feed", action: "navigate", url: "/feed" },
+        { id: "feed", label: "Explore Feed", action: "navigate", url: "/app/feed" },
       ],
       followUpQuestions: [
         "How do I create my first post?",
@@ -1493,7 +1537,21 @@ export class RealTimeAIService {
 
   private handleMarketplaceQuery(user: User): IntelligentAIResponse {
     return {
-      message: `The marketplace is amazing for both buyers and sellers! 🛍️ You can sell anything from digital products to physical items, and buying is super secure with our payment protection!\n\nAs a seller:\n• List unlimited products\n• Reach thousands of potential buyers\n• Secure payment processing\n• Built-in analytics and insights\n\nAs a buyer:\n• Discover unique products\n• Secure checkout process\n• Buyer protection guarantee\n• Review and rating system\n\nReady to start buying or selling?`,
+      message: `The marketplace is amazing for both buyers and sellers! 🛍️ You can sell anything from digital products to physical items, and buying is super secure with our payment protection!
+
+As a seller:
+• List unlimited products
+• Reach thousands of potential buyers
+• Secure payment processing
+• Built-in analytics and insights
+
+As a buyer:
+• Discover unique products
+• Secure checkout process
+• Buyer protection guarantee
+• Review and rating system
+
+Ready to start buying or selling?`,
       confidence: 98,
       sources: ["Marketplace Guide"],
       category: "softchat",
@@ -1522,7 +1580,22 @@ export class RealTimeAIService {
 
   private handleFreelanceQuery(user: User): IntelligentAIResponse {
     return {
-      message: `The freelance platform is perfect for building your career! 💼 Whether you're offering services or looking to hire talent, we've got you covered!\n\nFor freelancers:\n• Create a professional profile\n• Browse thousands of projects\n• Secure milestone-based payments\n• Build your reputation with reviews\n• Track time and manage projects\n\nFor clients:\n• Post your projects for free\n• Review proposals from qualified freelancers\n• Secure escrow payment system\n• Project management tools\n\nReady to start your freelance journey?`,
+      message: `The freelance platform is perfect for building your career! 💼 Whether you're offering services or looking to hire talent, we've got you covered!
+
+For freelancers:
+• Create a professional profile
+• Browse thousands of projects
+• Secure milestone-based payments
+• Build your reputation with reviews
+• Track time and manage projects
+
+For clients:
+• Post your projects for free
+• Review proposals from qualified freelancers
+• Secure escrow payment system
+• Project management tools
+
+Ready to start your freelance journey?`,
       confidence: 98,
       sources: ["Freelance Platform Guide"],
       category: "softchat",
@@ -1551,7 +1624,17 @@ export class RealTimeAIService {
 
   private handleWalletQuery(user: User): IntelligentAIResponse {
     return {
-      message: `Your SoftChat wallet is your financial hub! 💰 It securely manages all your money from different platform activities - crypto trading, marketplace sales, freelance earnings, and more!\n\nWallet features:\n• Multi-currency support (crypto + fiat)\n• Instant transfers between platform features\n• Detailed transaction history\n• Bank-level security\n• Easy deposits and withdrawals\n• Real-time balance tracking\n\nYour money is always safe and accessible!`,
+      message: `Your SoftChat wallet is your financial hub! 💰 It securely manages all your money from different platform activities - crypto trading, marketplace sales, freelance earnings, and more!
+
+Wallet features:
+• Multi-currency support (crypto + fiat)
+• Instant transfers between platform features
+• Detailed transaction history
+• Bank-level security
+• Easy deposits and withdrawals
+• Real-time balance tracking
+
+Your money is always safe and accessible!`,
       confidence: 98,
       sources: ["Wallet Features Guide"],
       category: "softchat",
@@ -1580,7 +1663,23 @@ export class RealTimeAIService {
 
   private handleRewardsQuery(user: User): IntelligentAIResponse {
     return {
-      message: `SoftPoints are so much fun to earn! 🎆 You get rewarded for being active on the platform, and you can redeem them for real rewards!\n\nEarn SoftPoints by:\n• Creating and sharing content\n• Engaging with the community\n• Completing your profile\n• Referring friends\n• Using different platform features\n• Maintaining positive interactions\n\nRedeem for:\n• Gift cards to popular stores\n• Platform premium features\n• Exclusive merchandise\n• Cash rewards\n\nThe more active you are, the more you earn!`,
+      message: `SoftPoints are so much fun to earn! 🎆 You get rewarded for being active on the platform, and you can redeem them for real rewards!
+
+Earn SoftPoints by:
+• Creating and sharing content
+• Engaging with the community
+• Completing your profile
+• Referring friends
+• Using different platform features
+• Maintaining positive interactions
+
+Redeem for:
+• Gift cards to popular stores
+• Platform premium features
+• Exclusive merchandise
+• Cash rewards
+
+The more active you are, the more you earn!`,
       confidence: 98,
       sources: ["Rewards System Guide"],
       category: "softchat",
@@ -1595,7 +1694,7 @@ export class RealTimeAIService {
           id: "earn",
           label: "Start Earning",
           action: "navigate",
-          url: "/feed",
+          url: "/app/feed",
         },
       ],
       followUpQuestions: [
@@ -1620,7 +1719,7 @@ export class RealTimeAIService {
       "start trading crypto": "/crypto",
       "sell on marketplace": "/marketplace/sell",
       "find freelance work": "/freelance",
-      "earn softpoints": "/rewards",
+      "earn eloits": "/rewards",
     };
     return urlMap[topic] || "/explore";
   }
@@ -1834,7 +1933,7 @@ export class RealTimeAIService {
             message: `${enthusiasm} I'd love to explain ${topic} to you! ${explanation}\n\n${curiosity} Is there a specific aspect you'd like to dive deeper into?`,
             confidence: 90,
             sources: ["Knowledge Base"],
-            category: "education",
+            category: "general",
             suggestedActions: [
               {
                 id: "learn-more",
@@ -1856,10 +1955,14 @@ export class RealTimeAIService {
 
     // Fallback for general knowledge queries
     return {
-      message: `That's a great question! While I might not have specific details about that topic, I'm always eager to help you learn! 🎓\n\nI excel at helping with SoftChat features, real-time data like crypto prices and weather, calculations, and friendly conversation. For complex topics, I'd recommend checking reliable sources online.\n\nIs there something specific about SoftChat or real-time information I can help you with instead?`,
+      message: `That's a great question! While I might not have specific details about that topic, I'm always eager to help you learn! 🎓
+
+I excel at helping with SoftChat features, real-time data like crypto prices and weather, calculations, and friendly conversation. For complex topics, I'd recommend checking reliable sources online.
+
+Is there something specific about SoftChat or real-time information I can help you with instead?`,
       confidence: 70,
       sources: ["General AI"],
-      category: "education",
+      category: "general",
       suggestedActions: [
         {
           id: "search",
@@ -1919,10 +2022,17 @@ export class RealTimeAIService {
           .join("\n");
 
         return Promise.resolve({
-          message: `${empathy} - I can definitely help you with ${problem}! ${support}\n\n🔧 **Troubleshooting Steps:**\n${solutionsList}\n\n💡 **Quick Tip:** ${solutionData.common}\n\nTry these steps and let me know if you're still having trouble! I'm here to help until we get it sorted out. 😊`,
+          message: `${empathy} - I can definitely help you with ${problem}! ${support}
+
+🔧 **Troubleshooting Steps:**
+${solutionsList}
+
+💡 **Quick Tip:** ${solutionData.common}
+
+Try these steps and let me know if you're still having trouble! I'm here to help until we get it sorted out. 😊`,
           confidence: 95,
           sources: ["SoftChat Support"],
-          category: "troubleshooting",
+          category: "technical",
           suggestedActions: [
             {
               id: "contact-support",
@@ -1946,7 +2056,7 @@ export class RealTimeAIService {
       message: `${empathy} - I can see you're dealing with an issue, and ${support}! 💪\n\nLet's work through this together step by step:\n\n1. **Describe the problem** - What exactly is happening?\n2. **When did it start** - Was it working before?\n3. **What you've tried** - Have you attempted any solutions?\n4. **Your goal** - What are you trying to accomplish?\n\nWith these details, I can provide much better guidance! Don't worry, most issues have simple solutions. 🔧`,
       confidence: 85,
       sources: ["Problem Solving AI"],
-      category: "troubleshooting",
+      category: "technical",
       suggestedActions: [
         {
           id: "help-center",
@@ -2092,10 +2202,20 @@ export class RealTimeAIService {
       .join("\n\n");
 
     return {
-      message: `${encouragement} I have the perfect tutorial for you: **${tutorial.title}**!\n\n📚 **Overview:** ${tutorial.description}\n⏱️ **Time needed:** ${tutorial.estimatedTime}\n🎯 **Difficulty:** ${tutorial.difficulty}\n\n**Here are the first steps:**\n\n${firstSteps}\n\nReady to dive in? I can guide you through each step!`,
+      message: `${encouragement} I have the perfect tutorial for you: **${tutorial.title}**!
+
+📚 **Overview:** ${tutorial.description}
+⏱️ **Time needed:** ${tutorial.estimatedTime}
+🎯 **Difficulty:** ${tutorial.difficulty}
+
+**Here are the first steps:**
+
+${firstSteps}
+
+Ready to dive in? I can guide you through each step!`,
       confidence: 95,
       sources: ["SoftChat Tutorials"],
-      category: "education",
+      category: "softchat",
       suggestedActions: [
         {
           id: "start-tutorial",
@@ -2125,10 +2245,16 @@ export class RealTimeAIService {
     const casual = this.getRandomItem(this.personalityTraits.casual);
 
     return {
-      message: `Great question! This is ${casual} something many people ask about.\n\n**Q: ${faq.question}**\n\n**A:** ${faq.answer}\n\nDoes this answer your question, or would you like me to go deeper into any part?`,
+      message: `Great question! This is ${casual} something many people ask about.
+
+**Q: ${faq.question}**
+
+**A:** ${faq.answer}
+
+Does this answer your question, or would you like me to go deeper into any part?`,
       confidence: 90,
       sources: ["SoftChat FAQ"],
-      category: "support",
+      category: "softchat",
       suggestedActions: [],
       followUpQuestions: [
         "Can you explain this in more detail?",
@@ -2144,7 +2270,7 @@ export class RealTimeAIService {
    */
   private getFeatureUrl(featureKey: string): string {
     const urlMap: Record<string, string> = {
-      "social-feed": "/feed",
+      "social-feed": "/app/feed",
       "crypto-trading": "/crypto",
       marketplace: "/marketplace",
       "freelance-platform": "/freelance",

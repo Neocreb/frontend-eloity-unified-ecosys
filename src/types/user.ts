@@ -30,6 +30,14 @@ export interface UserProfile {
   last_active?: string;
   is_online?: boolean;
 
+  // Premium Subscription Status
+  is_premium?: boolean;
+  premium_tier?: "free" | "creator" | "professional" | "enterprise";
+  subscription_status?: "active" | "cancelled" | "expired" | "trial";
+  subscription_expires_at?: string;
+  subscription_auto_renew?: boolean;
+  subscription_created_at?: string;
+
   // Privacy Settings
   profile_visibility?: "public" | "followers" | "private";
   show_email?: boolean;
@@ -44,6 +52,10 @@ export interface UserProfile {
   bank_name?: string;
   preferred_currency?: string;
   timezone?: string;
+
+  // KYC and Verification
+  kyc_level?: 0 | 1 | 2 | 3;
+  kyc_verified_at?: string;
 
   // Extended Profile Features
   marketplace_profile?: MarketplaceProfile;
@@ -319,8 +331,8 @@ export interface Badge {
 
 // Extended User interface
 export interface ExtendedUser extends User {
-  username(arg0: string, username: any): unknown;
   name: string;
+  username: string;
   avatar: string;
   points: number;
   level: string;

@@ -1157,6 +1157,13 @@ export const marketplaceService = {
     return mockOrders.filter((order) => order.customerId === customerId);
   },
 
+  async getSellerOrders(sellerId: string): Promise<Order[]> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return mockOrders.filter((order) => 
+      order.items.some(item => item.sellerId === sellerId)
+    );
+  },
+
   async updateOrderStatus(
     orderId: string,
     status: Order["status"],
@@ -1254,6 +1261,71 @@ export const marketplaceService = {
     // Return featured products
     return mockProducts.filter((p) => p.isFeatured).slice(0, 6);
   },
+
+  // Add missing seller analytics function
+  async getSellerAnalytics(sellerId: string): Promise<any> {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    // Mock seller analytics data
+    return {
+      totalRevenue: 12500,
+      totalOrders: 89,
+      totalProducts: 24,
+      customerSatisfaction: 4.8,
+      monthlyRevenue: [8500, 10200, 12500],
+      categoryBreakdown: [
+        { category: "Electronics", revenue: 7800, percentage: 62 },
+        { category: "Fashion", revenue: 3200, percentage: 26 },
+        { category: "Home", revenue: 1500, percentage: 12 },
+      ],
+      averageOrderValue: 140.45,
+      responseRate: 98,
+      onTimeDeliveryRate: 95,
+      topProducts: mockProducts.slice(0, 3),
+      conversionRate: 3.2,
+      boostROI: 245,
+    };
+  },
+
+  // Add missing product performance function
+  async getProductPerformance(productId: string): Promise<any> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    
+    // Mock product performance data
+    return {
+      views: 1247,
+      clicks: 398,
+      addToCarts: 156,
+      purchases: 89,
+      favorites: 67,
+      conversionRate: 2.3,
+      revenue: 22450,
+      rating: 4.8,
+      reviewCount: 124,
+    };
+  },
+
+  // Add missing duplicateProduct function
+  async duplicateProduct(productId: string): Promise<Product> {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    
+    const product = mockProducts.find((p) => p.id === productId);
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    const duplicatedProduct: Product = {
+      ...product,
+      id: `p${Date.now()}`,
+      name: `${product.name} (Copy)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockProducts.push(duplicatedProduct);
+    return duplicatedProduct;
+  },
+
 };
 
 export default marketplaceService;

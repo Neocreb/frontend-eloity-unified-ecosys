@@ -615,7 +615,7 @@ export class UnifiedPaymentService {
       },
       body: JSON.stringify({
         items: [{
-          title: 'Softchat Payment',
+          title: 'Eloity Payment',
           quantity: 1,
           unit_price: request.amount
         }],
@@ -972,7 +972,7 @@ export class GlobalSmsService {
 
     switch (provider.id) {
       case 'twilio':
-        return this.sendViaTwilio(phoneNumber, `Your Softchat verification code is: ${otp}`);
+        return this.sendViaTwilio(phoneNumber, `Your Eloity verification code is: ${otp}`);
       
       case 'africas_talking':
         return this.sendViaAfricasTalking(phoneNumber, otp);
@@ -1025,7 +1025,7 @@ export class GlobalSmsService {
     const sms = africasTalking.SMS;
     const result = await sms.send({
       to: phoneNumber,
-      message: `Your Softchat verification code is: ${otp}. Valid for 10 minutes.`,
+      message: `Your Eloity verification code is: ${otp}. Valid for 10 minutes.`,
       from: 'SOFTCHAT'
     });
 
@@ -1045,13 +1045,13 @@ export class GlobalSmsService {
         api_key: process.env.TERMII_API_KEY,
         message_type: 'NUMERIC',
         to: phoneNumber,
-        from: 'Softchat',
+        from: 'Eloity',
         channel: 'sms',
         pin_attempts: 3,
         pin_time_to_live: 10,
         pin_length: 6,
         pin_placeholder: '< 1234 >',
-        message_text: 'Your Softchat verification code is < 1234 >. Valid for 10 minutes.',
+        message_text: 'Your Eloity verification code is < 1234 >. Valid for 10 minutes.',
         pin_type: 'NUMERIC'
       })
     });

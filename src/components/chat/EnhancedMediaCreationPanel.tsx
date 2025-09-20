@@ -22,6 +22,8 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { useUserCollections } from "@/contexts/UserCollectionsContext";
+import { useUserPremiumStatus } from "@/hooks/useUserPremiumStatus";
+import PremiumGate from "@/components/premium/PremiumGate";
 
 interface EnhancedMediaCreationPanelProps {
   isMobile?: boolean;
@@ -32,8 +34,6 @@ interface EnhancedMediaCreationPanelProps {
     metadata?: any;
   }) => void;
   onMediaSaved?: (mediaId: string, collection: "memes" | "gifs" | "stickers") => void;
-  isPremium?: boolean;
-  userCredits?: number;
   saveToCollectionFirst?: boolean; // New prop to control behavior
 }
 
@@ -43,12 +43,11 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
   isMobile = false,
   onStickerCreate,
   onMediaSaved,
-  isPremium = false,
-  userCredits = 0,
   saveToCollectionFirst = true,
 }) => {
   const { toast } = useToast();
   const { saveToCollection } = useUserCollections();
+  const { isPremium, hasFeature, features } = useUserPremiumStatus();
   const [currentMode, setCurrentMode] = useState<CreationMode>(null);
   const [processing, setProcessing] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);

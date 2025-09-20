@@ -115,4 +115,4 @@ Users now experience:
 4. **Tab-based navigation** that stays within chat
 5. **Full WhatsApp-style features** in dedicated chat pages
 
-The chat system now properly reflects the multi-faceted nature of the Softchat platform! 🎉
+The chat system now properly reflects the multi-faceted nature of the Eloity platform! 🎉

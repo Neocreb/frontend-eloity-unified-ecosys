@@ -1014,7 +1014,7 @@ export default function EnhancedCrypto() {
                           <div className="p-2 bg-blue-500 rounded-lg">
                             <BookOpen className="h-5 w-5 text-white" />
                           </div>
-                          Latest from SoftChat Blog
+                          Latest from Eloity Blog
                         </h3>
                         <p className="text-sm text-blue-600/80 dark:text-blue-300/80">
                           Stay updated with crypto insights, trading strategies,

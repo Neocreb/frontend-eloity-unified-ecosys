@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide shows how the unified chat system integrates with all SoftChat features to enable real-time user activity and seamless communication across the platform.
+This guide shows how the unified chat system integrates with all Eloity features to enable real-time user activity and seamless communication across the platform.
 
 ## Integration Architecture
 
@@ -452,4 +452,4 @@ const UPDATED_CHAT_TABS = [
 - ✅ Unread count updates across all tabs
 - ✅ AI assistant always available for help
 
-The unified chat system now provides seamless integration across all SoftChat features, ensuring that every user interaction can naturally flow into meaningful conversations while maintaining full context and providing the best possible user experience.
+The unified chat system now provides seamless integration across all Eloity features, ensuring that every user interaction can naturally flow into meaningful conversations while maintaining full context and providing the best possible user experience.

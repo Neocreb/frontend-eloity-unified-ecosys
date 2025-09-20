@@ -167,7 +167,7 @@ export default function BlogPostPage() {
               <span className="text-gray-300">|</span>
               <Link
                 to="/blog"
-                className="text-gray-600 hover:text-softchat-600 font-medium transition-colors"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
               >
                 Blog
               </Link>
@@ -177,22 +177,22 @@ export default function BlogPostPage() {
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/#features"
-                className="text-gray-600 hover:text-softchat-600 transition-colors"
+                className="text-gray-600 hover:text-blue-600 transition-colors"
               >
                 Features
               </Link>
               <Link
-                to="/#why-softchat"
-                className="text-gray-600 hover:text-softchat-600 transition-colors"
+                to="/#why-eloity"
+                className="text-gray-600 hover:text-blue-600 transition-colors"
               >
-                Why Softchat
+                Why Eloity
               </Link>
-              <Link to="/blog" className="text-softchat-600 font-medium">
+              <Link to="/blog" className="text-blue-600 font-medium">
                 Blog
               </Link>
               <Link
                 to="/#contact"
-                className="text-gray-600 hover:text-softchat-600 transition-colors"
+                className="text-gray-600 hover:text-blue-600 transition-colors"
               >
                 Newsletter
               </Link>

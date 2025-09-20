@@ -24,7 +24,7 @@ Implemented unified navigation experience in both Thread and Classic modes while
 
 #### **Enhanced Sharing**
 - **Share Dialog**: Copy link, external sharing, repost, quote post functionality
-- **Reward Integration**: SoftPoints earned for all sharing activities
+- **Reward Integration**: Eloits earned for all sharing activities
 - **Consistent UX**: Same sharing experience as thread mode
 
 ### 2. Parent-Child Integration Strategy
@@ -63,7 +63,7 @@ Both thread and classic modes now support:
 - **Click-through**: Post content opens detailed pages
 - **Quick Actions**: Immediate actions without leaving feed
 - **Smart Suggestions**: Alternative content when unavailable
-- **Reward Tracking**: SoftPoints for all activities
+- **Reward Tracking**: Eloits for all activities
 
 #### **Cross-Platform Discovery**
 - **Natural Content Flow**: Users discover jobs, products, events in their social feed
@@ -110,7 +110,7 @@ const handleContentClick = (e: React.MouseEvent) => {
 - **Consistent Experience**: Both thread and classic modes work the same way
 - **Quick Actions**: Can take immediate action or get full details
 - **Smart Discovery**: Find relevant content across platform features
-- **Unified Rewards**: Earn SoftPoints for all activities
+- **Unified Rewards**: Earn Eloits for all activities
 
 ### **For Platform**
 - **No Duplication**: Detailed pages extend parent functionality

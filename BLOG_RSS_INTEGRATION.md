@@ -2,7 +2,7 @@
 
 ## Overview
 
-This integration connects the SoftChat landing page blog system to the cryptocurrency page's "Learn & News" tab, displaying blog posts as an RSS feed to provide educational content directly within the crypto trading interface.
+This integration connects the Eloity landing page blog system to the cryptocurrency page's "Learn & News" tab, displaying blog posts as an RSS feed to provide educational content directly within the crypto trading interface.
 
 ## Features
 
@@ -172,7 +172,7 @@ Each blog post can be tagged with related cryptocurrency symbols (BTC, ETH, ADA,
 ```xml
 <item>
   <title><![CDATA[Understanding Bitcoin: A Beginner's Guide]]></title>
-  <link>https://softchat.com/blog/understanding-bitcoin-beginners-guide</link>
+  <link>https://eloity.com/blog/understanding-bitcoin-beginners-guide</link>
   <description><![CDATA[Learn the fundamentals of Bitcoin...]]></description>
   <pubDate>Mon, 15 Jan 2024 10:00:00 GMT</pubDate>
   <author><![CDATA[Sarah Chen]]></author>

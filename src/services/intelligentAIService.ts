@@ -743,7 +743,20 @@ class IntelligentAIService {
     const userName = user?.name || "there";
 
     return {
-      message: `Welcome to SoftChat, ${userName}! 🌟\n\nSoftChat is your all-in-one platform for social networking, content creation, e-commerce, freelancing, and cryptocurrency trading. Here's what makes us special:\n\n🌐 **Social Features**: Connect with friends, share content, and build your community\n📹 **Video & Streaming**: Create and monetize video content with professional tools\n🛒 **Marketplace**: Buy and sell products with integrated payment processing\n💼 **Freelance Hub**: Find work or hire talent across various industries\n💰 **Crypto Trading**: Trade cryptocurrencies with advanced tools and P2P options\n🎁 **Rewards System**: Earn SoftPoints for activities and redeem for real rewards\n\nI'm Edith, your AI assistant, and I'm here to help you navigate the platform, answer questions, provide insights, and assist with both SoftChat features and general topics!\n\nWhat would you like to explore first?`,
+      message: `Welcome to SoftChat, ${userName}! 🌟
+
+SoftChat is your all-in-one platform for social networking, content creation, e-commerce, freelancing, and cryptocurrency trading. Here's what makes us special:
+
+🌐 **Social Features**: Connect with friends, share content, and build your community
+📹 **Video & Streaming**: Create and monetize video content with professional tools
+🛒 **Marketplace**: Buy and sell products with integrated payment processing
+💼 **Freelance Hub**: Find work or hire talent across various industries
+💰 **Crypto Trading**: Trade cryptocurrencies with advanced tools and P2P options
+🎁 **Rewards System**: Earn SoftPoints for activities and redeem for real rewards
+
+I'm Edith, your AI assistant, and I'm here to help you navigate the platform, answer questions, provide insights, and assist with both SoftChat features and general topics!
+
+What would you like to explore first?`,
       confidence: 98,
       sources: ["SoftChat Platform Guide", "Feature Documentation"],
       suggestedActions: [
@@ -779,7 +792,7 @@ class IntelligentAIService {
 
   private getFeatureUrl(featureKey: string): string {
     const urlMap: Record<string, string> = {
-      social_feed: "/feed",
+      social_feed: "/app/feed",
       video_creation: "/videos",
       marketplace: "/marketplace",
       freelance_platform: "/freelance",

@@ -12,7 +12,7 @@ Created comprehensive detailed pages for each content type:
 - **Full Job Details**: Company info, salary, requirements, benefits
 - **Application Form**: Complete application flow with cover letter, portfolio, expected salary
 - **Smart Suggestions**: Alternative jobs when position is unavailable
-- **Reward Integration**: SoftPoints for applications
+- **Reward Integration**: Eloits for applications
 - **Company Verification**: Verified badges and ratings
 - **Skills Matching**: Visual skill requirements display
 
@@ -23,7 +23,7 @@ Created comprehensive detailed pages for each content type:
 - **Product Specifications**: Detailed specs and features
 - **Availability Status**: Stock levels and availability
 - **Smart Suggestions**: Alternative products when unavailable
-- **Reward Integration**: SoftPoints for purchases and cart additions
+- **Reward Integration**: Eloits for purchases and cart additions
 
 #### **DetailedEventPage** (`/app/events/:eventId`)
 - **Live Event Support**: Real-time status and live streaming
@@ -88,7 +88,7 @@ Feed → Live Event → Watch Live → Live Stream → Participation
 ```
 
 ### 5. Reward System Integration
-Comprehensive SoftPoints tracking for all activities:
+Comprehensive Eloits tracking for all activities:
 
 #### **Social Activities**
 - **Like Posts**: +10 SP

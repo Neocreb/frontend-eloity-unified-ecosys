@@ -59,7 +59,7 @@ export type Database = {
       }
       crypto_settings: {
         Row: {
-          conversion_rate_softpoints_to_usdt: number
+          conversion_rate_eloits_to_usdt: number
           id: string
           min_kyc_level_for_withdrawal: number
           p2p_fee_percentage: number
@@ -69,7 +69,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          conversion_rate_softpoints_to_usdt?: number
+          conversion_rate_eloits_to_usdt?: number
           id?: string
           min_kyc_level_for_withdrawal?: number
           p2p_fee_percentage?: number
@@ -79,7 +79,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          conversion_rate_softpoints_to_usdt?: number
+          conversion_rate_eloits_to_usdt?: number
           id?: string
           min_kyc_level_for_withdrawal?: number
           p2p_fee_percentage?: number
@@ -418,7 +418,7 @@ export type Database = {
           kyc_documents: Json | null
           kyc_level: number
           kyc_verified: boolean
-          softpoints_balance: number
+          eloits_balance: number
           sol_balance: number
           updated_at: string | null
           usdt_balance: number
@@ -432,7 +432,7 @@ export type Database = {
           kyc_documents?: Json | null
           kyc_level?: number
           kyc_verified?: boolean
-          softpoints_balance?: number
+          eloits_balance?: number
           sol_balance?: number
           updated_at?: string | null
           usdt_balance?: number
@@ -446,7 +446,7 @@ export type Database = {
           kyc_documents?: Json | null
           kyc_level?: number
           kyc_verified?: boolean
-          softpoints_balance?: number
+          eloits_balance?: number
           sol_balance?: number
           updated_at?: string | null
           usdt_balance?: number

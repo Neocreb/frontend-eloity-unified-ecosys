@@ -488,7 +488,7 @@ We welcome contributions to the enhanced crypto platform! Please read our [Contr
 
 ## 📄 **License**
 
-This enhanced crypto trading platform is part of the Softchat ecosystem and is licensed under the [MIT License](LICENSE).
+This enhanced crypto trading platform is part of the Eloity ecosystem and is licensed under the [MIT License](LICENSE).
 
 ---
 

@@ -382,7 +382,7 @@ const dbPool = new Pool({
 # Production environment variables
 WEBSOCKET_URL=wss://api.yourapp.com
 REDIS_URL=redis://redis-cluster:6379
-DATABASE_URL=postgresql://user:pass@db-cluster:5432/softchat
+DATABASE_URL=postgresql://user:pass@db-cluster:5432/eloity
 NODE_ENV=production
 
 # External API keys

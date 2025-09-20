@@ -6,10 +6,10 @@ This system prevents referral abuse while encouraging genuine user growth withou
 ## Anti-Abuse Mechanisms
 
 ### 1. **Decay System**
-- **Base Reward**: 20 softpoints per referral
+- **Base Reward**: 20 eloits per referral
 - **Decay Start**: After 3rd referral in 24 hours
 - **Decay Rate**: 25% reduction per additional referral
-- **Minimum Reward**: 10% of base (2 softpoints minimum)
+- **Minimum Reward**: 10% of base (2 eloits minimum)
 
 **Example:**
 - 1st-3rd referral: 20 SP each

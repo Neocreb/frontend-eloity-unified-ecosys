@@ -1,452 +1,352 @@
-# Eloity - Where Everything Connects
+# Eloity - Unified Social Ecosystem Platform
+# 🚀 Eloity Platform
 
-A comprehensive AI-powered ecosystem combining social media, marketplace, crypto trading, freelancing, and advanced analytics features into one unified platform.
+> **AI-powered unified ecosystem** combining social media, marketplace, crypto trading, and freelancing into one comprehensive platform.
 
-## ✨ Features
+A modern, full-stack platform built with React 18, TypeScript, Node.js, and PostgreSQL, featuring real-time capabilities, advanced security, and enterprise-grade architecture.
 
-### 🔐 **Security & Authentication**
+## ⚡ Quick Start
 
-- JWT-based authentication with secure password hashing
-- Role-based access control (RBAC)
-- Rate limiting and DDoS protection
-- Input validation and sanitization
-- Security headers and CORS protection
+``bash
+# Clone and setup
+git clone https://github.com/your-org/eloity-platform.git
+cd eloity-platform
+npm install
 
-### 📁 **File Management**
+# Configure environment
+cp .env.example .env
+# Edit .env with your configuration
 
-- AWS S3 integration for file uploads
-- Image processing with Sharp (thumbnails, compression)
-- Multiple file format support
-- CDN-ready asset delivery
+# Setup database
+npm run db:generate
+npm run db:push
+npm run db:seed
 
-### 💳 **Payment Processing**
-
-- Marketplace transactions
-- Freelance escrow system
-- Subscription management
-- Multi-currency support
-
-### 📧 **Communication**
-
-- Professional email templates
-- SMTP integration with queuing
-- Real-time notifications
-- WebSocket messaging
-
-### ⚡ **Performance**
-
-- Redis caching layer
-- Background job processing
-- Database query optimization
-- CDN integration
-
-### 🔍 **Monitoring & Analytics**
-
-- Winston logging system
-- Payment analytics
-- User engagement metrics
-- Error tracking and reporting
-
-### 🎁 **Enhanced Reward System**
-
-- **No Daily Limits**: Content creators can post unlimited content
-- **Quality-Based Rewards**: Up to 2.5x multipliers for high-quality content
-- **Time-Based Decay**: Natural spam prevention through progressive reward reduction
-- **Payment-Gated Rewards**: Marketplace and freelance rewards only on completion
-- **Cross-Platform Integration**: Unified SoftPoints system across all activities
-- **Anti-Abuse Protection**: AI-powered fraud detection and risk scoring
-
-## 🏗️ Architecture
-
-```
-├── server/
-│   ├── config/
-│   │   └── security.ts          # Security configuration
-│   ├── database/
-│   │   └── operations.ts        # Database operations
-│   ├── routes/
-│   │   └── enhanced.ts          # API routes
-│   ├── services/
-│   │   ├── fileService.ts       # File upload & processing
-│   │   ├── emailService.ts      # Email system
-│   │   ├── paymentService.ts    # Payment processing
-│   │   ├── cacheService.ts      # Redis caching
-│   │   └── jobService.ts        # Background jobs
-│   ├── enhanced-index.ts        # Enhanced server entry
-│   └── db.ts                    # Database connection
-├── shared/
-│   └── schema.ts                # Database schema
-└── scripts/
-    └── setup.ts                 # Setup automation
+# Start development
+npm run dev
 ```
 
-## ��� Quick Start
+**🌐 Access the platform:**
+- Frontend: http://localhost:8080
+- Backend API: http://localhost:5000
+- Admin Dashboard: http://localhost:8080/admin
 
-### 1. **Clone & Setup**
+## 📚 Documentation
+
+**🎆 Recently Reorganized!** Our documentation has been completely restructured from 80+ scattered files into a clear, organized system.
+
+### 🚀 **[Getting Started](./docs/setup/getting-started.md)**
+Complete setup guide for local development
+
+### ⭐ **[Platform Features](./docs/features/core-features.md)**
+Comprehensive overview of all platform capabilities
+
+### 👩‍💻 **[Development Guide](./docs/development/development-guide.md)**
+Architecture, coding standards, and best practices
+
+### 🔌 **[API Reference](./docs/api/api-reference.md)**
+Complete API documentation with examples
+
+### 🚀 **[Deployment Guide](./docs/deployment/production.md)**
+Production deployment and configuration
+
+### 📜 **[Migration Summary](./docs/MIGRATION_SUMMARY.md)**
+See how 80+ files were organized into 6 clear sections
+
+### 📚 **[Full Documentation](./docs/README.md)**
+Browse all documentation categories
+- **React Query DevTools**: Development debugging
+- **Performance Monitoring**: Real-time metrics
+- **Error Tracking**: Comprehensive error reporting
+
+---
+
+## 🏗️ Modern Architecture
+
+```
+Eloity Platform/
+├── Frontend (React + TypeScript + Vite)
+│   ├── src/
+│   │   ├── components/        # Reusable UI components
+│   │   │   ├── ui/              # Base UI components (Radix)
+│   │   │   ├── feed/            # Social media components
+│   │   │   ├── marketplace/     # E-commerce components
+│   │   │   ├── crypto/          # Trading components
+│   │   │   ├── freelance/       # Freelancing components
+│   │   │   ├── video/           # Video platform components
+│   │   │   ├── chat/            # Real-time chat
+│   │   │   └── creator-economy/ # Creator tools
+│   │   ├── contexts/          # React contexts for state
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── services/          # API and external services
+│   │   ├── pages/             # Page components
+│   │   ├── lib/               # Utilities and helpers
+│   │   └── types/             # TypeScript type definitions
+│   └── public/              # Static assets
+│
+├── Backend (Node.js + Express + TypeScript)
+│   ├── server/
+│   │   ├── config/            # Configuration files
+│   │   ├── database/          # Database operations
+│   │   ├── routes/            # API route handlers
+│   │   ├── services/          # Business logic services
+│   │   ├── middleware/        # Express middleware
+│   │   ├── websocket/         # WebSocket handlers
+│   │   └── utils/             # Server utilities
+│   └── shared/              # Shared types and schemas
+│
+├── Database (PostgreSQL + Drizzle ORM)
+│   ├── migrations/          # Database migrations
+│   └── schema/              # Database schema definitions
+│
+└── Deployment
+    ├── scripts/             # Deployment and setup scripts
+    ├── config/              # Environment configurations
+    └── docs/                # Documentation and guides
+```
+
+---
+
+## 🚀 Quick Start
+
+> **👤 Prerequisites**: Node.js 18+, npm 9+, PostgreSQL 14+
+
+### 1. **Clone & Install**
 
 ```bash
 git clone <repository-url>
-cd softchat-platform
-chmod +x scripts/setup.ts
-npx tsx scripts/setup.ts
+cd frontend-eloity-unified-ecosyst
+npm install
 ```
 
-### 2. **Environment Configuration**
+### 2. **Environment Setup**
 
 ```bash
+# Copy environment template
 cp .env.example .env
+
 # Edit .env with your actual values
+nano .env  # or use your preferred editor
 ```
 
-### 3. **Required Environment Variables**
+### 3. **Essential Environment Variables**
 
-```bash
+```
 # Database (Required)
-DATABASE_URL=postgresql://user:pass@host:5432/db
+DATABASE_URL=postgresql://user:password@localhost:5432/eloity_db
+SUPABASE_URL=your-supabase-project-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
 
-# Security (Required)
-JWT_SECRET=your-super-secret-jwt-key
-SESSION_SECRET=your-session-secret
+# Authentication (Required)
+JWT_SECRET=your-super-secure-jwt-secret-key
+SESSION_SECRET=your-session-secret-key
 
-# Email (Required for notifications)
+# File Storage (AWS S3)
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_S3_BUCKET=your-s3-bucket-name
+AWS_REGION=us-east-1
+
+# Email Service (Required for notifications)
 SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
+SMTP_PASS=your-app-specific-password
 
-# Optional but recommended
-AWS_ACCESS_KEY_ID=your-aws-key
-AWS_SECRET_ACCESS_KEY=your-aws-secret
-AWS_S3_BUCKET=your-bucket
-STRIPE_SECRET_KEY=sk_test_...
+# Payment Processing (Stripe)
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_public
+
+# Redis Cache (Optional but recommended)
 REDIS_URL=redis://localhost:6379
+
+# Development
+NODE_ENV=development
+PORT=8080
+VITE_PORT=8081
 ```
 
-### 4. **Database Setup**
+### 4. **Database Initialization**
 
 ```bash
-# Generate and push schema
+# Generate database schema
 npm run db:generate
+
+# Push schema to database
 npm run db:push
 
-# View database in Drizzle Studio
+# Seed initial data (optional)
+npm run db:seed
+
+# Open database studio (optional)
 npm run db:studio
 ```
 
-### 5. **Start Development**
+### 5. **Start Development Servers**
 
 ```bash
-# Start enhanced backend
+# Start both frontend and backend (recommended)
 npm run dev
 
-# Or start original backend
-npm run dev:original
+# Or start individually:
+npm run dev:frontend  # Frontend only (Vite)
+npm run dev:backend   # Backend only (Express)
 ```
 
-## 📊 API Endpoints
+### 6. **Access the Application**
 
-### **Authentication**
+- **Frontend**: http://localhost:8081
+- **Backend API**: http://localhost:8080
+- **Database Studio**: http://localhost:4983 (when running db:studio)
 
-```
-POST /api/auth/register     # User registration
-POST /api/auth/login        # User login
-GET  /api/auth/me          # Get current user
-```
+### 7. **Build for Production**
 
-### **Social Media**
+```bash
+# Build both frontend and backend
+npm run build
 
-```
-GET  /api/posts            # Get feed posts
-POST /api/posts            # Create post (with media)
-POST /api/posts/:id/like   # Like/unlike post
-POST /api/posts/:id/comments # Add comment
+# Start production server
+npm start
 ```
 
-### **Marketplace**
+---
+
+## 📊 Enhanced API Endpoints
+
+### **Authentication & User Management**
 
 ```
-GET  /api/products         # Search products
-POST /api/products         # Create product (with images)
-POST /api/products/:id/purchase # Purchase product
+POST /api/auth/register         # User registration with validation
+POST /api/auth/login           # Secure login with MFA support
+POST /api/auth/logout          # Secure logout and token cleanup
+GET  /api/auth/me             # Get current user profile
+POST /api/auth/forgot-password # Password recovery
+POST /api/auth/reset-password  # Password reset with token
+POST /api/auth/verify-email    # Email verification
+```
+
+### **Social Media & Content**
+
+```
+GET  /api/feed                 # AI-curated personalized feed
+POST /api/posts               # Create post with rich media
+PUT  /api/posts/:id           # Edit post content
+DELETE /api/posts/:id         # Delete post
+POST /api/posts/:id/like      # Like/unlike with reaction types
+POST /api/posts/:id/share     # Share post with attribution
+GET  /api/posts/:id/comments  # Get threaded comments
+POST /api/posts/:id/comments  # Add comment with threading
+POST /api/stories             # Create 24-hour story
+GET  /api/trending            # Get trending topics and hashtags
+```
+
+### **E-Commerce**
+
+```
+GET  /api/products            # Search products with filters
+POST /api/products            # Create product listing
+PUT  /api/products/:id        # Edit product details
+DELETE /api/products/:id      # Remove product
+POST /api/products/:id/purchase # Purchase product with payment
+GET  /api/products/:id/reviews # Get product reviews
+POST /api/products/:id/reviews # Add product review
+```
+
+### **Crypto Trading**
+
+```
+GET  /api/trading/charts      # Get real-time market charts
+POST /api/trading/orders      # Create trading order
+GET  /api/trading/orders      # List user orders
+DELETE /api/trading/orders/:id # Cancel order
+GET  /api/trading/wallet      # Get user wallet balance
+POST /api/trading/deposit     # Deposit funds
+POST /api/trading/withdraw    # Withdraw funds
+GET  /api/trading/transactions # List transactions
 ```
 
 ### **Freelancing**
 
 ```
-GET  /api/freelance/jobs   # Search jobs
-POST /api/freelance/jobs   # Post job
-POST /api/freelance/jobs/:id/proposals # Submit proposal
+GET  /api/freelance/jobs      # Search freelance jobs
+POST /api/freelance/jobs      # Post new job
+GET  /api/freelance/proposals # List job proposals
+POST /api/freelance/proposals # Submit proposal
+POST /api/freelance/milestones # Complete project milestone
+GET  /api/freelance/projects  # List user projects
 ```
 
-### **File Uploads**
+### **Video Creation**
 
 ```
-POST /api/upload           # Generic file upload
-POST /api/profiles/:id/avatar # Upload avatar
+POST /api/video/upload        # Upload video file
+POST /api/video/effects      # Apply AR effects
+POST /api/video/stream       # Start live stream
+POST /api/video/stop         # Stop live stream
+GET  /api/video/trending      # Get trending videos
 ```
 
-### **Real-time**
+### **Real-Time Communication**
 
 ```
-WS   /ws                   # WebSocket connection
+WS   /ws                    # WebSocket connection for real-time updates
+POST /api/chat/messages     # Send chat message
+GET  /api/chat/messages     # Get chat history
+POST /api/chat/call         # Initiate voice/video call
 ```
 
-### **Reward System**
+### **Rewards & Gamification**
 
 ```
-POST /api/creator/reward        # Log activity and earn rewards
-GET  /api/creator/summary       # Get earnings and statistics
-GET  /api/creator/history       # View reward history
-GET  /api/creator/leaderboard   # View platform leaderboards
-POST /api/creator/withdraw      # Withdraw earnings
+GET  /api/rewards/summary   # Get user reward summary
+GET  /api/rewards/history   # Get reward history
+POST /api/rewards/activity  # Log user activity for rewards
 ```
 
-## 🗄️ Database Schema
+### **Creator Economy**
 
-### **Core Tables**
-
-- `users` - Authentication data
-- `profiles` - User profiles & settings
-- `posts` - Social media posts
-- `products` - Marketplace items
-- `freelance_jobs` - Job postings
-- `freelance_projects` - Active contracts
-- `notifications` - User notifications
-
-### **Advanced Features**
-
-- `p2p_offers` - Crypto trading
-- `freelance_escrow` - Payment security
-- `chat_messages` - Real-time messaging
-- `project_milestones` - Project tracking
-
-### **Reward System Tables**
-
-- `activity_logs` - All user activities and rewards
-- `reward_rules` - Configurable reward parameters
-- `trust_scores` - User trust and reputation scores
-- `daily_activity_summaries` - Aggregated activity data
-- `fraud_detection_logs` - Anti-abuse monitoring
-
-## 🔧 Development
-
-### **Available Scripts**
-
-```bash
-npm run dev              # Start enhanced development server
-npm run dev:original     # Start original server
-npm run build           # Build for production
-npm run start           # Start production server
-npm run db:push         # Push schema changes
-npm run db:studio       # Open database GUI
-npm run setup:env       # Copy environment template
+```
+GET  /api/creator/analytics # Get analytics dashboard
+POST /api/creator/content   # Submit new content
+GET  /api/creator/projects  # List ongoing projects
+POST /api/creator/earnings  # Withdraw earnings
 ```
 
-### **Development Tools**
+### **AI-Powered Tools**
 
-```bash
-# Database operations
-npm run db:generate     # Generate migrations
-npm run db:push        # Apply schema changes
-npm run db:studio      # Database GUI
-
-# Monitoring
-npm run logs:view      # View combined logs
-npm run logs:errors    # View error logs
+```
+GET  /api/ai/recommendations # Get content recommendations
+POST /api/ai/training       # Train AI model
+GET  /api/ai/predictions    # Get AI predictions
 ```
 
-## 🚀 Production Deployment
+### **File Management**
 
-### **Build & Deploy**
-
-```bash
-# Build application
-npm run build
-
-# Deploy to Vercel
-npm run deploy:vercel
-
-# Or use Docker
-npm run docker:build
-npm run docker:run
+```
+POST /api/files/upload      # Upload file to storage
+GET  /api/files/:id         # Get file metadata
+DELETE /api/files/:id       # Remove file
 ```
 
-### **Environment Setup**
+### **Payment Processing**
 
-1. **Database**: Set up Neon Postgres
-2. **Storage**: Configure AWS S3 bucket
-3. **Email**: Set up SMTP service
-4. **Payments**: Configure Stripe account
-5. **Cache**: Set up Redis instance
-6. **Monitoring**: Configure error tracking
-
-## 🔒 Security Features
-
-- **Password Hashing**: bcrypt with salt rounds
-- **JWT Tokens**: Secure token-based auth
-- **Rate Limiting**: Prevent API abuse
-- **Input Validation**: Zod schema validation
-- **SQL Injection**: Drizzle ORM protection
-- **XSS Protection**: Input sanitization
-- **CORS**: Configurable origin policies
-
-## 📈 Performance Optimizations
-
-- **Redis Caching**: Frequently accessed data
-- **Background Jobs**: Async processing
-- **Image Optimization**: Sharp processing
-- **Database Indexing**: Optimized queries
-- **Connection Pooling**: Efficient DB connections
-
-## 🐛 Troubleshooting
-
-### **Common Issues**
-
-**Database Connection**
-
-```bash
-# Check DATABASE_URL format
-echo $DATABASE_URL
-# Should be: postgresql://user:pass@host:5432/db
+```
+POST /api/payments/process  # Process payment
+GET  /api/payments/status   # Check payment status
+POST /api/payments/subscribe # Create subscription
 ```
 
-**File Uploads**
+### **Monitoring & Analytics**
 
-```bash
-# Verify AWS credentials
-aws s3 ls # Should list buckets
+```
+GET  /api/logs              # Get application logs
+GET  /api/metrics           # Get performance metrics
+POST /api/tracking          # Log user events
 ```
 
-**Email Service**
+---
 
-```bash
-# Test SMTP connection
-npm run test:email
-```
-
-**Redis Cache**
-
-```bash
-# Check Redis connection
-redis-cli ping # Should return PONG
-```
-
-### **Debug Mode**
-
-```bash
-# Enable debug logging
-DEBUG_MODE=true npm run dev
-```
-
-## 🎁 Reward System
-
-### **Overview**
-Our enhanced reward system encourages authentic engagement through quality-based rewards while preventing abuse through sophisticated time-based decay and risk analysis.
-
-### **Key Features**
-
-#### ✨ **No Daily Limits**
-- Content creators can post unlimited content
-- Natural rate limiting through progressive decay
-- Quality over quantity incentive structure
-
-#### 🏆 **Quality-Based Rewards**
-- **Content Quality**: Length, media, engagement features analysis
-- **Time Investment**: Up to 2x multiplier for thoughtful content creation
-- **Professional Features**: Bonuses for monetized, collaborative content
-- **Maximum Multiplier**: Up to 2.5x for exceptional quality
-
-#### ⏰ **Time-Based Decay System**
-- **Time Windows**: 4 hours for posts, 24 hours for other activities
-- **Progressive Decay**: Starting from 1st action in window
-- **Decay Rate**: 0.3 exponential reduction
-- **Minimum Rewards**: 0.1x minimum to discourage spam
-
-#### 💳 **Payment-Gated Rewards**
-- **Marketplace**: Rewards only on successful payment completion
-- **Freelance**: Milestone-based reward distribution
-- **P2P Trading**: Rewards on confirmed trade completion
-- **Escrow Integration**: Secure reward release mechanisms
-
-### **Activity Rewards**
-
-| Activity | Base Reward | Requirements | Special Features |
-|----------|-------------|--------------|------------------|
-| **Post Content** | 3 SP | Trust Score 20+ | Quality multipliers up to 2.5x |
-| **Marketplace Purchase** | 5 SP + 0.01% | Payment completion | Value-based scaling |
-| **Freelance Milestone** | 15 SP | Project completion | Performance bonuses |
-| **P2P Trade** | 5 SP | Trade confirmation | Trust-based multipliers |
-| **Comment** | 1 SP | Trust Score 10+ | Length and quality analysis |
-| **Like/Share** | 0.5-1 SP | Engagement time | Anti-rapid-clicking detection |
-
-### **Anti-Abuse Protection**
-
-#### 🛡️ **Trust Score System**
-- **Calculation**: Based on consistency, diversity, quality, behavior
-- **Multipliers**: 0.5x to 2.0x based on trust level
-- **Requirements**: Minimum trust scores for actions
-- **Dynamic**: Updates based on user behavior patterns
-
-#### 🚨 **Risk Analysis**
-- **Time-Based Frequency**: Rapid action detection
-- **Content Quality**: Pattern analysis for spam
-- **Behavioral Analysis**: Session and engagement patterns
-- **Fraud Detection**: Automated suspicious activity flagging
-
-#### 🔒 **Security Measures**
-- **IP/Device Tracking**: Multi-device abuse prevention
-- **Session Analysis**: Behavioral pattern monitoring
-- **Content Analysis**: Quality and originality checking
-- **Progressive Penalties**: Escalating consequences for abuse
-
-### **Integration Examples**
-
-#### **Marketplace Integration**
-```typescript
-// Reward only on payment completion
-await UnifiedActivityService.trackProductPurchase(
-  userId,
-  productId,
-  amount,
-  { paymentStatus: 'completed' }
-);
-```
-
-#### **Freelance Integration**
-```typescript
-// Milestone-based rewards
-await UnifiedActivityService.trackFreelanceMilestone(
-  userId,
-  projectId,
-  { milestone: completedMilestone, value: milestoneValue }
-);
-```
-
-#### **Content Creation**
-```typescript
-// Quality-based post rewards
-await UnifiedActivityService.trackPost(
-  userId,
-  postId,
-  {
-    contentLength: content.length,
-    hasMedia: !!media,
-    displayMode: 'both',
-    timeSpent: engagementTime
-  }
-);
-```
-
-### **Configuration**
-Reward rules are fully configurable through the admin dashboard:
-- Base reward amounts
-- Decay parameters
-- Quality thresholds
-- Trust score requirements
-- Daily/weekly limits (where applicable)
-
-For detailed technical documentation, see **[Enhanced Reward System](./ENHANCED_REWARD_SYSTEM.md)**
-
-## 📚 Documentation
+## 📄 Documentation
 
 - **[Backend Implementation Guide](./BACKEND_IMPLEMENTATION_GUIDE.md)** - Complete technical documentation
 - **[Enhanced Reward System](./ENHANCED_REWARD_SYSTEM.md)** - Comprehensive reward system documentation
@@ -470,11 +370,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: Check the guides in `/docs`
 - **Issues**: Report bugs in GitHub Issues
-- **Email**: team@softchat.com
-- **Discord**: [Join our community](https://discord.gg/softchat)
+- **Email**: team@eloity.com
+- **Discord**: [Join our community](https://discord.gg/eloity)
 
 ---
 
-**Built with ❤️ by the Softchat Team**
+**Built with ❤️ by the Eloity Team**
 
 🌟 **Star this repo if you find it helpful!**

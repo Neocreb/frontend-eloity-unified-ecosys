@@ -100,6 +100,7 @@ import DeliveryProviderDashboard from "./components/delivery/DeliveryProviderDas
 import DeliveryTracking from "./components/delivery/DeliveryTracking";
 import DeliveryProviderStatus from "./components/delivery/DeliveryProviderStatus";
 import DeliveryProvidersAdmin from "./components/admin/DeliveryProvidersAdmin";
+import DeliveryTrackingAdmin from "./components/admin/DeliveryTrackingAdmin";
 import DeliveryTrackingPublic from "./pages/DeliveryTrackingPublic";
 import DriverApplicationPublic from "./pages/DriverApplicationPublic";
 
@@ -130,6 +131,11 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminLogs from "./pages/admin/AdminLogs";
 import AdminSecurity from "./pages/admin/AdminSecurity";
 import AdminGroupsPages from "./pages/admin/AdminGroupsPages";
+import AdminKYC from "./pages/admin/AdminKYC";
+import AdminFinancial from "./pages/admin/AdminFinancial";
+import AdminChat from "./pages/admin/AdminChat";
+import AdminBoosts from "./pages/admin/AdminBoosts";
+import AdminSystem from "./pages/admin/AdminSystem";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 
@@ -608,12 +614,18 @@ const AppRoutes = () => {
         <Route path="moderation" element={<ContentModeration />} />
         <Route path="marketplace" element={<AdminMarketplace />} />
         <Route path="delivery" element={<DeliveryProvidersAdmin />} />
+        <Route path="delivery/tracking" element={<DeliveryTrackingAdmin />} />
         <Route path="crypto" element={<AdminCrypto />} />
         <Route path="freelance" element={<AdminFreelance />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="logs" element={<AdminLogs />} />
         <Route path="security" element={<AdminSecurity />} />
         <Route path="groups-pages" element={<AdminGroupsPages />} />
+        <Route path="kyc" element={<AdminKYC />} />
+        <Route path="financial" element={<AdminFinancial />} />
+        <Route path="chat" element={<AdminChat />} />
+        <Route path="boosts" element={<AdminBoosts />} />
+        <Route path="system" element={<AdminSystem />} />
       </Route>
 
       {/* Legacy route redirects */}

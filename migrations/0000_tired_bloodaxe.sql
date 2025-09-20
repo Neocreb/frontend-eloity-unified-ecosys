@@ -294,7 +294,7 @@ CREATE TABLE "posts" (
 	"type" text DEFAULT 'post',
 	"filter" text,
 	"tags" text[],
-	"softpoints" integer,
+	"eloits" integer,
 	"is_duet" boolean DEFAULT false,
 	"duet_of_post_id" uuid,
 	"original_creator_id" uuid,

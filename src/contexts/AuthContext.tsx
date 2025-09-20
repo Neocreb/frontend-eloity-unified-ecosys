@@ -107,6 +107,16 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             bank_account_name: rawUser.user_metadata?.bank_account_name,
             bank_account_number: rawUser.user_metadata?.bank_account_number,
             bank_name: rawUser.user_metadata?.bank_name,
+            // Premium subscription fields
+            is_premium: rawUser.user_metadata?.is_premium || false,
+            premium_tier: rawUser.user_metadata?.premium_tier || "free",
+            subscription_status: rawUser.user_metadata?.subscription_status || "active",
+            subscription_expires_at: rawUser.user_metadata?.subscription_expires_at,
+            subscription_auto_renew: rawUser.user_metadata?.subscription_auto_renew || false,
+            subscription_created_at: rawUser.user_metadata?.subscription_created_at,
+            // KYC fields
+            kyc_level: rawUser.user_metadata?.kyc_level || 0,
+            kyc_verified_at: rawUser.user_metadata?.kyc_verified_at,
           },
         };
       } catch (error) {
@@ -124,15 +134,25 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             id: rawUser.id,
             username: fallbackUsername,
             full_name: "User",
-            avatar_url: null,
-            bio: null,
+            avatar_url: undefined,
+            bio: undefined,
             points: 0,
             level: "bronze",
             role: "user",
             is_verified: false,
-            bank_account_name: null,
-            bank_account_number: null,
-            bank_name: null,
+            bank_account_name: undefined,
+            bank_account_number: undefined,
+            bank_name: undefined,
+            // Premium subscription fields
+            is_premium: false,
+            premium_tier: "free",
+            subscription_status: "active",
+            subscription_expires_at: undefined,
+            subscription_auto_renew: false,
+            subscription_created_at: undefined,
+            // KYC fields
+            kyc_level: 0,
+            kyc_verified_at: undefined,
           },
         };
       }
@@ -297,7 +317,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       let shouldCleanup = false;
 
       if (!codeToProcess) {
-        codeToProcess = localStorage.getItem('referralCode');
+        const storedCode = localStorage.getItem('referralCode');
+        codeToProcess = storedCode || undefined;
         const referralExpiry = localStorage.getItem('referralCodeExpiry');
 
         if (!codeToProcess || !referralExpiry) {
@@ -502,7 +523,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return user?.role === "admin" || user?.profile?.role === "admin";
   }, [user]);
 
-  // Update user profile
+  // Update user profile with type-safe profile updates
   const updateProfile = useCallback(
     async (data: Partial<UserProfile>): Promise<void> => {
       try {
@@ -521,16 +542,15 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           throw error;
         }
 
-        // Update local user state
+        // Update local user state with proper typing
         setUser((prev) =>
           prev
             ? {
                 ...prev,
-                ...data,
                 profile: {
                   ...prev.profile,
                   ...data,
-                },
+                } as UserProfile,
               }
             : null,
         );

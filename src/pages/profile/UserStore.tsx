@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -26,12 +25,16 @@ import {
   Globe,
   Award,
   Verified,
+  AlertCircle,
+  User,
 } from "lucide-react";
 import { Product } from "@/types/marketplace";
 import { UserProfile } from "@/types/user";
 import ProductCard from "@/components/marketplace/ProductCard";
 import { cn } from "@/lib/utils";
 import { Link as RouterLink } from "react-router-dom";
+import { profileService } from "@/services/profileService";
+import { apiClient } from "@/lib/api";
 
 interface UserStoreProps {
   // Add any props if needed
@@ -42,24 +45,12 @@ const UserStore: React.FC<UserStoreProps> = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - in real app, fetch from API based on username
-  const userProfile: UserProfile = {
-    id: "1",
-    username: username || "",
-    full_name: "Sarah Johnson",
-    avatar_url: "/placeholder.svg",
-    banner_url: "/placeholder.svg",
-    bio: "Premium fashion designer & entrepreneur. Creating unique pieces for modern lifestyle.",
-    location: "New York, USA",
-    website: "https://sarahdesigns.com",
-    verified: true,
-    created_at: "2023-01-15",
-    followers_count: 15240,
-    following_count: 890,
-    posts_count: 324,
-  };
-
+  // Mock data for stats (in real app, fetch from API)
   const storeStats = {
     totalProducts: 127,
     totalSales: 1834,
@@ -80,44 +71,236 @@ const UserStore: React.FC<UserStoreProps> = () => {
     { id: "bags", name: "Bags", count: 22 },
   ];
 
-  const products: Product[] = [
-    {
-      id: "1",
-      name: "Premium Leather Handbag",
-      description: "Handcrafted premium leather handbag with gold accents",
-      price: 189.99,
-      image: "/placeholder.svg",
-      images: ["/placeholder.svg"],
-      category: "bags",
-      rating: 4.9,
-      reviewCount: 34,
-      inStock: true,
-      sellerId: "1",
-      sellerName: "Sarah Johnson",
-      sellerAvatar: "/placeholder.svg",
-      condition: "new",
-      createdAt: "2024-01-15",
-      updatedAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Vintage Gold Chain Necklace",
-      description: "Elegant vintage-style gold chain necklace, perfect for any occasion",
-      price: 89.99,
-      image: "/placeholder.svg",
-      images: ["/placeholder.svg"],
-      category: "jewelry",
-      rating: 4.7,
-      reviewCount: 28,
-      inStock: true,
-      sellerId: "1",
-      sellerName: "Sarah Johnson",
-      sellerAvatar: "/placeholder.svg",
-      condition: "new",
-      createdAt: "2024-01-12",
-      updatedAt: "2024-01-12",
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!username) {
+        setError("Username is required");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch user profile
+        const profile = await profileService.getUserByUsername(username);
+        if (!profile) {
+          setError("User not found");
+          setLoading(false);
+          return;
+        }
+        
+        setUserProfile(profile);
+        
+        // Fetch user products
+        try {
+          const userProductsResponse = await apiClient.getSellerProducts(profile.id);
+          // Type guard to ensure we're working with the right data structure
+          let productsData: Product[] = [];
+          if (Array.isArray(userProductsResponse)) {
+            productsData = userProductsResponse;
+          } else if (userProductsResponse && typeof userProductsResponse === 'object' && 'products' in userProductsResponse) {
+            productsData = userProductsResponse.products as Product[];
+          } else {
+            // Fallback to mock data if API response is unexpected
+            productsData = [
+              {
+                id: "1",
+                name: "Premium Leather Handbag",
+                description: "Handcrafted premium leather handbag with gold accents",
+                price: 189.99,
+                image: "/placeholder.svg",
+                images: ["/placeholder.svg"],
+                category: "bags",
+                rating: 4.9,
+                reviewCount: 34,
+                inStock: true,
+                sellerId: profile.id,
+                sellerName: profile.full_name || profile.username || "Unknown Seller",
+                sellerAvatar: profile.avatar_url || "/placeholder.svg",
+                condition: "new",
+                createdAt: "2024-01-15",
+                updatedAt: "2024-01-15",
+              },
+              {
+                id: "2",
+                name: "Vintage Gold Chain Necklace",
+                description: "Elegant vintage-style gold chain necklace, perfect for any occasion",
+                price: 89.99,
+                image: "/placeholder.svg",
+                images: ["/placeholder.svg"],
+                category: "jewelry",
+                rating: 4.7,
+                reviewCount: 28,
+                inStock: true,
+                sellerId: profile.id,
+                sellerName: profile.full_name || profile.username || "Unknown Seller",
+                sellerAvatar: profile.avatar_url || "/placeholder.svg",
+                condition: "new",
+                createdAt: "2024-01-12",
+                updatedAt: "2024-01-12",
+              },
+            ];
+          }
+          setProducts(productsData);
+        } catch (productError) {
+          console.warn("Failed to fetch products, using mock data:", productError);
+          // Mock products data as fallback
+          setProducts([
+            {
+              id: "1",
+              name: "Premium Leather Handbag",
+              description: "Handcrafted premium leather handbag with gold accents",
+              price: 189.99,
+              image: "/placeholder.svg",
+              images: ["/placeholder.svg"],
+              category: "bags",
+              rating: 4.9,
+              reviewCount: 34,
+              inStock: true,
+              sellerId: profile.id,
+              sellerName: profile.full_name || profile.username || "Unknown Seller",
+              sellerAvatar: profile.avatar_url || "/placeholder.svg",
+              condition: "new",
+              createdAt: "2024-01-15",
+              updatedAt: "2024-01-15",
+            },
+            {
+              id: "2",
+              name: "Vintage Gold Chain Necklace",
+              description: "Elegant vintage-style gold chain necklace, perfect for any occasion",
+              price: 89.99,
+              image: "/placeholder.svg",
+              images: ["/placeholder.svg"],
+              category: "jewelry",
+              rating: 4.7,
+              reviewCount: 28,
+              inStock: true,
+              sellerId: profile.id,
+              sellerName: profile.full_name || profile.username || "Unknown Seller",
+              sellerAvatar: profile.avatar_url || "/placeholder.svg",
+              condition: "new",
+              createdAt: "2024-01-12",
+              updatedAt: "2024-01-12",
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError("Failed to load user data");
+        // Set mock data as fallback
+        setUserProfile({
+          id: "1",
+          username: username || "",
+          full_name: "Sarah Johnson",
+          avatar_url: "/placeholder.svg",
+          banner_url: "/placeholder.svg",
+          bio: "Premium fashion designer & entrepreneur. Creating unique pieces for modern lifestyle.",
+          location: "New York, USA",
+          website: "https://sarahdesigns.com",
+          is_verified: true,
+          join_date: "2023-01-15",
+          followers_count: 15240,
+          following_count: 890,
+          posts_count: 324,
+        } as UserProfile);
+        setProducts([
+          {
+            id: "1",
+            name: "Premium Leather Handbag",
+            description: "Handcrafted premium leather handbag with gold accents",
+            price: 189.99,
+            image: "/placeholder.svg",
+            images: ["/placeholder.svg"],
+            category: "bags",
+            rating: 4.9,
+            reviewCount: 34,
+            inStock: true,
+            sellerId: "1",
+            sellerName: "Sarah Johnson",
+            sellerAvatar: "/placeholder.svg",
+            condition: "new",
+            createdAt: "2024-01-15",
+            updatedAt: "2024-01-15",
+          },
+          {
+            id: "2",
+            name: "Vintage Gold Chain Necklace",
+            description: "Elegant vintage-style gold chain necklace, perfect for any occasion",
+            price: 89.99,
+            image: "/placeholder.svg",
+            images: ["/placeholder.svg"],
+            category: "jewelry",
+            rating: 4.7,
+            reviewCount: 28,
+            inStock: true,
+            sellerId: "1",
+            sellerName: "Sarah Johnson",
+            sellerAvatar: "/placeholder.svg",
+            condition: "new",
+            createdAt: "2024-01-12",
+            updatedAt: "2024-01-12",
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [username]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading store...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <AlertCircle className="h-12 w-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Error</h2>
+          <p className="text-muted-foreground">{error}</p>
+          <Button 
+            className="mt-4" 
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-4">
+            <User className="h-12 w-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">User Not Found</h2>
+          <p className="text-muted-foreground">The requested user profile could not be found.</p>
+          <Button 
+            className="mt-4" 
+            asChild
+          >
+            <Link to="/app/profile">Back to Profile</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -156,18 +339,18 @@ const UserStore: React.FC<UserStoreProps> = () => {
                 {/* Store Owner */}
                 <div className="text-center mb-6">
                   <Avatar className="h-20 w-20 mx-auto mb-4">
-                    <AvatarImage src={userProfile.avatar_url} alt={userProfile.full_name} />
+                    <AvatarImage src={userProfile.avatar_url || "/placeholder.svg"} alt={userProfile.full_name || userProfile.username || "User"} />
                     <AvatarFallback className="text-lg">
-                      {userProfile.full_name?.split(" ").map(n => n[0]).join("")}
+                      {userProfile.full_name ? userProfile.full_name.split(" ").map(n => n[0]).join("") : (userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : "U")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <h1 className="text-xl font-bold">{userProfile.full_name}</h1>
-                    {userProfile.verified && (
+                    <h1 className="text-xl font-bold">{userProfile.full_name || userProfile.username}</h1>
+                    {userProfile.is_verified && (
                       <Verified className="h-5 w-5 text-blue-500" />
                     )}
                   </div>
-                  <p className="text-muted-foreground text-sm mb-2">@{userProfile.username}</p>
+                  <p className="text-muted-foreground text-sm mb-2">@{userProfile.username || "unknown"}</p>
                   <div className="flex items-center justify-center gap-1 mb-4">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="font-medium">{storeStats.averageRating}</span>
@@ -181,7 +364,7 @@ const UserStore: React.FC<UserStoreProps> = () => {
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Products</span>
-                    <span className="font-semibold">{storeStats.totalProducts}</span>
+                    <span className="font-semibold">{products.length || storeStats.totalProducts}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total Sales</span>
@@ -213,7 +396,7 @@ const UserStore: React.FC<UserStoreProps> = () => {
                 <div className="mt-6 pt-6 border-t space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{userProfile.location}</span>
+                    <span>{userProfile.location || "Location not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
@@ -256,9 +439,9 @@ const UserStore: React.FC<UserStoreProps> = () => {
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-sm">{category.name}</span>
-                        <Badge variant="secondary" className="text-xs">
+                        <div className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
                           {category.count}
-                        </Badge>
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -273,11 +456,11 @@ const UserStore: React.FC<UserStoreProps> = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-bold">
-                  {userProfile.full_name}'s Store
+                  {userProfile.full_name || userProfile.username}'s Store
                 </h2>
-                <Badge variant="secondary">
+                <div className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">
                   {products.length} Products
-                </Badge>
+                </div>
               </div>
               
               <div className="flex items-center gap-2">

@@ -428,4 +428,4 @@ We welcome contributions to the marketplace system! Please read our [Contributin
 
 ## License
 
-This marketplace system is part of the Softchat platform and is licensed under the [MIT License](LICENSE).
+This marketplace system is part of the Eloity platform and is licensed under the [MIT License](LICENSE).

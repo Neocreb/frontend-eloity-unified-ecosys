@@ -1,6 +1,6 @@
 # 🌍 Unified Currency System
 
-A comprehensive, centralized currency conversion and management system for the entire SoftChat platform.
+A comprehensive, centralized currency conversion and management system for the entire Eloity platform.
 
 ## 🎯 Overview
 
@@ -140,7 +140,7 @@ function Settings() {
 ### Cryptocurrencies
 - **Major**: BTC, ETH, BNB, ADA, SOL
 - **Stablecoins**: USDT, USDC
-- **Platform**: SOFT (SoftChat Token)
+- **Platform**: ELOIT (Eloity Token)
 
 ## 🔧 Configuration
 

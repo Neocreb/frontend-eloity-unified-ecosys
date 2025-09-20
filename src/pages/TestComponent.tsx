@@ -46,7 +46,7 @@ const TestComponent: React.FC = () => {
         </div>
 
         <a
-          href="/feed"
+          href="/app/feed"
           className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
         >
           Go to Feed (Direct Link)

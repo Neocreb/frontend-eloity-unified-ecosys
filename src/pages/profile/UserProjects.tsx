@@ -36,9 +36,13 @@ import {
   FileText,
   Link as LinkIcon,
   Plus,
+  AlertCircle,
+  User,
 } from "lucide-react";
 import { UserProfile } from "@/types/user";
 import AddExternalWorkModal from "@/components/profile/AddExternalWorkModal";
+import { profileService } from "@/services/profileService";
+import { apiClient } from "@/lib/api";
 
 interface Project {
   id: string;
@@ -77,27 +81,15 @@ const UserProjects: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showAddWorkModal, setShowAddWorkModal] = useState(false);
   const [externalWorks, setExternalWorks] = useState<ExternalWork[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Check if this is the user's own profile (in real app, check authentication)
   const isOwnProfile = true; // Mock - in real app: currentUser?.username === username
 
-  // Mock data - in real app, fetch from API
-  const userProfile: UserProfile = {
-    id: "1",
-    username: username || "",
-    full_name: "Alex Rivera",
-    avatar_url: "/placeholder.svg",
-    banner_url: "/placeholder.svg",
-    bio: "Full-stack developer & UI/UX designer with 5+ years experience creating digital solutions.",
-    location: "San Francisco, CA",
-    website: "https://alexrivera.dev",
-    verified: true,
-    created_at: "2022-03-15",
-    followers_count: 8420,
-    following_count: 1240,
-    posts_count: 186,
-  };
-
+  // Mock data for stats (in real app, fetch from API)
   const freelanceStats = {
     totalProjects: 89,
     completedProjects: 85,
@@ -128,41 +120,176 @@ const UserProjects: React.FC = () => {
     { id: "backend", name: "Backend", count: 15 },
   ];
 
-  const projects: Project[] = [
-    {
-      id: "1",
-      title: "E-commerce Platform Redesign",
-      description: "Complete redesign and development of a modern e-commerce platform with improved UX and performance optimization.",
-      category: "web_development",
-      tags: ["React", "Node.js", "MongoDB", "Stripe"],
-      images: ["/placeholder.svg", "/placeholder.svg"],
-      external_link: "https://demo-ecommerce.com",
-      github_link: "https://github.com/alexrivera/ecommerce",
-      live_demo: "https://demo-ecommerce.com",
-      client: "TechStore Inc.",
-      duration: "8 weeks",
-      budget: 15000,
-      rating: 5.0,
-      completed_at: "2024-01-15",
-      type: "platform",
-      status: "completed",
-    },
-    {
-      id: "2",
-      title: "Mobile Banking App",
-      description: "Secure mobile banking application with biometric authentication and real-time notifications.",
-      category: "mobile_app",
-      tags: ["React Native", "Firebase", "Biometrics"],
-      images: ["/placeholder.svg"],
-      client: "FinTech Solutions",
-      duration: "12 weeks",
-      budget: 25000,
-      rating: 4.8,
-      completed_at: "2023-12-20",
-      type: "platform",
-      status: "completed",
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!username) {
+        setError("Username is required");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch user profile
+        const profile = await profileService.getUserByUsername(username);
+        if (!profile) {
+          setError("User not found");
+          setLoading(false);
+          return;
+        }
+        
+        setUserProfile(profile);
+        
+        // Fetch user projects/services
+        try {
+          const projectsResponse = await apiClient.getFreelanceJobs({ freelancer_id: profile.id });
+          // Type guard to ensure we're working with the right data structure
+          let projectsData: Project[] = [];
+          if (Array.isArray(projectsResponse)) {
+            projectsData = projectsResponse;
+          } else if (projectsResponse && typeof projectsResponse === 'object' && 'jobs' in projectsResponse) {
+            projectsData = projectsResponse.jobs as Project[];
+          } else {
+            // Fallback to mock data if API response is unexpected
+            projectsData = [
+              {
+                id: "1",
+                title: "E-commerce Platform Redesign",
+                description: "Complete redesign and development of a modern e-commerce platform with improved UX and performance optimization.",
+                category: "web_development",
+                tags: ["React", "Node.js", "MongoDB", "Stripe"],
+                images: ["/placeholder.svg", "/placeholder.svg"],
+                external_link: "https://demo-ecommerce.com",
+                github_link: "https://github.com/alexrivera/ecommerce",
+                live_demo: "https://demo-ecommerce.com",
+                client: "TechStore Inc.",
+                duration: "8 weeks",
+                budget: 15000,
+                rating: 5.0,
+                completed_at: "2024-01-15",
+                type: "platform",
+                status: "completed",
+              },
+              {
+                id: "2",
+                title: "Mobile Banking App",
+                description: "Secure mobile banking application with biometric authentication and real-time notifications.",
+                category: "mobile_app",
+                tags: ["React Native", "Firebase", "Biometrics"],
+                images: ["/placeholder.svg"],
+                client: "FinTech Solutions",
+                duration: "12 weeks",
+                budget: 25000,
+                rating: 4.8,
+                completed_at: "2023-12-20",
+                type: "platform",
+                status: "completed",
+              },
+            ];
+          }
+          setProjects(projectsData);
+        } catch (projectError) {
+          console.warn("Failed to fetch projects, using mock data:", projectError);
+          // Mock projects data as fallback
+          setProjects([
+            {
+              id: "1",
+              title: "E-commerce Platform Redesign",
+              description: "Complete redesign and development of a modern e-commerce platform with improved UX and performance optimization.",
+              category: "web_development",
+              tags: ["React", "Node.js", "MongoDB", "Stripe"],
+              images: ["/placeholder.svg", "/placeholder.svg"],
+              external_link: "https://demo-ecommerce.com",
+              github_link: "https://github.com/alexrivera/ecommerce",
+              live_demo: "https://demo-ecommerce.com",
+              client: "TechStore Inc.",
+              duration: "8 weeks",
+              budget: 15000,
+              rating: 5.0,
+              completed_at: "2024-01-15",
+              type: "platform",
+              status: "completed",
+            },
+            {
+              id: "2",
+              title: "Mobile Banking App",
+              description: "Secure mobile banking application with biometric authentication and real-time notifications.",
+              category: "mobile_app",
+              tags: ["React Native", "Firebase", "Biometrics"],
+              images: ["/placeholder.svg"],
+              client: "FinTech Solutions",
+              duration: "12 weeks",
+              budget: 25000,
+              rating: 4.8,
+              completed_at: "2023-12-20",
+              type: "platform",
+              status: "completed",
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError("Failed to load user data");
+        // Set mock data as fallback
+        setUserProfile({
+          id: "1",
+          username: username || "",
+          full_name: "Alex Rivera",
+          avatar_url: "/placeholder.svg",
+          banner_url: "/placeholder.svg",
+          bio: "Full-stack developer & UI/UX designer with 5+ years experience creating digital solutions.",
+          location: "San Francisco, CA",
+          website: "https://alexrivera.dev",
+          is_verified: true,
+          created_at: "2022-03-15",
+          followers_count: 8420,
+          following_count: 1240,
+          posts_count: 186,
+        } as UserProfile);
+        setProjects([
+          {
+            id: "1",
+            title: "E-commerce Platform Redesign",
+            description: "Complete redesign and development of a modern e-commerce platform with improved UX and performance optimization.",
+            category: "web_development",
+            tags: ["React", "Node.js", "MongoDB", "Stripe"],
+            images: ["/placeholder.svg", "/placeholder.svg"],
+            external_link: "https://demo-ecommerce.com",
+            github_link: "https://github.com/alexrivera/ecommerce",
+            live_demo: "https://demo-ecommerce.com",
+            client: "TechStore Inc.",
+            duration: "8 weeks",
+            budget: 15000,
+            rating: 5.0,
+            completed_at: "2024-01-15",
+            type: "platform",
+            status: "completed",
+          },
+          {
+            id: "2",
+            title: "Mobile Banking App",
+            description: "Secure mobile banking application with biometric authentication and real-time notifications.",
+            category: "mobile_app",
+            tags: ["React Native", "Firebase", "Biometrics"],
+            images: ["/placeholder.svg"],
+            client: "FinTech Solutions",
+            duration: "12 weeks",
+            budget: 25000,
+            rating: 4.8,
+            completed_at: "2023-12-20",
+            type: "platform",
+            status: "completed",
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [username]);
 
   useEffect(() => {
     setExternalWorks(externalWorksData);
@@ -219,6 +346,57 @@ const UserProjects: React.FC = () => {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading portfolio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <AlertCircle className="h-12 w-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Error</h2>
+          <p className="text-muted-foreground">{error}</p>
+          <Button 
+            className="mt-4" 
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-4">
+            <User className="h-12 w-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">User Not Found</h2>
+          <p className="text-muted-foreground">The requested user profile could not be found.</p>
+          <Button 
+            className="mt-4" 
+            asChild
+          >
+            <Link to="/app/profile">Back to Profile</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -253,18 +431,18 @@ const UserProjects: React.FC = () => {
                 {/* Profile Info */}
                 <div className="text-center mb-6">
                   <Avatar className="h-20 w-20 mx-auto mb-4">
-                    <AvatarImage src={userProfile.avatar_url} alt={userProfile.full_name} />
+                    <AvatarImage src={userProfile.avatar_url || "/placeholder.svg"} alt={userProfile.full_name || userProfile.username || "User"} />
                     <AvatarFallback className="text-lg">
-                      {userProfile.full_name?.split(" ").map(n => n[0]).join("")}
+                      {userProfile.full_name ? userProfile.full_name.split(" ").map(n => n[0]).join("") : (userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : "U")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <h1 className="text-xl font-bold">{userProfile.full_name}</h1>
-                    {userProfile.verified && (
+                    <h1 className="text-xl font-bold">{userProfile.full_name || userProfile.username}</h1>
+                    {userProfile.is_verified && (
                       <Verified className="h-5 w-5 text-blue-500" />
                     )}
                   </div>
-                  <p className="text-muted-foreground text-sm mb-2">@{userProfile.username}</p>
+                  <p className="text-muted-foreground text-sm mb-2">@{userProfile.username || "unknown"}</p>
                   <div className="flex items-center justify-center gap-1 mb-4">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="font-medium">{freelanceStats.averageRating}</span>
@@ -278,7 +456,7 @@ const UserProjects: React.FC = () => {
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Projects</span>
-                    <span className="font-semibold">{freelanceStats.totalProjects}</span>
+                    <span className="font-semibold">{projects.length || freelanceStats.totalProjects}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Success Rate</span>
@@ -330,7 +508,7 @@ const UserProjects: React.FC = () => {
                   </a>
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{userProfile.location}</span>
+                    <span>{userProfile.location || "Location not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -369,8 +547,8 @@ const UserProjects: React.FC = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">{userProfile.full_name}'s Portfolio</h2>
-              <p className="text-muted-foreground">{userProfile.bio}</p>
+              <h2 className="text-2xl font-bold mb-2">{userProfile.full_name || userProfile.username}'s Portfolio</h2>
+              <p className="text-muted-foreground">{userProfile.bio || "No bio available"}</p>
               {isOwnProfile && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="secondary">

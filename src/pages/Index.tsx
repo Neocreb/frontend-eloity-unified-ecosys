@@ -15,7 +15,7 @@ const Index = () => {
       
       if (isAuthenticated) {
         console.log("Index page: User is authenticated, redirecting to /feed");
-        navigate("/feed", { replace: true });
+        navigate("/app/feed", { replace: true });
       } else {
         console.log("Index page: User is not authenticated, redirecting to /auth");
         navigate("/auth", { replace: true });

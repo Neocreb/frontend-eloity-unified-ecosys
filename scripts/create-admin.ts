@@ -37,10 +37,10 @@ const createDefaultAdmin = async () => {
 
     // Check if admin already exists
     const existingAdmin =
-      await adminUserOperations.findByEmail("admin@softchat.com");
+      await adminUserOperations.findByEmail("admin@eloity.com");
     if (existingAdmin) {
       log("✅ Default admin user already exists", "success");
-      log("📧 Email: admin@softchat.com");
+      log("📧 Email: admin@eloity.com");
       log("🔑 Use your existing password or reset it through the database");
       return;
     }
@@ -51,7 +51,7 @@ const createDefaultAdmin = async () => {
     const defaultPassword = "SoftChat2024!";
 
     const { user: adminUser } = await adminUserOperations.create({
-      email: "admin@softchat.com",
+      email: "admin@eloity.com",
       password: defaultPassword,
       name: "System Administrator",
       roleId: superAdminRole.id,
@@ -62,7 +62,7 @@ const createDefaultAdmin = async () => {
 
     log("✅ Default admin user created successfully!", "success");
     log("\n📋 Admin Login Credentials:", "info");
-    log("📧 Email: admin@softchat.com");
+    log("📧 Email: admin@eloity.com");
     log(`🔑 Password: ${defaultPassword}`);
     log("🌐 Login URL: /admin/login");
 

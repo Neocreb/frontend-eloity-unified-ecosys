@@ -251,9 +251,9 @@ src/
 
 ## 🎉 **Summary**
 
-Successfully implemented two major feature sets that position Softchat as a cutting-edge, globally accessible platform:
+Successfully implemented two major feature sets that position Eloity as a cutting-edge, globally accessible platform:
 
-1. **🤖 AI Personal Assistant**: Provides users with intelligent insights, content suggestions, trading recommendations, and performance analytics - making Softchat the first social platform with a comprehensive AI companion.
+1. **🤖 AI Personal Assistant**: Provides users with intelligent insights, content suggestions, trading recommendations, and performance analytics - making Eloity the first social platform with a comprehensive AI companion.
 
 2. **🌐 Multi-Language & Global Expansion**: Enables global reach with 8 languages, 20+ currencies, and regional payment methods specifically tailored for African markets - removing barriers for international users.
 

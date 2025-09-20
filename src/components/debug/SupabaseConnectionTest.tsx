@@ -63,7 +63,7 @@ const SupabaseConnectionTest: React.FC = () => {
     try {
       // Test with demo credentials
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: "demo@softchat.com",
+        email: "demo@eloity.com",
         password: "password123"
       });
 

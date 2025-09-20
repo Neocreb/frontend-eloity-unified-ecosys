@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -56,9 +55,33 @@ import {
   Briefcase,
   Calendar,
   Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
+import { apiClient } from "@/lib/api";
 
-// Removed mock data import - using API integration
+// Simple Badge component since import is having issues
+interface BadgeProps {
+  children: React.ReactNode;
+  className?: string;
+  variant?: 'default' | 'outline' | 'secondary' | 'destructive';
+}
+
+const Badge: React.FC<BadgeProps> = ({ children, className, variant }) => {
+  const baseClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold";
+  
+  const variantClasses = {
+    default: "border-transparent bg-primary text-primary-foreground",
+    outline: "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300",
+    secondary: "border-transparent bg-secondary text-secondary-foreground",
+    destructive: "border-transparent bg-destructive text-destructive-foreground",
+  }[variant || 'default'] || "";
+  
+  return (
+    <span className={`${baseClasses} ${variantClasses} ${className || ''}`}>
+      {children}
+    </span>
+  );
+};
 
 interface Page {
   id: string;
@@ -72,7 +95,7 @@ interface Page {
     | "business"
     | "brand"
     | "public_figure"
-    | "community"
+    | "community" 
     | "organization";
   isFollowing?: boolean;
   isOwner?: boolean;
@@ -96,6 +119,8 @@ const Pages = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [followedPages, setFollowedPages] = useState<Page[]>([]);
   const [myPages, setMyPages] = useState<Page[]>([]);
+  const [allPages, setAllPages] = useState<Page[]>([]);
+  const [loading, setLoading] = useState(true);
   const [pageForm, setPageForm] = useState({
     name: "",
     description: "",
@@ -108,12 +133,39 @@ const Pages = () => {
     avatar: "",
   });
 
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      // Fetch real data from the API
+      const response = await apiClient.getPages();
+      const pagesData = response.data || response;
+      
+      setAllPages(pagesData);
+      setFollowedPages(pagesData.filter((p: Page) => p.isFollowing));
+      setMyPages(pagesData.filter((p: Page) => p.isOwner));
+    } catch (error) {
+      console.error('Error loading pages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load pages",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter and sort pages
-  const filteredPages = mockPages
-    .filter((page) => {
+  const filteredPages = allPages
+    .filter((page: Page) => {
       const matchesSearch =
         page.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        page.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (page.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
         page.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory =
         selectedCategory === "all" || page.category === selectedCategory;
@@ -121,14 +173,14 @@ const Pages = () => {
         selectedType === "all" || page.pageType === selectedType;
       return matchesSearch && matchesCategory && matchesType;
     })
-    .sort((a, b) => {
+    .sort((a: Page, b: Page) => {
       switch (sortBy) {
         case "followers":
           return b.followers - a.followers;
         case "recent":
           return (
-            new Date(b.createdAt || 0).getTime() -
-            new Date(a.createdAt || 0).getTime()
+            new Date(b.createdAt || new Date().toISOString()).getTime() -
+            new Date(a.createdAt || new Date().toISOString()).getTime()
           );
         case "name":
           return a.name.localeCompare(b.name);
@@ -166,7 +218,7 @@ const Pages = () => {
     { value: "organization", label: "Organization", icon: Briefcase },
   ];
 
-  const handleCreatePage = () => {
+  const handleCreatePage = async () => {
     if (!pageForm.name || !pageForm.category || !pageForm.pageType) {
       toast({
         title: "Error",
@@ -176,65 +228,93 @@ const Pages = () => {
       return;
     }
 
-    const newPage: Page = {
-      id: `page-${Date.now()}`,
-      name: pageForm.name,
-      description: pageForm.description,
-      category: pageForm.category,
-      pageType: pageForm.pageType as any,
-      website: pageForm.website,
-      location: pageForm.location,
-      email: pageForm.email,
-      phone: pageForm.phone,
-      avatar:
-        pageForm.avatar ||
-        "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100",
-      followers: 0,
-      verified: false,
-      isOwner: true,
-      posts: 0,
-      engagement: 0,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      // Call the API to create a new page
+      const response = await apiClient.request('/pages', {
+        method: 'POST',
+        body: JSON.stringify(pageForm),
+      });
+      
+      const newPage: Page = response.data || response;
 
-    setMyPages((prev) => [...prev, newPage]);
-    setPageForm({
-      name: "",
-      description: "",
-      category: "",
-      pageType: "business",
-      website: "",
-      location: "",
-      email: "",
-      phone: "",
-      avatar: "",
-    });
-    setShowCreateDialog(false);
+      setMyPages((prev) => [...prev, newPage]);
+      setAllPages((prev) => [...prev, newPage]);
+      setPageForm({
+        name: "",
+        description: "",
+        category: "",
+        pageType: "business",
+        website: "",
+        location: "",
+        email: "",
+        phone: "",
+        avatar: "",
+      });
+      setShowCreateDialog(false);
 
-    toast({
-      title: "Page Created",
-      description: `${newPage.name} has been created successfully!`,
-    });
+      toast({
+        title: "Page Created",
+        description: `${newPage.name} has been created successfully!`,
+      });
+    } catch (error) {
+      console.error('Error creating page:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create page",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleFollowPage = (page: Page) => {
+  const handleFollowPage = async (page: Page) => {
     if (page.isFollowing) return;
 
-    const updatedPage = { ...page, isFollowing: true };
-    setFollowedPages((prev) => [...prev, updatedPage]);
+    try {
+      // Call the API to follow the page
+      await apiClient.request(`/pages/${page.id}/follow`, {
+        method: 'POST',
+      });
+      
+      const updatedPage = { ...page, isFollowing: true };
+      setFollowedPages((prev) => [...prev, updatedPage]);
+      setAllPages(prev => prev.map(p => p.id === page.id ? updatedPage : p));
 
-    toast({
-      title: "Following Page",
-      description: `You're now following ${page.name}!`,
-    });
+      toast({
+        title: "Following Page",
+        description: `You're now following ${page.name}!`,
+      });
+    } catch (error) {
+      console.error('Error following page:', error);
+      toast({
+        title: "Error",
+        description: "Failed to follow page",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUnfollowPage = (pageId: string) => {
-    setFollowedPages((prev) => prev.filter((p) => p.id !== pageId));
-    toast({
-      title: "Unfollowed Page",
-      description: "You've unfollowed the page successfully",
-    });
+  const handleUnfollowPage = async (pageId: string) => {
+    try {
+      // Call the API to unfollow the page
+      await apiClient.request(`/pages/${pageId}/follow`, {
+        method: 'DELETE',
+      });
+      
+      setFollowedPages((prev) => prev.filter((p) => p.id !== pageId));
+      setAllPages(prev => prev.map(p => p.id === pageId ? { ...p, isFollowing: false } : p));
+      
+      toast({
+        title: "Unfollowed Page",
+        description: "You've unfollowed the page successfully",
+      });
+    } catch (error) {
+      console.error('Error unfollowing page:', error);
+      toast({
+        title: "Error",
+        description: "Failed to unfollow page",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewPage = (pageId: string) => {
@@ -451,11 +531,11 @@ const Pages = () => {
   };
 
   const getFollowedPagesData = () => {
-    return [...followedPages, ...mockPages.filter((p) => p.isFollowing)];
+    return [...followedPages, ...allPages.filter((p) => p.isFollowing)];
   };
 
   const getMyPagesData = () => {
-    return [...myPages, ...mockPages.filter((p) => p.isOwner)];
+    return [...myPages, ...allPages.filter((p) => p.isOwner)];
   };
 
   return (
@@ -709,160 +789,169 @@ const Pages = () => {
           </div>
         </div>
 
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
+
         {/* Page Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="discover" className="flex items-center gap-2">
-              <Eye className="w-4 h-4" />
-              Discover
-            </TabsTrigger>
-            <TabsTrigger value="following" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              Following ({getFollowedPagesData().length})
-            </TabsTrigger>
-            <TabsTrigger value="owned" className="flex items-center gap-2">
-              <Crown className="w-4 h-4" />
-              My Pages ({getMyPagesData().length})
-            </TabsTrigger>
-          </TabsList>
+        {!loading && (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="discover" className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                Discover
+              </TabsTrigger>
+              <TabsTrigger value="following" className="flex items-center gap-2">
+                <Heart className="w-4 h-4" />
+                Following ({getFollowedPagesData().length})
+              </TabsTrigger>
+              <TabsTrigger value="owned" className="flex items-center gap-2">
+                <Crown className="w-4 h-4" />
+                My Pages ({getMyPagesData().length})
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="discover" className="space-y-6">
-            {/* Quick stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Building className="w-5 h-5 text-blue-600" />
+            <TabsContent value="discover" className="space-y-6">
+              {/* Quick stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Building className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{allPages.length}</p>
+                      <p className="text-sm text-muted-foreground">Total Pages</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">{mockPages.length}</p>
-                    <p className="text-sm text-muted-foreground">Total Pages</p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
 
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Verified className="w-5 h-5 text-green-600" />
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Verified className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {allPages.filter((p) => p.verified).length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Verified Pages
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {mockPages.filter((p) => p.verified).length}
+                </Card>
+
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <TrendingUp className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{categories.length}</p>
+                      <p className="text-sm text-muted-foreground">Categories</p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <Users className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {Math.round(
+                          allPages.reduce((acc, p) => acc + p.followers, 0) /
+                            1000000,
+                        )}
+                        M
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Followers
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                {filteredPages.length > 0 ? (
+                  filteredPages.map((page) => renderPageCard(page))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <Building className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No pages found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Try adjusting your search criteria or browse different
+                      categories
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      Verified Pages
-                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedCategory("all");
+                        setSelectedType("all");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
                   </div>
-                </div>
-              </Card>
+                )}
+              </div>
+            </TabsContent>
 
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{categories.length}</p>
-                    <p className="text-sm text-muted-foreground">Categories</p>
-                  </div>
+            <TabsContent value="following" className="space-y-6">
+              {getFollowedPagesData().length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                  {getFollowedPagesData().map((page) =>
+                    renderPageCard(page, false),
+                  )}
                 </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Users className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {Math.round(
-                        mockPages.reduce((acc, p) => acc + p.followers, 0) /
-                          1000000,
-                      )}
-                      M
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Total Followers
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-              {filteredPages.length > 0 ? (
-                filteredPages.map((page) => renderPageCard(page))
               ) : (
-                <div className="col-span-full text-center py-12">
-                  <Building className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No pages found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Try adjusting your search criteria or browse different
-                    categories
+                <div className="text-center py-12">
+                  <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    You're not following any pages yet
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Discover interesting pages from businesses, brands, and public
+                    figures
                   </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSelectedCategory("all");
-                      setSelectedType("all");
-                    }}
-                  >
-                    Clear Filters
+                  <Button onClick={() => setActiveTab("discover")}>
+                    Discover Pages
                   </Button>
                 </div>
               )}
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="following" className="space-y-6">
-            {getFollowedPagesData().length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                {getFollowedPagesData().map((page) =>
-                  renderPageCard(page, false),
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  You're not following any pages yet
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Discover interesting pages from businesses, brands, and public
-                  figures
-                </p>
-                <Button onClick={() => setActiveTab("discover")}>
-                  Discover Pages
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="owned" className="space-y-6">
-            {getMyPagesData().length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                {getMyPagesData().map((page) => renderPageCard(page, true))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Crown className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  You haven't created any pages yet
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Create a page to represent your business, brand, or public
-                  presence
-                </p>
-                <Button onClick={() => setShowCreateDialog(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Page
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="owned" className="space-y-6">
+              {getMyPagesData().length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                  {getMyPagesData().map((page) => renderPageCard(page, true))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Crown className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    You haven't created any pages yet
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Create a page to represent your business, brand, or public
+                    presence
+                  </p>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Page
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

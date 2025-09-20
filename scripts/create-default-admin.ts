@@ -21,7 +21,7 @@ async function createDefaultAdmin() {
   console.log("🚀 Creating default admin user for SoftChat...\n");
 
   try {
-    const email = "admin@softchat.com";
+    const email = "admin@eloity.com";
     const name = "SoftChat Admin";
     const password = "Softchat2024!";
     const roles = ["super_admin"];

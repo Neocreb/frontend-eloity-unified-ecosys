@@ -1019,6 +1019,7 @@ export type MarketplaceContextType = {
     status: OrderStatus,
     notes?: string,
   ) => Promise<Order>;
+  getSellerOrders: (sellerId: string) => Promise<Order[]>;
   confirmDelivery: (orderId: string) => Promise<Order>;
   cancelOrder: (orderId: string, reason?: string) => Promise<boolean>;
   requestReturn: (
@@ -1124,4 +1125,3 @@ export type MarketplaceContextType = {
 
 // Type aliases for compatibility and validation
 export type MarketplaceOrder = Order;
-export { Campaign, CartItem, ProductBoost };

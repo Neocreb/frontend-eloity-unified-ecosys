@@ -312,7 +312,7 @@ const AdvancedSharingHub: React.FC<AdvancedSharingHubProps> = ({
 
   const generateEmbedCode = () => {
     const { width, height, autoplay, controls, responsive, startTime } = embedSettings;
-    const baseUrl = `https://softchat.com/embed/${videoId}`;
+    const baseUrl = `https://eloity.com/embed/${videoId}`;
     const params = new URLSearchParams({
       autoplay: autoplay ? "1" : "0",
       controls: controls ? "1" : "0",

@@ -1,7 +1,7 @@
 # 🚀 REAL-TIME ACTIVITIES IMPLEMENTATION GUIDE
 
 ## 📋 Overview
-This guide provides a complete breakdown for implementing production-ready real-time features in your Softchat frontend application. All core files have been created and are ready for integration with your backend APIs.
+This guide provides a complete breakdown for implementing production-ready real-time features in your Eloity frontend application. All core files have been created and are ready for integration with your backend APIs.
 
 ---
 

@@ -1,8 +1,8 @@
-# 🚀 Softchat Platform Integration Guide
+# 🚀 Eloity Platform Integration Guide
 
 ## 📋 Overview
 
-This guide provides comprehensive instructions for integrating real external services with the Softchat platform. All APIs are currently implemented with mock services that can be easily replaced with actual integrations.
+This guide provides comprehensive instructions for integrating real external services with the Eloity platform. All APIs are currently implemented with mock services that can be easily replaced with actual integrations.
 
 ## 🎯 Quick Setup Checklist
 
@@ -172,7 +172,7 @@ const response = await fetch('https://api.ng.termii.com/api/sms/send', {
   body: JSON.stringify({
     api_key: process.env.TERMII_API_KEY,
     to: data.phoneNumber,
-    from: 'Softchat',
+    from: 'Eloity',
     sms: data.message,
     type: 'plain',
     channel: getTermiiChannel(data.type)
@@ -254,7 +254,7 @@ YOUVERIFY_BASE_URL=https://api.youverify.co/v2
 # AWS S3 for video storage
 AWS_ACCESS_KEY_ID=xxxxxxxxxxxxx
 AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxx
-AWS_S3_BUCKET=softchat-videos
+AWS_S3_BUCKET=eloity-videos
 AWS_REGION=us-east-1
 
 # CloudFlare Stream (Alternative)
@@ -359,8 +359,8 @@ HOT_WALLET_PRIVATE_KEY=xxxxxxxxxxxxx
 **Environment Variables:**
 ```bash
 SENDGRID_API_KEY=SG.xxxxxxxxxxxxx
-SENDGRID_FROM_EMAIL=noreply@softchat.com
-SENDGRID_FROM_NAME=Softchat
+SENDGRID_FROM_EMAIL=noreply@eloity.com
+SENDGRID_FROM_NAME=Eloity
 ```
 
 **Integration Steps:**
@@ -398,9 +398,9 @@ await sgMail.send(msg);
 **Environment Variables:**
 ```bash
 FCM_SERVER_KEY=xxxxxxxxxxxxx
-FIREBASE_PROJECT_ID=softchat-xxxxx
+FIREBASE_PROJECT_ID=eloity-xxxxx
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nxxxxx\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@softchat-xxxxx.iam.gserviceaccount.com
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@eloity-xxxxx.iam.gserviceaccount.com
 ```
 
 **Integration Steps:**
@@ -518,7 +518,7 @@ FCM_SERVER_KEY=xxxxxxxxxxxxx
 # File Storage
 AWS_ACCESS_KEY_ID=xxxxxxxxxxxxx
 AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxx
-AWS_S3_BUCKET=softchat-production
+AWS_S3_BUCKET=eloity-production
 
 # Cryptocurrency
 COINGECKO_API_KEY=xxxxxxxxxxxxx
@@ -688,7 +688,7 @@ export ENABLE_SMS_SERVICE=true
 
 ## 🎉 Conclusion
 
-Your Softchat platform is now ready for production with comprehensive integrations. All services are implemented with mock data that can be seamlessly replaced with real integrations by following this guide.
+Your Eloity platform is now ready for production with comprehensive integrations. All services are implemented with mock data that can be seamlessly replaced with real integrations by following this guide.
 
 **Next Steps:**
 1. Choose your integrations based on target markets

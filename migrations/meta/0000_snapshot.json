@@ -2444,8 +2444,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "softpoints": {
-          "name": "softpoints",
+        "eloits": {
+          "name": "eloits",
           "type": "integer",
           "primaryKey": false,
           "notNull": false

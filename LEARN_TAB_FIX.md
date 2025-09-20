@@ -29,7 +29,7 @@ The issue was likely caused by one of the following:
   <div className="flex items-center justify-between">
     <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
       <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-      Latest from SoftChat Blog
+      Latest from Eloity Blog
     </h3>
     <div className="flex items-center gap-2">
       <Button variant="ghost" size="sm" asChild>

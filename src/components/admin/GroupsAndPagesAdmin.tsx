@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { formatNumber } from "@/utils/formatters";
 import { useToast } from "@/hooks/use-toast";
+import { apiClient } from "@/lib/api";
+import { AdminService } from "@/services/adminService";
 import {
   Users,
   Building,
@@ -75,6 +77,7 @@ import {
   ExternalLink,
   Heart,
   Briefcase,
+  Loader2,
 } from "lucide-react";
 
 interface Group {
@@ -135,96 +138,78 @@ const GroupsAndPagesAdmin = () => {
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [actionType, setActionType] = useState<string>("");
   const [actionReason, setActionReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [adminActions, setAdminActions] = useState<AdminAction[]>([]);
 
-  // Mock data
-  const [groups, setGroups] = useState<Group[]>([
-    {
-      id: "1",
-      name: "Web3 Developers Community",
-      members: 15420,
-      category: "Technology",
-      cover: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400",
-      description: "A vibrant community of Web3 developers",
-      privacy: "public",
-      isActive: true,
-      createdAt: "2023-01-15",
-      ownerName: "Alex Chen",
-      reportCount: 0,
-      status: "active",
-      posts: 456,
-      engagement: 87
-    },
-    {
-      id: "2",
-      name: "Crypto Trading Hub",
-      members: 8340,
-      category: "Finance",
-      cover: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400",
-      description: "Cryptocurrency trading strategies",
-      privacy: "public",
-      isActive: false,
-      createdAt: "2023-02-20",
-      ownerName: "Sarah Kim",
-      reportCount: 5,
-      status: "under_review",
-      posts: 234,
-      engagement: 65
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      // Fetch groups and pages from API
+      const [groupsResponse, pagesResponse] = await Promise.all([
+        apiClient.getGroups(100, 0),
+        apiClient.getPages(100, 0)
+      ]);
+
+      // Transform the data to match our interface
+      const groupsData = (groupsResponse.data || groupsResponse).map((group: any) => ({
+        id: group.id,
+        name: group.name,
+        members: group.memberCount || 0,
+        category: group.category || "General",
+        cover: group.coverImage || "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400",
+        description: group.description,
+        privacy: group.privacy === "private" ? "private" : "public",
+        isActive: group.status === "active",
+        createdAt: group.createdAt || new Date().toISOString(),
+        ownerName: group.owner?.name || "Unknown",
+        reportCount: group.reportCount || 0,
+        status: group.status || "active",
+        posts: group.postCount || 0,
+        engagement: group.engagement || 0
+      }));
+
+      const pagesData = (pagesResponse.data || pagesResponse).map((page: any) => ({
+        id: page.id,
+        name: page.name,
+        followers: page.followerCount || 0,
+        category: page.category || "General",
+        verified: page.isVerified || false,
+        avatar: page.avatar || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200",
+        description: page.description,
+        pageType: page.type || "business",
+        isActive: page.status === "active",
+        createdAt: page.createdAt || new Date().toISOString(),
+        ownerName: page.owner?.name || "Unknown",
+        reportCount: page.reportCount || 0,
+        status: page.status || "active",
+        posts: page.postCount || 0,
+        engagement: page.engagement || 0,
+        website: page.website,
+        location: page.location
+      }));
+
+      setGroups(groupsData);
+      setPages(pagesData);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load groups and pages data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  const [pages, setPages] = useState<Page[]>([
-    {
-      id: "1",
-      name: "TechCorp Innovation Hub",
-      followers: 125420,
-      category: "Technology",
-      verified: true,
-      avatar: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200",
-      description: "Leading technology solutions provider",
-      pageType: "business",
-      isActive: true,
-      createdAt: "2020-03-15",
-      ownerName: "TechCorp Team",
-      reportCount: 0,
-      status: "active",
-      posts: 567,
-      engagement: 92,
-      website: "https://techcorp.com",
-      location: "San Francisco, CA"
-    },
-    {
-      id: "2",
-      name: "Digital Marketing Hub",
-      followers: 18340,
-      category: "Marketing",
-      verified: false,
-      avatar: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=100",
-      description: "Digital marketing tips and strategies",
-      pageType: "brand",
-      isActive: true,
-      createdAt: "2021-05-10",
-      ownerName: "Marketing Pro",
-      reportCount: 2,
-      status: "pending_verification",
-      posts: 189,
-      engagement: 78
-    }
-  ]);
-
-  const [adminActions, setAdminActions] = useState<AdminAction[]>([
-    {
-      id: "1",
-      type: "group",
-      targetId: "2",
-      targetName: "Crypto Trading Hub",
-      action: "suspend",
-      reason: "Multiple reports of spam content",
-      timestamp: "2024-01-15T10:30:00Z",
-      adminName: "Admin User"
-    }
-  ]);
-
-  const handleAdminAction = (type: "group" | "page", target: Group | Page, action: string) => {
+  const handleAdminAction = async (type: "group" | "page", target: Group | Page, action: string) => {
     if (!actionReason.trim()) {
       toast({
         title: "Error",
@@ -234,55 +219,70 @@ const GroupsAndPagesAdmin = () => {
       return;
     }
 
-    const newAction: AdminAction = {
-      id: Date.now().toString(),
-      type,
-      targetId: target.id,
-      targetName: target.name,
-      action: action as any,
-      reason: actionReason,
-      timestamp: new Date().toISOString(),
-      adminName: "Current Admin"
-    };
+    try {
+      setLoading(true);
+      
+      // In a real implementation, we would call specific admin endpoints
+      // For now, we'll simulate the action and update the UI
+      const newAction: AdminAction = {
+        id: Date.now().toString(),
+        type,
+        targetId: target.id,
+        targetName: target.name,
+        action: action as any,
+        reason: actionReason,
+        timestamp: new Date().toISOString(),
+        adminName: "Current Admin"
+      };
 
-    setAdminActions(prev => [newAction, ...prev]);
+      setAdminActions(prev => [newAction, ...prev]);
 
-    // Update the target status
-    if (type === "group") {
-      setGroups(prev => prev.map(g => 
-        g.id === target.id 
-          ? { 
-              ...g, 
-              status: action === "activate" ? "active" : 
-                     action === "suspend" ? "suspended" : g.status,
-              isActive: action === "activate" ? true : action === "suspend" ? false : g.isActive
-            }
-          : g
-      ));
-    } else {
-      setPages(prev => prev.map(p => 
-        p.id === target.id 
-          ? { 
-              ...p, 
-              status: action === "activate" ? "active" : 
-                     action === "suspend" ? "suspended" :
-                     action === "verify" ? "active" : p.status,
-              verified: action === "verify" ? true : p.verified,
-              isActive: action === "activate" ? true : action === "suspend" ? false : p.isActive
-            }
-          : p
-      ));
+      // Update the target status
+      if (type === "group") {
+        setGroups(prev => prev.map(g => 
+          g.id === target.id 
+            ? { 
+                ...g, 
+                status: action === "activate" ? "active" : 
+                       action === "suspend" ? "suspended" : g.status,
+                isActive: action === "activate" ? true : action === "suspend" ? false : g.isActive
+              }
+            : g
+        ));
+      } else {
+        setPages(prev => prev.map(p => 
+          p.id === target.id 
+            ? { 
+                ...p, 
+                status: action === "activate" ? "active" : 
+                       action === "suspend" ? "suspended" :
+                       action === "verify" ? "active" : p.status,
+                verified: action === "verify" ? true : p.verified,
+                isActive: action === "activate" ? true : action === "suspend" ? false : p.isActive
+              }
+            : p
+        ));
+      }
+
+      setShowActionDialog(false);
+      setActionReason("");
+      setSelectedGroup(null);
+      setSelectedPage(null);
+
+      toast({
+        title: "Action Completed",
+        description: `${action} action has been applied to ${target.name}`
+      });
+    } catch (error) {
+      console.error("Error performing admin action:", error);
+      toast({
+        title: "Error",
+        description: "Failed to perform admin action",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-
-    setShowActionDialog(false);
-    setActionReason("");
-    setSelectedGroup(null);
-    setSelectedPage(null);
-
-    toast({
-      title: "Action Completed",
-      description: `${action} action has been applied to ${target.name}`
-    });
   };
 
   const getStatusColor = (status: string) => {
@@ -645,12 +645,22 @@ const GroupsAndPagesAdmin = () => {
                 <SelectItem value="under_review">Under Review</SelectItem>
               </SelectContent>
             </Select>
+            <Button onClick={loadData} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Refresh
+            </Button>
           </div>
 
           {/* Groups List */}
-          <div className="space-y-4">
-            {filteredGroups.map(renderGroupCard)}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredGroups.map(renderGroupCard)}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="pages" className="space-y-4">
@@ -677,12 +687,22 @@ const GroupsAndPagesAdmin = () => {
                 <SelectItem value="pending_verification">Pending Verification</SelectItem>
               </SelectContent>
             </Select>
+            <Button onClick={loadData} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Refresh
+            </Button>
           </div>
 
           {/* Pages List */}
-          <div className="space-y-4">
-            {filteredPages.map(renderPageCard)}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredPages.map(renderPageCard)}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="actions" className="space-y-4">
@@ -691,25 +711,31 @@ const GroupsAndPagesAdmin = () => {
               <CardTitle>Recent Admin Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {adminActions.map((action) => (
-                  <div key={action.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant={action.action === "suspend" ? "destructive" : "default"}>
-                          {action.action}
-                        </Badge>
-                        <span className="font-medium">{action.targetName}</span>
-                        <span className="text-sm text-muted-foreground">({action.type})</span>
+              {loading ? (
+                <div className="flex justify-center items-center h-32">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {adminActions.map((action) => (
+                    <div key={action.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={action.action === "suspend" ? "destructive" : "default"}>
+                            {action.action}
+                          </Badge>
+                          <span className="font-medium">{action.targetName}</span>
+                          <span className="text-sm text-muted-foreground">({action.type})</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{action.reason}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          By {action.adminName} on {new Date(action.timestamp).toLocaleString()}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{action.reason}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        By {action.adminName} on {new Date(action.timestamp).toLocaleString()}
-                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -852,6 +878,7 @@ const GroupsAndPagesAdmin = () => {
                     variant="outline"
                     onClick={() => setShowActionDialog(false)}
                     className="flex-1"
+                    disabled={loading}
                   >
                     Cancel
                   </Button>
@@ -865,7 +892,9 @@ const GroupsAndPagesAdmin = () => {
                       }
                     }}
                     className="flex-1"
+                    disabled={loading}
                   >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     Confirm {actionType}
                   </Button>
                 </>

@@ -46,7 +46,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({
               </div>
             )}
             <div className="flex gap-2 justify-center">
-              <Button onClick={() => navigate("/feed")}>Go to Feed</Button>
+              <Button onClick={() => navigate("/app/feed")}>Go to Feed</Button>
               <Button variant="outline" onClick={() => navigate("/")}>
                 Home
               </Button>

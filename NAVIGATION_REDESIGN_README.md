@@ -223,4 +223,4 @@ UnifiedHeader
 4. **Keyboard Shortcuts**: Advanced keyboard navigation support
 5. **Offline Support**: Cached search results for offline browsing
 
-The redesigned navigation provides a streamlined, consistent, and user-friendly interface that eliminates repetition while improving discoverability and accessibility across the entire SoftChat platform.
+The redesigned navigation provides a streamlined, consistent, and user-friendly interface that eliminates repetition while improving discoverability and accessibility across the entire Eloity platform.

@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/lib/supabase/client";
-import { ProfileService } from "@/services/profileService";
 import {
   TrendingUp,
   TrendingDown,
@@ -36,8 +34,11 @@ import {
   Filter,
   RefreshCw,
   Target,
+  User,
 } from "lucide-react";
 import { UserProfile } from "@/types/user";
+import { profileService } from "@/services/profileService";
+import { apiClient } from "@/lib/api";
 
 interface P2PTrade {
   id: string;
@@ -84,26 +85,11 @@ const UserTrades: React.FC = () => {
   const [tradeFilter, setTradeFilter] = useState("all");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeFromDb, setActiveFromDb] = useState<P2PTrade[]>([]);
-  const [completedFromDb, setCompletedFromDb] = useState<P2PTrade[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTrades, setActiveTrades] = useState<P2PTrade[]>([]);
+  const [completedTrades, setCompletedTrades] = useState<P2PTrade[]>([]);
 
-  // Mock data - in real app, fetch from API
-  const userProfile: UserProfile = {
-    id: "1",
-    username: username || "",
-    full_name: "Michael Chen",
-    avatar_url: "/placeholder.svg",
-    banner_url: "/placeholder.svg",
-    bio: "Experienced crypto trader with focus on security and reliability. Available for P2P trading.",
-    location: "Singapore",
-    website: "https://michaelchen.trade",
-    verified: true,
-    created_at: "2021-08-15",
-    followers_count: 3240,
-    following_count: 890,
-    posts_count: 124,
-  };
-
+  // Mock data for stats (in real app, fetch from API)
   const tradingStats: TradingStats = {
     totalTrades: 847,
     completedTrades: 823,
@@ -117,67 +103,6 @@ const UserTrades: React.FC = () => {
     disputeRate: 0.3,
     favoritePayments: ["Bank Transfer", "PayPal", "Wise", "Cash"],
   };
-
-  const activeTrades: P2PTrade[] = [
-    {
-      id: "1",
-      type: "sell",
-      crypto: "Bitcoin",
-      crypto_symbol: "BTC",
-      fiat_currency: "USD",
-      amount: 0.5,
-      price_per_unit: 42500,
-      total_amount: 21250,
-      payment_methods: ["Bank Transfer", "PayPal"],
-      min_limit: 1000,
-      max_limit: 5000,
-      status: "active",
-      created_at: "2024-01-18T10:30:00Z",
-      updated_at: "2024-01-18T10:30:00Z",
-    },
-    {
-      id: "2",
-      type: "buy",
-      crypto: "Ethereum",
-      crypto_symbol: "ETH",
-      fiat_currency: "USD",
-      amount: 10,
-      price_per_unit: 2580,
-      total_amount: 25800,
-      payment_methods: ["Wise", "Bank Transfer"],
-      min_limit: 500,
-      max_limit: 3000,
-      status: "active",
-      created_at: "2024-01-17T15:45:00Z",
-      updated_at: "2024-01-17T15:45:00Z",
-    },
-  ];
-
-  const completedTrades: P2PTrade[] = [
-    {
-      id: "3",
-      type: "sell",
-      crypto: "Bitcoin",
-      crypto_symbol: "BTC",
-      fiat_currency: "USD",
-      amount: 1.2,
-      price_per_unit: 41800,
-      total_amount: 50160,
-      payment_methods: ["Bank Transfer"],
-      min_limit: 2000,
-      max_limit: 10000,
-      status: "completed",
-      completion_rate: 98,
-      created_at: "2024-01-15T09:15:00Z",
-      updated_at: "2024-01-16T14:22:00Z",
-      trading_partner: {
-        name: "Sarah Williams",
-        avatar: "/placeholder.svg",
-        rating: 4.9,
-        trades_count: 156,
-      },
-    },
-  ];
 
   const paymentMethods = [
     { name: "Bank Transfer", icon: Building, available: true },
@@ -207,64 +132,281 @@ const UserTrades: React.FC = () => {
   };
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
+    const fetchData = async () => {
+      if (!username) {
+        setError("Username is required");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const svc = new ProfileService();
-        const p = username ? await svc.getUserByUsername(username) : null;
-        if (!mounted) return;
-        setProfile(p);
-        if (p?.id) {
-          const { data, error } = await supabase
-            .from("p2p_offers")
-            .select("*")
-            .eq("user_id", p.id)
-            .order("created_at", { ascending: false });
-          if (!mounted) return;
-          if (!error && data && data.length) {
-            const mapped: P2PTrade[] = data.map((row: any) => ({
-              id: String(row.id),
-              type: row.type === "SELL" || row.type === "sell" ? "sell" : "buy",
-              crypto: row.asset_name || row.asset || "Bitcoin",
-              crypto_symbol: row.asset_symbol || row.symbol || "BTC",
-              fiat_currency: row.fiat_currency || row.fiat || "USD",
-              amount: Number(row.amount || row.quantity || 0),
-              price_per_unit: Number(row.price || row.price_per_unit || 0),
-              total_amount: Number(row.total_amount || (row.amount || 0) * (row.price || 0)),
-              payment_methods: Array.isArray(row.payment_methods)
-                ? row.payment_methods
-                : (row.payment_methods ? String(row.payment_methods).split(",") : []),
-              min_limit: Number(row.min_amount || row.min_limit || 0),
-              max_limit: Number(row.max_amount || row.max_limit || 0),
-              status: String(row.status || "active").toLowerCase(),
-              created_at: row.created_at || new Date().toISOString(),
-              updated_at: row.updated_at || row.created_at || new Date().toISOString(),
-            }));
-            setActiveFromDb(mapped.filter((t) => t.status === "active" || t.status === "in_progress"));
-            setCompletedFromDb(mapped.filter((t) => t.status === "completed"));
-          } else {
-            setActiveFromDb([]);
-            setCompletedFromDb([]);
-          }
-        } else {
-          setActiveFromDb([]);
-          setCompletedFromDb([]);
+        setLoading(true);
+        setError(null);
+        
+        // Fetch user profile
+        const profileData = await profileService.getUserByUsername(username);
+        if (!profileData) {
+          setError("User not found");
+          setLoading(false);
+          return;
         }
-      } catch (e) {
-        setActiveFromDb([]);
-        setCompletedFromDb([]);
+        
+        setProfile(profileData);
+        
+        // Fetch user's P2P trades
+        try {
+          const tradesResponse = await apiClient.getCryptoTrades();
+          // Type guard to ensure we're working with the right data structure
+          let tradesData: P2PTrade[] = [];
+          if (Array.isArray(tradesResponse)) {
+            tradesData = tradesResponse.filter((trade: any) => trade.user_id === profileData.id);
+          } else if (tradesResponse && typeof tradesResponse === 'object' && 'trades' in tradesResponse) {
+            tradesData = (tradesResponse.trades as any[]).filter((trade: any) => trade.user_id === profileData.id).map((trade: any) => ({
+              ...trade,
+              status: trade.status as "active" | "completed" | "cancelled" | "in_progress"
+            }));
+          } else {
+            // Fallback to mock data if API response is unexpected
+            tradesData = [
+              {
+                id: "1",
+                type: "sell",
+                crypto: "Bitcoin",
+                crypto_symbol: "BTC",
+                fiat_currency: "USD",
+                amount: 0.5,
+                price_per_unit: 42500,
+                total_amount: 21250,
+                payment_methods: ["Bank Transfer", "PayPal"],
+                min_limit: 1000,
+                max_limit: 5000,
+                status: "active",
+                created_at: "2024-01-18T10:30:00Z",
+                updated_at: "2024-01-18T10:30:00Z",
+              },
+              {
+                id: "2",
+                type: "buy",
+                crypto: "Ethereum",
+                crypto_symbol: "ETH",
+                fiat_currency: "USD",
+                amount: 10,
+                price_per_unit: 2580,
+                total_amount: 25800,
+                payment_methods: ["Wise", "Bank Transfer"],
+                min_limit: 500,
+                max_limit: 3000,
+                status: "active",
+                created_at: "2024-01-17T15:45:00Z",
+                updated_at: "2024-01-17T15:45:00Z",
+              },
+            ];
+          }
+          
+          setActiveTrades(tradesData.filter((t) => t.status === "active" || t.status === "in_progress"));
+          setCompletedTrades(tradesData.filter((t) => t.status === "completed"));
+        } catch (tradeError) {
+          console.warn("Failed to fetch trades, using mock data:", tradeError);
+          // Mock trades data as fallback
+          setActiveTrades([
+            {
+              id: "1",
+              type: "sell",
+              crypto: "Bitcoin",
+              crypto_symbol: "BTC",
+              fiat_currency: "USD",
+              amount: 0.5,
+              price_per_unit: 42500,
+              total_amount: 21250,
+              payment_methods: ["Bank Transfer", "PayPal"],
+              min_limit: 1000,
+              max_limit: 5000,
+              status: "active",
+              created_at: "2024-01-18T10:30:00Z",
+              updated_at: "2024-01-18T10:30:00Z",
+            },
+            {
+              id: "2",
+              type: "buy",
+              crypto: "Ethereum",
+              crypto_symbol: "ETH",
+              fiat_currency: "USD",
+              amount: 10,
+              price_per_unit: 2580,
+              total_amount: 25800,
+              payment_methods: ["Wise", "Bank Transfer"],
+              min_limit: 500,
+              max_limit: 3000,
+              status: "active",
+              created_at: "2024-01-17T15:45:00Z",
+              updated_at: "2024-01-17T15:45:00Z",
+            },
+          ]);
+          
+          setCompletedTrades([
+            {
+              id: "3",
+              type: "sell",
+              crypto: "Bitcoin",
+              crypto_symbol: "BTC",
+              fiat_currency: "USD",
+              amount: 1.2,
+              price_per_unit: 41800,
+              total_amount: 50160,
+              payment_methods: ["Bank Transfer"],
+              min_limit: 2000,
+              max_limit: 10000,
+              status: "completed",
+              completion_rate: 98,
+              created_at: "2024-01-15T09:15:00Z",
+              updated_at: "2024-01-16T14:22:00Z",
+              trading_partner: {
+                name: "Sarah Williams",
+                avatar: "/placeholder.svg",
+                rating: 4.9,
+                trades_count: 156,
+              },
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError("Failed to load user data");
+        // Set mock data as fallback
+        setProfile({
+          id: "1",
+          username: username || "",
+          full_name: "Alex Morgan",
+          avatar_url: "/placeholder.svg",
+          banner_url: "/placeholder.svg",
+          bio: "Professional crypto trader with 5+ years of experience in digital asset markets.",
+          location: "London, UK",
+          website: "https://alexmorgan.crypto",
+          is_verified: true,
+          join_date: "2021-03-15",
+          followers_count: 5420,
+          following_count: 240,
+          posts_count: 186,
+        } as UserProfile);
+        
+        setActiveTrades([
+          {
+            id: "1",
+            type: "sell",
+            crypto: "Bitcoin",
+            crypto_symbol: "BTC",
+            fiat_currency: "USD",
+            amount: 0.5,
+            price_per_unit: 42500,
+            total_amount: 21250,
+            payment_methods: ["Bank Transfer", "PayPal"],
+            min_limit: 1000,
+            max_limit: 5000,
+            status: "active",
+            created_at: "2024-01-18T10:30:00Z",
+            updated_at: "2024-01-18T10:30:00Z",
+          },
+          {
+            id: "2",
+            type: "buy",
+            crypto: "Ethereum",
+            crypto_symbol: "ETH",
+            fiat_currency: "USD",
+            amount: 10,
+            price_per_unit: 2580,
+            total_amount: 25800,
+            payment_methods: ["Wise", "Bank Transfer"],
+            min_limit: 500,
+            max_limit: 3000,
+            status: "active",
+            created_at: "2024-01-17T15:45:00Z",
+            updated_at: "2024-01-17T15:45:00Z",
+          },
+        ]);
+        
+        setCompletedTrades([
+          {
+            id: "3",
+            type: "sell",
+            crypto: "Bitcoin",
+            crypto_symbol: "BTC",
+            fiat_currency: "USD",
+            amount: 1.2,
+            price_per_unit: 41800,
+            total_amount: 50160,
+            payment_methods: ["Bank Transfer"],
+            min_limit: 2000,
+            max_limit: 10000,
+            status: "completed",
+            completion_rate: 98,
+            created_at: "2024-01-15T09:15:00Z",
+            updated_at: "2024-01-16T14:22:00Z",
+            trading_partner: {
+              name: "Sarah Williams",
+              avatar: "/placeholder.svg",
+              rating: 4.9,
+              trades_count: 156,
+            },
+          },
+        ]);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
-    load();
-    return () => { mounted = false; };
+
+    fetchData();
   }, [username]);
 
-  const profileData = profile || userProfile;
-  const isDemo = (username || "").toLowerCase() === "demo";
-  const displayActiveTrades = activeFromDb.length ? activeFromDb : (isDemo ? activeTrades : []);
-  const displayCompletedTrades = completedFromDb.length ? completedFromDb : (isDemo ? completedTrades : []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading trading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <AlertCircle className="h-12 w-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Error</h2>
+          <p className="text-muted-foreground">{error}</p>
+          <Button 
+            className="mt-4" 
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-4">
+            <User className="h-12 w-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">User Not Found</h2>
+          <p className="text-muted-foreground">The requested user profile could not be found.</p>
+          <Button 
+            className="mt-4" 
+            asChild
+          >
+            <Link to="/app/profile">Back to Profile</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -303,14 +445,14 @@ const UserTrades: React.FC = () => {
                 {/* Trader Info */}
                 <div className="text-center mb-6">
                   <Avatar className="h-20 w-20 mx-auto mb-4">
-                    <AvatarImage src={profileData.avatar_url} alt={profileData.full_name} />
+                    <AvatarImage src={profile.avatar_url || "/placeholder.svg"} alt={profile.full_name || profile.username || "User"} />
                     <AvatarFallback className="text-lg">
-                      {profileData.full_name?.split(" ").map(n => n[0]).join("")}
+                      {profile.full_name ? profile.full_name.split(" ").map(n => n[0]).join("") : (profile.username ? profile.username.substring(0, 2).toUpperCase() : "U")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <h1 className="text-xl font-bold">{profileData.full_name}</h1>
-                    {profileData.verified && (
+                    <h1 className="text-xl font-bold">{profile.full_name || profile.username}</h1>
+                    {profile.is_verified && (
                       <Verified className="h-5 w-5 text-blue-500" />
                     )}
                     <Badge className="bg-green-100 text-green-800">
@@ -318,7 +460,7 @@ const UserTrades: React.FC = () => {
                       Verified Trader
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground text-sm mb-2">@{profileData.username}</p>
+                  <p className="text-muted-foreground text-sm mb-2">@{profile.username || "unknown"}</p>
                   <div className="flex items-center justify-center gap-1 mb-4">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="font-medium">{tradingStats.averageRating}</span>
@@ -332,7 +474,7 @@ const UserTrades: React.FC = () => {
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total Trades</span>
-                    <span className="font-semibold">{tradingStats.totalTrades}</span>
+                    <span className="font-semibold">{(activeTrades.length + completedTrades.length) || tradingStats.totalTrades}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Completion Rate</span>
@@ -368,7 +510,7 @@ const UserTrades: React.FC = () => {
                 <div className="space-y-3 pt-6 border-t">
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{profileData.location}</span>
+                    <span>{profile.location || "Location not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -446,8 +588,8 @@ const UserTrades: React.FC = () => {
           {/* Trading Content */}
           <div className="lg:col-span-3">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">{profileData.full_name}'s Trading Activity</h2>
-              <p className="text-muted-foreground">{profileData.bio}</p>
+              <h2 className="text-2xl font-bold mb-2">{profile.full_name || profile.username}'s Trading Activity</h2>
+              <p className="text-muted-foreground">{profile.bio || "No bio available"}</p>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

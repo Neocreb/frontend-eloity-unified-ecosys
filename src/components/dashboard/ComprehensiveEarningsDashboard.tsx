@@ -381,7 +381,7 @@ const ComprehensiveEarningsDashboard: React.FC = () => {
       switch (action.action) {
         case "create_post":
           // Navigate to create post
-          window.location.href = "/feed";
+          window.location.href = "/app/feed";
           break;
         case "complete_profile":
           // Navigate to profile

@@ -224,7 +224,7 @@ const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
       name: "Copy Link",
       icon: <Copy className="w-4 h-4" />,
       action: () => {
-        navigator.clipboard.writeText(`https://softchat.com/video/${videoId}`);
+        navigator.clipboard.writeText(`https://eloity.com/video/${videoId}`);
         toast({ title: "Link copied to clipboard!" });
       },
     },
@@ -233,7 +233,7 @@ const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
       name: "Share to WhatsApp",
       icon: <MessageCircle className="w-4 h-4" />,
       action: () => {
-        window.open(`https://wa.me/?text=Check out this video! https://softchat.com/video/${videoId}`, '_blank');
+        window.open(`https://wa.me/?text=Check out this video! https://eloity.com/video/${videoId}`, '_blank');
       },
     },
     {

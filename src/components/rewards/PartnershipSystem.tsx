@@ -119,7 +119,7 @@ const mockReferralData: ReferralData = {
   tierProgress: 75,
   nextTierRequirement: 100,
   referralCode: "SOFTCHAT2024",
-  customLink: "https://softchat.com/join/johndoe",
+  customLink: "https://eloity.com/join/johndoe",
 };
 
 const mockPartnerships: Partnership[] = [
@@ -917,7 +917,7 @@ export function PartnershipSystem() {
               <label className="text-sm font-medium">Custom Path</label>
               <div className="flex mt-1">
                 <span className="flex items-center px-3 bg-gray-100 border border-r-0 rounded-l-md text-sm">
-                  softchat.com/join/
+                  eloity.com/join/
                 </span>
                 <Input placeholder="your-name" className="rounded-l-none" />
               </div>

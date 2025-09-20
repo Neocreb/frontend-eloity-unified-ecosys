@@ -59,7 +59,7 @@ const EnhancedAuthForm = () => {
         } else {
           notification.success("Successfully logged in!");
           console.log("Login successful, navigating to /feed");
-          navigate("/feed", { replace: true });
+          navigate("/app/feed", { replace: true });
         }
       } else {
         if (!name) {
@@ -90,7 +90,7 @@ const EnhancedAuthForm = () => {
         } else {
           notification.success("Registration successful! Please check your email for verification.");
           console.log("Registration successful, navigating to /feed");
-          navigate("/feed", { replace: true });
+          navigate("/app/feed", { replace: true });
         }
       }
     } catch (err: any) {
@@ -127,7 +127,7 @@ const EnhancedAuthForm = () => {
     try {
       console.log("Attempting demo login");
       // Demo credentials - these should be environment variables in production
-      const DEMO_EMAIL = "demo@softchat.com";
+      const DEMO_EMAIL = "demo@eloity.com";
       const DEMO_PASSWORD = "password123";
       const result = await login(DEMO_EMAIL, DEMO_PASSWORD);
       if (result.error) {
@@ -138,7 +138,7 @@ const EnhancedAuthForm = () => {
       } else {
         notification.success("Successfully logged in with demo account!");
         console.log("Demo login successful, navigating to /feed");
-        navigate("/feed", { replace: true });
+        navigate("/app/feed", { replace: true });
       }
     } catch (err: any) {
       console.error("Demo login error:", err);

@@ -317,6 +317,178 @@ const mockProducts: Product[] = [
   },
 ];
 
+// Mock orders for enhanced marketplace
+const mockOrders: Order[] = [
+  {
+    id: "order1",
+    buyerId: "user1",
+    sellerId: "seller1",
+    customerName: "John Doe",
+    customerEmail: "john@example.com",
+    orderNumber: "ORD-001",
+    orderType: "marketplace",
+    items: [
+      {
+        productId: "1",
+        productName: "Wireless Noise Cancelling Headphones",
+        productImage:
+          "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200",
+        sellerId: "seller1",
+        sellerName: "AudioTech",
+        quantity: 1,
+        unitPrice: 249.99,
+        totalPrice: 249.99,
+        status: "shipped",
+      },
+    ],
+    subtotal: 249.99,
+    shippingCost: 0,
+    taxAmount: 25.00,
+    discountAmount: 0,
+    totalAmount: 274.99,
+    paymentMethod: "Credit Card",
+    paymentCurrency: "USDT",
+    paymentStatus: "paid",
+    escrowId: undefined,
+    paymentTransactionId: undefined,
+    shippingAddress: {
+      fullName: "John Doe",
+      addressLine1: "123 Main Street",
+      addressLine2: "Apt 4B",
+      city: "San Francisco",
+      state: "CA",
+      postalCode: "94102",
+      country: "United States",
+      phone: "+1-555-0199",
+    },
+    billingAddress: {
+      fullName: "John Doe",
+      addressLine1: "123 Main Street",
+      addressLine2: "Apt 4B",
+      city: "San Francisco",
+      state: "CA",
+      postalCode: "94102",
+      country: "United States",
+    },
+    shippingMethod: "standard",
+    trackingNumber: "UPS123456789",
+    trackingUrl: "https://www.ups.com/track?loc=en_US&tracknum=UPS123456789",
+    estimatedDelivery: "2024-01-18T17:00:00Z",
+    actualDelivery: undefined,
+    downloadUrls: undefined,
+    downloadExpiresAt: undefined,
+    downloadCount: 0,
+    downloadLimit: undefined,
+    status: "shipped",
+    fulfillmentStatus: "processing",
+    requiresShipping: true,
+    autoCompleteAfterDays: 7,
+    chatThreadId: undefined,
+    customerNotes: "Please leave at front door if not home",
+    sellerNotes: undefined,
+    adminNotes: undefined,
+    confirmedAt: "2024-01-15T11:00:00Z",
+    processingAt: "2024-01-15T12:00:00Z",
+    shippedAt: "2024-01-16T09:00:00Z",
+    deliveredAt: undefined,
+    completedAt: undefined,
+    cancelledAt: undefined,
+    platformFee: 13.75,
+    feePercentage: 5,
+    sellerRevenue: 261.24,
+    disputeId: undefined,
+    disputeReason: undefined,
+    returnRequested: false,
+    returnRequestedAt: undefined,
+    returnReason: undefined,
+    returnStatus: undefined,
+    refundAmount: undefined,
+    refundedAt: undefined,
+    createdAt: "2024-01-15T10:30:00Z",
+    updatedAt: "2024-01-16T14:22:00Z",
+  },
+  {
+    id: "order2",
+    buyerId: "user2",
+    sellerId: "seller2",
+    customerName: "Jane Smith",
+    customerEmail: "jane@example.com",
+    orderNumber: "ORD-002",
+    orderType: "service",
+    items: [
+      {
+        productId: "2",
+        productName: "AI-Powered Logo Design Service",
+        productImage:
+          "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=200",
+        sellerId: "seller2",
+        sellerName: "CreativeStudio",
+        quantity: 1,
+        unitPrice: 69.99,
+        totalPrice: 69.99,
+        status: "processing",
+        deliveryDate: "2024-01-25T00:00:00Z",
+        serviceNotes: "Need 3 initial concepts",
+      },
+    ],
+    subtotal: 69.99,
+    shippingCost: 0,
+    taxAmount: 7.00,
+    discountAmount: 0,
+    totalAmount: 76.99,
+    paymentMethod: "PayPal",
+    paymentCurrency: "USDT",
+    paymentStatus: "paid",
+    escrowId: undefined,
+    paymentTransactionId: undefined,
+    shippingAddress: undefined,
+    billingAddress: {
+      fullName: "Jane Smith",
+      addressLine1: "456 Oak Avenue",
+      city: "Los Angeles",
+      state: "CA",
+      postalCode: "90001",
+      country: "United States",
+    },
+    shippingMethod: "digital",
+    trackingNumber: undefined,
+    trackingUrl: undefined,
+    estimatedDelivery: undefined,
+    actualDelivery: undefined,
+    downloadUrls: undefined,
+    downloadExpiresAt: undefined,
+    downloadCount: 0,
+    downloadLimit: undefined,
+    status: "processing",
+    fulfillmentStatus: "processing",
+    requiresShipping: false,
+    autoCompleteAfterDays: 7,
+    chatThreadId: undefined,
+    customerNotes: "Looking forward to seeing the designs",
+    sellerNotes: "Will start work tomorrow",
+    adminNotes: undefined,
+    confirmedAt: "2024-01-18T09:30:00Z",
+    processingAt: "2024-01-18T10:00:00Z",
+    shippedAt: undefined,
+    deliveredAt: undefined,
+    completedAt: undefined,
+    cancelledAt: undefined,
+    platformFee: 3.85,
+    feePercentage: 5,
+    sellerRevenue: 73.14,
+    disputeId: undefined,
+    disputeReason: undefined,
+    returnRequested: false,
+    returnRequestedAt: undefined,
+    returnReason: undefined,
+    returnStatus: undefined,
+    refundAmount: undefined,
+    refundedAt: undefined,
+    createdAt: "2024-01-18T09:15:00Z",
+    updatedAt: "2024-01-18T10:00:00Z",
+  },
+];
+
 const mockCampaigns: Campaign[] = [
   {
     id: "campaign1",
@@ -371,6 +543,10 @@ const mockCampaigns: Campaign[] = [
     clickCount: 789,
     conversionCount: 45,
     totalRevenue: 3890.5,
+    usageLimit: 500,
+    usageCount: 123,
+    maxParticipants: 50,
+    maxProductsPerSeller: 5,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -945,7 +1121,11 @@ export const EnhancedMarketplaceProvider = ({
     createdAt: "",
     updatedAt: "",
   });
-  const addToWishlist = (productId: string) => {
+  const addToWishlist = async (
+    productId: string,
+    wishlistId?: string,
+    options?: Partial<WishlistItem>,
+  ): Promise<WishlistItem> => {
     const product = getProduct(productId);
     if (!product) {
       toast({
@@ -953,16 +1133,16 @@ export const EnhancedMarketplaceProvider = ({
         description: "Product not found",
         variant: "destructive",
       });
-      return;
+      throw new Error("Product not found");
     }
 
     const wishlistItem: WishlistItem = {
       id: `wishlist-${Date.now()}`,
-      wishlistId: `wishlist-${user?.id || "guest"}`,
+      wishlistId: wishlistId || `wishlist-${user?.id || "guest"}`,
       productId,
-      notifyOnSale: false,
-      notifyOnRestock: false,
-      priority: 1,
+      notifyOnSale: options?.notifyOnSale || false,
+      notifyOnRestock: options?.notifyOnRestock || false,
+      priority: options?.priority || 1,
       addedAt: new Date().toISOString(),
       product,
     };
@@ -973,6 +1153,8 @@ export const EnhancedMarketplaceProvider = ({
       title: "Added to Wishlist",
       description: `${product.name} added to your wishlist`,
     });
+
+    return wishlistItem;
   };
   const removeFromWishlist = () => {};
   const moveToCart = async () => false;
@@ -1094,8 +1276,56 @@ export const EnhancedMarketplaceProvider = ({
   const trackProductView = () => {};
   const trackProductClick = () => {};
   const trackSearch = () => {};
-  const getSellerAnalytics = async () => ({});
-  const getProductPerformance = async () => ({});
+  const getSellerAnalytics = async () => {
+    // Mock implementation - in a real app this would call an API
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    
+    return {
+      totalRevenue: 12500,
+      totalOrders: 89,
+      totalProducts: 24,
+      customerSatisfaction: 4.8,
+      monthlyRevenue: [8500, 10200, 12500],
+      categoryBreakdown: [
+        { category: "Electronics", revenue: 7800, percentage: 62 },
+        { category: "Fashion", revenue: 3200, percentage: 26 },
+        { category: "Home", revenue: 1500, percentage: 12 },
+      ],
+      averageOrderValue: 140.45,
+      responseRate: 98,
+      onTimeDeliveryRate: 95,
+      topProducts: mockProducts.slice(0, 3),
+      conversionRate: 3.2,
+      boostROI: 245,
+    };
+  };
+
+  const getProductPerformance = async (productId: string) => {
+    // Mock implementation - in a real app this would call an API
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    return {
+      views: 1247,
+      clicks: 398,
+      addToCarts: 156,
+      purchases: 89,
+      favorites: 67,
+      conversionRate: 2.3,
+      revenue: 22450,
+      rating: 4.8,
+      reviewCount: 124,
+    };
+  };
+
+  const getSellerOrders = async (sellerId: string) => {
+    // Mock implementation - in a real app this would call an API
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    
+    return mockOrders.filter((order: Order) => 
+      order.items.some((item: OrderItem) => item.sellerId === sellerId)
+    );
+  };
+
   const setPriceAlert = async () => false;
   const getPriceHistory = async () => [];
 
@@ -1228,6 +1458,7 @@ export const EnhancedMarketplaceProvider = ({
     trackSearch,
     getSellerAnalytics,
     getProductPerformance,
+    getSellerOrders,
     setPriceAlert,
     getPriceHistory,
   };

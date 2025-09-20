@@ -26,7 +26,7 @@ const initiatePayment = async (paymentData) => {
       name: paymentData.name
     },
     customizations: {
-      title: "Softchat Payment",
+      title: "Eloity Payment",
       logo: "https://yourapp.com/logo.png"
     }
   };
@@ -97,8 +97,8 @@ const requestMobileMoneyPayment = async (phoneNumber, amount, currency) => {
       partyIdType: "MSISDN",
       partyId: phoneNumber.replace('+', '')
     },
-    payerMessage: "Payment for Softchat services",
-    payeeNote: "Softchat platform payment"
+    payerMessage: "Payment for Eloity services",
+    payeeNote: "Eloity platform payment"
   };
 
   try {
@@ -142,7 +142,7 @@ const initiateOrangeMoneyPayment = async (paymentData) => {
     cancel_url: 'https://yourapp.com/payment/cancel',
     notif_url: 'https://yourapp.com/webhook/orange-money',
     lang: paymentData.language || 'fr', // French/English
-    reference: `SOFTCHAT_${Date.now()}`
+    reference: `ELOITY_${Date.now()}`
   };
 
   return await fetch(`${orangeMoneyConfig.baseUrl}/webpayment`, {
@@ -495,13 +495,13 @@ const africasTalking = AfricasTalking({
 const sendSMSOTP = async (phoneNumber, otp, countryCode) => {
   const sms = africasTalking.SMS;
   
-  const message = `Your Softchat verification code is: ${otp}. Valid for 10 minutes. Do not share this code.`;
+  const message = `Your Eloity verification code is: ${otp}. Valid for 10 minutes. Do not share this code.`;
   
   try {
     const result = await sms.send({
       to: phoneNumber,
       message: message,
-      from: 'SOFTCHAT' // Your sender ID
+      from: 'ELOITY' // Your sender ID
     });
     
     return {
@@ -560,13 +560,13 @@ const sendMultiChannelOTP = async (phoneNumber, channel = 'sms') => {
     api_key: termiiConfig.apiKey,
     message_type: 'NUMERIC',
     to: phoneNumber,
-    from: 'Softchat',
+    from: 'Eloity',
     channel: channel, // sms, voice, email, whatsapp
     pin_attempts: 3,
     pin_time_to_live: 10,
     pin_length: 6,
     pin_placeholder: '< 1234 >',
-    message_text: 'Your Softchat verification code is < 1234 >. Valid for 10 minutes.',
+    message_text: 'Your Eloity verification code is < 1234 >. Valid for 10 minutes.',
     pin_type: 'NUMERIC'
   };
 

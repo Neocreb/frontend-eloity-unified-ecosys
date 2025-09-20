@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Live Community Events** is a revolutionary new feature that transforms SoftChat into an interactive, real-time collaborative platform. This feature creates network effects by bringing together your existing user base around shared experiences, significantly increasing engagement and retention.
+**Live Community Events** is a revolutionary new feature that transforms Eloity into an interactive, real-time collaborative platform. This feature creates network effects by bringing together your existing user base around shared experiences, significantly increasing engagement and retention.
 
 ## 🚀 Key Features
 
@@ -31,7 +31,7 @@
 - **Premium Events**: Monetization through exclusive access
 - **Analytics Dashboard**: Host performance insights
 
-## 🎯 Why This Feature is Perfect for SoftChat
+## 🎯 Why This Feature is Perfect for Eloity
 
 ### **1. Network Effects**
 
@@ -127,7 +127,7 @@
 ### **Phase 1: Launch** (Weeks 1-4)
 
 - Promote heavily with banner in main feed
-- Host daily events by SoftChat team
+- Host daily events by Eloity team
 - Invite top community members as early hosts
 - Focus on crypto trading and marketplace events
 
@@ -178,4 +178,4 @@
 
 ---
 
-**This feature positions SoftChat as a pioneer in real-time social commerce and community engagement, creating a unique competitive advantage in the social platform space.**
+**This feature positions Eloity as a pioneer in real-time social commerce and community engagement, creating a unique competitive advantage in the social platform space.**

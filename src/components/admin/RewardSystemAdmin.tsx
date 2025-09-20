@@ -65,7 +65,7 @@ interface RewardRule {
   actionType: string;
   displayName: string;
   description: string;
-  baseSoftPoints: number;
+  baseEloits: number;
   baseWalletBonus: number;
   currency: string;
   dailyLimit?: number;
@@ -92,7 +92,7 @@ interface UserTrustScore {
   currentScore: number;
   trustLevel: string;
   rewardMultiplier: number;
-  dailySoftPointsCap: number;
+  dailyEloitsCap: number;
   totalActivities: number;
   suspiciousActivityCount: number;
   isFrozen: boolean;
@@ -115,7 +115,7 @@ interface FraudDetection {
 
 interface AdminStats {
   totalUsers: number;
-  totalSoftPointsIssued: number;
+  totalEloitsIssued: number;
   totalWalletBonusIssued: number;
   totalActivitiesTracked: number;
   fraudDetectionCount: number;
@@ -184,7 +184,7 @@ const RewardSystemAdmin: React.FC = () => {
         actionType: "post_content",
         displayName: "Create Post",
         description: "Reward for creating quality content",
-        baseSoftPoints: 3,
+        baseEloits: 3,
         baseWalletBonus: 0,
         currency: "USDT",
         dailyLimit: 10,
@@ -206,7 +206,7 @@ const RewardSystemAdmin: React.FC = () => {
         actionType: "like_post",
         displayName: "Like Post",
         description: "Reward for engaging with content",
-        baseSoftPoints: 0.5,
+        baseEloits: 0.5,
         baseWalletBonus: 0,
         currency: "USDT",
         dailyLimit: 100,
@@ -237,7 +237,7 @@ const RewardSystemAdmin: React.FC = () => {
         currentScore: 85.5,
         trustLevel: "gold",
         rewardMultiplier: 1.5,
-        dailySoftPointsCap: 150,
+        dailyEloitsCap: 150,
         totalActivities: 1247,
         suspiciousActivityCount: 2,
         isFrozen: false,
@@ -251,7 +251,7 @@ const RewardSystemAdmin: React.FC = () => {
         currentScore: 25.0,
         trustLevel: "bronze",
         rewardMultiplier: 0.5,
-        dailySoftPointsCap: 25,
+        dailyEloitsCap: 25,
         totalActivities: 50,
         suspiciousActivityCount: 15,
         isFrozen: true,
@@ -283,7 +283,7 @@ const RewardSystemAdmin: React.FC = () => {
     // Demo data
     setAdminStats({
       totalUsers: 12847,
-      totalSoftPointsIssued: 1547892,
+      totalEloitsIssued: 1547892,
       totalWalletBonusIssued: 25678.45,
       totalActivitiesTracked: 847593,
       fraudDetectionCount: 23,
@@ -538,10 +538,10 @@ const RewardSystemAdmin: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-purple-700">
-                  SoftPoints Issued
+                  Eloits Issued
                 </p>
                 <p className="text-2xl font-bold text-purple-900">
-                  {formatNumber(adminStats?.totalSoftPointsIssued || 0)}
+                  {formatNumber(adminStats?.totalEloitsIssued || 0)}
                 </p>
                 <p className="text-xs text-purple-600">Platform-wide</p>
               </div>
@@ -767,16 +767,16 @@ const RewardSystemAdmin: React.FC = () => {
 
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <Label htmlFor="baseSoftPoints">Base SoftPoints</Label>
+                        <Label htmlFor="baseEloits">Base Eloits</Label>
                         <Input
-                          id="baseSoftPoints"
+                          id="baseEloits"
                           type="number"
                           step="0.1"
-                          value={newRule.baseSoftPoints || ""}
+                          value={newRule.baseEloits || ""}
                           onChange={(e) =>
                             setNewRule((prev) => ({
                               ...prev,
-                              baseSoftPoints: parseFloat(e.target.value),
+                              baseEloits: parseFloat(e.target.value),
                             }))
                           }
                         />
@@ -848,7 +848,7 @@ const RewardSystemAdmin: React.FC = () => {
                         {rule.description}
                       </p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>SP: {rule.baseSoftPoints}</span>
+                        <span>EP: {rule.baseEloits}</span>
                         {rule.baseWalletBonus > 0 && (
                           <span>
                             Bonus: {formatCurrency(rule.baseWalletBonus)}
@@ -1187,9 +1187,9 @@ const RewardSystemAdmin: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">SoftPoints</span>
+                    <span className="text-sm">Eloits</span>
                     <span className="font-medium">
-                      {formatNumber(adminStats?.totalSoftPointsIssued || 0)}
+                      {formatNumber(adminStats?.totalEloitsIssued || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">

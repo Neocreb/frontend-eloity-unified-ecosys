@@ -1,8 +1,8 @@
-# 🚀 Softchat Campaign & Boost System - Integration Guide
+# 🚀 Eloity Campaign & Boost System - Integration Guide
 
 ## 📋 Overview
 
-The comprehensive Campaign & Boost System for Softchat has been successfully implemented with all the features requested in the brief. This guide shows how to integrate and use the system throughout the platform.
+The comprehensive Campaign & Boost System for Eloity has been successfully implemented with all the features requested in the brief. This guide shows how to integrate and use the system throughout the platform.
 
 ## ✅ Completed Features
 
@@ -37,7 +37,7 @@ The comprehensive Campaign & Boost System for Softchat has been successfully imp
 ### 4. 💰 Wallet-Integrated Payment System
 - **Location**: `src/components/campaigns/CampaignPayment.tsx`
 - **Features**:
-  - Multiple payment methods (SoftPoints, USDT, Wallet, Cards)
+  - Multiple payment methods (Eloits, USDT, Wallet, Cards)
   - Real-time balance checking
   - Bonus and discount calculations
   - Insufficient funds handling with top-up
@@ -210,7 +210,7 @@ Each goal optimizes targeting, metrics, and recommendations differently.
 
 The payment system integrates with the existing wallet system:
 - Uses `PAYMENT_METHODS` configuration
-- Supports SoftPoints, USDT, ETH, BTC, and card payments
+- Supports Eloits, USDT, ETH, BTC, and card payments
 - Includes bonus calculations and fee handling
 - Real-time balance checking and top-up functionality
 
@@ -225,7 +225,7 @@ The system builds upon existing schema:
 ## 🎨 UI/UX Features
 
 ### Design System Integration
-- Uses existing Softchat UI components and design tokens
+- Uses existing Eloity UI components and design tokens
 - Consistent with platform's color scheme and typography
 - Responsive design for mobile and desktop
 - Accessibility features included
@@ -348,7 +348,7 @@ For implementation questions or issues:
 
 ## 🎉 Conclusion
 
-The Softchat Campaign & Boost System is now fully implemented with all requested features from the original brief. The system provides:
+The Eloity Campaign & Boost System is now fully implemented with all requested features from the original brief. The system provides:
 
 ✅ **Central Campaign Center** - One place for all promotion needs  
 ✅ **Campaign Goals** - Clear objectives with optimized flows  

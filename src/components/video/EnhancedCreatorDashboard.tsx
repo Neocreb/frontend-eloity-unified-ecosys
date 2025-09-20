@@ -272,7 +272,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
   ];
 
   const quickActions = [
-    { name: "Create Post", icon: Plus, color: "bg-blue-500", href: "/feed" },
+    { name: "Create Post", icon: Plus, color: "bg-blue-500", href: "/app/feed" },
     { name: "New Video", icon: Video, color: "bg-red-500", href: "/videos" },
     { name: "List Product", icon: ShoppingBag, color: "bg-green-500", href: "/marketplace" },
     { name: "Find Job", icon: Briefcase, color: "bg-orange-500", href: "/freelance" },

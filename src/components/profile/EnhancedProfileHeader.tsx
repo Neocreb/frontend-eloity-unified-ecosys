@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useUserPremiumStatus } from "@/hooks/useUserPremiumStatus";
 import {
   Verified,
   MapPin,
@@ -57,6 +59,7 @@ export const EnhancedProfileHeader: React.FC<EnhancedProfileHeaderProps> = ({
   onEdit,
   onShare,
 }) => {
+  const { isPremium, isVerified } = useUserPremiumStatus();
   const [activeTab, setActiveTab] = useState("overview");
 
   const formatNumber = (num: number) => {
@@ -158,9 +161,11 @@ export const EnhancedProfileHeader: React.FC<EnhancedProfileHeaderProps> = ({
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
                   {profile.full_name}
                 </h1>
-                {profile.is_verified && (
-                  <Verified className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 fill-current" />
-                )}
+                <VerifiedBadge 
+                  isVerified={profile.is_verified}
+                  isPremium={isPremium}
+                  size="md"
+                />
               </div>
 
               <p className="text-muted-foreground mb-2">@{profile.username}</p>

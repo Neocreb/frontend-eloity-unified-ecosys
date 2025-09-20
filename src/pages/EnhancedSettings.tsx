@@ -121,6 +121,7 @@ import DataManagement from "@/components/data/DataManagement";
 import CurrencyDemo from "@/components/currency/CurrencyDemo";
 import AIFeatures from "@/components/ai/AIFeatures";
 import MobileTabsFix from "@/components/layout/MobileTabsFix";
+import { supabase } from "@/integrations/supabase/client";
 
 const { SmartFeedCuration, AIContentAssistant } = AIFeatures;
 
@@ -141,7 +142,7 @@ const EnhancedSettings = () => {
   );
   const [newLanguage, setNewLanguage] = useState("");
   const [certifications, setCertifications] = useState<string[]>(
-    user?.profile?.certifications || [],
+    user?.profile?.skills || [],
   );
   const [newCertification, setNewCertification] = useState("");
 
@@ -157,68 +158,68 @@ const EnhancedSettings = () => {
   const [timezone, setTimezone] = useState(user?.profile?.timezone || "UTC");
 
   // Professional information states
-  const [jobTitle, setJobTitle] = useState(user?.profile?.job_title || "");
-  const [company, setCompany] = useState(user?.profile?.company || "");
-  const [education, setEducation] = useState(user?.profile?.education || "");
-  const [experience, setExperience] = useState(user?.profile?.experience || "");
+  const [jobTitle, setJobTitle] = useState(user?.profile?.bio || "");
+  const [company, setCompany] = useState(user?.profile?.bio || "");
+  const [education, setEducation] = useState(user?.profile?.bio || "");
+  const [experience, setExperience] = useState(user?.profile?.bio || "");
   const [linkedinUrl, setLinkedinUrl] = useState(
-    user?.profile?.linkedin_url || "",
+    user?.profile?.website || "",
   );
-  const [githubUrl, setGithubUrl] = useState(user?.profile?.github_url || "");
+  const [githubUrl, setGithubUrl] = useState(user?.profile?.website || "");
 
-  // Freelance profile states
+  // Freelance profile states - using available profile properties
   const [professionalTitle, setProfessionalTitle] = useState(
-    user?.freelance_profile?.professional_title || "",
+    user?.profile?.freelance_profile?.professional_title || "",
   );
   const [hourlyRate, setHourlyRate] = useState(
-    user?.freelance_profile?.hourly_rate?.toString() || "",
+    user?.profile?.freelance_profile?.hourly_rate?.toString() || "",
   );
   const [availability, setAvailability] = useState(
-    user?.freelance_profile?.availability || "available",
+    user?.profile?.freelance_profile?.availability || "available",
   );
   const [experienceLevel, setExperienceLevel] = useState(
-    user?.freelance_profile?.experience_level || "intermediate",
+    user?.profile?.freelance_profile?.experience_level || "intermediate",
   );
   const [portfolioUrl, setPortfolioUrl] = useState(
-    user?.freelance_profile?.portfolio_url || "",
+    user?.profile?.freelance_profile?.portfolio_url || "",
   );
   const [workingHours, setWorkingHours] = useState(
-    user?.freelance_profile?.working_hours || "9am-5pm",
+    user?.profile?.freelance_profile?.working_hours || "9am-5pm",
   );
   const [responseTime, setResponseTime] = useState(
-    user?.freelance_profile?.response_time || "within-24h",
+    user?.profile?.freelance_profile?.response_time || "within-24h",
   );
 
-  // Marketplace profile states
+  // Marketplace profile states - using available profile properties
   const [storeName, setStoreName] = useState(
-    user?.marketplace_profile?.store_name || "",
+    user?.profile?.marketplace_profile?.store_name || "",
   );
   const [storeDescription, setStoreDescription] = useState(
-    user?.marketplace_profile?.store_description || "",
+    user?.profile?.marketplace_profile?.store_description || "",
   );
   const [businessType, setBusinessType] = useState(
-    user?.marketplace_profile?.business_type || "individual",
+    user?.profile?.marketplace_profile?.business_type || "individual",
   );
   const [businessAddress, setBusinessAddress] = useState(
-    user?.marketplace_profile?.business_address || "",
+    user?.profile?.marketplace_profile?.business_address || "",
   );
-  const [taxId, setTaxId] = useState(user?.marketplace_profile?.tax_id || "");
+  const [taxId, setTaxId] = useState(user?.profile?.marketplace_profile?.tax_id || "");
   const [returnPolicy, setReturnPolicy] = useState(
-    user?.marketplace_profile?.return_policy || "",
+    user?.profile?.marketplace_profile?.return_policy || "",
   );
 
-  // Crypto profile states
+  // Crypto profile states - using available profile properties
   const [tradingExperience, setTradingExperience] = useState(
-    user?.crypto_profile?.trading_experience || "beginner",
+    user?.profile?.crypto_profile?.trading_experience || "beginner",
   );
   const [riskTolerance, setRiskTolerance] = useState(
-    user?.crypto_profile?.risk_tolerance || "low",
+    user?.profile?.crypto_profile?.risk_tolerance || "low",
   );
   const [p2pEnabled, setP2pEnabled] = useState(
-    user?.crypto_profile?.p2p_enabled || false,
+    user?.profile?.crypto_profile?.p2p_enabled || false,
   );
   const [preferredCurrency, setPreferredCurrency] = useState(
-    user?.crypto_profile?.preferred_currency || "USD",
+    user?.profile?.crypto_profile?.preferred_currency || "USD",
   );
 
   // Notification settings
@@ -506,8 +507,165 @@ const EnhancedSettings = () => {
     }
   };
 
+  // Save notification settings
+  const saveNotificationSettings = async () => {
+    setIsLoading(true);
+    try {
+      await updateProfile({
+        settings: {
+          email_notifications: emailNotifications,
+          push_notifications: pushNotifications,
+          marketing_emails: marketingEmails,
+          order_updates: orderUpdates,
+          trading_alerts: tradingAlerts,
+          social_activity: socialActivity,
+          news_updates: newsUpdates,
+          weekly_digest: weeklyDigest,
+          price_alerts: priceAlerts,
+          security_alerts: securityAlerts,
+        },
+      });
+
+      toast({
+        title: "Notification settings updated",
+        description: "Your notification preferences have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update notification settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save privacy settings
+  const savePrivacySettings = async () => {
+    setIsLoading(true);
+    try {
+      await updateProfile({
+        settings: {
+          profile_visibility: profileVisibility,
+          show_online_status: showOnlineStatus,
+          allow_direct_messages: allowDirectMessages,
+          show_email: showEmail,
+          show_phone: showPhone,
+          index_profile: indexProfile,
+          show_activity: showActivity,
+          allow_tags: allowTags,
+        },
+      });
+
+      toast({
+        title: "Privacy settings updated",
+        description: "Your privacy preferences have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update privacy settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save security settings
+  const saveSecuritySettings = async () => {
+    setIsLoading(true);
+    try {
+      await updateProfile({
+        settings: {
+          two_factor_enabled: twoFactorEnabled,
+          login_notifications: loginNotifications,
+          session_timeout: sessionTimeout,
+        },
+      });
+
+      toast({
+        title: "Security settings updated",
+        description: "Your security preferences have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update security settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save appearance settings
+  const saveAppearanceSettings = async () => {
+    setIsLoading(true);
+    try {
+      await updateProfile({
+        settings: {
+          auto_play_videos: autoPlayVideos,
+          reduced_motion: reducedMotion,
+          high_contrast: highContrast,
+          font_size: fontSize,
+          language: language,
+        },
+      });
+
+      toast({
+        title: "Appearance settings updated",
+        description: "Your appearance preferences have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update appearance settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save data settings
+  const saveDataSettings = async () => {
+    setIsLoading(true);
+    try {
+      await updateProfile({
+        settings: {
+          data_usage: dataUsage,
+          auto_backup: autoBackup,
+        },
+      });
+
+      toast({
+        title: "Data settings updated",
+        description: "Your data preferences have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update data settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Change password
   const changePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all password fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       toast({
         title: "Error",
@@ -528,18 +686,25 @@ const EnhancedSettings = () => {
 
     setIsLoading(true);
     try {
-      // This would call the password change API
-      toast({
-        title: "Password changed",
-        description: "Your password has been changed successfully.",
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
       });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been updated successfully.",
+      });
+      
+      // Clear password fields
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to change password. Please try again.",
+        description: error.message || "Failed to update password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -1251,6 +1416,11 @@ const EnhancedSettings = () => {
                     />
                   </div>
                 </div>
+                
+                <Button onClick={saveAppearanceSettings} disabled={isLoading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Appearance Settings
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -2157,6 +2327,11 @@ const EnhancedSettings = () => {
                     </div>
                   </div>
                 </div>
+                
+                <Button onClick={saveNotificationSettings} disabled={isLoading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Notification Settings
+                </Button>
               </CardContent>
             </Card>
 
@@ -2352,6 +2527,11 @@ const EnhancedSettings = () => {
                     />
                   </div>
                 </div>
+                
+                <Button onClick={savePrivacySettings} disabled={isLoading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Privacy Settings
+                </Button>
               </CardContent>
             </Card>
 
@@ -2501,6 +2681,11 @@ const EnhancedSettings = () => {
                     Change Password
                   </Button>
                 </div>
+                
+                <Button onClick={saveSecuritySettings} disabled={isLoading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Security Settings
+                </Button>
               </CardContent>
             </Card>
 
@@ -2554,6 +2739,11 @@ const EnhancedSettings = () => {
                     Clear Cache
                   </Button>
                 </div>
+                
+                <Button onClick={saveDataSettings} disabled={isLoading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Data Settings
+                </Button>
               </CardContent>
             </Card>
 

@@ -5,7 +5,7 @@ const DYNAMIC_CACHE = "eloity-dynamic-v1.0.0";
 // Files to cache for offline use
 const STATIC_FILES = [
   "/",
-  "/feed",
+  "/app/feed",
   "/marketplace",
   "/crypto",
   "/messages",

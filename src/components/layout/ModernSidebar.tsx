@@ -44,7 +44,7 @@ interface NavItem {
 const primaryNavItems: NavItem[] = [
   {
     label: "Feed",
-    href: "/feed",
+    href: "/app/feed",
     icon: Home,
     description: "Your personalized timeline",
   },

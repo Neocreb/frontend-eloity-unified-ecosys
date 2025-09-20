@@ -28,6 +28,10 @@ import {
   Database,
   Lock,
   AlertTriangle,
+  UserCheck,
+  DollarSign,
+  Zap,
+  Route,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -89,6 +93,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className = "" }) => {
       description: "Manage user accounts",
     },
     {
+      path: "/admin/kyc",
+      label: "KYC Verification",
+      icon: <UserCheck className="w-5 h-5" />,
+      requiredPermission: "users.view",
+      description: "Review identity verifications",
+    },
+    {
       path: "/admin/moderation",
       label: "Content Moderation",
       icon: <Eye className="w-5 h-5" />,
@@ -121,6 +132,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className = "" }) => {
       description: "Manage delivery providers",
     },
     {
+      path: "/admin/delivery/tracking",
+      label: "Delivery Tracking",
+      icon: <Route className="w-5 h-5" />,
+      requiredPermission: "marketplace.view",
+      description: "Monitor delivery assignments",
+    },
+    {
       path: "/admin/crypto",
       label: "Cryptocurrency",
       icon: <Bitcoin className="w-5 h-5" />,
@@ -134,6 +152,27 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className = "" }) => {
       requiredPermission: "freelance.view",
       description: "Job board management",
     },
+    {
+      path: "/admin/financial",
+      label: "Financial",
+      icon: <DollarSign className="w-5 h-5" />,
+      requiredPermission: "financial.view",
+      description: "Platform earnings and wallet management",
+    },
+    {
+      path: "/admin/chat",
+      label: "Chat Moderation",
+      icon: <MessageSquare className="w-5 h-5" />,
+      requiredPermission: "content.moderate",
+      description: "Monitor and moderate communications",
+    },
+    {
+      path: "/admin/boosts",
+      label: "Boost System",
+      icon: <Zap className="w-5 h-5" />,
+      requiredPermission: "content.moderate",
+      description: "Content promotion and advertising",
+    },
   ];
 
   const systemItems: NavItem[] = [
@@ -142,6 +181,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className = "" }) => {
       label: "Analytics",
       icon: <TrendingUp className="w-5 h-5" />,
       description: "Platform analytics",
+    },
+    {
+      path: "/admin/system",
+      label: "System Health",
+      icon: <Database className="w-5 h-5" />,
+      requiredRole: "super_admin",
+      description: "Server performance and monitoring",
     },
     {
       path: "/admin/logs",

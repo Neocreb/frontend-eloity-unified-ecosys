@@ -4,17 +4,8 @@ import {
   Portfolio,
   Transaction,
   MarketData,
-  TradingSignal,
-  News,
-  EducationContent,
-  DeFiProtocol,
-  NFTCollection,
-  StakingOption,
-  Achievement,
-  SocialTradingPost,
-  ChartData,
-  CopyTradingProvider,
 } from "@/types/crypto";
+import { realAPIService } from "@/services/realAPIService"; // Import the real API service
 
 // Mock data for realistic crypto experience
 export const mockCryptocurrencies: Cryptocurrency[] = [
@@ -32,8 +23,8 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     low_24h: 42180.45,
     price_change_24h: 1070.22,
     price_change_percentage_24h: 2.54,
-    price_change_percentage_7d_in_currency: 8.42,
-    price_change_percentage_30d_in_currency: 15.67,
+    price_change_percentage_7d: 8.42,
+    price_change_percentage_30d: 15.67,
     market_cap_change_24h: 21600000000,
     market_cap_change_percentage_24h: 2.61,
     circulating_supply: 19590000,
@@ -45,11 +36,8 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     atl: 67.81,
     atl_change_percentage: 63654.78,
     atl_date: "2013-07-06T00:00:00.000Z",
-    roi: null,
     last_updated: new Date().toISOString(),
-    sparkline_in_7d: {
-      price: [40123, 40567, 41234, 42100, 42890, 43250, 43567],
-    },
+    sparkline_in_7d: [40123, 40567, 41234, 42100, 42890, 43250, 43567],
   },
   {
     id: "ethereum",
@@ -59,34 +47,27 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     current_price: 2587.34,
     market_cap: 310950000000,
     market_cap_rank: 2,
-    fully_diluted_valuation: null,
+    fully_diluted_valuation: 0,
     total_volume: 12400000000,
     high_24h: 2612.89,
     low_24h: 2534.12,
     price_change_24h: 53.22,
     price_change_percentage_24h: 2.1,
-    price_change_percentage_7d_in_currency: 6.78,
-    price_change_percentage_30d_in_currency: 12.34,
+    price_change_percentage_7d: 6.78,
+    price_change_percentage_30d: 12.34,
     market_cap_change_24h: 6400000000,
     market_cap_change_percentage_24h: 2.1,
     circulating_supply: 120280000,
     total_supply: 120280000,
-    max_supply: null,
+    max_supply: 0,
     ath: 4878.26,
     ath_change_percentage: -46.95,
     ath_date: "2021-11-10T14:24:19.604Z",
     atl: 0.432979,
     atl_change_percentage: 597142.1,
     atl_date: "2015-10-20T00:00:00.000Z",
-    roi: {
-      times: 97.34,
-      currency: "usd",
-      percentage: 9734.21,
-    },
     last_updated: new Date().toISOString(),
-    sparkline_in_7d: {
-      price: [2456, 2489, 2512, 2545, 2567, 2587, 2590],
-    },
+    sparkline_in_7d: [2456, 2489, 2512, 2545, 2567, 2587, 2590],
   },
   {
     id: "binancecoin",
@@ -103,8 +84,8 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     low_24h: 308.12,
     price_change_24h: 4.33,
     price_change_percentage_24h: 1.41,
-    price_change_percentage_7d_in_currency: 3.45,
-    price_change_percentage_30d_in_currency: 8.92,
+    price_change_percentage_7d: 3.45,
+    price_change_percentage_30d: 8.92,
     market_cap_change_24h: 650000000,
     market_cap_change_percentage_24h: 1.41,
     circulating_supply: 150030000,
@@ -116,11 +97,8 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     atl: 0.0398177,
     atl_change_percentage: 784145.2,
     atl_date: "2017-10-19T00:00:00.000Z",
-    roi: null,
     last_updated: new Date().toISOString(),
-    sparkline_in_7d: {
-      price: [301, 305, 309, 312, 315, 312, 314],
-    },
+    sparkline_in_7d: [301, 305, 309, 312, 315, 312, 314],
   },
   {
     id: "cardano",
@@ -136,8 +114,8 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     low_24h: 0.501,
     price_change_24h: 0.018,
     price_change_percentage_24h: 3.59,
-    price_change_percentage_7d_in_currency: 7.23,
-    price_change_percentage_30d_in_currency: 14.67,
+    price_change_percentage_7d: 7.23,
+    price_change_percentage_30d: 14.67,
     market_cap_change_24h: 640000000,
     market_cap_change_percentage_24h: 3.59,
     circulating_supply: 35410000000,
@@ -149,11 +127,8 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     atl: 0.01925275,
     atl_change_percentage: 2601.77,
     atl_date: "2020-03-13T02:22:55.391Z",
-    roi: null,
     last_updated: new Date().toISOString(),
-    sparkline_in_7d: {
-      price: [0.485, 0.492, 0.501, 0.515, 0.523, 0.52, 0.525],
-    },
+    sparkline_in_7d: [0.485, 0.492, 0.501, 0.515, 0.523, 0.52, 0.525],
   },
   {
     id: "solana",
@@ -169,77 +144,114 @@ export const mockCryptocurrencies: Cryptocurrency[] = [
     low_24h: 96.12,
     price_change_24h: 2.33,
     price_change_percentage_24h: 2.42,
-    price_change_percentage_7d_in_currency: 9.67,
-    price_change_percentage_30d_in_currency: 18.94,
+    price_change_percentage_7d: 9.67,
+    price_change_percentage_30d: 18.94,
     market_cap_change_24h: 1020000000,
     market_cap_change_percentage_24h: 2.42,
     circulating_supply: 435670000,
     total_supply: 565450000,
-    max_supply: null,
+    max_supply: 0,
     ath: 259.96,
     ath_change_percentage: -62.12,
     ath_date: "2021-11-06T21:54:35.825Z",
     atl: 0.500801,
     atl_change_percentage: 19556.89,
     atl_date: "2020-05-11T19:35:23.449Z",
-    roi: null,
     last_updated: new Date().toISOString(),
-    sparkline_in_7d: {
-      price: [89.45, 91.23, 94.67, 96.12, 98.45, 100.23, 99.78],
-    },
+    sparkline_in_7d: [89.45, 91.23, 94.67, 96.12, 98.45, 100.23, 99.78],
   },
 ];
 
 export const mockTradingPairs: TradingPair[] = [
   {
-    id: "BTC/USDT",
+    symbol: "BTC/USDT",
     baseAsset: "BTC",
     quoteAsset: "USDT",
     price: 43250.67,
-    change24h: 2.54,
-    volume24h: 1850000000,
-    high24h: 43890.12,
-    low24h: 42180.45,
+    priceChange: 1070.22,
+    priceChangePercent: 2.54,
+    volume: 18500000000,
+    quoteVolume: 18500000000,
+    openPrice: 42180.45,
+    highPrice: 43890.12,
+    lowPrice: 42180.45,
+    bidPrice: 43250.67,
+    askPrice: 43255.00,
+    spread: 4.33,
+    lastUpdateId: 1,
+    lastUpdated: new Date().toISOString(),
   },
   {
-    id: "ETH/USDT",
+    symbol: "ETH/USDT",
     baseAsset: "ETH",
     quoteAsset: "USDT",
     price: 2587.34,
-    change24h: 2.1,
-    volume24h: 1240000000,
-    high24h: 2612.89,
-    low24h: 2534.12,
+    priceChange: 53.22,
+    priceChangePercent: 2.1,
+    volume: 12400000000,
+    quoteVolume: 12400000000,
+    openPrice: 2534.12,
+    highPrice: 2612.89,
+    lowPrice: 2534.12,
+    bidPrice: 2587.34,
+    askPrice: 2588.00,
+    spread: 0.66,
+    lastUpdateId: 1,
+    lastUpdated: new Date().toISOString(),
   },
   {
-    id: "BNB/USDT",
+    symbol: "BNB/USDT",
     baseAsset: "BNB",
     quoteAsset: "USDT",
     price: 312.45,
-    change24h: 1.41,
-    volume24h: 189000000,
-    high24h: 318.67,
-    low24h: 308.12,
+    priceChange: 4.33,
+    priceChangePercent: 1.41,
+    volume: 1890000000,
+    quoteVolume: 1890000000,
+    openPrice: 308.12,
+    highPrice: 318.67,
+    lowPrice: 308.12,
+    bidPrice: 312.45,
+    askPrice: 312.50,
+    spread: 0.05,
+    lastUpdateId: 1,
+    lastUpdated: new Date().toISOString(),
   },
   {
-    id: "ADA/USDT",
+    symbol: "ADA/USDT",
     baseAsset: "ADA",
     quoteAsset: "USDT",
     price: 0.52,
-    change24h: 3.59,
-    volume24h: 89000000,
-    high24h: 0.538,
-    low24h: 0.501,
+    priceChange: 0.018,
+    priceChangePercent: 3.59,
+    volume: 890000000,
+    quoteVolume: 890000000,
+    openPrice: 0.501,
+    highPrice: 0.538,
+    lowPrice: 0.501,
+    bidPrice: 0.52,
+    askPrice: 0.521,
+    spread: 0.001,
+    lastUpdateId: 1,
+    lastUpdated: new Date().toISOString(),
   },
   {
-    id: "SOL/USDT",
+    symbol: "SOL/USDT",
     baseAsset: "SOL",
     quoteAsset: "USDT",
     price: 98.45,
-    change24h: 2.42,
-    volume24h: 234000000,
-    high24h: 102.34,
-    low24h: 96.12,
+    priceChange: 2.33,
+    priceChangePercent: 2.42,
+    volume: 2340000000,
+    quoteVolume: 2340000000,
+    openPrice: 96.12,
+    highPrice: 102.34,
+    lowPrice: 96.12,
+    bidPrice: 98.45,
+    askPrice: 98.50,
+    spread: 0.05,
+    lastUpdateId: 1,
+    lastUpdated: new Date().toISOString(),
   },
 ];
 
@@ -252,215 +264,134 @@ export const mockPortfolio: Portfolio = {
   totalChangePercent24h: 2.64,
   assets: [
     {
-      id: "bitcoin",
-      symbol: "BTC",
-      name: "Bitcoin",
-      amount: 2.5,
-      value: 108126.68,
-      change24h: 2675.55,
+      asset: "BTC",
+      free: 2.5,
+      locked: 0,
+      total: 2.5,
+      btcValue: 2.5,
+      usdValue: 108126.68,
+      price: 43250.67,
+      change24h: 1070.22,
       changePercent24h: 2.54,
       allocation: 86.1,
     },
     {
-      id: "ethereum",
-      symbol: "ETH",
-      name: "Ethereum",
-      amount: 6.8,
-      value: 17593.51,
-      change24h: 361.9,
+      asset: "ETH",
+      free: 6.8,
+      locked: 0,
+      total: 6.8,
+      btcValue: 0.407,
+      usdValue: 17593.51,
+      price: 2587.34,
+      change24h: 53.22,
       changePercent24h: 2.1,
       allocation: 14.0,
     },
   ],
+  allocation: [
+    {
+      asset: "BTC",
+      percentage: 86.1,
+      value: 108126.68,
+      color: "#F7931A",
+    },
+    {
+      asset: "ETH",
+      percentage: 14.0,
+      value: 17593.51,
+      color: "#627EEA",
+    },
+  ],
 };
-
-export const mockStakingOptions: StakingOption[] = [
-  {
-    id: "eth-staking-1",
-    asset: "ETH",
-    type: "FLEXIBLE",
-    apy: 4.5,
-    minAmount: 0.1,
-    rewardAsset: "ETH",
-    isActive: true,
-    totalStaked: 15678.45,
-    description: "Ethereum 2.0 staking with flexible withdrawals",
-    risks: ["Slashing risk", "Market volatility"],
-    features: ["Flexible withdrawal", "Daily rewards", "Auto-compounding"],
-  },
-  {
-    id: "bnb-staking-1",
-    asset: "BNB",
-    type: "LOCKED",
-    apy: 8.2,
-    minAmount: 1,
-    duration: 30,
-    rewardAsset: "BNB",
-    isActive: true,
-    totalStaked: 98765.32,
-    description: "30-day locked BNB staking with higher rewards",
-    risks: ["Lock-up period", "Market volatility"],
-    features: ["High APY", "Auto-renewal option", "Early withdrawal penalty"],
-  },
-];
-
-export const mockNews: News[] = [
-  {
-    id: "news-1",
-    title: "Bitcoin Reaches New All-Time High Above $43,000",
-    summary:
-      "Bitcoin surges to new heights as institutional adoption continues to grow across major financial institutions worldwide.",
-    author: "CryptoNews Team",
-    source: "CryptoDaily",
-    image: "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=500",
-    tags: ["Bitcoin", "ATH", "Institutional"],
-    sentiment: "POSITIVE",
-    publishedAt: "2024-01-15T14:30:00Z",
-    relatedAssets: ["BTC"],
-  },
-  {
-    id: "news-2",
-    title: "Ethereum Layer 2 Solutions See Massive Growth",
-    summary:
-      "Layer 2 scaling solutions for Ethereum are experiencing unprecedented adoption as transaction costs continue to decrease.",
-    author: "DeFi Analyst",
-    source: "BlockchainWeekly",
-    image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500",
-    tags: ["Ethereum", "Layer2", "Scaling"],
-    sentiment: "POSITIVE",
-    publishedAt: "2024-01-15T12:00:00Z",
-    relatedAssets: ["ETH"],
-  },
-  {
-    id: "news-3",
-    title: "Solana Network Processes Record Transaction Volume",
-    summary:
-      "The Solana blockchain has achieved a new milestone with over 3,000 TPS sustained throughout the day.",
-    author: "Blockchain Reporter",
-    source: "SolanaNews",
-    image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=500",
-    tags: ["Solana", "Performance", "TPS"],
-    sentiment: "POSITIVE",
-    publishedAt: "2024-01-15T10:15:00Z",
-    relatedAssets: ["SOL"],
-  },
-];
-
-export const mockEducationContent: EducationContent[] = [
-  {
-    id: "edu-1",
-    title: "Introduction to Cryptocurrency Trading",
-    description:
-      "Learn the basics of crypto trading, from market analysis to risk management strategies.",
-    content:
-      "Complete course content covering fundamentals of cryptocurrency trading...",
-    type: "COURSE",
-    level: "BEGINNER",
-    category: "Trading",
-    tags: ["basics", "trading", "cryptocurrency"],
-    duration: 45,
-    thumbnail:
-      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=300",
-    author: "Trading Academy",
-    rating: 4.8,
-    views: 12567,
-    likes: 1234,
-    isBookmarked: false,
-    progress: 0,
-    publishedAt: "2024-01-10T10:00:00Z",
-    updatedAt: "2024-01-10T10:00:00Z",
-  },
-  {
-    id: "edu-2",
-    title: "Understanding DeFi Protocols",
-    description:
-      "Deep dive into decentralized finance protocols and how they work.",
-    content: "Comprehensive guide to DeFi protocols...",
-    type: "ARTICLE",
-    level: "INTERMEDIATE",
-    category: "DeFi",
-    tags: ["defi", "protocols", "yield"],
-    duration: 25,
-    thumbnail:
-      "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=300",
-    author: "DeFi Expert",
-    rating: 4.6,
-    views: 8934,
-    likes: 567,
-    isBookmarked: false,
-    progress: 0,
-    publishedAt: "2024-01-08T15:30:00Z",
-    updatedAt: "2024-01-08T15:30:00Z",
-  },
-];
 
 // Mock order book data
 const generateOrderBook = () => ({
+  symbol: "BTC/USDT",
   bids: Array.from({ length: 10 }, (_, i) => ({
     price: 43200 - i * 10,
-    amount: Math.random() * 5,
-    total: 0,
+    quantity: Math.random() * 5,
+    total: (43200 - i * 10) * (Math.random() * 5),
   })),
   asks: Array.from({ length: 10 }, (_, i) => ({
     price: 43260 + i * 10,
-    amount: Math.random() * 5,
-    total: 0,
+    quantity: Math.random() * 5,
+    total: (43260 + i * 10) * (Math.random() * 5),
   })),
+  lastUpdateId: 1,
+  timestamp: new Date().toISOString(),
 });
 
 // Mock recent trades
 const generateRecentTrades = (count: number) =>
   Array.from({ length: count }, (_, i) => ({
     id: `trade-${i}`,
+    symbol: "BTC/USDT",
     price: 43200 + (Math.random() - 0.5) * 100,
-    amount: Math.random() * 2,
-    timestamp: new Date(Date.now() - i * 60000).toISOString(),
-    side: Math.random() > 0.5 ? "buy" : "sell",
+    quantity: Math.random() * 2,
+    quoteQuantity: (43200 + (Math.random() - 0.5) * 100) * (Math.random() * 2),
+    time: new Date(Date.now() - i * 60000).toISOString(),
+    isBuyerMaker: Math.random() > 0.5,
+    isBestMatch: true,
   }));
 
 // Simplified service class with only mock data
 export class CryptoService {
   // Add realistic delays to simulate loading
-  private async delay(ms: number): Promise<void> {
+  private delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // Simulate price fluctuations for real-time feel
+  // Simulate real-time price updates for mock data
   private simulateRealTimePrices(cryptos: Cryptocurrency[]): Cryptocurrency[] {
-    return cryptos.map((crypto) => {
-      // Add small random price fluctuations (±2%)
-      const priceChange = (Math.random() - 0.5) * 0.04;
-      const newPrice = crypto.current_price * (1 + priceChange);
-      const price_change_24h = newPrice - crypto.current_price;
-      const price_change_percentage_24h =
-        (price_change_24h / crypto.current_price) * 100;
-
-      return {
-        ...crypto,
-        current_price: parseFloat(newPrice.toFixed(8)),
-        price_change_24h: parseFloat(price_change_24h.toFixed(8)),
-        price_change_percentage_24h: parseFloat(
-          price_change_percentage_24h.toFixed(2),
-        ),
-        high_24h: Math.max(crypto.high_24h, newPrice),
-        low_24h: Math.min(crypto.low_24h, newPrice),
-        last_updated: new Date().toISOString(),
-      };
-    });
+    return cryptos.map((crypto) => ({
+      ...crypto,
+      current_price: crypto.current_price * (1 + (Math.random() * 0.01 - 0.005)),
+      price_change_24h: crypto.price_change_24h + (Math.random() * 0.4 - 0.2),
+      last_updated: new Date().toISOString(),
+    }));
   }
 
-  async getCryptocurrencies(
-    limit = 100,
-    sortBy = "market_cap_desc",
-  ): Promise<Cryptocurrency[]> {
-    await this.delay(200); // Simulate network delay
-    console.log("📊 CryptoService: Returning simulated cryptocurrency data");
-
-    const data = mockCryptocurrencies.slice(
-      0,
-      Math.min(limit, mockCryptocurrencies.length),
-    );
-    return this.simulateRealTimePrices(data);
+  // Enhanced method to get cryptocurrencies with real data when available
+  async getCryptocurrencies(): Promise<Cryptocurrency[]> {
+    try {
+      // Try to fetch real data for major cryptocurrencies
+      const cryptoSymbols = ["bitcoin", "ethereum", "binancecoin", "cardano", "solana"];
+      
+      const realData = await Promise.all(
+        cryptoSymbols.map(async (symbol) => {
+          try {
+            const response = await realAPIService.getCryptoPrice(symbol);
+            if (response.success) {
+              // Map real API response to Cryptocurrency interface
+              const mockCrypto = mockCryptocurrencies.find(c => c.id === symbol);
+              if (mockCrypto) {
+                return {
+                  ...mockCrypto,
+                  current_price: response.data.price,
+                  market_cap: response.data.marketCap || mockCrypto.market_cap,
+                  total_volume: response.data.volume24h || mockCrypto.total_volume,
+                  price_change_24h: response.data.change24h || mockCrypto.price_change_24h,
+                  high_24h: response.data.high24h || mockCrypto.high_24h,
+                  low_24h: response.data.low24h || mockCrypto.low_24h,
+                  last_updated: new Date().toISOString(),
+                };
+              }
+            }
+          } catch (error) {
+            console.log(`Failed to fetch real data for ${symbol}, using mock data`);
+          }
+          
+          // Return mock data as fallback
+          return mockCryptocurrencies.find(c => c.id === symbol) || mockCryptocurrencies[0];
+        })
+      );
+      
+      return realData;
+    } catch (error) {
+      console.error("Error fetching cryptocurrency data, using mock data:", error);
+      // Fallback to mock data with simulated real-time updates
+      return this.simulateRealTimePrices(mockCryptocurrencies);
+    }
   }
 
   async getMarketData(): Promise<MarketData> {
@@ -495,9 +426,12 @@ export class CryptoService {
           )
           .slice(0, 5),
       },
+      fearGreedIndex: {
+        value: Math.floor(Math.random() * 100),
+        classification: "Neutral",
+        timestamp: new Date().toISOString(),
+      },
       trending: cryptos.slice(0, 5),
-      fearGreedIndex: Math.floor(Math.random() * 100),
-      lastUpdated: new Date().toISOString(),
     };
   }
 
@@ -511,49 +445,57 @@ export class CryptoService {
     return mockPortfolio;
   }
 
-  async getStakingOptions(): Promise<StakingOption[]> {
-    await this.delay(200);
-    return mockStakingOptions;
-  }
-
+  // Enhanced method to get a single cryptocurrency with real data when available
   async getCryptocurrencyById(id: string): Promise<Cryptocurrency | null> {
-    await this.delay(100);
+    try {
+      const response = await realAPIService.getCryptoPrice(id);
+      if (response.success) {
+        // Map real API response to Cryptocurrency interface
+        const mockCrypto = mockCryptocurrencies.find(c => c.id === id);
+        if (mockCrypto) {
+          return {
+            ...mockCrypto,
+            current_price: response.data.price,
+            market_cap: response.data.marketCap || mockCrypto.market_cap,
+            total_volume: response.data.volume24h || mockCrypto.total_volume,
+            price_change_24h: response.data.change24h || mockCrypto.price_change_24h,
+            high_24h: response.data.high24h || mockCrypto.high_24h,
+            low_24h: response.data.low24h || mockCrypto.low_24h,
+            last_updated: new Date().toISOString(),
+          };
+        }
+      }
+    } catch (error) {
+      console.log(`Failed to fetch real data for ${id}, using mock data`);
+    }
+    
+    // Fallback to mock data
     const crypto = mockCryptocurrencies.find((c) => c.id === id);
     if (!crypto) return null;
-
+    
     // Return with simulated price updates
     return this.simulateRealTimePrices([crypto])[0];
   }
 
-  async getNews(limit = 10): Promise<News[]> {
-    await this.delay(300);
-    return mockNews.slice(0, limit);
-  }
-
-  async getEducationContent(limit = 10): Promise<EducationContent[]> {
-    await this.delay(250);
-    return mockEducationContent.slice(0, limit);
-  }
-
-  async getOrderBook(pair: string) {
+  async getOrderBook(symbol: string) {
     await this.delay(100);
     return generateOrderBook();
   }
 
-  async getRecentTrades(pair: string, limit = 20) {
+  async getRecentTrades(symbol: string, limit = 20) {
     await this.delay(100);
     return generateRecentTrades(limit);
   }
 
   // Chart data for trading interface
-  async getChartData(pair: string, interval: string): Promise<ChartData[]> {
+  async getChartData(symbol: string, interval: string) {
     await this.delay(200);
 
     // Generate realistic OHLCV data
     const now = Date.now();
     const intervalMs = 60000; // 1 minute intervals
 
-    return Array.from({ length: 100 }, (_, i) => {
+    const data = Array.from({ length: 100 }, (_, i) => {
       const timestamp = now - (100 - i) * intervalMs;
       const basePrice = 43200 + Math.sin(i / 10) * 500; // Base wave pattern
       const volatility = 100; // Price volatility
@@ -570,9 +512,22 @@ export class CryptoService {
         high: parseFloat(high.toFixed(2)),
         low: parseFloat(low.toFixed(2)),
         close: parseFloat(close.toFixed(2)),
-        volume: parseFloat(volume.toFixed(2)),
       };
     });
+
+    const volume = data.map((d, i) => ({
+      timestamp: d.timestamp,
+      volume: parseFloat((Math.random() * 1000000).toFixed(2)),
+      buyVolume: parseFloat((Math.random() * 500000).toFixed(2)),
+      sellVolume: parseFloat((Math.random() * 500000).toFixed(2)),
+    }));
+
+    return {
+      symbol,
+      timeframe: interval,
+      data,
+      volume,
+    };
   }
 
   // P2P Marketplace methods
@@ -589,6 +544,7 @@ export class CryptoService {
       const mockOffers = [
         {
           id: "1",
+          userId: "user1",
           type: "SELL",
           asset: "BTC",
           fiatCurrency: "USD",
@@ -598,24 +554,32 @@ export class CryptoService {
           totalAmount: 10000,
           availableAmount: 8500,
           paymentMethods: [
-            { id: "bank", name: "Bank Transfer", icon: "Building" },
-            { id: "paypal", name: "PayPal", icon: "CreditCard" },
+            { id: "bank", name: "Bank Transfer", type: "BANK_TRANSFER", icon: "Building", processingTime: "1-2 business days", isActive: true },
+            { id: "paypal", name: "PayPal", type: "DIGITAL_WALLET", icon: "CreditCard", processingTime: "Instant", isActive: true },
           ],
           terms: "Fast and secure transaction. Payment within 15 minutes.",
-          trader: {
-            id: "trader1",
-            username: "CryptoKing",
-            completedTrades: 127,
-            successRate: 98.5,
-            avgResponseTime: "2 min",
-            isVerified: true,
-            rating: 4.9,
-          },
-          createdAt: "2024-01-15T10:00:00Z",
           status: "ACTIVE",
+          user: {
+            id: "user1",
+            username: "CryptoKing",
+            isVerified: true,
+            kycLevel: 2,
+            rating: 4.9,
+            totalTrades: 127,
+            completionRate: 98.5,
+            avgReleaseTime: 120000,
+            isOnline: true,
+            lastSeen: new Date().toISOString(),
+          },
+          completionRate: 98.5,
+          avgReleaseTime: 120000,
+          totalTrades: 127,
+          createdAt: "2024-01-15T10:00:00Z",
+          updatedAt: "2024-01-15T10:00:00Z",
         },
         {
           id: "2",
+          userId: "user2",
           type: "BUY",
           asset: "ETH",
           fiatCurrency: "EUR",
@@ -625,21 +589,28 @@ export class CryptoService {
           totalAmount: 5000,
           availableAmount: 5000,
           paymentMethods: [
-            { id: "wise", name: "Wise", icon: "Globe" },
-            { id: "revolut", name: "Revolut", icon: "Smartphone" },
+            { id: "wise", name: "Wise", type: "DIGITAL_WALLET", icon: "Globe", processingTime: "Instant", isActive: true },
+            { id: "revolut", name: "Revolut", type: "DIGITAL_WALLET", icon: "Smartphone", processingTime: "Instant", isActive: true },
           ],
           terms: "Instant payment required. Excellent rates.",
-          trader: {
-            id: "trader2",
-            username: "EthTrader",
-            completedTrades: 89,
-            successRate: 97.2,
-            avgResponseTime: "5 min",
-            isVerified: true,
-            rating: 4.7,
-          },
-          createdAt: "2024-01-15T09:30:00Z",
           status: "ACTIVE",
+          user: {
+            id: "user2",
+            username: "EthTrader",
+            isVerified: true,
+            kycLevel: 2,
+            rating: 4.7,
+            totalTrades: 89,
+            completionRate: 97.2,
+            avgReleaseTime: 300000,
+            isOnline: true,
+            lastSeen: new Date().toISOString(),
+          },
+          completionRate: 97.2,
+          avgReleaseTime: 300000,
+          totalTrades: 89,
+          createdAt: "2024-01-15T09:30:00Z",
+          updatedAt: "2024-01-15T09:30:00Z",
         },
       ];
 
@@ -677,6 +648,7 @@ export class CryptoService {
         ...offerData,
         status: "ACTIVE",
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
     } catch (error) {
       console.error("Error creating P2P offer:", error);
@@ -691,14 +663,42 @@ export class CryptoService {
         {
           id: "trade1",
           offerId: "1",
-          type: "SELL",
+          buyerId: "buyer1",
+          sellerId: "seller1",
           asset: "BTC",
-          amount: 0.1,
-          fiatAmount: 4325,
           fiatCurrency: "USD",
+          amount: 0.1,
+          price: 43250,
+          totalPrice: 4325,
+          paymentMethod: "bank",
           status: "COMPLETED",
+          messages: [],
+          buyer: {
+            id: "buyer1",
+            username: "BuyerUser",
+            isVerified: true,
+            kycLevel: 2,
+            rating: 4.8,
+            totalTrades: 45,
+            completionRate: 100,
+            avgReleaseTime: 180000,
+            isOnline: true,
+            lastSeen: new Date().toISOString(),
+          },
+          seller: {
+            id: "seller1",
+            username: "SellerUser",
+            isVerified: true,
+            kycLevel: 2,
+            rating: 4.9,
+            totalTrades: 78,
+            completionRate: 99,
+            avgReleaseTime: 150000,
+            isOnline: true,
+            lastSeen: new Date().toISOString(),
+          },
           createdAt: "2024-01-14T15:30:00Z",
-          completedAt: "2024-01-14T15:45:00Z",
+          updatedAt: "2024-01-14T15:45:00Z",
         },
       ];
     } catch (error) {

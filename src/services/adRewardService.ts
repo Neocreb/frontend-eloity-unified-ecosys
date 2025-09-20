@@ -158,7 +158,7 @@ class AdRewardService {
       console.log(`Adding ${amount} SoftPoints to user ${userId}`);
       
       // Example API call:
-      // await fetch('/api/softpoints/add', {
+      // await fetch('/api/eloits/add', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify({ userId, amount, source: 'ad_reward' })

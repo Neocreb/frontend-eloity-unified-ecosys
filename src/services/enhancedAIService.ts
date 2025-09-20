@@ -1,4 +1,4 @@
-import { User } from "@/types/user";
+import { ExtendedUser } from "@/types/user";
 
 // Enhanced AI service with comprehensive platform knowledge
 export interface PlatformFeature {
@@ -192,7 +192,7 @@ export class EnhancedAIService {
 
   generateSmartResponse(
     input: string,
-    userContext?: Partial<User>,
+    userContext?: Partial<ExtendedUser>,
   ): SmartResponse {
     const lowerInput = input.toLowerCase();
     let response: SmartResponse;
@@ -391,7 +391,7 @@ export class EnhancedAIService {
     return factualKeywords.some((keyword) => input.includes(keyword));
   }
 
-  private generateGreetingResponse(userContext?: Partial<User>): SmartResponse {
+  private generateGreetingResponse(userContext?: Partial<ExtendedUser>): SmartResponse {
     const userName = userContext?.username || userContext?.email || "there";
 
     return {
@@ -431,13 +431,24 @@ export class EnhancedAIService {
 
     if (mentionedFeature) {
       const feature = this.platformFeatures[mentionedFeature];
+      // Build the benefits list
+      const benefitsList = feature.benefits.map((b) => `• ${b}`).join("\n");
+      // Build the how-to steps
+      const howToSteps = feature.howToUse
+        .slice(0, 3)
+        .map((h, i) => `${i + 1}. ${h}`)
+        .join("\n");
+      
       return {
-        message: `${feature.name} is all about ${feature.description}\n\nHere's what makes it awesome:\n${feature.benefits.map((b) => `• ${b}`).join("\n")}\n\nTo get started:\n${feature.howToUse
-          .slice(0, 3)
-          .map((h, i) => `${i + 1}. ${h}`)
-          .join(
-            "\n",
-          )}\n\nWant me to show you around or answer any specific questions about it?`,
+        message: `${feature.name} is all about ${feature.description}
+
+Here's what makes it awesome:
+${benefitsList}
+
+To get started:
+${howToSteps}
+
+Want me to show you around or answer any specific questions about it?`,
         suggestedActions: [
           {
             label: `Let's try ${feature.name}`,
@@ -490,7 +501,16 @@ export class EnhancedAIService {
     // Analyze what specific action they want to learn
     if (input.includes("post") || input.includes("content")) {
       return {
-        message: `How to Create Engaging Content:\n\n1. Go to Create page or click the '+' button\n2. Choose your content type (post, image, video)\n3. Write a compelling caption with relevant hashtags\n4. Add high-quality visuals that catch attention\n5. Post at optimal times (7-9 PM works best for engagement)\n6. Engage with comments quickly to build community\n\nPro Tips: Use trending hashtags, post consistently, and always create value for your audience!`,
+        message: `How to Create Engaging Content:
+
+1. Go to Create page or click the '+' button
+2. Choose your content type (post, image, video)
+3. Write a compelling caption with relevant hashtags
+4. Add high-quality visuals that catch attention
+5. Post at optimal times (7-9 PM works best for engagement)
+6. Engage with comments quickly to build community
+
+Pro Tips: Use trending hashtags, post consistently, and always create value for your audience!`,
         suggestedActions: [
           { label: "Create First Post", action: "create", url: "/create" },
           {
@@ -619,7 +639,13 @@ export class EnhancedAIService {
 
     if (lowerInput.includes("god")) {
       return {
-        message: `The question of God has been pondered by humans throughout history, and people have many different perspectives based on their beliefs, experiences, and cultural backgrounds.\n\nFor many, God represents the ultimate source of love, wisdom, and creation - a divine presence that gives life meaning and purpose. Some see God as a personal being who cares about each individual, while others view God as the underlying force or energy that connects all things.\n\nSome people find God through organized religion, others through personal spiritual experiences, nature, or acts of kindness and love. And some find meaning and purpose without belief in God at all.\n\nWhat's beautiful is that this question has inspired countless acts of compassion, art, music, and literature throughout human history. Whether you believe or not, the search for meaning and purpose is something we all share.`,
+        message: `The question of God has been pondered by humans throughout history, and people have many different perspectives based on their beliefs, experiences, and cultural backgrounds.
+
+For many, God represents the ultimate source of love, wisdom, and creation - a divine presence that gives life meaning and purpose. Some see God as a personal being who cares about each individual, while others view God as the underlying force or energy that connects all things.
+
+Some people find God through organized religion, others through personal spiritual experiences, nature, or acts of kindness and love. And some find meaning and purpose without belief in God at all.
+
+What's beautiful is that this question has inspired countless acts of compassion, art, music, and literature throughout human history. Whether you believe or not, the search for meaning and purpose is something we all share.`,
         suggestedActions: [
           { label: "Explore meaning of life", action: "meaning" },
           { label: "Talk about purpose", action: "purpose" },
@@ -636,7 +662,13 @@ export class EnhancedAIService {
 
     if (lowerInput.includes("failure")) {
       return {
-        message: `Failure isn't the opposite of success - it's a stepping stone to it! Every successful person has a trail of failures behind them, because failure is how we learn, grow, and discover what really works.\n\nWhen something doesn't go as planned, it's not a reflection of your worth as a person. It's just feedback. It tells you what didn't work this time, so you can try a different approach. Some of the world's greatest innovations came from people who "failed" multiple times but kept learning and improving.\n\nFailure builds resilience, teaches humility, and makes eventual success even sweeter because you appreciate how hard it was to achieve. The only real failure is not trying at all, or giving up when you could keep learning.\n\nRemember: every expert was once a beginner, and every pro was once an amateur who refused to give up.`,
+        message: `Failure isn't the opposite of success - it's a stepping stone to it! Every successful person has a trail of failures behind them, because failure is how we learn, grow, and discover what really works.
+
+When something doesn't go as planned, it's not a reflection of your worth as a person. It's just feedback. It tells you what didn't work this time, so you can try a different approach. Some of the world's greatest innovations came from people who "failed" multiple times but kept learning and improving.
+
+Failure builds resilience, teaches humility, and makes eventual success even sweeter because you appreciate how hard it was to achieve. The only real failure is not trying at all, or giving up when you could keep learning.
+
+Remember: every expert was once a beginner, and every pro was once an amateur who refused to give up.`,
         suggestedActions: [
           { label: "Learn about success", action: "success" },
           { label: "Build resilience", action: "resilience" },
@@ -653,7 +685,13 @@ export class EnhancedAIService {
 
     if (lowerInput.includes("happiness") || lowerInput.includes("happy")) {
       return {
-        message: `Happiness is like a warm feeling that comes from both inside and outside. It's not just one thing - it's moments of joy, contentment, gratitude, and connection with others.\n\nTrue happiness often comes from simple things: meaningful relationships, doing things you're passionate about, helping others, appreciating what you have, and growing as a person. It's not about having everything perfect, but finding joy even in ordinary moments.\n\nResearch shows that happiness is less about getting stuff and more about experiences, relationships, and having a sense of purpose. The happiest people tend to focus on what they can control, practice gratitude, and invest in their relationships.\n\nRemember, it's okay not to be happy all the time - that's just being human! The goal isn't constant happiness, but building a life that feels meaningful and satisfying to you.`,
+        message: `Happiness is like a warm feeling that comes from both inside and outside. It's not just one thing - it's moments of joy, contentment, gratitude, and connection with others.
+
+True happiness often comes from simple things: meaningful relationships, doing things you're passionate about, helping others, appreciating what you have, and growing as a person. It's not about having everything perfect, but finding joy even in ordinary moments.
+
+Research shows that happiness is less about getting stuff and more about experiences, relationships, and having a sense of purpose. The happiest people tend to focus on what they can control, practice gratitude, and invest in their relationships.
+
+Remember, it's okay not to be happy all the time - that's just being human! The goal isn't constant happiness, but building a life that feels meaningful and satisfying to you.`,
         suggestedActions: [
           { label: "Explore gratitude", action: "gratitude" },
           { label: "Learn about well-being", action: "wellbeing" },
@@ -687,7 +725,11 @@ export class EnhancedAIService {
 
     // Default philosophical response
     return {
-      message: `That's a profound question that philosophers and thinkers have explored for centuries! These big questions about life, existence, and human nature don't have simple answers, but exploring them is part of what makes us human.\n\nPhilosophy isn't about having all the answers - it's about asking good questions and thinking deeply about what matters most. Whether you're wondering about purpose, morality, consciousness, or the nature of reality, remember that great minds throughout history have wrestled with the same questions.\n\nWhat's beautiful is that your own life experiences, relationships, and reflections contribute to how you understand these mysteries. Everyone's perspective is valuable in the ongoing human conversation about existence and meaning.`,
+      message: `That's a profound question that philosophers and thinkers have explored for centuries! These big questions about life, existence, and human nature don't have simple answers, but exploring them is part of what makes us human.
+
+Philosophy isn't about having all the answers - it's about asking good questions and thinking deeply about what matters most. Whether you're wondering about purpose, morality, consciousness, or the nature of reality, remember that great minds throughout history have wrestled with the same questions.
+
+What's beautiful is that your own life experiences, relationships, and reflections contribute to how you understand these mysteries. Everyone's perspective is valuable in the ongoing human conversation about existence and meaning.`,
       suggestedActions: [
         { label: "Explore big questions", action: "philosophy" },
         { label: "Learn about meaning", action: "meaning" },
@@ -707,7 +749,13 @@ export class EnhancedAIService {
 
     if (lowerInput.includes("earth") && lowerInput.includes("round")) {
       return {
-        message: `Yes, the Earth is round! Well, technically it's an oblate spheroid - basically a sphere that's slightly flattened at the poles and bulges a bit at the equator due to its rotation.\n\nWe've known this for over 2,000 years! Ancient Greek scholars like Eratosthenes calculated Earth's circumference with remarkable accuracy. Today we have countless evidence: satellite photos, physics of gravity, how ships disappear over the horizon hull-first, time zones, and the fact that we can circumnavigate the globe.\n\nThe curvature is about 8 inches per mile, which is why the horizon appears flat when you're standing on the ground - you'd need to be really high up to see the curve clearly!\n\nIt's amazing how much we can learn about our world through observation, mathematics, and scientific inquiry.`,
+        message: `Yes, the Earth is round! Well, technically it's an oblate spheroid - basically a sphere that's slightly flattened at the poles and bulges a bit at the equator due to its rotation.
+
+We've known this for over 2,000 years! Ancient Greek scholars like Eratosthenes calculated Earth's circumference with remarkable accuracy. Today we have countless evidence: satellite photos, physics of gravity, how ships disappear over the horizon hull-first, time zones, and the fact that we can circumnavigate the globe.
+
+The curvature is about 8 inches per mile, which is why the horizon appears flat when you're standing on the ground - you'd need to be really high up to see the curve clearly!
+
+It's amazing how much we can learn about our world through observation, mathematics, and scientific inquiry.`,
         suggestedActions: [
           { label: "Learn about space", action: "space" },
           { label: "Explore science", action: "science" },
@@ -724,7 +772,13 @@ export class EnhancedAIService {
 
     if (lowerInput.includes("sun") || lowerInput.includes("solar")) {
       return {
-        message: `The Sun is absolutely fascinating! It's a massive ball of hot plasma held together by its own gravity, essentially a giant nuclear fusion reactor that's been burning for about 4.6 billion years.\n\nEvery second, the Sun converts about 4 million tons of matter into pure energy through nuclear fusion - that's what makes it shine! It's so big that you could fit about 1.3 million Earths inside it, yet it's just an average-sized star compared to others in our galaxy.\n\nThe Sun is about 93 million miles away from Earth - just the right distance to keep us warm but not too hot. Without the Sun, there would be no life on Earth as we know it. It drives our weather, ocean currents, and provides the energy that plants use for photosynthesis.\n\nPretty amazing that this giant star in space is what makes life possible here on our little blue planet!`,
+        message: `The Sun is absolutely fascinating! It's a massive ball of hot plasma held together by its own gravity, essentially a giant nuclear fusion reactor that's been burning for about 4.6 billion years.
+
+Every second, the Sun converts about 4 million tons of matter into pure energy through nuclear fusion - that's what makes it shine! It's so big that you could fit about 1.3 million Earths inside it, yet it's just an average-sized star compared to others in our galaxy.
+
+The Sun is about 93 million miles away from Earth - just the right distance to keep us warm but not too hot. Without the Sun, there would be no life on Earth as we know it. It drives our weather, ocean currents, and provides the energy that plants use for photosynthesis.
+
+Pretty amazing that this giant star in space is what makes life possible here on our little blue planet!`,
         suggestedActions: [
           { label: "Explore the solar system", action: "solar_system" },
           { label: "Learn about stars", action: "stars" },
@@ -758,7 +812,13 @@ export class EnhancedAIService {
 
     if (lowerInput.includes("ocean") || lowerInput.includes("sea")) {
       return {
-        message: `The oceans are Earth's most amazing feature! They cover about 71% of our planet's surface and contain 97% of all the water on Earth. We've actually explored less than 5% of our oceans - there's more mystery in our deep seas than on the surface of Mars!\n\nOceans are incredibly important: they produce over half the oxygen we breathe (thanks to tiny marine plants called phytoplankton), regulate our climate, and are home to countless species we haven't even discovered yet.\n\nThe deepest part is the Mariana Trench in the Pacific - it's about 36,000 feet deep! If Mount Everest were placed in it, the peak would still be over a mile underwater. And the pressure down there is so intense it would crush a human instantly.\n\nOceans are also highways for nutrients and heat around the planet, making life possible everywhere on Earth!`,
+        message: `The oceans are Earth's most amazing feature! They cover about 71% of our planet's surface and contain 97% of all the water on Earth. We've actually explored less than 5% of our oceans - there's more mystery in our deep seas than on the surface of Mars!
+
+Oceans are incredibly important: they produce over half the oxygen we breathe (thanks to tiny marine plants called phytoplankton), regulate our climate, and are home to countless species we haven't even discovered yet.
+
+The deepest part is the Mariana Trench in the Pacific - it's about 36,000 feet deep! If Mount Everest were placed in it, the peak would still be over a mile underwater. And the pressure down there is so intense it would crush a human instantly.
+
+Oceans are also highways for nutrients and heat around the planet, making life possible everywhere on Earth!`,
         suggestedActions: [
           { label: "Discover marine life", action: "marine_life" },
           { label: "Learn about climate", action: "climate" },
@@ -780,7 +840,11 @@ export class EnhancedAIService {
 
     // Default factual response
     return {
-      message: `That's a great question about our world! I love curiosity about science, history, geography, and how things work. While I might not have every specific fact memorized, I'm always happy to explore topics about our fascinating universe.\n\nFrom the tiniest atoms to the vast cosmos, from ancient history to cutting-edge discoveries, there's so much to learn about our world. Science helps us understand everything from why the sky is blue to how our brains work to what makes the seasons change.\n\nWhat specific aspect interests you most? I'd love to explore it together!`,
+      message: `That's a great question about our world! I love curiosity about science, history, geography, and how things work. While I might not have every specific fact memorized, I'm always happy to explore topics about our fascinating universe.
+
+From the tiniest atoms to the vast cosmos, from ancient history to cutting-edge discoveries, there's so much to learn about our world. Science helps us understand everything from why the sky is blue to how our brains work to what makes the seasons change.
+
+What specific aspect interests you most? I'd love to explore it together!`,
       suggestedActions: [
         { label: "Explore science topics", action: "science" },
         { label: "Learn about history", action: "history" },
@@ -797,7 +861,11 @@ export class EnhancedAIService {
 
   private generateGeneralKnowledgeResponse(input: string): SmartResponse {
     return {
-      message: `I'd love to help you learn about that! While I'm primarily designed to help with SoftChat, I also enjoy exploring general knowledge topics with curious minds like yours.\n\nI can chat about science, philosophy, history, how things work, and many other fascinating topics. My responses come from my training, so while I aim to be helpful and accurate, I always encourage you to explore topics further through reliable sources too.\n\nWhat would you like to know more about? Whether it's something scientific, philosophical, historical, or just something you're curious about - I'm here to explore it with you!`,
+      message: `I'd love to help you learn about that! While I'm primarily designed to help with SoftChat, I also enjoy exploring general knowledge topics with curious minds like yours.
+
+I can chat about science, philosophy, history, how things work, and many other fascinating topics. My responses come from my training, so while I aim to be helpful and accurate, I always encourage you to explore topics further through reliable sources too.
+
+What would you like to know more about? Whether it's something scientific, philosophical, historical, or just something you're curious about - I'm here to explore it with you!`,
       suggestedActions: [
         { label: "Ask about science", action: "science" },
         { label: "Explore philosophy", action: "philosophy" },
@@ -838,7 +906,21 @@ export class EnhancedAIService {
 
     const responses = {
       earning: {
-        message: `Multiple Ways to Earn on SoftChat:\n\n💰 High-Earning Activities:\n• Crypto trading (potential high returns)\n• Marketplace sales (500 SoftPoints per sale)\n• Freelance services (direct payments)\n• Video monetization (views + tips)\n\n🏆 SoftPoints Earning:\n• Daily login: 25 points\n• Create content: 100 points\n• Trading activity: 200 points\n• Community engagement: 50 points\n\nMy advice: Focus on 2-3 areas consistently for the best results!`,
+        message: `Multiple Ways to Earn on SoftChat:
+
+💰 High-Earning Activities:
+• Crypto trading (potential high returns)
+• Marketplace sales (500 SoftPoints per sale)
+• Freelance services (direct payments)
+• Video monetization (views + tips)
+
+🏆 SoftPoints Earning:
+• Daily login: 25 points
+• Create content: 100 points
+• Trading activity: 200 points
+• Community engagement: 50 points
+
+My advice: Focus on 2-3 areas consistently for the best results!`,
         suggestedActions: [
           { label: "Check Earning Opportunities", action: "earnings" },
           {
@@ -850,7 +932,20 @@ export class EnhancedAIService {
         ],
       },
       social: {
-        message: `Building Your Social Presence:\n\n��� Growth Strategies:\n• Post consistently (daily is ideal)\n• Use trending hashtags in your niche\n• Engage authentically with others\n• Share valuable, original content\n• Collaborate with other creators\n\n📈 Engagement Tips:\n• Respond to comments quickly\n• Ask questions in your posts\n• Share behind-the-scenes content\n• Post at optimal times (7-9 PM works best)`,
+        message: `Building Your Social Presence:
+
+��� Growth Strategies:
+• Post consistently (daily is ideal)
+• Use trending hashtags in your niche
+• Engage authentically with others
+• Share valuable, original content
+• Collaborate with other creators
+
+📈 Engagement Tips:
+• Respond to comments quickly
+• Ask questions in your posts
+• Share behind-the-scenes content
+• Post at optimal times (7-9 PM works best)`,
         suggestedActions: [
           { label: "Create Post", action: "create", url: "/create" },
           { label: "Find Trending Topics", action: "explore", url: "/explore" },
@@ -858,7 +953,21 @@ export class EnhancedAIService {
         ],
       },
       trading: {
-        message: `Crypto Trading Insights:\n\n📊 Current Market:\n• Bitcoin: Strong support at $43,500\n• Ethereum: Bullish fundamentals\n• 50+ trading pairs available\n• Real-time market data\n\n⚡ Trading Features:\n• Spot trading with low fees\n• Copy trading from experts\n• Advanced charting tools\n• Risk management orders\n\nRemember: Only trade what you can afford to lose!`,
+        message: `Crypto Trading Insights:
+
+📊 Current Market:
+• Bitcoin: Strong support at $43,500
+• Ethereum: Bullish fundamentals
+• 50+ trading pairs available
+• Real-time market data
+
+⚡ Trading Features:
+• Spot trading with low fees
+• Copy trading from experts
+• Advanced charting tools
+• Risk management orders
+
+Remember: Only trade what you can afford to lose!`,
         suggestedActions: [
           { label: "View Markets", action: "crypto", url: "/crypto" },
           { label: "Copy Expert Traders", action: "copy_trading" },
@@ -866,11 +975,22 @@ export class EnhancedAIService {
         ],
       },
       general: {
-        message: `Welcome to SoftChat! 🌟\n\nI'm Edith, your AI assistant. I can help you with:\n\n🎯 Platform Navigation - Find any feature quickly\n📈 Performance Optimization - Maximize your success\n💡 Strategy Advice - Best practices for each feature\n🛠️ Technical Support - Solve any issues\n📚 Learning Resources - Tutorials and guides\n🤔 General Questions - Life, science, philosophy, and more!\n\nI love chatting about all kinds of topics - from SoftChat features to life's big questions! Just ask me anything and let's explore together.`,
+        message: `Welcome to SoftChat! 🌟
+
+I'm Edith, your AI assistant. I can help you with:
+
+🎯 Platform Navigation - Find any feature quickly
+📈 Performance Optimization - Maximize your success
+💡 Strategy Advice - Best practices for each feature
+🛠️ Technical Support - Solve any issues
+📚 Learning Resources - Tutorials and guides
+🤔 General Questions - Life, science, philosophy, and more!
+
+I love chatting about all kinds of topics - from SoftChat features to life's big questions! Just ask me anything and let's explore together.`,
         suggestedActions: [
           { label: "Platform Tour", action: "tour" },
           { label: "Ask me anything", action: "general_chat" },
-          { label: "View My Dashboard", action: "dashboard", url: "/feed" },
+          { label: "View My Dashboard", action: "dashboard", url: "/app/feed" },
         ],
       },
     };
@@ -895,7 +1015,7 @@ export class EnhancedAIService {
 
   private getFeatureUrl(featureKey: string): string {
     const urls: Record<string, string> = {
-      social_feed: "/feed",
+      social_feed: "/app/feed",
       crypto_trading: "/crypto",
       marketplace: "/marketplace",
       freelance: "/freelance",

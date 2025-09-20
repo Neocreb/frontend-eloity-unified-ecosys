@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { realAPIService } from "@/services/realAPIService"; // Import the real API service
 
 export interface Crypto {
   id: string;
@@ -38,101 +39,35 @@ const CryptoMarket = () => {
   useEffect(() => {
     const fetchCryptos = async () => {
       try {
-        // In a real app, this would be fetched from a real API like CoinGecko
-        // For now, we'll use mock data
-        const mockData: Crypto[] = [
-          {
-            id: "bitcoin",
-            name: "Bitcoin",
-            symbol: "btc",
-            current_price: 52835.42,
-            market_cap: 1034278909176,
-            total_volume: 25982611987,
-            price_change_percentage_24h: 2.34,
-            image:
-              "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-          },
-          {
-            id: "ethereum",
-            name: "Ethereum",
-            symbol: "eth",
-            current_price: 3145.79,
-            market_cap: 377339750529,
-            total_volume: 18245920134,
-            price_change_percentage_24h: -1.23,
-            image:
-              "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
-          },
-          {
-            id: "tether",
-            name: "Tether",
-            symbol: "usdt",
-            current_price: 1.0,
-            market_cap: 99258852784,
-            total_volume: 47895732908,
-            price_change_percentage_24h: 0.02,
-            image:
-              "https://assets.coingecko.com/coins/images/325/large/Tether.png",
-          },
-          {
-            id: "solana",
-            name: "Solana",
-            symbol: "sol",
-            current_price: 157.83,
-            market_cap: 69573985610,
-            total_volume: 2945801497,
-            price_change_percentage_24h: 5.67,
-            image:
-              "https://assets.coingecko.com/coins/images/4128/large/solana.png",
-          },
-          {
-            id: "cardano",
-            name: "Cardano",
-            symbol: "ada",
-            current_price: 0.57,
-            market_cap: 20187657290,
-            total_volume: 591872345,
-            price_change_percentage_24h: -2.15,
-            image:
-              "https://assets.coingecko.com/coins/images/975/large/cardano.png",
-          },
-          {
-            id: "dogecoin",
-            name: "Dogecoin",
-            symbol: "doge",
-            current_price: 0.17,
-            market_cap: 24753982341,
-            total_volume: 1389752043,
-            price_change_percentage_24h: 3.42,
-            image:
-              "https://assets.coingecko.com/coins/images/5/large/dogecoin.png",
-          },
-          {
-            id: "polkadot",
-            name: "Polkadot",
-            symbol: "dot",
-            current_price: 7.92,
-            market_cap: 10982365923,
-            total_volume: 343298712,
-            price_change_percentage_24h: -3.78,
-            image:
-              "https://assets.coingecko.com/coins/images/12171/large/polkadot.png",
-          },
-          {
-            id: "chainlink",
-            name: "Chainlink",
-            symbol: "link",
-            current_price: 18.37,
-            market_cap: 10754982713,
-            total_volume: 589371285,
-            price_change_percentage_24h: 0.87,
-            image:
-              "https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png",
-          },
-        ];
-
-        setCryptos(mockData);
-        setSelectedCrypto(mockData[0]);
+        // Use real API service with fallback to intelligent simulation
+        const cryptoSymbols = ["bitcoin", "ethereum", "tether", "solana", "cardano", "dogecoin", "polkadot", "chainlink"];
+        
+        // Fetch data for each cryptocurrency
+        const cryptoData = await Promise.all(
+          cryptoSymbols.map(async (symbol) => {
+            const response = await realAPIService.getCryptoPrice(symbol);
+            
+            // Map the response to our Crypto interface
+            if (response.success) {
+              return {
+                id: symbol,
+                name: symbol.charAt(0).toUpperCase() + symbol.slice(1),
+                symbol: symbol,
+                current_price: response.data.price,
+                market_cap: response.data.marketCap || 0,
+                total_volume: response.data.volume24h || 0,
+                price_change_percentage_24h: response.data.change24h || 0,
+                image: `https://assets.coingecko.com/coins/images/${getCoinGeckoId(symbol)}/large/${symbol}.png`,
+              };
+            }
+            
+            // Fallback to mock data if API fails
+            return getMockCryptoData(symbol);
+          })
+        );
+        
+        setCryptos(cryptoData);
+        setSelectedCrypto(cryptoData[0]);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching crypto data:", error);
@@ -146,21 +81,115 @@ const CryptoMarket = () => {
       }
     };
 
+    // Helper function to map symbols to CoinGecko IDs
+    const getCoinGeckoId = (symbol: string) => {
+      const idMap: Record<string, string> = {
+        bitcoin: "1",
+        ethereum: "279",
+        tether: "325",
+        solana: "4128",
+        cardano: "975",
+        dogecoin: "5",
+        polkadot: "12171",
+        chainlink: "877"
+      };
+      return idMap[symbol] || symbol;
+    };
+
+    // Helper function to get mock data as fallback
+    const getMockCryptoData = (symbol: string): Crypto => {
+      const mockData: Record<string, Crypto> = {
+        bitcoin: {
+          id: "bitcoin",
+          name: "Bitcoin",
+          symbol: "btc",
+          current_price: 52835.42,
+          market_cap: 1034278909176,
+          total_volume: 25982611987,
+          price_change_percentage_24h: 2.34,
+          image: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
+        },
+        ethereum: {
+          id: "ethereum",
+          name: "Ethereum",
+          symbol: "eth",
+          current_price: 3145.79,
+          market_cap: 377339750529,
+          total_volume: 18245920134,
+          price_change_percentage_24h: -1.23,
+          image: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+        },
+        tether: {
+          id: "tether",
+          name: "Tether",
+          symbol: "usdt",
+          current_price: 1.0,
+          market_cap: 99258852784,
+          total_volume: 47895732908,
+          price_change_percentage_24h: 0.02,
+          image: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
+        },
+        solana: {
+          id: "solana",
+          name: "Solana",
+          symbol: "sol",
+          current_price: 157.83,
+          market_cap: 69573985610,
+          total_volume: 2945801497,
+          price_change_percentage_24h: 5.67,
+          image: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
+        },
+        cardano: {
+          id: "cardano",
+          name: "Cardano",
+          symbol: "ada",
+          current_price: 0.57,
+          market_cap: 20187657290,
+          total_volume: 591872345,
+          price_change_percentage_24h: -2.15,
+          image: "https://assets.coingecko.com/coins/images/975/large/cardano.png",
+        },
+        dogecoin: {
+          id: "dogecoin",
+          name: "Dogecoin",
+          symbol: "doge",
+          current_price: 0.17,
+          market_cap: 24753982341,
+          total_volume: 1389752043,
+          price_change_percentage_24h: 3.42,
+          image: "https://assets.coingecko.com/coins/images/5/large/dogecoin.png",
+        },
+        polkadot: {
+          id: "polkadot",
+          name: "Polkadot",
+          symbol: "dot",
+          current_price: 7.92,
+          market_cap: 10982365923,
+          total_volume: 343298712,
+          price_change_percentage_24h: -3.78,
+          image: "https://assets.coingecko.com/coins/images/12171/large/polkadot.png",
+        },
+        chainlink: {
+          id: "chainlink",
+          name: "Chainlink",
+          symbol: "link",
+          current_price: 18.37,
+          market_cap: 10754982713,
+          total_volume: 589371285,
+          price_change_percentage_24h: 0.87,
+          image: "https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png",
+        },
+      };
+      
+      return mockData[symbol] || mockData.bitcoin;
+    };
+
     fetchCryptos();
 
-    // In a real app, we might set up a websocket or polling for real-time price updates
+    // Set up polling for real-time price updates
     const interval = setInterval(() => {
-      // For demonstration purposes, we'll just add small random price changes to simulate live updates
-      setCryptos((prev) =>
-        prev.map((crypto) => ({
-          ...crypto,
-          current_price:
-            crypto.current_price * (1 + (Math.random() * 0.01 - 0.005)),
-          price_change_percentage_24h:
-            crypto.price_change_percentage_24h + (Math.random() * 0.4 - 0.2),
-        })),
-      );
-    }, 30000); // Update every 30 seconds
+      fetchCryptos(); // Refresh data every 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [toast]);

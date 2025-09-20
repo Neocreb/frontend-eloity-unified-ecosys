@@ -154,7 +154,7 @@ const AdChoices = () => {
               Ad Choices & Preferences
             </CardTitle>
             <p className="text-muted-foreground">
-              Control your advertising experience on SoftChat
+              Control your advertising experience on Eloity
             </p>
           </CardHeader>
         </Card>
@@ -190,7 +190,7 @@ const AdChoices = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground mb-4">
-              Control which types of advertisements you see across different SoftChat features.
+              Control which types of advertisements you see across different Eloity features.
             </p>
             
             <div className="space-y-4">
@@ -400,7 +400,6 @@ const AdChoices = () => {
                   <Switch 
                     checked={enabled} 
                     onCheckedChange={(value) => handleInterestChange(interest as keyof typeof interestCategories, value)}
-                    size="sm"
                   />
                 </div>
               ))}
@@ -609,7 +608,7 @@ const AdChoices = () => {
               If you have questions about your advertising choices or need assistance:
             </p>
             <div className="space-y-2 text-sm">
-              <p><strong>Email:</strong> adchoices@softchat.com</p>
+              <p><strong>Email:</strong> adchoices@eloity.com</p>
               <p><strong>Support:</strong> Visit our Help Center</p>
               <p><strong>Response Time:</strong> We aim to respond within 2 business days</p>
             </div>

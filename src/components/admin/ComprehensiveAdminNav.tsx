@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Database,
   Activity,
+  UserCheck,
 } from "lucide-react";
 
 const adminNavItems = [
@@ -36,6 +37,12 @@ const adminNavItems = [
     href: "/admin/users",
     icon: Users,
     description: "Manage users, KYC, and permissions",
+  },
+  {
+    title: "KYC Verification",
+    href: "/admin/kyc",
+    icon: UserCheck,
+    description: "Review identity verifications and compliance",
   },
   {
     title: "Freelance",

@@ -56,8 +56,10 @@ import {
   Edit,
   Ban,
   UserCheck,
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { AdminService } from "@/services/adminService";
 import { cn } from "@/lib/utils";
 
 interface DeliveryProvider {
@@ -93,99 +95,9 @@ interface DeliveryStats {
   onTimeRate: number;
 }
 
-const mockProviders: DeliveryProvider[] = [
-  {
-    id: "1",
-    businessName: "FastTrack Delivery",
-    contactName: "John Smith",
-    contactEmail: "john@fasttrack.com",
-    contactPhone: "+1-555-0123",
-    serviceAreas: [
-      { city: "New York", state: "NY", country: "USA", radius: 15 }
-    ],
-    vehicleTypes: ["bike", "car"],
-    servicesOffered: ["same_day", "express", "standard"],
-    verificationStatus: "verified",
-    rating: 4.8,
-    reviewCount: 247,
-    completedDeliveries: 1250,
-    onTimeRate: 96.5,
-    isActive: true,
-    isAvailable: true,
-    createdAt: "2024-01-10T10:00:00Z",
-    lastActiveAt: "2024-01-15T14:30:00Z",
-    documents: {
-      license: ["license-1.jpg"],
-      insurance: ["insurance-1.pdf"],
-      registration: ["registration-1.pdf"],
-    },
-    verifiedAt: "2024-01-12T09:00:00Z",
-    verifiedBy: "admin-1",
-  },
-  {
-    id: "2",
-    businessName: "QuickDrop Services",
-    contactName: "Sarah Johnson",
-    contactEmail: "sarah@quickdrop.com",
-    contactPhone: "+1-555-0456",
-    serviceAreas: [
-      { city: "Los Angeles", state: "CA", country: "USA", radius: 20 }
-    ],
-    vehicleTypes: ["car", "van"],
-    servicesOffered: ["next_day", "standard", "scheduled"],
-    verificationStatus: "pending",
-    rating: 0,
-    reviewCount: 0,
-    completedDeliveries: 0,
-    onTimeRate: 0,
-    isActive: false,
-    isAvailable: false,
-    createdAt: "2024-01-14T15:30:00Z",
-    lastActiveAt: "2024-01-14T15:30:00Z",
-    documents: {
-      license: ["license-2.jpg"],
-      insurance: ["insurance-2.pdf"],
-    },
-  },
-  {
-    id: "3",
-    businessName: "Metro Express",
-    contactName: "Mike Wilson",
-    contactEmail: "mike@metroexpress.com",
-    contactPhone: "+1-555-0789",
-    serviceAreas: [
-      { city: "Chicago", state: "IL", country: "USA", radius: 25 }
-    ],
-    vehicleTypes: ["bike", "car", "van"],
-    servicesOffered: ["same_day", "express", "standard", "scheduled"],
-    verificationStatus: "rejected",
-    rating: 0,
-    reviewCount: 0,
-    completedDeliveries: 0,
-    onTimeRate: 0,
-    isActive: false,
-    isAvailable: false,
-    createdAt: "2024-01-08T12:00:00Z",
-    lastActiveAt: "2024-01-08T12:00:00Z",
-    documents: {
-      license: ["license-3.jpg"],
-    },
-    rejectionReason: "Incomplete documentation - missing insurance certificate",
-  },
-];
-
-const mockStats: DeliveryStats = {
-  totalProviders: 15,
-  activeProviders: 8,
-  pendingVerification: 3,
-  totalDeliveries: 2847,
-  averageRating: 4.6,
-  onTimeRate: 94.2,
-};
-
 export default function DeliveryProvidersAdmin() {
-  const [providers, setProviders] = useState<DeliveryProvider[]>(mockProviders);
-  const [stats, setStats] = useState<DeliveryStats>(mockStats);
+  const [providers, setProviders] = useState<DeliveryProvider[]>([]);
+  const [stats, setStats] = useState<DeliveryStats | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<DeliveryProvider | null>(null);
   const [showProviderDialog, setShowProviderDialog] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
@@ -194,7 +106,39 @@ export default function DeliveryProvidersAdmin() {
   const [verificationFilter, setVerificationFilter] = useState("all");
   const [verificationAction, setVerificationAction] = useState<"approve" | "reject" | null>(null);
   const [verificationNotes, setVerificationNotes] = useState("");
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load delivery providers
+      const providersResponse = await AdminService.getDeliveryProviders({ limit: 50 });
+      if (providersResponse.success) {
+        setProviders(providersResponse.data.providers);
+      }
+      
+      // Load delivery stats
+      const statsResponse = await AdminService.getDeliveryStats();
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
+      }
+    } catch (error) {
+      console.error("Error loading delivery data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load delivery data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -239,27 +183,37 @@ export default function DeliveryProvidersAdmin() {
 
   const handleVerificationAction = async (providerId: string, action: "approve" | "reject", notes?: string) => {
     try {
-      const updatedProviders = providers.map(provider => {
-        if (provider.id === providerId) {
-          return {
-            ...provider,
-            verificationStatus: action === "approve" ? "verified" : "rejected",
-            isActive: action === "approve",
-            verifiedAt: action === "approve" ? new Date().toISOString() : undefined,
-            rejectionReason: action === "reject" ? notes : undefined,
-          };
-        }
-        return provider;
+      const response = await AdminService.updateDeliveryProviderVerification(providerId, {
+        status: action,
+        notes: notes
       });
 
-      setProviders(updatedProviders);
-      setShowVerificationDialog(false);
-      setVerificationNotes("");
+      if (response.success) {
+        // Update local state
+        const updatedProviders = providers.map(provider => {
+          if (provider.id === providerId) {
+            return {
+              ...provider,
+              verificationStatus: action === "approve" ? "verified" : "rejected",
+              isActive: action === "approve",
+              verifiedAt: action === "approve" ? new Date().toISOString() : undefined,
+              rejectionReason: action === "reject" ? notes : undefined,
+            };
+          }
+          return provider;
+        });
 
-      toast({
-        title: `Provider ${action === "approve" ? "Approved" : "Rejected"}`,
-        description: `The delivery provider has been ${action === "approve" ? "approved and activated" : "rejected"}.`,
-      });
+        setProviders(updatedProviders);
+        setShowVerificationDialog(false);
+        setVerificationNotes("");
+
+        toast({
+          title: `Provider ${action === "approve" ? "Approved" : "Rejected"}`,
+          description: `The delivery provider has been ${action === "approve" ? "approved and activated" : "rejected"}.`,
+        });
+      } else {
+        throw new Error(response.error || "Failed to update provider verification status");
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -271,19 +225,25 @@ export default function DeliveryProvidersAdmin() {
 
   const handleToggleProviderStatus = async (providerId: string, newStatus: boolean) => {
     try {
-      const updatedProviders = providers.map(provider => {
-        if (provider.id === providerId) {
-          return { ...provider, isActive: newStatus };
-        }
-        return provider;
-      });
+      const response = await AdminService.updateDeliveryProviderStatus(providerId, newStatus);
+      
+      if (response.success) {
+        const updatedProviders = providers.map(provider => {
+          if (provider.id === providerId) {
+            return { ...provider, isActive: newStatus };
+          }
+          return provider;
+        });
 
-      setProviders(updatedProviders);
+        setProviders(updatedProviders);
 
-      toast({
-        title: "Provider Status Updated",
-        description: `Provider has been ${newStatus ? "activated" : "deactivated"}.`,
-      });
+        toast({
+          title: "Provider Status Updated",
+          description: `Provider has been ${newStatus ? "activated" : "deactivated"}.`,
+        });
+      } else {
+        throw new Error(response.error || "Failed to update provider status");
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -291,6 +251,10 @@ export default function DeliveryProvidersAdmin() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleRefresh = () => {
+    loadData();
   };
 
   const formatDateTime = (dateString: string) => {
@@ -312,100 +276,116 @@ export default function DeliveryProvidersAdmin() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Delivery Providers</h1>
-        <p className="text-gray-600">Manage delivery service providers and their verification status</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Delivery Providers</h1>
+          <p className="text-gray-600">Manage delivery service providers and their verification status</p>
+        </div>
+        <Button onClick={handleRefresh} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Providers</p>
-                <p className="text-2xl font-bold">{stats.totalProviders}</p>
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Providers</p>
+                  <p className="text-2xl font-bold">{stats.totalProviders}</p>
+                </div>
+                <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold">{stats.activeProviders}</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active</p>
+                  <p className="text-2xl font-bold">{stats.activeProviders}</p>
+                </div>
+                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold">{stats.pendingVerification}</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Pending</p>
+                  <p className="text-2xl font-bold">{stats.pendingVerification}</p>
+                </div>
+                <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Deliveries</p>
-                <p className="text-2xl font-bold">{stats.totalDeliveries.toLocaleString()}</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Deliveries</p>
+                  <p className="text-2xl font-bold">{stats.totalDeliveries.toLocaleString()}</p>
+                </div>
+                <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Package className="h-6 w-6 text-purple-600" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Package className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg Rating</p>
-                <p className="text-2xl font-bold">{stats.averageRating}</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Avg Rating</p>
+                  <p className="text-2xl font-bold">{stats.averageRating}</p>
+                </div>
+                <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Star className="h-6 w-6 text-yellow-600" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Star className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">On-Time Rate</p>
-                <p className="text-2xl font-bold">{stats.onTimeRate}%</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">On-Time Rate</p>
+                  <p className="text-2xl font-bold">{stats.onTimeRate}%</p>
+                </div>
+                <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-orange-600" />
+                </div>
               </div>
-              <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <Card>

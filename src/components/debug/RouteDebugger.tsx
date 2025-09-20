@@ -10,7 +10,7 @@ const RouteDebugger = () => {
   const { isAuthenticated, user } = useAuth();
 
   const testRoutes = [
-    { path: "/feed", label: "Feed", protected: true },
+    { path: "/app/feed", label: "Feed", protected: true },
     { path: "/explore", label: "Explore", protected: true },
     { path: "/videos", label: "Videos", protected: true },
     { path: "/marketplace", label: "Marketplace", protected: true },

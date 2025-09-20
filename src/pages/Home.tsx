@@ -7,7 +7,7 @@ const Home = () => {
 
   // Redirect authenticated users to feed, others to landing
   if (isAuthenticated) {
-    return <Navigate to="/feed" replace />;
+    return <Navigate to="/app/feed" replace />;
   }
 
   return <Navigate to="/" replace />;
