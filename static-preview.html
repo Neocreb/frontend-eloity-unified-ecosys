@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eloity Platform - Setup Required</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            margin: 2rem;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .status {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .status h3 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        .steps {
+            text-align: left;
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        .steps ol {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+        .steps li {
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #5a67d8;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .feature {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀 Eloity</div>
+        <h1 class="title">Development Environment Setup Required</h1>
+        <p class="subtitle">Your comprehensive social media, marketplace, and crypto platform</p>
+        
+        <div class="status">
+            <h3>⚠️ Node.js Not Found</h3>
+            <p>The development server cannot start because Node.js is not installed or not accessible in your current environment.</p>
+        </div>
+
+        <div class="steps">
+            <h3>Quick Setup Steps:</h3>
+            <ol>
+                <li><strong>Install Node.js:</strong> Download from <a href="https://nodejs.org" target="_blank" style="color: #667eea;">nodejs.org</a></li>
+                <li><strong>Restart your terminal/IDE</strong></li>
+                <li><strong>Run:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">npm install</code></li>
+                <li><strong>Start:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">npm run dev:frontend</code></li>
+            </ol>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">💬</div>
+                <h4>Social Feed</h4>
+                <p>Enhanced feed with real-time updates</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🛒</div>
+                <h4>Marketplace</h4>
+                <p>Buy and sell products</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💼</div>
+                <h4>Freelancing</h4>
+                <p>Connect with clients and freelancers</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">₿</div>
+                <h4>Crypto Trading</h4>
+                <p>Trade cryptocurrencies</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <a href="https://nodejs.org/en/download/" target="_blank" class="btn">Download Node.js</a>
+            <button onclick="window.location.reload()" class="btn" style="background: #48bb78;">🔄 Refresh Page</button>
+        </div>
+
+        <p style="margin-top: 2rem; color: #718096; font-size: 0.9rem;">
+            Once Node.js is installed, this page will be replaced with your full Eloity platform.
+        </p>
+    </div>
+
+    <script>
+        // Check if we can detect when Node.js becomes available
+        setInterval(() => {
+            fetch('/api/health').then(() => {
+                window.location.reload();
+            }).catch(() => {
+                // Node.js still not available
+            });
+        }, 10000);
+    </script>
+</body>
+</html>

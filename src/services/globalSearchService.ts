@@ -313,77 +313,112 @@ class GlobalSearchService {
 
   async search(params: SearchParams): Promise<SearchResponse> {
     try {
-      // Try real API first, fallback to mock data
-      const realResults = await this.searchRealAPIs(params);
-      if (realResults.totalCount > 0) {
-        return realResults;
-      }
+      // Use only real API calls - no mock data fallback
+      return await this.searchRealAPIs(params);
     } catch (error) {
-      console.warn('Real API search failed, using mock data:', error);
+      console.error('Search API failed:', error);
+      // Return empty results on error instead of mock data
+      return {
+        results: [],
+        totalCount: 0,
+        currentPage: params.page || 1,
+        totalPages: 0,
+        suggestions: [],
+        relatedSearches: [],
+        facets: {
+          category: [],
+          price: [],
+          location: []
+        }
+      };
     }
-
-    // Fallback to enhanced mock data search
-    return this.searchMockData(params);
   }
 
   private async searchRealAPIs(params: SearchParams): Promise<SearchResponse> {
     const { query, type, filters = {}, page = 1, limit = 20 } = params;
 
-    const searchPromises = [];
+    // Use apiClient.search for unified search
+    try {
+      const response = await apiClient.search(query, type, filters) as any;
+      
+      // Transform API response to expected format
+      const results = this.transformApiResults(response.results || []);
+      
+      // Apply additional filters and sorting
+      const filteredResults = this.applyFiltersAndSort(results, filters, query);
+      
+      // Pagination
+      const startIndex = (page - 1) * limit;
+      const paginatedResults = filteredResults.slice(startIndex, startIndex + limit);
+      
+      return {
+        results: paginatedResults,
+        totalCount: filteredResults.length,
+        currentPage: page,
+        totalPages: Math.ceil(filteredResults.length / limit),
+        suggestions: await this.getSuggestions(query),
+        relatedSearches: this.generateRelatedSearches(query),
+        facets: this.generateFacets(filteredResults),
+      };
+    } catch (error) {
+      console.error('Unified search API failed:', error);
+      
+      // Fallback to individual API searches
+      const searchPromises = [];
 
-    // Search across all platform APIs simultaneously
-    if (!type || type === 'all' || type === 'users') {
-      searchPromises.push(this.searchUsers(query, filters));
-    }
-    if (!type || type === 'all' || type === 'products') {
-      searchPromises.push(this.searchProducts(query, filters));
-    }
-    if (!type || type === 'all' || type === 'services' || type === 'jobs') {
-      searchPromises.push(this.searchFreelance(query, filters));
-    }
-    if (!type || type === 'all' || type === 'posts') {
-      searchPromises.push(this.searchPosts(query, filters));
-    }
-    if (!type || type === 'all' || type === 'videos') {
-      searchPromises.push(this.searchVideos(query, filters));
-    }
-    if (!type || type === 'all' || type === 'crypto') {
-      searchPromises.push(this.searchCrypto(query, filters));
-    }
-
-    const searchResults = await Promise.allSettled(searchPromises);
-
-    // Combine results from all APIs
-    let allResults: SearchResult[] = [];
-    searchResults.forEach(result => {
-      if (result.status === 'fulfilled' && result.value) {
-        allResults = allResults.concat(result.value);
+      if (!type || type === 'all' || type === 'users') {
+        searchPromises.push(this.searchUsers(query, filters));
       }
-    });
+      if (!type || type === 'all' || type === 'products') {
+        searchPromises.push(this.searchProducts(query, filters));
+      }
+      if (!type || type === 'all' || type === 'services' || type === 'jobs') {
+        searchPromises.push(this.searchFreelance(query, filters));
+      }
+      if (!type || type === 'all' || type === 'posts') {
+        searchPromises.push(this.searchPosts(query, filters));
+      }
+      if (!type || type === 'all' || type === 'videos') {
+        searchPromises.push(this.searchVideos(query, filters));
+      }
+      if (!type || type === 'all' || type === 'crypto') {
+        searchPromises.push(this.searchCrypto(query, filters));
+      }
 
-    // Filter by type if specified
-    let results = allResults;
-    if (type && type !== 'all') {
-      const targetType = type.endsWith('s') ? type.slice(0, -1) : type;
-      results = results.filter((item) => item.type === targetType);
+      const searchResults = await Promise.allSettled(searchPromises);
+
+      // Combine results from all APIs
+      let allResults: SearchResult[] = [];
+      searchResults.forEach(result => {
+        if (result.status === 'fulfilled' && result.value) {
+          allResults = allResults.concat(result.value);
+        }
+      });
+
+      // Filter by type if specified
+      let results = allResults;
+      if (type && type !== 'all') {
+        const targetType = type.endsWith('s') ? type.slice(0, -1) : type;
+        results = results.filter((item) => item.type === targetType);
+      }
+
+      // Apply additional filters and sorting
+      results = this.applyFiltersAndSort(results, filters, query);
+
+      // Pagination
+      const startIndex = (page - 1) * limit;
+      const paginatedResults = results.slice(startIndex, startIndex + limit);
+
+      return {
+        results: paginatedResults,
+        totalCount: results.length,
+        currentPage: page,
+        totalPages: Math.ceil(results.length / limit),
+        suggestions: await this.getSuggestions(query),
+        relatedSearches: this.generateRelatedSearches(query),
+        facets: this.generateFacets(results),
+      };
     }
-
-    // Apply additional filters and sorting
-    results = this.applyFiltersAndSort(results, filters, query);
-
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const paginatedResults = results.slice(startIndex, startIndex + limit);
-
-    return {
-      results: paginatedResults,
-      totalCount: results.length,
-      currentPage: page,
-      totalPages: Math.ceil(results.length / limit),
-      suggestions: await this.getSuggestions(query),
-      relatedSearches: this.generateRelatedSearches(query),
-      facets: this.generateFacets(results),
-    };
   }
 
   private async searchMockData(params: SearchParams): Promise<SearchResponse> {

@@ -1,15 +1,23 @@
 // API client for server communication
 const BASE_URL = "/api";
 
+// Get auth token from localStorage
+const getAuthToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
 class ApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
+    const token = getAuthToken();
+    
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -150,6 +158,108 @@ class ApiClient {
   async checkFollowStatus(followerId: string, followingId: string) {
     return this.request(`/follow/check/${followerId}/${followingId}`);
   }
+
+  // Explore/Discovery methods
+  async getTrendingTopics(limit = 10) {
+    return this.request(`/explore/trending?limit=${limit}`);
+  }
+
+  async getSuggestedUsers(limit = 10) {
+    return this.request(`/explore/users?limit=${limit}`);
+  }
+
+  async getPopularHashtags(limit = 10) {
+    return this.request(`/explore/hashtags?limit=${limit}`);
+  }
+
+  async getGroups(limit = 20, offset = 0) {
+    return this.request(`/groups?limit=${limit}&offset=${offset}`);
+  }
+
+  async getPages(limit = 20, offset = 0) {
+    return this.request(`/pages?limit=${limit}&offset=${offset}`);
+  }
+
+  // Video methods
+  async getVideos(limit = 20, offset = 0, type = 'all') {
+    return this.request(`/videos?limit=${limit}&offset=${offset}&type=${type}`);
+  }
+
+  async getVideo(id: string) {
+    return this.request(`/videos/${id}`);
+  }
+
+  async getUserVideos(userId: string) {
+    return this.request(`/videos/user/${userId}`);
+  }
+
+  async createVideo(video: any) {
+    return this.request("/videos", {
+      method: "POST",
+      body: JSON.stringify(video),
+    });
+  }
+
+  async likeVideo(videoId: string) {
+    return this.request(`/videos/${videoId}/like`, {
+      method: "POST",
+    });
+  }
+
+  async unlikeVideo(videoId: string) {
+    return this.request(`/videos/${videoId}/like`, {
+      method: "DELETE",
+    });
+  }
+
+  // Search methods
+  async search(query: string, type?: string, filters?: any) {
+    const params = new URLSearchParams({ q: query });
+    if (type) params.append('type', type);
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    return this.request(`/search?${params.toString()}`);
+  }
+
+  // Marketplace methods
+  async getMarketplaceProducts(filters?: any) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    return this.request(`/marketplace/products?${params.toString()}`);
+  }
+
+  // Freelance methods
+  async getFreelanceJobs(filters?: any) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    return this.request(`/freelance/jobs?${params.toString()}`);
+  }
+
+  // Crypto methods
+  async getCryptoPrices() {
+    return this.request('/crypto/prices');
+  }
+
+  async getCryptoTrades() {
+    return this.request('/crypto/trades');
+  }
 }
 
 export const apiClient = new ApiClient();
@@ -161,9 +271,12 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     : endpoint.startsWith("/")
       ? `/api${endpoint}`
       : `/api/${endpoint}`;
+  
+  const token = getAuthToken();
   const config: RequestInit = {
     headers: {
       "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` }),
       ...options.headers,
     },
     ...options,
@@ -180,3 +293,6 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
 
   return response.json();
 }
+
+// Export token helper for other modules
+export { getAuthToken };
