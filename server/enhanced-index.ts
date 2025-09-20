@@ -115,8 +115,26 @@ console.log('🗄️ Database URL configured:', !!databaseUrl);
 
 // Security middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Allow for development
-  crossOriginEmbedderPolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "https:", "wss:"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: "same-origin" }
 }));
 
 // CORS configuration
@@ -132,23 +150,42 @@ app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Rate limiting
+// Rate limiting with enhanced security
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: process.env.NODE_ENV === 'development' ? 1000 : 100, // requests per window
-  message: { error: 'Too many requests, please try again later.' }
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  handler: (req, res) => {
+    logger.warn('Rate limit exceeded', {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+      path: req.path
+    });
+    res.status(429).json({
+      error: 'Too many requests, please try again later.',
+      retryAfter: Math.round(15 * 60) // seconds
+    });
+  }
 });
 app.use('/api/', limiter);
 
-// Session configuration
+// Session configuration with enhanced security
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-session-secret',
   resave: false,
   saveUninitialized: false,
+  name: 'sessionId', // Change default session name
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'strict' // CSRF protection
+  },
+  genid: () => {
+    // Generate cryptographically secure session IDs
+    return require('crypto').randomBytes(32).toString('hex');
   }
 }));
 
@@ -171,17 +208,37 @@ const upload = multer({
   storage,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
+    files: 10, // Maximum 10 files at once
+    fieldSize: 100 * 1024, // 100KB field size limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|mp4|avi|mov|pdf|doc|docx/;
-    const extname = allowedTypes.test(file.originalname.toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    // Enhanced security: check both extension and MIME type
+    const allowedMimeTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+      'video/mp4', 'video/avi', 'video/mov',
+      'application/pdf', 'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
     
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Invalid file type'));
+    const allowedExtensions = /\.(jpeg|jpg|png|gif|mp4|avi|mov|pdf|doc|docx)$/i;
+    
+    // Check MIME type
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      return cb(new Error(`Invalid file type: ${file.mimetype}`));
     }
+    
+    // Check file extension
+    if (!allowedExtensions.test(file.originalname)) {
+      return cb(new Error(`Invalid file extension: ${file.originalname}`));
+    }
+    
+    // Additional security: prevent malicious filenames
+    const filename = file.originalname.toLowerCase();
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      return cb(new Error('Invalid filename'));
+    }
+    
+    cb(null, true);
   }
 });
 
