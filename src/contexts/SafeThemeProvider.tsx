@@ -1,5 +1,5 @@
 import * as React from "react";
-import React from 'react';
+import * as React from 'react';
 import { ThemeProvider } from "./ThemeContext";
 
 // Create a safe version of useLayoutEffect that works on both client and server
