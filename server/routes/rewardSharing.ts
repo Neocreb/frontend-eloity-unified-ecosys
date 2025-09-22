@@ -1,6 +1,4 @@
 import express from 'express';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
 import { eq, and, desc, sql, count, sum } from 'drizzle-orm';
 import { authenticateToken } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
@@ -10,22 +8,15 @@ import {
   referral_events 
 } from '../../shared/enhanced-schema.js';
 import { users } from '../../shared/schema.js';
+import { db } from '../../server/enhanced-index.js'; // Use shared database connection
 
 const router = express.Router();
-
-// Initialize database connection
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
-
-const sql_client = neon(connectionString);
-const db = drizzle(sql_client);
 
 // Process automatic reward sharing
 router.post('/process-sharing', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    // Use req.userId instead of req.user?.id
+    const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -149,7 +140,8 @@ router.post('/process-sharing', authenticateToken, async (req, res) => {
 // Get user's sharing statistics
 router.get('/sharing-stats', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    // Use req.userId instead of req.user?.id
+    const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -206,19 +198,22 @@ router.get('/sharing-stats', authenticateToken, async (req, res) => {
     ));
 
     const stats = {
-      totalShared: Number(sharingStats[0]?.totalShared || 0),
-      totalReceived: Number(receivingStats[0]?.totalReceived || 0),
-      sharingTransactionsCount: Number(sharingStats[0]?.sharingTransactionsCount || 0),
-      receivingTransactionsCount: Number(receivingStats[0]?.receivingTransactionsCount || 0),
-      thisMonthShared: Number(thisMonthShared[0]?.amount || 0),
-      thisMonthReceived: Number(thisMonthReceived[0]?.amount || 0)
+      shared: {
+        total: Number(sharingStats[0]?.totalShared || 0),
+        transactions: Number(sharingStats[0]?.sharingTransactionsCount || 0),
+        thisMonth: Number(thisMonthShared[0]?.amount || 0)
+      },
+      received: {
+        total: Number(receivingStats[0]?.totalReceived || 0),
+        transactions: Number(receivingStats[0]?.receivingTransactionsCount || 0),
+        thisMonth: Number(thisMonthReceived[0]?.amount || 0)
+      }
     };
 
     res.json({
       success: true,
       data: stats
     });
-
   } catch (error) {
     logger.error('Error fetching sharing stats:', error);
     res.status(500).json({ error: 'Failed to fetch sharing stats' });
@@ -226,33 +221,18 @@ router.get('/sharing-stats', authenticateToken, async (req, res) => {
 });
 
 // Get sharing transaction history
-router.get('/sharing-history', authenticateToken, async (req, res) => {
+router.get('/transactions', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    // Use req.userId instead of req.user?.id
+    const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const { 
-      page = 1, 
-      limit = 20, 
-      type = 'all' 
-    } = req.query;
+    const { page = 1, limit = 20, type = 'all' } = req.query;
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    const offset = (Number(page) - 1) * Number(limit);
-
-    // Build filter based on type
-    let userFilter;
-    if (type === 'shared') {
-      userFilter = eq(reward_sharing_transactions.sharer_id, userId);
-    } else if (type === 'received') {
-      userFilter = eq(reward_sharing_transactions.recipient_id, userId);
-    } else {
-      userFilter = sql`(${reward_sharing_transactions.sharer_id} = ${userId} OR ${reward_sharing_transactions.recipient_id} = ${userId})`;
-    }
-
-    // Get transactions with user details
-    const transactions = await db.select({
+    let query = db.select({
       id: reward_sharing_transactions.id,
       sharer_id: reward_sharing_transactions.sharer_id,
       recipient_id: reward_sharing_transactions.recipient_id,
@@ -265,101 +245,90 @@ router.get('/sharing-history', authenticateToken, async (req, res) => {
       status: reward_sharing_transactions.status,
       metadata: reward_sharing_transactions.metadata,
       created_at: reward_sharing_transactions.created_at,
-      sharer_username: sql`sharer.username`,
-      recipient_username: sql`recipient.username`
+      updated_at: reward_sharing_transactions.updated_at
     })
     .from(reward_sharing_transactions)
-    .leftJoin(users.as('sharer'), eq(reward_sharing_transactions.sharer_id, sql`sharer.id`))
-    .leftJoin(users.as('recipient'), eq(reward_sharing_transactions.recipient_id, sql`recipient.id`))
-    .where(userFilter)
     .orderBy(desc(reward_sharing_transactions.created_at))
-    .limit(Number(limit))
+    .limit(parseInt(limit as string))
     .offset(offset);
 
-    // Get total count
-    const totalResult = await db.select({ count: count() })
-      .from(reward_sharing_transactions)
-      .where(userFilter);
-
-    const total = totalResult[0]?.count || 0;
-    const hasMore = offset + transactions.length < total;
-
-    res.json({
-      success: true,
-      data: {
-        transactions: transactions.map(t => ({
-          id: t.id,
-          sharer_id: t.sharer_id,
-          recipient_id: t.recipient_id,
-          original_reward_amount: Number(t.original_reward_amount),
-          shared_amount: Number(t.shared_amount),
-          sharing_percentage: Number(t.sharing_percentage),
-          transaction_type: t.transaction_type,
-          source_activity: t.source_activity,
-          activity_id: t.activity_id,
-          status: t.status,
-          metadata: t.metadata,
-          created_at: t.created_at,
-          sharer_username: t.sharer_username,
-          recipient_username: t.recipient_username,
-          is_shared_by_me: t.sharer_id === userId,
-          is_received_by_me: t.recipient_id === userId
-        })),
-        total,
-        hasMore,
-        page: Number(page),
-        limit: Number(limit)
-      }
-    });
-
-  } catch (error) {
-    logger.error('Error fetching sharing history:', error);
-    res.status(500).json({ error: 'Failed to fetch sharing history' });
-  }
-});
-
-// Get user's sharing settings
-router.get('/sharing-settings', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
+    // Apply type filter
+    if (type === 'sent') {
+      query = query.where(eq(reward_sharing_transactions.sharer_id, userId));
+    } else if (type === 'received') {
+      query = query.where(eq(reward_sharing_transactions.recipient_id, userId));
+    } else {
+      query = query.where(
+        or(
+          eq(reward_sharing_transactions.sharer_id, userId),
+          eq(reward_sharing_transactions.recipient_id, userId)
+        )
+      );
     }
 
-    // Check if user has active referral links with sharing enabled
-    const referralLinks = await db.select({
-      automatic_sharing_enabled: referral_links.automatic_sharing_enabled,
-      is_active: referral_links.is_active
+    const transactions = await query;
+
+    // Get total count for pagination
+    let countQuery = db.select({ count: count() })
+      .from(reward_sharing_transactions);
+
+    if (type === 'sent') {
+      countQuery = countQuery.where(eq(reward_sharing_transactions.sharer_id, userId));
+    } else if (type === 'received') {
+      countQuery = countQuery.where(eq(reward_sharing_transactions.recipient_id, userId));
+    } else {
+      countQuery = countQuery.where(
+        or(
+          eq(reward_sharing_transactions.sharer_id, userId),
+          eq(reward_sharing_transactions.recipient_id, userId)
+        )
+      );
+    }
+
+    const countResult = await countQuery;
+    const total = countResult[0]?.count || 0;
+
+    // Enrich with user information
+    const userIds = [
+      ...new Set([
+        ...transactions.map(t => t.sharer_id),
+        ...transactions.map(t => t.recipient_id)
+      ])
+    ];
+
+    const usersResult = await db.select({
+      id: users.id,
+      username: users.username,
+      full_name: users.full_name,
+      avatar_url: users.avatar_url
     })
-    .from(referral_links)
-    .where(eq(referral_links.referrer_id, userId));
+    .from(users)
+    .where(sql`${users.id} in ${userIds}`);
 
-    // Count eligible referrals
-    const eligibleReferrals = await db.select({ count: count() })
-      .from(referral_events)
-      .innerJoin(referral_links, eq(referral_events.referral_link_id, referral_links.id))
-      .where(and(
-        eq(referral_events.referrer_id, userId),
-        eq(referral_events.event_type, 'signup'),
-        eq(referral_events.is_reward_claimed, true),
-        eq(referral_links.automatic_sharing_enabled, true),
-        eq(referral_links.is_active, true)
-      ));
+    const usersMap = usersResult.reduce((acc, user) => {
+      acc[user.id] = user;
+      return acc;
+    }, {} as Record<string, any>);
 
-    const settings = {
-      automaticSharingEnabled: referralLinks.some(link => link.automatic_sharing_enabled && link.is_active),
-      sharingPercentage: 0.5, // Fixed at 0.5%
-      eligibleReferrals: eligibleReferrals[0]?.count || 0
-    };
+    const enrichedTransactions = transactions.map(transaction => ({
+      ...transaction,
+      sharer: usersMap[transaction.sharer_id] || { id: transaction.sharer_id, username: 'Unknown' },
+      recipient: usersMap[transaction.recipient_id] || { id: transaction.recipient_id, username: 'Unknown' }
+    }));
 
     res.json({
       success: true,
-      data: settings
+      data: enrichedTransactions,
+      pagination: {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit as string))
+      }
     });
-
   } catch (error) {
-    logger.error('Error fetching sharing settings:', error);
-    res.status(500).json({ error: 'Failed to fetch sharing settings' });
+    logger.error('Error fetching sharing transactions:', error);
+    res.status(500).json({ error: 'Failed to fetch sharing transactions' });
   }
 });
 

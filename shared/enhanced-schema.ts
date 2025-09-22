@@ -1,6 +1,118 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, numeric, integer, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './schema.js';
+import { users } from './schema';
+
+// Profiles table
+export const profiles = pgTable('profiles', {
+  user_id: uuid('user_id').primaryKey(),
+  username: text('username').unique().notNull(),
+  email: text('email').notNull(),
+  full_name: text('full_name'),
+  avatar_url: text('avatar_url'),
+  banner_url: text('banner_url'),
+  bio: text('bio'),
+  location: text('location'),
+  website: text('website'),
+  phone: text('phone'),
+  date_of_birth: text('date_of_birth'),
+  gender: text('gender'),
+  is_verified: boolean('is_verified').default(false),
+  points: integer('points').default(0),
+  level: text('level').default('bronze'),
+  role: text('role').default('user'),
+  reputation: integer('reputation').default(0),
+  followers_count: integer('followers_count').default(0),
+  following_count: integer('following_count').default(0),
+  posts_count: integer('posts_count').default(0),
+  profile_views: integer('profile_views').default(0),
+  is_online: boolean('is_online').default(false),
+  last_active: timestamp('last_active'),
+  profile_visibility: text('profile_visibility').default('public'),
+  show_email: boolean('show_email').default(false),
+  show_phone: boolean('show_phone').default(false),
+  allow_direct_messages: boolean('allow_direct_messages').default(true),
+  allow_notifications: boolean('allow_notifications').default(true),
+  preferred_currency: text('preferred_currency').default('USD'),
+  timezone: text('timezone'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Marketplace profiles table
+export const marketplace_profiles = pgTable('marketplace_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull(),
+  store_name: text('store_name'),
+  store_description: text('store_description'),
+  store_logo: text('store_logo'),
+  store_banner: text('store_banner'),
+  business_type: text('business_type').default('individual'),
+  business_registration: text('business_registration'),
+  tax_id: text('tax_id'),
+  return_policy: text('return_policy'),
+  shipping_policy: text('shipping_policy'),
+  store_rating: numeric('store_rating', { precision: 3, scale: 2 }).default('0'),
+  total_sales: integer('total_sales').default(0),
+  total_orders: integer('total_orders').default(0),
+  response_rate: numeric('response_rate', { precision: 5, scale: 2 }).default('0'),
+  response_time: text('response_time'),
+  is_active: boolean('is_active').default(true),
+  seller_level: text('seller_level').default('bronze'),
+  verification_status: text('verification_status').default('pending'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Freelance profiles table
+export const freelance_profiles = pgTable('freelance_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull(),
+  professional_title: text('professional_title'),
+  overview: text('overview'),
+  hourly_rate: numeric('hourly_rate', { precision: 8, scale: 2 }),
+  availability: text('availability').default('available'),
+  experience_level: text('experience_level').default('intermediate'),
+  portfolio_url: text('portfolio_url'),
+  resume_url: text('resume_url'),
+  languages: jsonb('languages'),
+  education: jsonb('education'),
+  certifications: jsonb('certifications'),
+  work_history: jsonb('work_history'),
+  services_offered: jsonb('services_offered'),
+  preferred_project_size: text('preferred_project_size'),
+  response_time: text('response_time'),
+  success_rate: numeric('success_rate', { precision: 5, scale: 2 }).default('0'),
+  total_earnings: numeric('total_earnings', { precision: 12, scale: 2 }).default('0'),
+  completed_projects: integer('completed_projects').default(0),
+  repeat_clients: integer('repeat_clients').default(0),
+  profile_completion: integer('profile_completion').default(0),
+  is_available: boolean('is_available').default(true),
+  is_featured: boolean('is_featured').default(false),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Crypto profiles table
+export const crypto_profiles = pgTable('crypto_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull(),
+  wallet_address: text('wallet_address').unique(),
+  wallet_provider: text('wallet_provider'),
+  kyc_status: text('kyc_status').default('pending'),
+  kyc_verified_at: timestamp('kyc_verified_at'),
+  trading_volume: numeric('trading_volume', { precision: 15, scale: 2 }).default('0'),
+  total_trades: integer('total_trades').default(0),
+  average_rating: numeric('average_rating', { precision: 3, scale: 2 }).default('0'),
+  is_verified_trader: boolean('is_verified_trader').default(false),
+  preferred_currencies: text('preferred_currencies').array(),
+  trading_pairs: jsonb('trading_pairs'),
+  risk_tolerance: text('risk_tolerance').default('medium'),
+  investment_strategy: text('investment_strategy'),
+  notification_preferences: jsonb('notification_preferences'),
+  security_settings: jsonb('security_settings'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
 
 // Products table
 export const products = pgTable('products', {
@@ -228,6 +340,30 @@ export const user_activity_sessions = pgTable('user_activity_sessions', {
   device_info: jsonb('device_info'),
   engagement_score: numeric('engagement_score', { precision: 5, scale: 2 }).default('0'),
   created_at: timestamp('created_at').defaultNow(),
+});
+
+// Freelance jobs table
+export const freelance_jobs = pgTable('freelance_jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  client_id: uuid('client_id').notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  category: text('category').notNull(),
+  subcategory: text('subcategory'),
+  budget_type: text('budget_type').notNull(),
+  budget_min: numeric('budget_min', { precision: 10, scale: 2 }),
+  budget_max: numeric('budget_max', { precision: 10, scale: 2 }),
+  budget_amount: numeric('budget_amount', { precision: 10, scale: 2 }),
+  deadline: timestamp('deadline'),
+  duration: text('duration'),
+  experience_level: text('experience_level').notNull(),
+  skills: text('skills').array().notNull(),
+  status: text('status').default('open'),
+  visibility: text('visibility').default('public'),
+  attachments: text('attachments').array(),
+  applications_count: integer('applications_count').default(0),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // Relations

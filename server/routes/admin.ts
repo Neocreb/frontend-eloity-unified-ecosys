@@ -1,7 +1,5 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
 import { 
   users, 
   posts, 
@@ -20,10 +18,7 @@ import {
   like 
 } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
-
-// Initialize database connection
-const sql_client = neon(process.env.DATABASE_URL || 'postgresql://mock:mock@localhost:5432/mock');
-const db = drizzle(sql_client);
+import { db } from '../../server/enhanced-index.js'; // Use shared database connection
 
 const router = express.Router();
 
@@ -97,7 +92,7 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
         admin_name: req.adminUser.full_name || 'Admin',
         action: 'content_moderation',
         description: 'Reviewed and approved content',
-        created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        created_at: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
       },
     ];
 
@@ -205,27 +200,31 @@ router.get('/users', authenticateAdmin, async (req, res) => {
       query = query.where(and(...conditions));
     }
 
-    const usersData = await query
+    // Apply pagination
+    query = query
       .orderBy(desc(users.created_at))
       .limit(Number(limit))
       .offset(offset);
 
-    // Get total count
+    const usersResult = await query;
+
+    // Get total count for pagination
     let countQuery = db.select({ count: count() }).from(users);
     if (conditions.length > 0) {
       countQuery = countQuery.where(and(...conditions));
     }
-    const totalResult = await countQuery;
+    const countResult = await countQuery;
+    const total = countResult[0].count;
 
     res.json({
       success: true,
-      data: usersData,
+      data: usersResult,
       pagination: {
         page: Number(page),
         limit: Number(limit),
-        total: totalResult[0].count,
-        totalPages: Math.ceil(totalResult[0].count / Number(limit))
-      }
+        total,
+        totalPages: Math.ceil(total / Number(limit)),
+      },
     });
   } catch (error) {
     logger.error('Error fetching users:', error);
@@ -236,122 +235,132 @@ router.get('/users', authenticateAdmin, async (req, res) => {
   }
 });
 
-// =============================================================================
-// MOCK ENDPOINTS FOR FEATURES NOT YET IMPLEMENTED
-// =============================================================================
+// Get user details
+router.get('/users/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
 
-// KYC Management
-router.get('/kyc/verifications', authenticateAdmin, async (req, res) => {
-  const mockVerifications = [
-    {
-      id: 'kyc-001',
-      userId: 'user-123',
-      userName: 'John Doe',
-      userEmail: 'john.doe@example.com',
-      level: 1,
-      status: 'pending',
-      verificationScore: 0.85,
-      riskLevel: 'low',
-      submittedAt: new Date().toISOString(),
+    const userResult = await db.select({
+      id: users.id,
+      username: users.username,
+      fullName: users.full_name,
+      email: users.email,
+      role: users.role,
+      isVerified: users.is_verified,
+      points: users.points,
+      level: users.level,
+      isOnline: users.is_online,
+      lastActiveAt: users.last_active,
+      createdAt: users.created_at,
+      updatedAt: users.updated_at,
+      bio: users.bio,
+      location: users.location,
+      website: users.website,
+      avatarUrl: users.avatar_url,
+      bannerUrl: users.banner_url,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+
+    if (!userResult.length) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
     }
-  ];
-  
-  res.json({ success: true, data: mockVerifications, pagination: { page: 1, limit: 10, total: 1, totalPages: 1 } });
+
+    res.json({
+      success: true,
+      data: userResult[0],
+    });
+  } catch (error) {
+    logger.error('Error fetching user details:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch user details' 
+    });
+  }
 });
 
-router.put('/kyc/verifications/:id', authenticateAdmin, async (req, res) => {
-  res.json({ success: true, message: 'KYC verification updated successfully' });
+// Update user
+router.put('/users/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, isVerified } = req.body;
+
+    const updateData: any = {};
+    if (role !== undefined) updateData.role = role;
+    if (isVerified !== undefined) updateData.is_verified = isVerified;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No update data provided' 
+      });
+    }
+
+    updateData.updated_at = new Date();
+
+    const result = await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+
+    if (!result.length) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result[0],
+      message: 'User updated successfully',
+    });
+  } catch (error) {
+    logger.error('Error updating user:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to update user' 
+    });
+  }
 });
 
-// Financial Management
-router.get('/financial/overview', authenticateAdmin, async (req, res) => {
-  const mockData = {
-    metrics: { totalRevenue: 125000, totalTransactions: 1250, averageTransaction: 100, successRate: 98.5 },
-    revenueChart: [{ date: '2024-01-01', revenue: 5000 }],
-    transactionsByStatus: [{ status: 'completed', count: 1230, amount: 123000 }]
-  };
-  
-  res.json({ success: true, data: mockData });
-});
+// Delete user
+router.delete('/users/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
 
-router.get('/financial/transactions', authenticateAdmin, async (req, res) => {
-  const mockTransactions = [{
-    id: 'txn-001',
-    amount: 150.00,
-    currency: 'USD',
-    status: 'completed',
-    type: 'marketplace_sale',
-    description: 'Product purchase',
-    createdAt: new Date().toISOString(),
-  }];
-  
-  res.json({ success: true, data: mockTransactions, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
-});
+    // Check if user exists
+    const userResult = await db.select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
-// Chat Moderation
-router.get('/chat/flagged-messages', authenticateAdmin, async (req, res) => {
-  const mockMessages = [{
-    id: 'msg-001',
-    content: 'Flagged message content',
-    senderId: 'user-123',
-    flaggedReason: 'inappropriate_content',
-    aiConfidence: 0.85,
-    moderationStatus: 'pending',
-    createdAt: new Date().toISOString(),
-    sender: { name: 'John Doe', email: 'john@example.com' }
-  }];
-  
-  res.json({ success: true, data: mockMessages, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
-});
+    if (!userResult.length) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
 
-router.put('/chat/messages/:id/moderate', authenticateAdmin, async (req, res) => {
-  res.json({ success: true, message: 'Message moderated successfully' });
-});
+    // Delete user
+    await db.delete(users)
+      .where(eq(users.id, id));
 
-// Boost Management
-router.get('/boosts/campaigns', authenticateAdmin, async (req, res) => {
-  const mockCampaigns = [{
-    id: 'boost-001',
-    title: 'Product Promotion Campaign',
-    type: 'product_boost',
-    status: 'active',
-    budget: 500.00,
-    spent: 250.75,
-    impressions: 15000,
-    clicks: 450,
-    conversions: 23,
-    createdAt: new Date().toISOString(),
-    creator: { name: 'John Merchant', email: 'merchant@example.com' }
-  }];
-  
-  res.json({ success: true, data: mockCampaigns, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
-});
-
-router.put('/boosts/campaigns/:id', authenticateAdmin, async (req, res) => {
-  res.json({ success: true, message: 'Boost campaign updated successfully' });
-});
-
-// System Health
-router.get('/system/metrics', authenticateAdmin, async (req, res) => {
-  const mockMetrics = {
-    systemMetrics: {
-      cpu: 45,
-      memory: 62,
-      disk: 78,
-      network: 150,
-      apiLatency: 120,
-      errorRate: 0.02,
-      activeConnections: 75,
-      requestsPerMinute: 750,
-    },
-    services: [
-      { name: 'Database', status: 'healthy', uptime: '99.9%' },
-      { name: 'API Server', status: 'healthy', uptime: '99.8%' },
-    ],
-    timestamp: new Date().toISOString(),
-  };
-  
-  res.json({ success: true, data: mockMetrics });
+    res.json({
+      success: true,
+      message: 'User deleted successfully',
+    });
+  } catch (error) {
+    logger.error('Error deleting user:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to delete user' 
+    });
+  }
 });
 
 export default router;

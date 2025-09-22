@@ -15,9 +15,10 @@ import { WebSocketServer } from 'ws';
 import multer from 'multer';
 import dotenv from 'dotenv';
 import winston from 'winston';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import { eq, and, or, desc, asc, like, sql, count, ilike } from 'drizzle-orm';
+import { randomUUID } from 'crypto'; // Import crypto module
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +33,31 @@ import {
   user_sessions,
   user_preferences 
 } from '../shared/schema.js';
+
+import { 
+  profiles,
+  marketplace_profiles,
+  freelance_profiles,
+  crypto_profiles,
+  products,
+  orders,
+  order_items,
+  product_reviews,
+  shopping_cart,
+  product_categories,
+  wishlist,
+  store_profiles,
+  referral_links,
+  referral_events,
+  reward_sharing_transactions,
+  pioneer_badges,
+  user_activity_sessions,
+  freelance_jobs
+} from '../shared/enhanced-schema.js';
+
+import { 
+  freelance_proposals
+} from '../shared/freelance-schema.js';
 
 // Import route handlers
 import paymentsRouter from './routes/payments.js';
@@ -53,24 +79,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Initialize database connection
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
+const databaseUrl = process.env.DATABASE_URL || 'postgresql://mock:mock@localhost:5432/mock';
+if (!process.env.DATABASE_URL) {
   console.warn('⚠️  DATABASE_URL not set. Using development fallback.');
   console.warn('⚠️  For production use, please set up a proper database.');
   console.warn('⚠️  Consider connecting to Neon database for persistent storage.');
-
-  // Use a mock/fallback for development when no database is available
-  process.env.DATABASE_URL = 'postgresql://mock:mock@localhost:5432/mock';
 }
 
-let sql_client, db;
+let client, db;
+let useMockData = false;
+
 try {
-  sql_client = neon(process.env.DATABASE_URL);
-  db = drizzle(sql_client);
+  // Use postgres-js for Supabase connection with additional connection options
+  client = postgres(databaseUrl, { 
+    ssl: {
+      rejectUnauthorized: false
+    },
+    connect_timeout: 20,
+    idle_timeout: 30,
+    max_lifetime: 60 * 60
+  });
+  db = drizzle(client);
+  
+  // Test the connection
+  console.log('🔄 Testing database connection...');
+  await client`SELECT 1`;
   console.log('✅ Database connection initialized');
 } catch (error) {
   console.error('❌ Database connection failed:', error.message);
-  console.warn('��️  Running in mock mode. Some features may not work.');
+  console.warn('⚠️  Running in mock mode. Some features may not work.');
+  useMockData = true;
 
   // Create a mock database object for development
   db = {
@@ -80,6 +118,12 @@ try {
     delete: () => ({ where: () => ({ execute: async () => [] }) })
   };
 }
+
+// Make mock mode status available globally
+global.useMockData = useMockData;
+
+// Export the database connection for use in routes
+export { db };
 
 // Configure logger
 const logger = winston.createLogger({
@@ -103,7 +147,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Create HTTP server and WebSocket server
 const server = createServer(app);
@@ -185,8 +229,8 @@ app.use(session({
     sameSite: 'strict' // CSRF protection
   },
   genid: () => {
-    // Generate cryptographically secure session IDs
-    return require('crypto').randomBytes(32).toString('hex');
+    // Generate cryptographically secure session IDs using crypto module
+    return randomUUID();
   }
 }));
 
@@ -276,6 +320,11 @@ const authenticateToken = async (req: any, res: any, next: any) => {
       return res.status(401).json({ error: 'Invalid token type' });
     }
 
+    // Type guard for userId
+    if (typeof decoded.userId !== 'string') {
+      return res.status(401).json({ error: 'Invalid user ID in token' });
+    }
+
     req.userId = decoded.userId;
     next();
   } catch (error) {
@@ -315,8 +364,10 @@ if (process.env.NODE_ENV === 'production') {
 
 app.get('/api/health', async (req, res) => {
   try {
-    // Test database connection
-    await db.select().from(users).limit(1);
+    // Test database connection only if not in mock mode
+    if (!global.useMockData) {
+      await db.select().from(users).limit(1);
+    }
     
     res.json({
       status: 'OK',
@@ -324,7 +375,7 @@ app.get('/api/health', async (req, res) => {
       timestamp: new Date().toISOString(),
       version: '2.0.0',
       environment: process.env.NODE_ENV,
-      database: 'connected',
+      database: global.useMockData ? 'mock' : 'connected',
       features: {
         payments: 'enabled',
         video: 'enabled',
@@ -548,6 +599,11 @@ app.post('/api/auth/signin', async (req, res) => {
 
 app.post('/api/auth/signout', authenticateToken, async (req, res) => {
   try {
+    // Type guard for userId
+    if (typeof req.userId !== 'string') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     // Deactivate user sessions
     await db.update(user_sessions)
       .set({ is_active: false })
@@ -600,11 +656,14 @@ app.use('/uploads', express.static('uploads'));
 // WEBSOCKET FOR REAL-TIME FEATURES
 // =============================================================================
 
-const activeConnections = new Map();
+// Create a map to store active connections
+const activeConnections = new Map<string, WebSocket>();
 
+// Handle WebSocket connections
 wss.on('connection', (ws, req) => {
   console.log('New WebSocket connection');
 
+  // Handle incoming messages
   ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message.toString());
@@ -613,9 +672,13 @@ wss.on('connection', (ws, req) => {
         case 'authenticate':
           try {
             const decoded = jwt.verify(data.token, process.env.JWT_SECRET || 'your-jwt-secret') as any;
-            ws.userId = decoded.userId;
-            activeConnections.set(decoded.userId, ws);
-            ws.send(JSON.stringify({ type: 'authenticated', success: true }));
+            if (typeof decoded.userId === 'string') {
+              (ws as any).userId = decoded.userId;
+              activeConnections.set(decoded.userId, ws);
+              ws.send(JSON.stringify({ type: 'authenticated', success: true }));
+            } else {
+              ws.send(JSON.stringify({ type: 'authenticated', success: false, error: 'Invalid user ID' }));
+            }
           } catch (error) {
             ws.send(JSON.stringify({ type: 'authenticated', success: false, error: 'Invalid token' }));
           }
@@ -626,7 +689,7 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'chat_message':
-          if (ws.userId) {
+          if ((ws as any).userId) {
             // Broadcast to conversation participants
             // Implementation would involve checking conversation participants
             // and sending to their active connections
@@ -634,9 +697,9 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'live_stream_join':
-          if (ws.userId && data.streamId) {
+          if ((ws as any).userId && data.streamId) {
             // Join live stream room
-            ws.streamId = data.streamId;
+            (ws as any).streamId = data.streamId;
             ws.send(JSON.stringify({ 
               type: 'stream_joined', 
               streamId: data.streamId,
@@ -646,9 +709,9 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'trading_subscribe':
-          if (ws.userId && data.symbols) {
+          if ((ws as any).userId && data.symbols) {
             // Subscribe to trading pairs
-            ws.tradingSymbols = data.symbols;
+            (ws as any).tradingSymbols = data.symbols;
             ws.send(JSON.stringify({ 
               type: 'trading_subscribed', 
               symbols: data.symbols 
@@ -665,13 +728,15 @@ wss.on('connection', (ws, req) => {
     }
   });
 
+  // Handle connection close
   ws.on('close', () => {
     console.log('WebSocket connection closed');
-    if (ws.userId) {
-      activeConnections.delete(ws.userId);
+    if ((ws as any).userId) {
+      activeConnections.delete((ws as any).userId);
     }
   });
 
+  // Handle errors
   ws.on('error', (error) => {
     console.error('WebSocket error:', error);
   });
@@ -681,7 +746,7 @@ wss.on('connection', (ws, req) => {
 function getStreamViewerCount(streamId: string): number {
   let count = 0;
   activeConnections.forEach((ws) => {
-    if (ws.streamId === streamId) {
+    if ((ws as any).streamId === streamId) {
       count++;
     }
   });
@@ -752,7 +817,7 @@ server.listen(PORT, () => {
     console.log(`🔧 Development mode: Static files served by Vite (port 8080)`);
   }
 
-  console.log(`🌐 API endpoints available at: http://localhost:${PORT}/api`);
+  console.log(` Geli API endpoints available at: http://localhost:${PORT}/api`);
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
   console.log(`📊 Comprehensive Features:`);
   console.log(`   💳 Payments: African processors (Flutterwave, Paystack, MTN MoMo)`);

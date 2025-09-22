@@ -72,6 +72,7 @@ const ContentModeration = () => {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [isUsingMockData, setIsUsingMockData] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const notification = useNotification();
 
@@ -88,6 +89,7 @@ const ContentModeration = () => {
   const initializeModeration = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       setIsUsingMockData(false);
 
       // Get current admin
@@ -112,7 +114,45 @@ const ContentModeration = () => {
         : typeof error === 'string'
         ? error
         : "Failed to load moderation queue";
+      setError(errorMessage);
       notification.error(`Error fetching pending moderation: ${errorMessage}`);
+      
+      // Set mock data as fallback
+      setModerationItems([
+        {
+          id: "mock-1",
+          contentId: "content-123",
+          contentType: "post",
+          status: "pending",
+          reason: "Inappropriate content",
+          description: "User reported this post for containing inappropriate language",
+          priority: "medium",
+          reportedBy: "user-456",
+          autoDetected: false,
+          confidence: 0.8,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          reviewedBy: null,
+          reviewedAt: null,
+          reviewNotes: null,
+        },
+        {
+          id: "mock-2",
+          contentId: "content-789",
+          contentType: "comment",
+          status: "pending",
+          reason: "Spam",
+          description: "Automated detection flagged this as potential spam",
+          priority: "high",
+          reportedBy: null,
+          autoDetected: true,
+          confidence: 0.95,
+          createdAt: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+          reviewedBy: null,
+          reviewedAt: null,
+          reviewNotes: null,
+        },
+      ]);
+      setIsUsingMockData(true);
     } finally {
       setIsLoading(false);
     }

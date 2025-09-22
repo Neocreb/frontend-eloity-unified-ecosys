@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, integer } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './schema.js';
+import { users } from './schema';
 
 // Admin permissions table
 export const admin_permissions = pgTable('admin_permissions', {
@@ -234,3 +234,4 @@ export const announcementsRelations = relations(announcements, ({ one }) => ({
     references: [users.id],
   }),
 }));
+

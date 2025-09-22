@@ -56,6 +56,7 @@ const PlatformSettings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(null);
   const [pendingChanges, setPendingChanges] = useState<Record<string, any>>({});
+  const [error, setError] = useState<string | null>(null);
 
   const notification = useNotification();
 
@@ -66,6 +67,7 @@ const PlatformSettings = () => {
   const initializeSettings = async () => {
     try {
       setIsLoading(true);
+      setError(null);
 
       // Get current admin
       const adminData = localStorage.getItem("admin_user");
@@ -81,7 +83,40 @@ const PlatformSettings = () => {
       setSettingGroups(grouped);
     } catch (error) {
       console.error("Error loading settings:", error);
-      notification.error("Failed to load platform settings");
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+        ? error
+        : "Failed to load platform settings";
+      setError(errorMessage);
+      notification.error(`Error loading settings: ${errorMessage}`);
+      
+      // Set mock data as fallback
+      const mockSettings: PlatformSetting[] = [
+        {
+          id: "setting-1",
+          key: "platform_name",
+          value: "Eloity Platform",
+          category: "general",
+          description: "Platform display name",
+          isPublic: true,
+          lastModifiedBy: "system",
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "setting-2",
+          key: "maintenance_mode",
+          value: false,
+          category: "general",
+          description: "Enable maintenance mode",
+          isPublic: false,
+          lastModifiedBy: "system",
+          updatedAt: new Date().toISOString(),
+        }
+      ];
+      
+      const grouped = groupSettingsByCategory(mockSettings);
+      setSettingGroups(grouped);
     } finally {
       setIsLoading(false);
     }

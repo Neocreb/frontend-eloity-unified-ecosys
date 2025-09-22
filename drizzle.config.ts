@@ -1,6 +1,12 @@
 import { defineConfig } from "drizzle-kit";
 
-if (!process.env.DATABASE_URL) {
+// Use the standard Supabase URL instead of the db. subdomain
+const standardDatabaseUrl = process.env.DATABASE_URL?.replace(
+  'db.', 
+  ''
+);
+
+if (!standardDatabaseUrl) {
   throw new Error("DATABASE_URL, ensure the database is provisioned");
 }
 
@@ -19,6 +25,6 @@ export default defineConfig({
   ],
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: standardDatabaseUrl,
   },
 });

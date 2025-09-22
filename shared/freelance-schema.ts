@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, numeric, integer } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './schema.js';
+import { users } from './schema';
 
 // Freelance projects table
 export const freelance_projects = pgTable('freelance_projects', {

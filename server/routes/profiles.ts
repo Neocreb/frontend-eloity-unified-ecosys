@@ -1,6 +1,11 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
+import { db } from '../../server/enhanced-index.js';
+import { users, followers, posts as schemaPosts } from '../../shared/schema.js';
+import { profiles, marketplace_profiles, freelance_profiles, products as schemaProducts } from '../../shared/enhanced-schema.js';
+import { crypto_profiles } from '../../shared/crypto-schema.js';
+import { eq, and, or, desc, asc, like, sql, count } from 'drizzle-orm';
 
 const router = express.Router();
 
@@ -10,28 +15,51 @@ router.get('/:identifier', async (req, res) => {
     const { identifier } = req.params;
     const isUserId = identifier.startsWith('user_') || identifier.length > 20;
 
-    // TODO: Replace with real database query
+    // Query the database for the user profile
+    let userQuery;
+    if (isUserId) {
+      userQuery = db.select().from(profiles).where(eq(profiles.user_id, identifier as string));
+    } else {
+      userQuery = db.select().from(profiles).where(eq(profiles.username, identifier as string));
+    }
+
+    const userResult = await userQuery.execute();
+    const userData = userResult[0];
+
+    if (!userData) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get related profiles
+    const marketplaceResult = await db.select().from(marketplace_profiles).where(eq(marketplace_profiles.user_id, userData.user_id as string)).execute();
+    const freelanceResult = await db.select().from(freelance_profiles).where(eq(freelance_profiles.user_id, userData.user_id as string)).execute();
+    const cryptoResult = await db.select().from(crypto_profiles).where(eq(crypto_profiles.user_id, userData.user_id as string)).execute();
+
+    // Get follower counts
+    const followersCountResult = await db.select({ count: count() }).from(followers).where(eq(followers.following_id, userData.user_id as string)).execute();
+    const followingCountResult = await db.select({ count: count() }).from(followers).where(eq(followers.follower_id, userData.user_id as string)).execute();
+
     const profile = {
-      id: isUserId ? identifier : `user_${identifier}`,
-      username: isUserId ? `user_${Date.now()}` : identifier,
-      email: `${identifier}@example.com`,
-      displayName: identifier.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      bio: `This is the bio for ${identifier}`,
-      avatar: '/placeholder.svg',
-      cover_image: '/placeholder.svg',
-      location: 'Global',
-      website: `https://${identifier}.com`,
-      verified: Math.random() > 0.7,
+      id: userData.user_id,
+      username: userData.username,
+      email: userData.email,
+      displayName: userData.full_name || userData.username,
+      bio: userData.bio,
+      avatar: userData.avatar_url,
+      cover_image: userData.banner_url,
+      location: userData.location,
+      website: userData.website,
+      verified: userData.is_verified || false,
       privacy_settings: {
-        profile_visibility: 'public',
-        show_email: false,
-        show_phone: false
+        profile_visibility: userData.profile_visibility || 'public',
+        show_email: userData.show_email || false,
+        show_phone: userData.show_phone || false
       },
       stats: {
-        followers_count: Math.floor(Math.random() * 1000) + 50,
-        following_count: Math.floor(Math.random() * 500) + 25,
-        posts_count: Math.floor(Math.random() * 100) + 10,
-        likes_received: Math.floor(Math.random() * 5000) + 100
+        followers_count: followersCountResult[0]?.count || 0,
+        following_count: followingCountResult[0]?.count || 0,
+        posts_count: userData.posts_count || 0,
+        likes_received: userData.likes_received || 0
       },
       social_profiles: {
         facebook: null,
@@ -39,34 +67,16 @@ router.get('/:identifier', async (req, res) => {
         instagram: null,
         linkedin: null
       },
-      marketplace_profile: {
-        is_seller: Math.random() > 0.5,
-        store_name: `${identifier}'s Store`,
-        rating: (Math.random() * 2 + 3).toFixed(1),
-        total_sales: Math.floor(Math.random() * 100),
-        products_count: Math.floor(Math.random() * 50)
-      },
-      freelance_profile: {
-        is_freelancer: Math.random() > 0.6,
-        title: `${identifier} - Professional Freelancer`,
-        hourly_rate: Math.floor(Math.random() * 100) + 25,
-        rating: (Math.random() * 2 + 3).toFixed(1),
-        completed_projects: Math.floor(Math.random() * 50),
-        skills: ['JavaScript', 'Python', 'Design', 'Marketing'].slice(0, Math.floor(Math.random() * 4) + 1)
-      },
-      crypto_profile: {
-        is_trader: Math.random() > 0.7,
-        trade_volume: Math.floor(Math.random() * 100000),
-        successful_trades: Math.floor(Math.random() * 200),
-        trust_score: Math.floor(Math.random() * 40) + 60
-      },
+      marketplace_profile: marketplaceResult[0] || null,
+      freelance_profile: freelanceResult[0] || null,
+      crypto_profile: cryptoResult[0] || null,
       activity: {
-        last_seen: new Date().toISOString(),
-        is_online: Math.random() > 0.5,
-        total_activity_points: Math.floor(Math.random() * 10000) + 500
+        last_seen: userData.last_active || new Date().toISOString(),
+        is_online: userData.is_online || false,
+        total_activity_points: userData.points || 0
       },
-      created_at: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: userData.created_at,
+      updated_at: userData.updated_at
     };
 
     logger.info('Profile fetched', { identifier, profileId: profile.id });
@@ -80,30 +90,51 @@ router.get('/:identifier', async (req, res) => {
 // Get current user profile
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId as string;
 
-    // TODO: Replace with real database query
+    // Type guard
+    if (typeof userId !== 'string') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Query the database for the user profile
+    const userResult = await db.select().from(profiles).where(eq(profiles.user_id, userId)).execute();
+    const userData = userResult[0];
+
+    if (!userData) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get related profiles
+    const marketplaceResult = await db.select().from(marketplace_profiles).where(eq(marketplace_profiles.user_id, userId)).execute();
+    const freelanceResult = await db.select().from(freelance_profiles).where(eq(freelance_profiles.user_id, userId)).execute();
+    const cryptoResult = await db.select().from(crypto_profiles).where(eq(crypto_profiles.user_id, userId)).execute();
+
+    // Get follower counts
+    const followersCountResult = await db.select({ count: count() }).from(followers).where(eq(followers.following_id, userId)).execute();
+    const followingCountResult = await db.select({ count: count() }).from(followers).where(eq(followers.follower_id, userId)).execute();
+
     const profile = {
-      id: userId,
-      username: 'current_user',
-      email: 'user@example.com',
-      displayName: 'Current User',
-      bio: 'This is my bio',
-      avatar: '/placeholder.svg',
-      cover_image: '/placeholder.svg',
-      location: 'Global',
-      website: null,
-      verified: false,
+      id: userData.user_id,
+      username: userData.username,
+      email: userData.email,
+      displayName: userData.full_name || userData.username,
+      bio: userData.bio,
+      avatar: userData.avatar_url,
+      cover_image: userData.banner_url,
+      location: userData.location,
+      website: userData.website,
+      verified: userData.is_verified || false,
       privacy_settings: {
-        profile_visibility: 'public',
-        show_email: false,
-        show_phone: false
+        profile_visibility: userData.profile_visibility || 'public',
+        show_email: userData.show_email || false,
+        show_phone: userData.show_phone || false
       },
       stats: {
-        followers_count: 125,
-        following_count: 89,
-        posts_count: 45,
-        likes_received: 1234
+        followers_count: followersCountResult[0]?.count || 0,
+        following_count: followingCountResult[0]?.count || 0,
+        posts_count: userData.posts_count || 0,
+        likes_received: userData.likes_received || 0
       },
       social_profiles: {
         facebook: null,
@@ -111,34 +142,16 @@ router.get('/me', authenticateToken, async (req, res) => {
         instagram: null,
         linkedin: null
       },
-      marketplace_profile: {
-        is_seller: true,
-        store_name: 'My Store',
-        rating: '4.5',
-        total_sales: 23,
-        products_count: 12
-      },
-      freelance_profile: {
-        is_freelancer: true,
-        title: 'Full Stack Developer',
-        hourly_rate: 50,
-        rating: '4.8',
-        completed_projects: 15,
-        skills: ['JavaScript', 'React', 'Node.js', 'Python']
-      },
-      crypto_profile: {
-        is_trader: false,
-        trade_volume: 0,
-        successful_trades: 0,
-        trust_score: 75
-      },
+      marketplace_profile: marketplaceResult[0] || null,
+      freelance_profile: freelanceResult[0] || null,
+      crypto_profile: cryptoResult[0] || null,
       activity: {
-        last_seen: new Date().toISOString(),
-        is_online: true,
-        total_activity_points: 2500
+        last_seen: userData.last_active || new Date().toISOString(),
+        is_online: userData.is_online || false,
+        total_activity_points: userData.points || 0
       },
-      created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: userData.created_at,
+      updated_at: userData.updated_at
     };
 
     logger.info('Current user profile fetched', { userId });
@@ -152,7 +165,13 @@ router.get('/me', authenticateToken, async (req, res) => {
 // Update user profile
 router.put('/me', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId as string;
+    
+    // Type guard
+    if (typeof userId !== 'string') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const {
       displayName,
       bio,
@@ -162,16 +181,40 @@ router.put('/me', authenticateToken, async (req, res) => {
       social_profiles
     } = req.body;
 
-    // TODO: Validate input and update in database
-    const updatedProfile = {
-      id: userId,
-      displayName,
+    // Update profile in database
+    const updateData = {
+      full_name: displayName,
       bio,
       location,
       website,
-      privacy_settings,
-      social_profiles,
-      updated_at: new Date().toISOString()
+      profile_visibility: privacy_settings?.profile_visibility,
+      show_email: privacy_settings?.show_email,
+      show_phone: privacy_settings?.show_phone,
+      updated_at: new Date()
+    };
+
+    const result = await db.update(profiles)
+      .set(updateData)
+      .where(eq(profiles.user_id, userId))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const updatedProfile = {
+      id: result[0].user_id,
+      displayName: result[0].full_name,
+      bio: result[0].bio,
+      location: result[0].location,
+      website: result[0].website,
+      privacy_settings: {
+        profile_visibility: result[0].profile_visibility,
+        show_email: result[0].show_email,
+        show_phone: result[0].show_phone
+      },
+      updated_at: result[0].updated_at
     };
 
     logger.info('Profile updated', { userId });
@@ -185,11 +228,27 @@ router.put('/me', authenticateToken, async (req, res) => {
 // Upload profile avatar
 router.post('/me/avatar', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId as string;
     
-    // TODO: Handle file upload to S3
-    // For now, return a placeholder URL
+    // Type guard
+    if (typeof userId !== 'string') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // In a real implementation, you would handle file upload to S3 or similar
+    // For now, we'll just update the avatar URL in the database
     const avatarUrl = `/api/uploads/avatars/${userId}_${Date.now()}.jpg`;
+
+    // Update avatar URL in database
+    const result = await db.update(profiles)
+      .set({ avatar_url: avatarUrl, updated_at: new Date() })
+      .where(eq(profiles.user_id, userId))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     logger.info('Avatar uploaded', { userId, avatarUrl });
     res.json({ avatar_url: avatarUrl });
@@ -202,10 +261,26 @@ router.post('/me/avatar', authenticateToken, async (req, res) => {
 // Upload cover image
 router.post('/me/cover', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId as string;
     
-    // TODO: Handle file upload to S3
+    // Type guard
+    if (typeof userId !== 'string') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // In a real implementation, you would handle file upload to S3 or similar
     const coverUrl = `/api/uploads/covers/${userId}_${Date.now()}.jpg`;
+
+    // Update cover URL in database
+    const result = await db.update(profiles)
+      .set({ banner_url: coverUrl, updated_at: new Date() })
+      .where(eq(profiles.user_id, userId))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     logger.info('Cover image uploaded', { userId, coverUrl });
     res.json({ cover_url: coverUrl });
@@ -221,29 +296,54 @@ router.get('/:identifier/posts', async (req, res) => {
     const { identifier } = req.params;
     const { page = 1, limit = 10, type = 'all' } = req.query;
 
-    // TODO: Replace with real database query
+    // First get the user ID
+    const isUserId = identifier.startsWith('user_') || identifier.length > 20;
+    let userId;
+    
+    if (isUserId) {
+      userId = identifier;
+    } else {
+      const userResult = await db.select().from(profiles).where(eq(profiles.username, identifier)).execute();
+      if (userResult.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      userId = userResult[0].user_id;
+    }
+
+    // Get user's posts from database
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+    
+    const postsResult = await db.select().from(schemaPosts)
+      .where(eq(schemaPosts.user_id, userId))
+      .orderBy(desc(schemaPosts.created_at))
+      .limit(parseInt(limit as string))
+      .offset(offset)
+      .execute();
+
+    // Get user profile for author information
+    const userResult = await db.select().from(profiles).where(eq(profiles.user_id, userId)).execute();
+    const userData = userResult[0];
+
     const posts = {
-      data: [
-        {
-          id: 'post_1',
-          author: {
-            id: `user_${identifier}`,
-            username: identifier,
-            displayName: identifier.replace('_', ' '),
-            avatar: '/placeholder.svg'
-          },
-          content: `Sample post from ${identifier}`,
-          type: 'text',
-          likes_count: 10,
-          comments_count: 2,
-          created_at: new Date().toISOString()
-        }
-      ],
+      data: postsResult.map(post => ({
+        id: post.id,
+        author: {
+          id: userData.user_id,
+          username: userData.username,
+          displayName: userData.full_name || userData.username,
+          avatar: userData.avatar_url
+        },
+        content: post.content,
+        type: post.type,
+        likes_count: post.likes_count || 0,
+        comments_count: post.comments_count || 0,
+        created_at: post.created_at
+      })),
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: 1,
-        totalPages: 1
+        total: postsResult.length,
+        totalPages: Math.ceil(postsResult.length / parseInt(limit as string))
       }
     };
 
@@ -261,32 +361,62 @@ router.get('/:identifier/products', async (req, res) => {
     const { identifier } = req.params;
     const { page = 1, limit = 10, category = 'all' } = req.query;
 
-    // TODO: Replace with real database query
+    // First get the user ID
+    const isUserId = identifier.startsWith('user_') || identifier.length > 20;
+    let userId;
+    
+    if (isUserId) {
+      userId = identifier;
+    } else {
+      const userResult = await db.select().from(profiles).where(eq(profiles.username, identifier)).execute();
+      if (userResult.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      userId = userResult[0].user_id;
+    }
+
+    // Get user's products from database
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+    
+    let productsQuery = db.select().from(schemaProducts)
+      .where(eq(schemaProducts.seller_id, userId))
+      .orderBy(desc(schemaProducts.created_at))
+      .limit(parseInt(limit as string))
+      .offset(offset);
+
+    if (category !== 'all') {
+      productsQuery = productsQuery.where(eq(schemaProducts.category, category.toString()));
+    }
+
+    const productsResult = await productsQuery.execute();
+
+    // Get user profile for seller information
+    const userResult = await db.select().from(profiles).where(eq(profiles.user_id, userId)).execute();
+    const userData = userResult[0];
+
     const products = {
-      data: [
-        {
-          id: 'product_1',
-          seller: {
-            id: `user_${identifier}`,
-            username: identifier,
-            displayName: identifier.replace('_', ' '),
-            avatar: '/placeholder.svg'
-          },
-          title: `Product from ${identifier}`,
-          price: 99.99,
-          currency: 'USD',
-          category: 'Electronics',
-          images: ['/placeholder.svg'],
-          rating: 4.5,
-          sales_count: 5,
-          created_at: new Date().toISOString()
-        }
-      ],
+      data: productsResult.map(product => ({
+        id: product.id,
+        seller: {
+          id: userData.user_id,
+          username: userData.username,
+          displayName: userData.full_name || userData.username,
+          avatar: userData.avatar_url
+        },
+        title: product.title,
+        price: product.price,
+        currency: product.currency,
+        category: product.category,
+        images: product.images ? JSON.parse(product.images) : ['/placeholder.svg'],
+        rating: product.rating || 0,
+        sales_count: product.sales_count || 0,
+        created_at: product.created_at
+      })),
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: 1,
-        totalPages: 1
+        total: productsResult.length,
+        totalPages: Math.ceil(productsResult.length / parseInt(limit as string))
       }
     };
 
@@ -304,32 +434,68 @@ router.get('/:identifier/services', async (req, res) => {
     const { identifier } = req.params;
     const { page = 1, limit = 10, category = 'all' } = req.query;
 
-    // TODO: Replace with real database query
+    // First get the user ID
+    const isUserId = identifier.startsWith('user_') || identifier.length > 20;
+    let userId;
+    
+    if (isUserId) {
+      userId = identifier;
+    } else {
+      const userResult = await db.select().from(profiles).where(eq(profiles.username, identifier)).execute();
+      if (userResult.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      userId = userResult[0].user_id;
+    }
+
+    // Get user's services from database
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+    
+    // Get user profile for freelancer information
+    const userResult = await db.select().from(profiles).where(eq(profiles.user_id, userId)).execute();
+    const userData = userResult[0];
+    
+    // Get freelance profile to access services_offered
+    const freelanceResult = await db.select().from(freelance_profiles).where(eq(freelance_profiles.user_id, userId)).execute();
+    const freelanceData = freelanceResult[0];
+    
+    // Parse services from services_offered field
+    let servicesData = [];
+    if (freelanceData && freelanceData.services_offered) {
+      try {
+        servicesData = JSON.parse(freelanceData.services_offered as string);
+      } catch (e) {
+        logger.error('Error parsing services_offered:', e);
+        servicesData = [];
+      }
+    }
+    
+    // Apply pagination to services data
+    const paginatedServices = servicesData.slice(offset, offset + parseInt(limit as string));
+    
     const services = {
-      data: [
-        {
-          id: 'service_1',
-          freelancer: {
-            id: `user_${identifier}`,
-            username: identifier,
-            displayName: identifier.replace('_', ' '),
-            avatar: '/placeholder.svg'
-          },
-          title: `Service by ${identifier}`,
-          description: 'Professional service offering',
-          hourly_rate: 50,
-          category: 'Development',
-          skills: ['JavaScript', 'React'],
-          rating: 4.8,
-          completed_projects: 10,
-          created_at: new Date().toISOString()
-        }
-      ],
+      data: paginatedServices.map((service: any, index: number) => ({
+        id: service.id || `service_${index}`,
+        freelancer: {
+          id: userData.user_id,
+          username: userData.username,
+          displayName: userData.full_name || userData.username,
+          avatar: userData.avatar_url
+        },
+        title: service.title || service.name || 'Unnamed Service',
+        description: service.description || '',
+        hourly_rate: service.hourly_rate || service.rate || 0,
+        category: service.category || 'General',
+        skills: service.skills || [],
+        rating: service.rating || 0,
+        completed_projects: service.completed_projects || 0,
+        created_at: service.created_at || new Date().toISOString()
+      })),
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: 1,
-        totalPages: 1
+        total: servicesData.length,
+        totalPages: Math.ceil(servicesData.length / parseInt(limit as string))
       }
     };
 
@@ -350,33 +516,45 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: 'Search query is required' });
     }
 
-    // TODO: Replace with real database search
-    const profiles = {
-      data: [
-        {
-          id: 'user_search_1',
-          username: 'search_result',
-          displayName: 'Search Result User',
-          bio: `Profile matching "${q}"`,
-          avatar: '/placeholder.svg',
-          verified: false,
-          stats: {
-            followers_count: 150,
-            following_count: 75,
-            posts_count: 20
-          }
-        }
-      ],
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+
+    // Search profiles in database
+    const searchResult = await db.select().from(profiles)
+      .where(or(
+        like(profiles.username, `%${q}%`),
+        like(profiles.full_name, `%${q}%`),
+        like(profiles.bio, `%${q}%`)
+      ))
+      .limit(parseInt(limit as string))
+      .offset(offset)
+      .execute();
+
+    const profilesData = searchResult.map(profile => ({
+      id: profile.user_id,
+      username: profile.username,
+      displayName: profile.full_name || profile.username,
+      bio: profile.bio,
+      avatar: profile.avatar_url,
+      verified: profile.is_verified || false,
+      stats: {
+        followers_count: profile.followers_count || 0,
+        following_count: profile.following_count || 0,
+        posts_count: profile.posts_count || 0
+      }
+    }));
+
+    const searchResults = {
+      data: profilesData,
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: 1,
-        totalPages: 1
+        total: profilesData.length,
+        totalPages: Math.ceil(profilesData.length / parseInt(limit as string))
       }
     };
 
-    logger.info('Profiles searched', { query: q, count: profiles.data.length });
-    res.json(profiles);
+    logger.info('Profiles searched', { query: q, count: searchResults.data.length });
+    res.json(searchResults);
   } catch (error) {
     logger.error('Error searching profiles:', error);
     res.status(500).json({ error: 'Failed to search profiles' });

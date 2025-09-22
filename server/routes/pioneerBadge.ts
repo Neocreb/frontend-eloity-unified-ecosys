@@ -1,6 +1,4 @@
 import express from 'express';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
 import { eq, and, desc, sql, count, asc } from 'drizzle-orm';
 import { authenticateToken } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
@@ -9,17 +7,9 @@ import {
   user_activity_sessions 
 } from '../../shared/enhanced-schema.js';
 import { users } from '../../shared/schema.js';
+import { db } from '../../server/enhanced-index.js'; // Use shared database connection
 
 const router = express.Router();
-
-// Initialize database connection
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
-
-const sql_client = neon(connectionString);
-const db = drizzle(sql_client);
 
 // Constants
 const MAX_PIONEER_BADGES = 500;
@@ -28,7 +18,8 @@ const MIN_ELIGIBILITY_SCORE = 75; // Minimum score to be eligible for pioneer ba
 // Track user activity session
 router.post('/track-session', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    // Use req.userId instead of req.user?.id
+    const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -90,7 +81,8 @@ router.post('/track-session', authenticateToken, async (req, res) => {
 // Check user's eligibility for pioneer badge
 router.get('/eligibility', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    // Use req.userId instead of req.user?.id
+    const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -174,7 +166,8 @@ router.get('/eligibility', authenticateToken, async (req, res) => {
 // Get user's pioneer badge
 router.get('/badge', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    // Use req.userId instead of req.user?.id
+    const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }

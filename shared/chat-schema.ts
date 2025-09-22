@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, integer } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './schema.js';
+import { users } from './schema';
 
 // Chat conversations table
 export const chat_conversations = pgTable('chat_conversations', {

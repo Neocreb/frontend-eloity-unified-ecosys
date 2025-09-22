@@ -267,15 +267,15 @@ export class ProfileService {
 
       // Fallback to direct database query
       const { data, error } = await supabase
-        .from("freelance_services")
+        .from("freelance_profiles")
         .select(
           `
           *,
-          profiles:freelancer_id(*)
+          profiles:user_id(*)
         `,
         )
-        .eq("freelancer_id", userId)
-        .order("created_at", { ascending: false });
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false });
 
       if (error) {
         console.warn(
@@ -283,7 +283,20 @@ export class ProfileService {
         );
         return [];
       }
-      return data || [];
+      
+      // Extract services from services_offered field
+      if (data && data[0] && data[0].services_offered) {
+        try {
+          const services = typeof data[0].services_offered === 'string' 
+            ? JSON.parse(data[0].services_offered)
+            : data[0].services_offered;
+          return Array.isArray(services) ? services : [];
+        } catch (parseError) {
+          console.warn('Error parsing services_offered:', parseError);
+          return [];
+        }
+      }
+      return [];
     } catch (error: any) {
       console.warn(
         `Error fetching user services for ${userId}:`,

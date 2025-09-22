@@ -138,6 +138,7 @@ const AdminFinancial = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
   const [transactionFilter, setTransactionFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const notification = useNotification();
 
@@ -148,6 +149,7 @@ const AdminFinancial = () => {
   const loadFinancialData = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       
       // Use real API calls instead of mock data
       const [overviewResponse, transactionsResponse] = await Promise.all([
@@ -158,14 +160,14 @@ const AdminFinancial = () => {
       if (overviewResponse.success) {
         const overview = overviewResponse.data;
         const apiMetrics: FinancialMetrics = {
-          totalRevenue: overview.totalRevenue || 0,
-          monthlyRevenue: overview.monthlyRevenue || 0,
-          platformFees: overview.platformFees || 0,
-          totalWithdrawals: overview.totalWithdrawals || 0,
-          pendingPayouts: overview.pendingPayouts || 0,
-          escrowBalance: overview.escrowBalance || 0,
-          userBalances: overview.userBalances || 0,
-          transactionVolume: overview.transactionVolume || 0,
+          totalRevenue: overview.revenue?.total || 0,
+          monthlyRevenue: overview.revenue?.change || 0,
+          platformFees: overview.revenue?.total ? overview.revenue.total * 0.02 : 0, // 2% fee
+          totalWithdrawals: overview.payouts?.completed || 0,
+          pendingPayouts: overview.payouts?.pending || 0,
+          escrowBalance: 0, // Not provided in mock data
+          userBalances: 0, // Not provided in mock data
+          transactionVolume: overview.transactions?.volume || 0,
         };
         setMetrics(apiMetrics);
       } else {
@@ -173,7 +175,7 @@ const AdminFinancial = () => {
       }
       
       if (transactionsResponse.success) {
-        setTransactions(transactionsResponse.data.transactions || []);
+        setTransactions(transactionsResponse.data?.transactions || []);
       } else {
         throw new Error(transactionsResponse.error || 'Failed to load transactions');
       }
@@ -199,25 +201,42 @@ const AdminFinancial = () => {
           amount: 299.99,
           status: "open",
           priority: "medium",
-          submittedAt: "2024-01-25T10:30:00Z",
-          description: "Product not as described, requesting refund",
+          submittedAt: "2024-01-24T09:15:00Z",
+          description: "Request for refund on defective product purchase",
+        },
+        {
+          id: "dispute-003",
+          type: "escrow",
+          userId: "user-789",
+          userName: "Michael Chen",
+          amount: 1250.00,
+          status: "resolved",
+          priority: "low",
+          submittedAt: "2024-01-20T14:30:00Z",
+          description: "Escrow release dispute for freelance web design project",
         },
       ];
       setDisputes(mockDisputes);
     } catch (error) {
       console.error("Error loading financial data:", error);
-      notification.error("Failed to load financial data");
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+        ? error
+        : "Failed to load financial data";
+      setError(errorMessage);
+      notification.error(`Error loading financial data: ${errorMessage}`);
       
-      // Fallback to mock data if API fails
+      // Set mock data as fallback
       const mockMetrics: FinancialMetrics = {
-        totalRevenue: 2456789.50,
-        monthlyRevenue: 185234.75,
-        platformFees: 24567.89,
-        totalWithdrawals: 189567.25,
-        pendingPayouts: 45234.50,
-        escrowBalance: 67890.25,
-        userBalances: 1456789.75,
-        transactionVolume: 3456789.00,
+        totalRevenue: 48500.75,
+        monthlyRevenue: 12.5,
+        platformFees: 970.02,
+        totalWithdrawals: 45678.90,
+        pendingPayouts: 8947.32,
+        escrowBalance: 12500.00,
+        userBalances: 250000.00,
+        transactionVolume: 1250000.50,
       };
       
       const mockTransactions: Transaction[] = [
@@ -225,34 +244,57 @@ const AdminFinancial = () => {
           id: "txn-001",
           userId: "user-123",
           userName: "John Smith",
-          type: "withdrawal",
-          amount: -1500.00,
+          type: "deposit",
+          amount: 250.00,
           currency: "USD",
           source: "marketplace",
           status: "completed",
-          timestamp: "2024-01-26T14:30:00Z",
-          description: "Marketplace earnings withdrawal",
-          feeAmount: 15.00,
-          reference: "WD-2024-001234",
+          timestamp: "2024-01-25T10:30:00Z",
+          description: "Product sale commission",
         },
         {
           id: "txn-002",
           userId: "user-456",
           userName: "Sarah Johnson",
-          type: "deposit",
-          amount: 2500.00,
+          type: "withdrawal",
+          amount: 150.50,
           currency: "USD",
           source: "freelance",
-          status: "processing",
-          timestamp: "2024-01-26T13:15:00Z",
-          description: "Client payment for web development project",
-          feeAmount: 25.00,
-          reference: "DEP-2024-001235",
+          status: "pending",
+          timestamp: "2024-01-25T09:15:00Z",
+          description: "Payout request",
+        },
+        {
+          id: "txn-003",
+          userId: "user-789",
+          userName: "Mike Davis",
+          type: "fee",
+          amount: 25.00,
+          currency: "USD",
+          source: "platform",
+          status: "completed",
+          timestamp: "2024-01-24T16:45:00Z",
+          description: "Subscription fee",
         },
       ];
       
       setMetrics(mockMetrics);
       setTransactions(mockTransactions);
+      
+      const mockDisputes: Dispute[] = [
+        {
+          id: "dispute-001",
+          type: "payment",
+          userId: "user-321",
+          userName: "Alex Rodriguez",
+          amount: 850.00,
+          status: "investigating",
+          priority: "high",
+          submittedAt: "2024-01-25T16:20:00Z",
+          description: "Payment not received for completed freelance project",
+        },
+      ];
+      setDisputes(mockDisputes);
     } finally {
       setIsLoading(false);
     }
