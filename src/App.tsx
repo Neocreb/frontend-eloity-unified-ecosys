@@ -363,8 +363,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Protected routes - only render when not loading */}
-      {!isLoading && (
+      {/* Protected routes - register always; ProtectedRoute handles loading and auth */}
         <Route
           path="/app"
           element={
@@ -595,7 +594,6 @@ const AppRoutes = () => {
             }
           />
         </Route>
-      )}
 
       {/* Admin Routes */}
       <Route
