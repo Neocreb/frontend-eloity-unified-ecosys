@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import * as React from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 
 type Theme = "light" | "dark" | "system";
 
@@ -10,10 +10,10 @@ interface ThemeContextType {
   isDark: boolean;
 }
 
-const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useTheme = () => {
-  const context = React.useContext(ThemeContext);
+  const context = useContext(ThemeContext);
   if (!context) {
     console.error("useTheme called without ThemeProvider context");
     throw new Error("useTheme must be used within a ThemeProvider");
@@ -22,12 +22,12 @@ export const useTheme = () => {
 };
 
 interface ThemeProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   // Initialize theme state with immediate localStorage check to avoid hydration issues
-  const [theme, setTheme] = React.useState<Theme>(() => {
+  const [theme, setTheme] = useState<Theme>(() => {
     try {
       if (typeof window !== "undefined" && window.localStorage) {
         const savedTheme = localStorage.getItem("theme") as Theme;
@@ -41,12 +41,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return "light"; // Default fallback
   });
 
-  const [isDark, setIsDark] = React.useState(false);
-
-  // Remove the initialization effect since we're handling it in useState
+  const [isDark, setIsDark] = useState(false);
 
   // Determine if dark mode is active
-  React.useEffect(() => {
+  useEffect(() => {
     const updateDarkMode = () => {
       try {
         let isDarkMode = false;
@@ -109,7 +107,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, [theme]);
 
   // Save theme to localStorage when it changes
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       if (typeof window !== "undefined" && window.localStorage) {
         localStorage.setItem("theme", theme);
@@ -119,7 +117,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
   }, [theme]);
 
-  const contextValue: ThemeContextType = React.useMemo(
+  const contextValue: ThemeContextType = useMemo(
     () => ({
       theme,
       setTheme,
