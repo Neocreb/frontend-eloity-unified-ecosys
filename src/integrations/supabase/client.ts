@@ -27,7 +27,19 @@ const debugFetch: typeof fetch = async (input, init) => {
       } catch (e) {
         console.error('Supabase request failed (metadata logging error)', e);
       }
+
+      // Return a clone so downstream consumers (including the Supabase client internals)
+      // can safely read the response body without encountering "body stream already read"
+      try {
+        return res.clone();
+      } catch (cloneErr) {
+        // If cloning fails for any reason, fall back to returning the original response
+        // (avoid swallowing the original error) so the caller can still handle it.
+        console.warn('Failed to clone response, returning original response', cloneErr);
+        return res;
+      }
     }
+
     return res;
   } catch (networkError) {
     console.error('Supabase network error', networkError);
