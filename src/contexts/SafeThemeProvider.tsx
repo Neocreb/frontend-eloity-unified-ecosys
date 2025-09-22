@@ -1,14 +1,9 @@
 import * as React from "react";
+import React from 'react';
 import { ThemeProvider } from "./ThemeContext";
 
 // Create a safe version of useLayoutEffect that works on both client and server
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined" &&
-  React && React.useLayoutEffect
-    ? React.useLayoutEffect
-    : React && React.useEffect || function useEffect(fn, deps) { if (typeof window !== "undefined") { fn(); } };
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
 // Fallback theme context that applies light theme without hooks
 const FallbackThemeProvider = ({ children }: { children: React.ReactNode }) => {
