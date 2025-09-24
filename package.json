@@ -12,7 +12,7 @@
     "build:frontend": "tsc && vite build",
     "build:backend": "tsc -p tsconfig.backend.json",
     "preview": "vite preview",
-    "start": "node dist/server/enhanced-index.js",
+    "start": "npm run build && node dist/server/enhanced-index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint . --ext .ts,.tsx",
