@@ -1,6 +1,45 @@
-node_modules
-dist
+# === Node.js ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+
+# === Build outputs ===
+dist/
+build/
+.next/
+out/
+.cache/
+
+# === Environment files ===
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# === System files ===
 .DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs
+*.out
+*.pid
+*.seed
+*.gz
+
+# === IDE & Editor ===
+.vscode/
+.idea/
+*.swp
+
+# === Misc ===
 server/public
 vite.config.ts.*
 *.tar.gz
