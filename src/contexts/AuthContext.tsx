@@ -249,7 +249,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         setSession(session);
         setUser(enhanceUserData(session?.user || null));
-        await ensureProfileExists(session?.user || null);
+        ensureProfileExists(session?.user || null).catch(() => {});
       } catch (error) {
         console.warn("Auth initialization warning:", error);
         if (mounted) {
