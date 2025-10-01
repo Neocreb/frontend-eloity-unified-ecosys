@@ -279,7 +279,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         try {
           setSession(session);
           setUser(enhanceUserData(session?.user || null));
-          await ensureProfileExists(session?.user || null);
+          ensureProfileExists(session?.user || null).catch(() => {});
           setError(null);
         } catch (error) {
           console.error("Auth state change error:", error);
