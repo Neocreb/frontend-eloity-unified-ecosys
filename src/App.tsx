@@ -1,4 +1,3 @@
-import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -363,8 +362,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Protected routes - only render when not loading */}
-      {!isLoading && (
+      {/* Protected routes - always register, ProtectedRoute will handle loading */}
         <Route
           path="/app"
           element={
@@ -595,7 +593,6 @@ const AppRoutes = () => {
             }
           />
         </Route>
-      )}
 
       {/* Admin Routes */}
       <Route
