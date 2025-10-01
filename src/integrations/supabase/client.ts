@@ -20,15 +20,21 @@ const debugFetch: typeof fetch = async (input, init) => {
         const url = typeof input === 'string' ? input : (input as Request).url;
         const ct = res.headers.get('content-type') || '';
 
-        // Clone and attempt to read the clone's text for better logging, but don't
-        // allow failures here to bubble up. Reading the clone will not affect the
-        // original response stream that Supabase expects to consume.
-        const clone = res.clone();
+        // Attempt to safely read a preview of the response without affecting the
+        // original Response stream. If the Response body has already been used
+        // earlier in the request pipeline (e.g. by a service worker or proxy),
+        // cloning will fail — so guard by checking bodyUsed and catching errors.
         let bodyPreview: string | null = null;
         try {
-          // Limit preview size to avoid logging huge payloads
-          const text = await clone.text();
-          bodyPreview = text ? (text.length > 1000 ? text.slice(0, 1000) + '... (truncated)' : text) : null;
+          if (!res.bodyUsed) {
+            const clone = res.clone();
+            // Limit preview size to avoid logging huge payloads
+            const text = await clone.text();
+            bodyPreview = text ? (text.length > 1000 ? text.slice(0, 1000) + '... (truncated)' : text) : null;
+          } else {
+            // Body already consumed upstream; skip attempting to read
+            bodyPreview = null;
+          }
         } catch (readErr) {
           // Ignore read errors - logging should not interfere with normal flow
           bodyPreview = null;
