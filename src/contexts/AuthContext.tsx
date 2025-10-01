@@ -434,6 +434,15 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return { error };
         }
 
+        // Immediately reflect authenticated state without waiting for onAuthStateChange
+        if (data) {
+          const nextSession = (data as any).session ?? null;
+          const nextUser = (data as any).user ?? null;
+          setSession(nextSession);
+          setUser(enhanceUserData(nextUser));
+          await ensureProfileExists(nextUser);
+        }
+
         console.log("Login successful:", data.user?.id);
         return {};
       } catch (error) {
