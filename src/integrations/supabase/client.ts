@@ -8,26 +8,51 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Custom fetch that logs failures without consuming the response body (so Supabase can parse it)
+// Custom fetch that logs failures without consuming the original response body.
+// We clone the response for any diagnostic reads so the original Response stream
+// remains unread for Supabase internals which will parse it later.
 const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
+
     if (!res.ok) {
       try {
         const url = typeof input === 'string' ? input : (input as Request).url;
         const ct = res.headers.get('content-type') || '';
-        // Do NOT read the body here to avoid locking the stream for Supabase internals
+
+        // Attempt to safely read a preview of the response without affecting the
+        // original Response stream. If the Response body has already been used
+        // earlier in the request pipeline (e.g. by a service worker or proxy),
+        // cloning will fail — so guard by checking bodyUsed and catching errors.
+        let bodyPreview: string | null = null;
+        try {
+          if (!res.bodyUsed) {
+            const clone = res.clone();
+            // Limit preview size to avoid logging huge payloads
+            const text = await clone.text();
+            bodyPreview = text ? (text.length > 1000 ? text.slice(0, 1000) + '... (truncated)' : text) : null;
+          } else {
+            // Body already consumed upstream; skip attempting to read
+            bodyPreview = null;
+          }
+        } catch (readErr) {
+          // Ignore read errors - logging should not interfere with normal flow
+          bodyPreview = null;
+        }
+
         console.error('Supabase request failed', {
           url,
           status: res.status,
           statusText: res.statusText,
           type: res.type,
           contentType: ct,
+          bodyPreview,
         });
       } catch (e) {
         console.error('Supabase request failed (metadata logging error)', e);
       }
     }
+
     return res;
   } catch (networkError) {
     console.error('Supabase network error', networkError);

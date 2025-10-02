@@ -249,7 +249,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         setSession(session);
         setUser(enhanceUserData(session?.user || null));
-        await ensureProfileExists(session?.user || null);
+        ensureProfileExists(session?.user || null).catch(() => {});
       } catch (error) {
         console.warn("Auth initialization warning:", error);
         if (mounted) {
@@ -279,7 +279,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         try {
           setSession(session);
           setUser(enhanceUserData(session?.user || null));
-          await ensureProfileExists(session?.user || null);
+          ensureProfileExists(session?.user || null).catch(() => {});
           setError(null);
         } catch (error) {
           console.error("Auth state change error:", error);
@@ -432,6 +432,15 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           } catch {}
           setError(error);
           return { error };
+        }
+
+        // Immediately reflect authenticated state without waiting for onAuthStateChange
+        if (data) {
+          const nextSession = (data as any).session ?? null;
+          const nextUser = (data as any).user ?? null;
+          setSession(nextSession);
+          setUser(enhanceUserData(nextUser));
+          await ensureProfileExists(nextUser);
         }
 
         console.log("Login successful:", data.user?.id);

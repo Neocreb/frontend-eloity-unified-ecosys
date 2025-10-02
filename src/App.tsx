@@ -241,10 +241,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, session, user } = useAuth() as any;
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+  const hasAuth = !!session || !!user || isAuthenticated;
+  const stillLoading = isLoading && !hasAuth;
+
+  if (stillLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
@@ -255,8 +257,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  // Redirect to auth page if not authenticated
-  if (!isAuthenticated) {
+  if (!hasAuth) {
     console.log("Not authenticated, redirecting to /auth");
     return <Navigate to="/auth" replace />;
   }
@@ -363,8 +364,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Protected routes - only render when not loading */}
-      {!isLoading && (
+      {/* Protected routes - always register, ProtectedRoute will handle loading */}
         <Route
           path="/app"
           element={
@@ -595,7 +595,6 @@ const AppRoutes = () => {
             }
           />
         </Route>
-      )}
 
       {/* Admin Routes */}
       <Route
