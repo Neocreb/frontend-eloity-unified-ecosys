@@ -114,6 +114,11 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState("");
 
+  // Relationship and UI state
+  const [viewerFollowsOwner, setViewerFollowsOwner] = useState(false);
+  const [ownerFollowsViewer, setOwnerFollowsViewer] = useState(false);
+  const [openCommentsFor, setOpenCommentsFor] = useState<string | null>(null);
+
   // New state for enhanced features
   const [mediaFilter, setMediaFilter] = useState("all");
   const [mediaViewMode, setMediaViewMode] = useState("grid");
