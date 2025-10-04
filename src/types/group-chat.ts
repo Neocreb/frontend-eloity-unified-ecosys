@@ -104,6 +104,7 @@ export interface CreateGroupRequest {
   category?: GroupChatThread['category'];
   groupType?: GroupChatThread['groupType'];
   initialMessage?: string;
+  createdBy?: string;
 }
 
 export interface UpdateGroupRequest {

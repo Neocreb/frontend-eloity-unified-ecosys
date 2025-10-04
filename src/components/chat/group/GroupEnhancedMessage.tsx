@@ -25,7 +25,7 @@ import {
   ThumbsUp,
   Laugh,
   Angry,
-  Sad,
+  Frown,
   Crown,
   Shield,
   AtSign,

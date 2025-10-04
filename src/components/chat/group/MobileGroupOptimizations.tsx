@@ -29,7 +29,7 @@ export const MobileGroupChatHeader: React.FC<MobileGroupChatHeaderProps> = ({
   onCall,
   className,
 }) => {
-  const currentUser = group.participants?.find(p => p.userId === currentUserId);
+  const currentUser = group.participants?.find(p => p.id === currentUserId);
   const isAdmin = currentUser?.role === 'admin';
   const activeMembersCount = group.participants?.filter(p => p.isActive).length || 0;
   const onlineMembersCount = group.participants?.filter(p => p.isOnline && p.isActive).length || 0;
@@ -51,7 +51,7 @@ export const MobileGroupChatHeader: React.FC<MobileGroupChatHeaderProps> = ({
         
         <div className="flex-1 min-w-0 cursor-pointer" onClick={onSettings}>
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-sm truncate">{group.name}</h3>
+            <h3 className="font-semibold text-sm truncate">{group.groupName}</h3>
             {isAdmin && (
               <Badge variant="secondary" className="text-xs px-1 h-4">
                 Admin
@@ -177,10 +177,10 @@ const MobileGroupListItem: React.FC<MobileGroupListItemProps> = ({
     >
       <div className="relative">
         <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          {group.avatar ? (
+          {group.groupAvatar ? (
             <img 
-              src={group.avatar} 
-              alt={group.name} 
+              src={group.groupAvatar} 
+              alt={group.groupName} 
               className="h-12 w-12 rounded-full object-cover"
             />
           ) : (
@@ -198,15 +198,15 @@ const MobileGroupListItem: React.FC<MobileGroupListItemProps> = ({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <h4 className={cn(
+            <h4 className={cn(
             "font-medium text-sm truncate",
             hasUnread && "font-semibold"
           )}>
-            {group.name}
+            {group.groupName}
           </h4>
-          {group.lastActivity && (
+          {group.lastMessageAt && (
             <span className="text-xs text-muted-foreground shrink-0 ml-2">
-              {formatTime(group.lastActivity)}
+              {formatTime(group.lastMessageAt)}
             </span>
           )}
         </div>
@@ -407,7 +407,7 @@ export const MobileParticipantList: React.FC<MobileParticipantListProps> = ({
   currentUserId,
   onParticipantAction,
 }) => {
-  const currentUser = participants?.find(p => p.userId === currentUserId);
+  const currentUser = participants?.find(p => p.id === currentUserId);
   const isCurrentUserAdmin = currentUser?.role === 'admin';
 
   return (
@@ -415,24 +415,24 @@ export const MobileParticipantList: React.FC<MobileParticipantListProps> = ({
       <div className="space-y-1 p-1">
         {participants?.map((participant) => (
           <div
-            key={participant.userId}
+            key={participant.id}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer"
-            onClick={() => onParticipantAction(participant.userId, 'profile')}
+            onClick={() => onParticipantAction(participant.id, 'profile')}
           >
-            <div className="relative">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                {participant.avatar ? (
-                  <img 
-                    src={participant.avatar} 
-                    alt={participant.displayName} 
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-sm font-medium">
-                    {participant.displayName?.charAt(0) || 'U'}
-                  </span>
-                )}
-              </div>
+              <div className="relative">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  {participant.avatar ? (
+                    <img 
+                      src={participant.avatar} 
+                      alt={participant.name} 
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium">
+                      {participant.name?.charAt(0) || 'U'}
+                    </span>
+                  )}
+                </div>
               {participant.isOnline && (
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
               )}
@@ -441,8 +441,8 @@ export const MobileParticipantList: React.FC<MobileParticipantListProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-medium text-sm truncate">
-                  {participant.displayName}
-                  {participant.userId === currentUserId && " (You)"}
+                  {participant.name}
+                  {participant.id === currentUserId && " (You)"}
                 </p>
                 {participant.role === 'admin' && (
                   <Badge variant="secondary" className="text-xs px-1 h-4">
@@ -455,7 +455,7 @@ export const MobileParticipantList: React.FC<MobileParticipantListProps> = ({
               </p>
             </div>
 
-            {isCurrentUserAdmin && participant.userId !== currentUserId && (
+            {isCurrentUserAdmin && participant.id !== currentUserId && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -466,7 +466,7 @@ export const MobileParticipantList: React.FC<MobileParticipantListProps> = ({
                   <DropdownMenuItem 
                     onClick={(e) => {
                       e.stopPropagation();
-                      onParticipantAction(participant.userId, 'promote');
+                      onParticipantAction(participant.id, 'promote');
                     }}
                   >
                     {participant.role === 'admin' ? 'Remove admin' : 'Make admin'}
@@ -474,7 +474,7 @@ export const MobileParticipantList: React.FC<MobileParticipantListProps> = ({
                   <DropdownMenuItem 
                     onClick={(e) => {
                       e.stopPropagation();
-                      onParticipantAction(participant.userId, 'remove');
+                      onParticipantAction(participant.id, 'remove');
                     }}
                     className="text-destructive"
                   >
