@@ -1204,11 +1204,10 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Posts</h3>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{mockProfile.posts} posts</span>
+                      <span>{(posts || []).length} posts</span>
                       <span>•</span>
                       <span>
-                        {mockPosts.reduce((sum, post) => sum + post.likes, 0)}{" "}
-                        total likes
+                        {((posts || []) as any[]).reduce((sum, p: any) => sum + (p.likes || p.interactions?.likes || 0), 0)} total likes
                       </span>
                     </div>
                   </div>
