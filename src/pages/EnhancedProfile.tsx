@@ -19,6 +19,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import UserListModal from "@/components/profile/UserListModal";
+import EnhancedShareDialog from "@/components/feed/EnhancedShareDialog";
+import { EnhancedCommentsSection } from "@/components/feed/EnhancedCommentsSection";
+import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
 import {
   ArrowLeft,
   Settings,
