@@ -4,13 +4,14 @@
   "description": "Eloity Unified Ecosystem Platform",
   "main": "server/enhanced-index.ts",
   "type": "module",
-  "scripts": "build:dev": "vite build --mode development"
+  "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npx cross-env NODE_ENV=development npx tsx server/enhanced-index.ts",
     "dev:frontend": "vite",
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "tsc && vite build",
     "build:backend": "tsc -p tsconfig.backend.json",
+    "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "start": "node dist/server/enhanced-index.js",
     "test": "jest",
