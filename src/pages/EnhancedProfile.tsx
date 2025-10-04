@@ -22,6 +22,7 @@ import UserListModal from "@/components/profile/UserListModal";
 import EnhancedShareDialog from "@/components/feed/EnhancedShareDialog";
 import { EnhancedCommentsSection } from "@/components/feed/EnhancedCommentsSection";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
+import { Bookmark } from "lucide-react";
 import {
   ArrowLeft,
   Settings,
