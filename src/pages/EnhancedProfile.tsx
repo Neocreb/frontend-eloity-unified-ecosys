@@ -521,6 +521,24 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     loadProfile();
   }, [targetUsername, isOwnProfile, user, toast]);
 
+  useEffect(() => {
+    const checkRelationship = async () => {
+      try {
+        if (!user?.id || !profileUser?.id) return;
+        const [vf, of] = await Promise.all([
+          profileService.isFollowing(user.id, profileUser.id),
+          profileService.isFollowing(profileUser.id, user.id),
+        ]);
+        setViewerFollowsOwner(!!vf);
+        setOwnerFollowsViewer(!!of);
+      } catch (e) {
+        setViewerFollowsOwner(false);
+        setOwnerFollowsViewer(false);
+      }
+    };
+    checkRelationship();
+  }, [user?.id, profileUser?.id]);
+
   const handleFollow = async () => {
     setIsFollowing(!isFollowing);
     setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
