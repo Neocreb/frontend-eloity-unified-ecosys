@@ -4,7 +4,7 @@
   "description": "Eloity Unified Ecosystem Platform",
   "main": "server/enhanced-index.ts",
   "type": "module",
-  "scripts": {
+  "scripts": "build:dev": "vite build --mode development"
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npx cross-env NODE_ENV=development npx tsx server/enhanced-index.ts",
     "dev:frontend": "vite",
