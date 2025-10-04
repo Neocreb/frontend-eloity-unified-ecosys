@@ -1213,73 +1213,160 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                   </div>
 
                   <div className="space-y-4">
-                    {mockPosts.map((post) => (
-                      <Card
-                        key={post.id}
-                        className="hover:shadow-md transition-shadow"
-                      >
-                        <CardContent className="p-4 sm:p-6">
-                          <div className="flex items-start gap-3">
-                            <Avatar className="h-10 w-10 flex-shrink-0">
-                              <AvatarImage
-                                src={mockProfile.avatar}
-                                alt={mockProfile.displayName}
-                              />
-                              <AvatarFallback>
-                                {mockProfile.displayName
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 space-y-3">
-                              <div>
-                                <div className="flex items-center gap-2 text-sm">
-                                  <span className="font-medium">
-                                    {mockProfile.displayName}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    @{mockProfile.username}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    •
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {post.timestamp}
-                                  </span>
-                                </div>
-                                <p className="mt-2">{post.content}</p>
-                              </div>
+                    {(() => {
+                      const privacyAllowed = (privacy?: string) => {
+                        const v = (privacy || "public").toLowerCase();
+                        if (v === "public") return true;
+                        if (isOwnProfile) return true;
+                        if (v === "private") return false;
+                        if (v === "friends") return viewerFollowsOwner && ownerFollowsViewer;
+                        return true;
+                      };
+                      const normalized = (posts || []).map((p: any) => {
+                        const authorProfile = p.profiles || {};
+                        return {
+                          id: String(p.id ?? p.post_id ?? p.uuid ?? p.id),
+                          content: p.content || p.text || p.content?.text || "",
+                          image: p.image_url || p.image || (p.content?.media?.[0]?.url ?? undefined),
+                          createdAt: p.created_at || p.timestamp || new Date().toISOString(),
+                          likes: p.likes || p.interactions?.likes || 0,
+                          comments: p.comments || p.interactions?.comments || 0,
+                          shares: p.shares || p.interactions?.shares || 0,
+                          privacy: (p.privacy || p.audience || p.content?.audience || "public") as string,
+                          author: {
+                            id: authorProfile.user_id || profileUser?.id || "",
+                            name: authorProfile.full_name || mockProfile.displayName,
+                            username: authorProfile.username || mockProfile.username,
+                            avatar: authorProfile.avatar_url || mockProfile.avatar,
+                            verified: !!authorProfile.is_verified || !!mockProfile.verified,
+                          },
+                          _liked: !!p._liked,
+                          _saved: !!p._saved,
+                        };
+                      }).filter((p) => privacyAllowed(p.privacy));
 
-                              {post.image && (
-                                <div className="rounded-lg overflow-hidden">
-                                  <img
-                                    src={post.image}
-                                    alt="Post image"
-                                    className="w-full h-auto max-h-96 object-cover"
-                                  />
+                      return normalized.map((post) => (
+                        <Card key={post.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex items-start gap-3">
+                              <Avatar className="h-10 w-10 flex-shrink-0">
+                                <AvatarImage src={post.author.avatar} alt={post.author.name} />
+                                <AvatarFallback>
+                                  {post.author.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 space-y-3">
+                                <div>
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="font-medium">{post.author.name}</span>
+                                    <span className="text-muted-foreground">@{post.author.username}</span>
+                                    <span className="text-muted-foreground">•</span>
+                                    <span className="text-muted-foreground">{typeof post.createdAt === 'string' ? post.createdAt : ''}</span>
+                                  </div>
+                                  {post.content && <p className="mt-2">{post.content}</p>}
                                 </div>
-                              )}
 
-                              <div className="flex items-center gap-6 pt-2 text-sm text-muted-foreground">
-                                <button className="flex items-center gap-2 hover:text-red-500 transition-colors">
-                                  <Heart className="h-4 w-4" />
-                                  {post.likes}
-                                </button>
-                                <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
-                                  <MessageSquare className="h-4 w-4" />
-                                  {post.comments}
-                                </button>
-                                <button className="flex items-center gap-2 hover:text-green-500 transition-colors">
-                                  <Share2 className="h-4 w-4" />
-                                  {post.shares}
-                                </button>
+                                {post.image && (
+                                  <div className="rounded-lg overflow-hidden">
+                                    <img src={post.image} alt="Post image" className="w-full h-auto max-h-96 object-cover" />
+                                  </div>
+                                )}
+
+                                <div className="pt-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1 sm:gap-3">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={cn("flex items-center gap-1 px-2 py-1.5 h-auto", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._liked && "text-red-500")}
+                                        onClick={() => {
+                                          setPosts((prev: any[]) => prev.map((p: any) => {
+                                            const id = String(p.id ?? p.post_id ?? p.uuid ?? p.id);
+                                            if (String(id) === String(post.id)) {
+                                              const likedFlag = !!p._liked;
+                                              const likes = (p.likes || p.interactions?.likes || 0) + (likedFlag ? -1 : 1);
+                                              return { ...p, _liked: !likedFlag, likes, interactions: { ...(p.interactions || {}), likes } };
+                                            }
+                                            return p;
+                                          }));
+                                        }}
+                                      >
+                                        <Heart className={cn("w-4 h-4", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._liked && "fill-current")} />
+                                        <span className="text-xs sm:text-sm">{post.likes}</span>
+                                      </Button>
+
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setOpenCommentsFor((c) => (c === post.id ? null : post.id))}
+                                        className={cn("flex items-center gap-1 px-2 py-1.5 h-auto", openCommentsFor === post.id && "text-blue-500")}
+                                      >
+                                        <MessageSquare className="w-4 h-4" />
+                                        <span className="text-xs sm:text-sm">{post.comments}</span>
+                                      </Button>
+
+                                      <EnhancedShareDialog
+                                        postId={post.id}
+                                        postContent={post.content}
+                                        postAuthor={{ name: post.author.name, username: post.author.username }}
+                                        trigger={
+                                          <Button variant="ghost" size="sm" className="flex items-center gap-1 px-2 py-1.5 h-auto hover:text-green-500 transition-colors">
+                                            <Share2 className="w-4 h-4" />
+                                            <span className="text-xs sm:text-sm">{post.shares}</span>
+                                          </Button>
+                                        }
+                                      />
+
+                                      <VirtualGiftsAndTips
+                                        recipientId={post.author.id}
+                                        recipientName={post.author.name}
+                                        trigger={
+                                          <Button variant="ghost" size="sm" className="flex items-center gap-1 px-2 py-1.5 h-auto text-yellow-600 hover:text-yellow-700">
+                                            <Gift className="w-4 h-4" />
+                                            <span className="text-xs sm:text-sm hidden sm:inline">Gift</span>
+                                          </Button>
+                                        }
+                                      />
+                                    </div>
+
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={cn("px-2 py-1.5 h-auto", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._saved && "text-blue-500")}
+                                      onClick={() => {
+                                        setPosts((prev: any[]) => prev.map((p: any) => {
+                                          const id = String(p.id ?? p.post_id ?? p.uuid ?? p.id);
+                                          if (String(id) === String(post.id)) {
+                                            return { ...p, _saved: !p._saved };
+                                          }
+                                          return p;
+                                        }));
+                                      }}
+                                    >
+                                      <Bookmark className={cn("w-4 h-4", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._saved && "fill-current")} />
+                                    </Button>
+                                  </div>
+
+                                  {openCommentsFor === post.id && (
+                                    <div className="mt-4 border-t pt-4">
+                                      <EnhancedCommentsSection
+                                        postId={post.id}
+                                        isVisible={openCommentsFor === post.id}
+                                        commentsCount={post.comments}
+                                        onCommentsCountChange={() => {}}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      ));
+                    })()}
                   </div>
                 </TabsContent>
 
