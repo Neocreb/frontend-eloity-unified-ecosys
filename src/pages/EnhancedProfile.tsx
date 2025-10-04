@@ -303,7 +303,35 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     },
   ];
 
-  const filteredMedia = mockMedia.filter((item) => {
+  const viewerCanSee = (privacy?: string) => {
+    const v = (privacy || "public").toLowerCase();
+    if (v === "public") return true;
+    if (isOwnProfile) return true;
+    if (v === "private") return false;
+    if (v === "friends") return viewerFollowsOwner && ownerFollowsViewer;
+    return true;
+  };
+
+  const derivedMedia = (posts || [])
+    .map((p: any) => {
+      const privacy = p.privacy || p.audience || p.content?.audience || "public";
+      if (!viewerCanSee(privacy)) return [] as any[];
+      const postId = String(p.id ?? p.post_id ?? p.uuid ?? p.id);
+      const arr: any[] = [];
+      if (p.image_url) arr.push({ id: `${postId}-img`, type: "image", url: p.image_url, postId });
+      const mediaArr = p.content?.media || [];
+      mediaArr.forEach((m: any, idx: number) => {
+        if (m?.url && (m.type === "image" || m.type === "video")) {
+          arr.push({ id: `${postId}-${idx}`, type: m.type, url: m.url, postId });
+        }
+      });
+      return arr;
+    })
+    .flat();
+
+  const mediaSource: any[] = derivedMedia.length > 0 ? derivedMedia : mockMedia;
+
+  const filteredMedia = mediaSource.filter((item: any) => {
     if (mediaFilter === "all") return true;
     if (mediaFilter === "images") return item.type === "image";
     if (mediaFilter === "videos") return item.type === "video";
