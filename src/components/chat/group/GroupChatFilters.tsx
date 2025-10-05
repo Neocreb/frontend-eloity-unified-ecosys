@@ -20,7 +20,7 @@ import {
   Crown,
   MessageSquare,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 export interface ChatFilter {
   type: 'all' | 'groups' | 'direct';

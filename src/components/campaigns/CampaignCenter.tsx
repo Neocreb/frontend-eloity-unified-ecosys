@@ -648,6 +648,7 @@ const CampaignCenter: React.FC = () => {
       {/* Campaign Creation Wizard */}
       {showCreationWizard && (
         <CampaignCreationWizard 
+          isOpen={showCreationWizard}
           open={showCreationWizard}
           onClose={() => setShowCreationWizard(false)}
           onCampaignCreated={(newCampaign) => {

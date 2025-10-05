@@ -158,7 +158,10 @@ const GroupsAndPagesAdmin = () => {
       ]);
 
       // Transform the data to match our interface
-      const groupsData = (groupsResponse.data || groupsResponse).map((group: any) => ({
+      // Normalize unknown API responses safely
+      const groupsRaw: any = groupsResponse as any;
+      const groupsArray: any[] = Array.isArray(groupsRaw?.data) ? groupsRaw.data : (groupsRaw as any[]);
+      const groupsData = groupsArray.map((group: any) => ({
         id: group.id,
         name: group.name,
         members: group.memberCount || 0,
@@ -175,7 +178,9 @@ const GroupsAndPagesAdmin = () => {
         engagement: group.engagement || 0
       }));
 
-      const pagesData = (pagesResponse.data || pagesResponse).map((page: any) => ({
+      const pagesRaw: any = pagesResponse as any;
+      const pagesArray: any[] = Array.isArray(pagesRaw?.data) ? pagesRaw.data : (pagesRaw as any[]);
+      const pagesData = pagesArray.map((page: any) => ({
         id: page.id,
         name: page.name,
         followers: page.followerCount || 0,

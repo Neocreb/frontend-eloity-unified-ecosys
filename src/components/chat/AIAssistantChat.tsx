@@ -86,9 +86,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
             aiContext: {
               confidence: welcomeResponse.confidence,
               sources: welcomeResponse.sources,
-              suggestedActions: welcomeResponse.suggestedActions,
-              followUpQuestions: welcomeResponse.followUpQuestions,
-              relatedTopics: welcomeResponse.relatedTopics,
+              suggestedActions: (welcomeResponse.suggestedActions as unknown as AIAction[]) || [],
+              followUpQuestions: welcomeResponse.followUpQuestions || [],
+              relatedTopics: welcomeResponse.relatedTopics || [],
             },
           };
           setMessages([welcomeMessage]);
@@ -213,7 +213,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
           messageType: "text",
           aiContext: {
             confidence: smartResponse.confidence || 85,
-            suggestedActions: smartResponse.suggestedActions?.slice(0, 3) || [],
+            suggestedActions: (smartResponse.suggestedActions?.slice(0, 3) as unknown as AIAction[]) || [],
             followUpQuestions:
               smartResponse.followUpQuestions?.slice(0, 3) || [],
             relatedTopics: smartResponse.relatedTopics?.slice(0, 4) || [],
