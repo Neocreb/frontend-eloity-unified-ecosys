@@ -168,7 +168,7 @@ const GroupsAndPagesAdmin = () => {
         category: group.category || "General",
         cover: group.coverImage || "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400",
         description: group.description,
-        privacy: group.privacy === "private" ? "private" : "public",
+        privacy: (group.privacy === "private" ? "private" : "public") as "private" | "public",
         isActive: group.status === "active",
         createdAt: group.createdAt || new Date().toISOString(),
         ownerName: group.owner?.name || "Unknown",
