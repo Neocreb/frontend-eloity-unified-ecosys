@@ -252,9 +252,9 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     if (!selectedChat || !user) return;
 
     const mockParticipant = {
-      id: selectedChat.participants?.[0]?.id || "participant-1",
-      name: selectedChat.participants?.[0]?.name || selectedChat.title,
-      avatar: selectedChat.participants?.[0]?.avatar,
+      id: selectedChat.participant_profile?.id || selectedChat.participants?.[0] || "participant-1",
+      name: selectedChat.participant_profile?.name || selectedChat.groupName || "Participant",
+      avatar: selectedChat.participant_profile?.avatar,
       isAudioMuted: false,
       isVideoEnabled: false,
       isScreenSharing: false,
@@ -280,7 +280,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
     toast({
       title: "Voice Call Started",
-      description: `Calling ${selectedChat.title}...`,
+      description: `Calling ${selectedChat.groupName || selectedChat.participant_profile?.name || 'contact'}...`,
     });
   };
 
@@ -288,9 +288,9 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     if (!selectedChat || !user) return;
 
     const mockParticipant = {
-      id: selectedChat.participants?.[0]?.id || "participant-1",
-      name: selectedChat.participants?.[0]?.name || selectedChat.title,
-      avatar: selectedChat.participants?.[0]?.avatar,
+      id: selectedChat.participant_profile?.id || selectedChat.participants?.[0] || "participant-1",
+      name: selectedChat.participant_profile?.name || selectedChat.groupName || "Participant",
+      avatar: selectedChat.participant_profile?.avatar,
       isAudioMuted: false,
       isVideoEnabled: true,
       isScreenSharing: false,
@@ -316,7 +316,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
     toast({
       title: "Video Call Started",
-      description: `Starting video call with ${selectedChat.title}...`,
+      description: `Starting video call with ${selectedChat.groupName || selectedChat.participant_profile?.name || 'contact'}...`,
     });
   };
 
@@ -365,13 +365,13 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
     setGroupVideoRoom({
       roomId: `room-${selectedChat.id}`,
-      roomName: selectedChat.title,
+      roomName: selectedChat.groupName || selectedChat.participant_profile?.name || "Group",
       roomType:
         selectedChat.type === "freelance"
           ? "freelance_collab"
           : selectedChat.type === "marketplace"
             ? "marketplace_demo"
-            : selectedChat.type === "crypto"
+            : selectedChat.type === "p2p"
               ? "crypto_discussion"
               : "community_event",
       participants: mockParticipants,
@@ -380,7 +380,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
     toast({
       title: "Group Video Room Created",
-      description: `Starting group video session for ${selectedChat.title}`,
+      description: `Starting group video session for ${selectedChat.groupName || selectedChat.participant_profile?.name || 'group'}`,
     });
   };
 
@@ -501,8 +501,8 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
           (msg) => ({
             id: msg.id,
             senderId: msg.senderId,
-            senderName: msg.sender?.name || msg.sender?.full_name || "Unknown",
-            senderAvatar: msg.sender?.avatar || msg.sender?.avatar_url,
+            senderName: msg.senderName || "Unknown",
+            senderAvatar: msg.senderAvatar,
             content: msg.content,
             type:
               msg.messageType === "voice"
@@ -611,7 +611,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       const newMessage: EnhancedChatMessage = {
         id: Date.now().toString(),
         senderId: user.id,
-        senderName: user.profile?.full_name || user.email,
+        senderName: user.profile?.full_name || user.email || "You",
         senderAvatar: user.profile?.avatar_url,
         content,
         type,
@@ -1042,9 +1042,9 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                                         : "h-5 min-w-[20px] px-1.5"
                                     }`}
                                   >
-                                    {conv.unreadCount > 99
+                                    {(conv.unreadCount || 0) > 99
                                       ? "99+"
-                                      : conv.unreadCount}
+                                      : (conv.unreadCount || 0)}
                                   </Badge>
                                 )}
                               </div>
@@ -1320,6 +1320,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                                             isCurrentUser={
                                               msg.senderId === user.id
                                             }
+                                            currentUserId={user.id}
                                             isMobile={isMobile}
                                             onReply={handleReplyToMessage}
                                             onReact={handleReactToMessage}

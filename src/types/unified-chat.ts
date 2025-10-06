@@ -41,6 +41,13 @@ export interface UnifiedChatThread extends ChatThread {
   type: UnifiedChatType;
   isAI?: boolean;
   aiPersonality?: "helpful" | "professional" | "casual" | "expert";
+  participant_profile?: {
+    id: string;
+    name: string;
+    avatar?: string;
+    is_online?: boolean;
+    last_seen?: string;
+  };
 }
 
 export interface ChatFilter {
@@ -60,6 +67,14 @@ export interface UnifiedChatContextData extends ChatContextData {
   priority?: "low" | "medium" | "high" | "urgent";
   tags?: string[];
   customData?: Record<string, any>;
+  
+  // Freelance extended
+  projectBudget?: number;
+  
+  // Crypto extended
+  tradeType?: "buy" | "sell";
+  cryptocurrency?: string;
+  amount?: number;
 }
 
 export interface ChatTabConfig {

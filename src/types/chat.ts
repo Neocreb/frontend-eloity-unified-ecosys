@@ -1,4 +1,4 @@
-export type ChatType = "freelance" | "marketplace" | "p2p" | "social";
+export type ChatType = "freelance" | "marketplace" | "p2p" | "social" | "crypto";
 
 export interface ChatThread {
   id: string;
