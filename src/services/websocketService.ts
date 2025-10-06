@@ -192,4 +192,13 @@ export interface WebSocketEvents {
   // Video events
   viewer_count_update: { videoId: string; count: number };
   ad_view_complete: { videoId: string; adId: string; reward: number };
+
+  // Creator economy events
+  creator_stats_update: { creatorId: string; stats: any };
+  new_tip_received: { recipientId: string; amount: number; tip: { id: string; sender: string; message?: string; timestamp: string; currency: string; amount: number } };
+  new_subscriber: { creatorId: string; subscriber: { id: string; name: string } };
+  content_engagement: { creatorId: string; type: 'like' | 'share' | 'comment' | 'view'; contentId: string; contentTitle: string; contentType: 'video' | 'post' | 'livestream' };
+  milestone_achieved: { creatorId: string; milestone: { id: string; title: string; target: number; reward: number } };
+  livestream_viewers: { creatorId: string; count: number };
 }
+
