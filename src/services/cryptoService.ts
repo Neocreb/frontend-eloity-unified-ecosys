@@ -2,12 +2,18 @@ import {
   Cryptocurrency,
   TradingPair,
   Portfolio,
-  Transaction,
   MarketData,
 } from "@/types/crypto";
-import { realAPIService } from "@/services/realAPIService"; // Import the real API service
+import { realAPIService } from "@/services/realAPIService";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-// Mock data for realistic crypto experience
+type Wallet = Database["public"]["Tables"]["wallets"]["Row"];
+type CryptoTransaction = Database["public"]["Tables"]["crypto_transactions"]["Row"];
+type Trade = Database["public"]["Tables"]["trades"]["Row"];
+type P2POffer = Database["public"]["Tables"]["p2p_offers"]["Row"];
+
+// Mock data for fallback when real data is not available
 export const mockCryptocurrencies: Cryptocurrency[] = [
   {
     id: "bitcoin",
@@ -304,406 +310,508 @@ export const mockPortfolio: Portfolio = {
   ],
 };
 
-// Mock order book data
-const generateOrderBook = () => ({
-  symbol: "BTC/USDT",
-  bids: Array.from({ length: 10 }, (_, i) => ({
-    price: 43200 - i * 10,
-    quantity: Math.random() * 5,
-    total: (43200 - i * 10) * (Math.random() * 5),
-  })),
-  asks: Array.from({ length: 10 }, (_, i) => ({
-    price: 43260 + i * 10,
-    quantity: Math.random() * 5,
-    total: (43260 + i * 10) * (Math.random() * 5),
-  })),
-  lastUpdateId: 1,
-  timestamp: new Date().toISOString(),
-});
-
-// Mock recent trades
-const generateRecentTrades = (count: number) =>
-  Array.from({ length: count }, (_, i) => ({
-    id: `trade-${i}`,
-    symbol: "BTC/USDT",
-    price: 43200 + (Math.random() - 0.5) * 100,
-    quantity: Math.random() * 2,
-    quoteQuantity: (43200 + (Math.random() - 0.5) * 100) * (Math.random() * 2),
-    time: new Date(Date.now() - i * 60000).toISOString(),
-    isBuyerMaker: Math.random() > 0.5,
-    isBestMatch: true,
-  }));
-
-// Simplified service class with only mock data
+// Simplified service class with real database connections
 export class CryptoService {
-  // Add realistic delays to simulate loading
-  private delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  // Simulate real-time price updates for mock data
-  private simulateRealTimePrices(cryptos: Cryptocurrency[]): Cryptocurrency[] {
-    return cryptos.map((crypto) => ({
-      ...crypto,
-      current_price: crypto.current_price * (1 + (Math.random() * 0.01 - 0.005)),
-      price_change_24h: crypto.price_change_24h + (Math.random() * 0.4 - 0.2),
-      last_updated: new Date().toISOString(),
-    }));
-  }
-
   // Enhanced method to get cryptocurrencies with real data when available
   async getCryptocurrencies(): Promise<Cryptocurrency[]> {
     try {
-      // Try to fetch real data for major cryptocurrencies
-      const cryptoSymbols = ["bitcoin", "ethereum", "binancecoin", "cardano", "solana"];
-      
-      const realData = await Promise.all(
-        cryptoSymbols.map(async (symbol) => {
-          try {
-            const response = await realAPIService.getCryptoPrice(symbol);
-            if (response.success) {
-              // Map real API response to Cryptocurrency interface
-              const mockCrypto = mockCryptocurrencies.find(c => c.id === symbol);
-              if (mockCrypto) {
-                return {
-                  ...mockCrypto,
-                  current_price: response.data.price,
-                  market_cap: response.data.marketCap || mockCrypto.market_cap,
-                  total_volume: response.data.volume24h || mockCrypto.total_volume,
-                  price_change_24h: response.data.change24h || mockCrypto.price_change_24h,
-                  high_24h: response.data.high24h || mockCrypto.high_24h,
-                  low_24h: response.data.low24h || mockCrypto.low_24h,
-                  last_updated: new Date().toISOString(),
-                };
-              }
-            }
-          } catch (error) {
-            console.log(`Failed to fetch real data for ${symbol}, using mock data`);
-          }
-          
-          // Return mock data as fallback
-          return mockCryptocurrencies.find(c => c.id === symbol) || mockCryptocurrencies[0];
-        })
-      );
-      
-      return realData;
+      // Try to fetch real data from our database first
+      const { data, error } = await supabase
+        .from('crypto_prices')
+        .select('*')
+        .order('market_cap_rank', { ascending: true })
+        .limit(100);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Convert database data to Cryptocurrency format
+        return data.map(price => ({
+          id: price.symbol.toLowerCase(),
+          symbol: price.symbol,
+          name: price.name,
+          image: `https://assets.coingecko.com/coins/images/${price.symbol.toLowerCase()}/large/${price.symbol.toLowerCase()}.png`,
+          current_price: price.price_usd,
+          market_cap: price.market_cap,
+          market_cap_rank: price.market_cap_rank,
+          fully_diluted_valuation: price.max_supply ? price.max_supply * price.price_usd : 0,
+          total_volume: price.volume_24h,
+          high_24h: price.high_24h,
+          low_24h: price.low_24h,
+          price_change_24h: price.price_change_24h,
+          price_change_percentage_24h: price.price_change_24h ? (price.price_change_24h / (price.price_usd - price.price_change_24h)) * 100 : 0,
+          price_change_percentage_7d: 0, // Would need historical data
+          price_change_percentage_30d: 0, // Would need historical data
+          market_cap_change_24h: 0, // Would need historical data
+          market_cap_change_percentage_24h: 0, // Would need historical data
+          circulating_supply: price.circulating_supply,
+          total_supply: price.total_supply,
+          max_supply: price.max_supply,
+          ath: 0, // Would need historical data
+          ath_change_percentage: 0, // Would need historical data
+          ath_date: "", // Would need historical data
+          atl: 0, // Would need historical data
+          atl_change_percentage: 0, // Would need historical data
+          atl_date: "", // Would need historical data
+          last_updated: price.last_updated,
+          sparkline_in_7d: [] // Would need historical data
+        }));
+      }
+
+      // Fallback to mock data if no real data available
+      return mockCryptocurrencies;
     } catch (error) {
       console.error("Error fetching cryptocurrency data, using mock data:", error);
-      // Fallback to mock data with simulated real-time updates
-      return this.simulateRealTimePrices(mockCryptocurrencies);
+      return mockCryptocurrencies;
     }
   }
 
   async getMarketData(): Promise<MarketData> {
-    await this.delay(300);
-    console.log("📊 CryptoService: Returning simulated market data");
+    try {
+      const cryptos = await this.getCryptocurrencies();
+      
+      if (cryptos.length === 0) {
+        throw new Error("No cryptocurrency data available");
+      }
 
-    const cryptos = this.simulateRealTimePrices(mockCryptocurrencies);
+      // Calculate global stats
+      const totalMarketCap = cryptos.reduce((sum, crypto) => sum + (crypto.market_cap || 0), 0);
+      const totalVolume24h = cryptos.reduce((sum, crypto) => sum + (crypto.total_volume || 0), 0);
+      
+      // Find top gainers and losers
+      const gainers = cryptos
+        .filter(c => c.price_change_percentage_24h > 0)
+        .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+        .slice(0, 5);
+        
+      const losers = cryptos
+        .filter(c => c.price_change_percentage_24h < 0)
+        .sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h)
+        .slice(0, 5);
 
-    return {
-      globalStats: {
-        totalMarketCap: 1750000000000 * (0.98 + Math.random() * 0.04), // ±2% variation
-        totalVolume24h: 85000000000 * (0.9 + Math.random() * 0.2), // ±10% variation
-        marketCapChange24h: (Math.random() - 0.5) * 10, // ±5% change
-        btcDominance: 48.5 + (Math.random() - 0.5) * 2, // ±1% variation
-        ethDominance: 18.2 + (Math.random() - 0.5) * 2, // ±1% variation
-        activeCoins: 8924,
-        markets: 25687,
-      },
-      topMovers: {
-        gainers: cryptos
-          .filter((c) => c.price_change_percentage_24h > 0)
-          .sort(
-            (a, b) =>
-              b.price_change_percentage_24h - a.price_change_percentage_24h,
-          )
-          .slice(0, 5),
-        losers: cryptos
-          .filter((c) => c.price_change_percentage_24h < 0)
-          .sort(
-            (a, b) =>
-              a.price_change_percentage_24h - b.price_change_percentage_24h,
-          )
-          .slice(0, 5),
-      },
-      fearGreedIndex: {
-        value: Math.floor(Math.random() * 100),
-        classification: "Neutral",
-        timestamp: new Date().toISOString(),
-      },
-      trending: cryptos.slice(0, 5),
-    };
+      return {
+        globalStats: {
+          totalMarketCap,
+          totalVolume24h,
+          marketCapChange24h: 0, // Would need historical data
+          btcDominance: 0, // Would need to calculate
+          ethDominance: 0, // Would need to calculate
+          activeCoins: cryptos.length,
+          markets: 0 // Would need data from exchanges
+        },
+        topMovers: {
+          gainers,
+          losers
+        },
+        fearGreedIndex: {
+          value: Math.floor(Math.random() * 100),
+          classification: "Neutral",
+          timestamp: new Date().toISOString()
+        },
+        trending: cryptos.slice(0, 5)
+      };
+    } catch (error) {
+      console.error("Error fetching market data:", error);
+      // Return mock data as fallback
+      const cryptos = mockCryptocurrencies;
+
+      return {
+        globalStats: {
+          totalMarketCap: 1750000000000 * (0.98 + Math.random() * 0.04), // ±2% variation
+          totalVolume24h: 85000000000 * (0.9 + Math.random() * 0.2), // ±10% variation
+          marketCapChange24h: (Math.random() - 0.5) * 10, // ±5% change
+          btcDominance: 48.5 + (Math.random() - 0.5) * 2, // ±1% variation
+          ethDominance: 18.2 + (Math.random() - 0.5) * 2, // ±1% variation
+          activeCoins: 8924,
+          markets: 25687,
+        },
+        topMovers: {
+          gainers: cryptos
+            .filter((c) => c.price_change_percentage_24h > 0)
+            .sort(
+              (a, b) =>
+                b.price_change_percentage_24h - a.price_change_percentage_24h,
+            )
+            .slice(0, 5),
+          losers: cryptos
+            .filter((c) => c.price_change_percentage_24h < 0)
+            .sort(
+              (a, b) =>
+                a.price_change_percentage_24h - b.price_change_percentage_24h,
+            )
+            .slice(0, 5),
+        },
+        fearGreedIndex: {
+          value: Math.floor(Math.random() * 100),
+          classification: "Neutral",
+          timestamp: new Date().toISOString(),
+        },
+        trending: cryptos.slice(0, 5),
+      };
+    }
   }
 
   async getTradingPairs(): Promise<TradingPair[]> {
-    await this.delay(150);
+    // In a real implementation, this would fetch from database or external API
     return mockTradingPairs;
   }
 
   async getPortfolio(): Promise<Portfolio> {
-    await this.delay(250);
+    // In a real implementation, this would fetch user's actual portfolio
     return mockPortfolio;
   }
 
   // Enhanced method to get a single cryptocurrency with real data when available
   async getCryptocurrencyById(id: string): Promise<Cryptocurrency | null> {
     try {
-      const response = await realAPIService.getCryptoPrice(id);
-      if (response.success) {
-        // Map real API response to Cryptocurrency interface
-        const mockCrypto = mockCryptocurrencies.find(c => c.id === id);
-        if (mockCrypto) {
-          return {
-            ...mockCrypto,
-            current_price: response.data.price,
-            market_cap: response.data.marketCap || mockCrypto.market_cap,
-            total_volume: response.data.volume24h || mockCrypto.total_volume,
-            price_change_24h: response.data.change24h || mockCrypto.price_change_24h,
-            high_24h: response.data.high24h || mockCrypto.high_24h,
-            low_24h: response.data.low24h || mockCrypto.low_24h,
-            last_updated: new Date().toISOString(),
-          };
-        }
+      const { data, error } = await supabase
+        .from('crypto_prices')
+        .select('*')
+        .eq('symbol', id.toUpperCase())
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        return {
+          id: data.symbol.toLowerCase(),
+          symbol: data.symbol,
+          name: data.name,
+          image: `https://assets.coingecko.com/coins/images/${data.symbol.toLowerCase()}/large/${data.symbol.toLowerCase()}.png`,
+          current_price: data.price_usd,
+          market_cap: data.market_cap,
+          market_cap_rank: data.market_cap_rank,
+          fully_diluted_valuation: data.max_supply ? data.max_supply * data.price_usd : 0,
+          total_volume: data.volume_24h,
+          high_24h: data.high_24h,
+          low_24h: data.low_24h,
+          price_change_24h: data.price_change_24h,
+          price_change_percentage_24h: data.price_change_24h ? (data.price_change_24h / (data.price_usd - data.price_change_24h)) * 100 : 0,
+          price_change_percentage_7d: 0, // Would need historical data
+          price_change_percentage_30d: 0, // Would need historical data
+          market_cap_change_24h: 0, // Would need historical data
+          market_cap_change_percentage_24h: 0, // Would need historical data
+          circulating_supply: data.circulating_supply,
+          total_supply: data.total_supply,
+          max_supply: data.max_supply,
+          ath: 0, // Would need historical data
+          ath_change_percentage: 0, // Would need historical data
+          ath_date: "", // Would need historical data
+          atl: 0, // Would need historical data
+          atl_change_percentage: 0, // Would need historical data
+          atl_date: "", // Would need historical data
+          last_updated: data.last_updated,
+          sparkline_in_7d: [] // Would need historical data
+        };
       }
+
+      // Fallback to mock data
+      return mockCryptocurrencies.find((c) => c.id === id) || null;
     } catch (error) {
-      console.log(`Failed to fetch real data for ${id}, using mock data`);
+      console.error(`Error fetching cryptocurrency ${id}:`, error);
+      // Fallback to mock data
+      return mockCryptocurrencies.find((c) => c.id === id) || null;
     }
-    
-    // Fallback to mock data
-    const crypto = mockCryptocurrencies.find((c) => c.id === id);
-    if (!crypto) return null;
-    
-    // Return with simulated price updates
-    return this.simulateRealTimePrices([crypto])[0];
   }
 
-  async getOrderBook(symbol: string) {
-    await this.delay(100);
-    return generateOrderBook();
+  // Get user wallet
+  static async getUserWallet(userId: string): Promise<Wallet | null> {
+    try {
+      const { data, error } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user wallet:", error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in getUserWallet:", error);
+      return null;
+    }
   }
 
-  async getRecentTrades(symbol: string, limit = 20) {
-    await this.delay(100);
-    return generateRecentTrades(limit);
+  // Create user wallet
+  static async createUserWallet(userId: string): Promise<Wallet | null> {
+    try {
+      const { data, error } = await supabase
+        .from("wallets")
+        .insert({
+          user_id: userId,
+          btc_balance: 0,
+          eth_balance: 0,
+          usdt_balance: 0,
+          eloits_balance: 0,
+          sol_balance: 0,
+          kyc_level: 0,
+          kyc_verified: false
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating user wallet:", error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in createUserWallet:", error);
+      return null;
+    }
   }
 
-  // Chart data for trading interface
-  async getChartData(symbol: string, interval: string) {
-    await this.delay(200);
+  // Get wallet balance
+  static async getWalletBalance(userId: string): Promise<{
+    btc: number;
+    eth: number;
+    usdt: number;
+    eloits: number;
+    sol: number;
+    totalValueUSD: number;
+  } | null> {
+    try {
+      const wallet = await this.getUserWallet(userId);
+      if (!wallet) return null;
 
-    // Generate realistic OHLCV data
-    const now = Date.now();
-    const intervalMs = 60000; // 1 minute intervals
-
-    const data = Array.from({ length: 100 }, (_, i) => {
-      const timestamp = now - (100 - i) * intervalMs;
-      const basePrice = 43200 + Math.sin(i / 10) * 500; // Base wave pattern
-      const volatility = 100; // Price volatility
-
-      const open = basePrice + (Math.random() - 0.5) * volatility;
-      const close = open + (Math.random() - 0.5) * volatility * 0.5;
-      const high = Math.max(open, close) + Math.random() * volatility * 0.3;
-      const low = Math.min(open, close) - Math.random() * volatility * 0.3;
-      const volume = Math.random() * 1000000;
+      // In a real implementation, you would fetch current prices and calculate total value
+      const totalValueUSD = 
+        wallet.btc_balance * 50000 + // Mock BTC price
+        wallet.eth_balance * 3000 +  // Mock ETH price
+        wallet.usdt_balance * 1 +    // USDT price
+        wallet.eloits_balance * 0.1 + // Mock ELOITS price
+        wallet.sol_balance * 100;    // Mock SOL price
 
       return {
-        timestamp,
-        open: parseFloat(open.toFixed(2)),
-        high: parseFloat(high.toFixed(2)),
-        low: parseFloat(low.toFixed(2)),
-        close: parseFloat(close.toFixed(2)),
+        btc: wallet.btc_balance,
+        eth: wallet.eth_balance,
+        usdt: wallet.usdt_balance,
+        eloits: wallet.eloits_balance,
+        sol: wallet.sol_balance,
+        totalValueUSD
       };
+    } catch (error) {
+      console.error("Error in getWalletBalance:", error);
+      return null;
+    }
+  }
+
+  // Get crypto transactions
+  static async getUserTransactions(userId: string, limit = 20): Promise<CryptoTransaction[]> {
+    try {
+      const { data, error } = await supabase
+        .from("crypto_transactions")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("Error fetching user transactions:", error);
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in getUserTransactions:", error);
+      return [];
+    }
+  }
+
+  // Get user trades
+  static async getUserTrades(userId: string, limit = 20): Promise<Trade[]> {
+    try {
+      const { data, error } = await supabase
+        .from("trades")
+        .select("*")
+        .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("Error fetching user trades:", error);
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in getUserTrades:", error);
+      return [];
+    }
+  }
+
+  // Create P2P offer
+  static async createP2POffer(offerData: Partial<P2POffer> & { user_id: string }): Promise<P2POffer | null> {
+    try {
+      const { data, error } = await supabase
+        .from("p2p_offers")
+        .insert(offerData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating P2P offer:", error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in createP2POffer:", error);
+      return null;
+    }
+  }
+
+  // Get P2P offers
+  static async getP2POffers(limit = 20, cryptoType?: string): Promise<P2POffer[]> {
+    try {
+      let query = supabase
+        .from("p2p_offers")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (cryptoType) {
+        query = query.eq("crypto_type", cryptoType);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching P2P offers:", error);
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in getP2POffers:", error);
+      return [];
+    }
+  }
+
+  // Get user's P2P offers
+  static async getUserP2POffers(userId: string, limit = 20): Promise<P2POffer[]> {
+    try {
+      const { data, error } = await supabase
+        .from("p2p_offers")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("Error fetching user P2P offers:", error);
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in getUserP2POffers:", error);
+      return [];
+    }
+  }
+
+  // Get crypto prices (in a real implementation, this would call an external API)
+  static async getCryptoPrices(symbols: string[]): Promise<Record<string, number>> {
+    // Mock prices - in a real implementation, you would call CoinGecko or similar API
+    const mockPrices: Record<string, number> = {
+      'bitcoin': 50000,
+      'ethereum': 3000,
+      'tether': 1,
+      'solana': 100,
+      'eloits': 0.1
+    };
+
+    const prices: Record<string, number> = {};
+    symbols.forEach(symbol => {
+      prices[symbol] = mockPrices[symbol] || 0;
     });
 
-    const volume = data.map((d, i) => ({
-      timestamp: d.timestamp,
-      volume: parseFloat((Math.random() * 1000000).toFixed(2)),
-      buyVolume: parseFloat((Math.random() * 500000).toFixed(2)),
-      sellVolume: parseFloat((Math.random() * 500000).toFixed(2)),
-    }));
-
-    return {
-      symbol,
-      timeframe: interval,
-      data,
-      volume,
-    };
+    return prices;
   }
 
-  // P2P Marketplace methods
-  async getP2POffers(filters?: {
-    asset?: string;
-    fiatCurrency?: string;
-    type?: string;
-    paymentMethod?: string;
-    minAmount?: number;
-    maxAmount?: number;
-  }) {
+  // Get user's crypto portfolio value
+  static async getPortfolioValue(userId: string): Promise<{
+    totalValue: number;
+    assets: Array<{ symbol: string; balance: number; value: number; percentage: number }>;
+  } | null> {
     try {
-      // Mock P2P offers data
-      const mockOffers = [
-        {
-          id: "1",
-          userId: "user1",
-          type: "SELL",
-          asset: "BTC",
-          fiatCurrency: "USD",
-          price: 43250.5,
-          minAmount: 100,
-          maxAmount: 5000,
-          totalAmount: 10000,
-          availableAmount: 8500,
-          paymentMethods: [
-            { id: "bank", name: "Bank Transfer", type: "BANK_TRANSFER", icon: "Building", processingTime: "1-2 business days", isActive: true },
-            { id: "paypal", name: "PayPal", type: "DIGITAL_WALLET", icon: "CreditCard", processingTime: "Instant", isActive: true },
-          ],
-          terms: "Fast and secure transaction. Payment within 15 minutes.",
-          status: "ACTIVE",
-          user: {
-            id: "user1",
-            username: "CryptoKing",
-            isVerified: true,
-            kycLevel: 2,
-            rating: 4.9,
-            totalTrades: 127,
-            completionRate: 98.5,
-            avgReleaseTime: 120000,
-            isOnline: true,
-            lastSeen: new Date().toISOString(),
-          },
-          completionRate: 98.5,
-          avgReleaseTime: 120000,
-          totalTrades: 127,
-          createdAt: "2024-01-15T10:00:00Z",
-          updatedAt: "2024-01-15T10:00:00Z",
+      const wallet = await this.getUserWallet(userId);
+      if (!wallet) return null;
+
+      const prices = await this.getCryptoPrices([
+        'bitcoin', 'ethereum', 'tether', 'solana', 'eloits'
+      ]);
+
+      const assets = [
+        { 
+          symbol: 'BTC', 
+          balance: wallet.btc_balance, 
+          value: wallet.btc_balance * prices.bitcoin 
         },
-        {
-          id: "2",
-          userId: "user2",
-          type: "BUY",
-          asset: "ETH",
-          fiatCurrency: "EUR",
-          price: 2650.75,
-          minAmount: 50,
-          maxAmount: 2000,
-          totalAmount: 5000,
-          availableAmount: 5000,
-          paymentMethods: [
-            { id: "wise", name: "Wise", type: "DIGITAL_WALLET", icon: "Globe", processingTime: "Instant", isActive: true },
-            { id: "revolut", name: "Revolut", type: "DIGITAL_WALLET", icon: "Smartphone", processingTime: "Instant", isActive: true },
-          ],
-          terms: "Instant payment required. Excellent rates.",
-          status: "ACTIVE",
-          user: {
-            id: "user2",
-            username: "EthTrader",
-            isVerified: true,
-            kycLevel: 2,
-            rating: 4.7,
-            totalTrades: 89,
-            completionRate: 97.2,
-            avgReleaseTime: 300000,
-            isOnline: true,
-            lastSeen: new Date().toISOString(),
-          },
-          completionRate: 97.2,
-          avgReleaseTime: 300000,
-          totalTrades: 89,
-          createdAt: "2024-01-15T09:30:00Z",
-          updatedAt: "2024-01-15T09:30:00Z",
+        { 
+          symbol: 'ETH', 
+          balance: wallet.eth_balance, 
+          value: wallet.eth_balance * prices.ethereum 
         },
-      ];
+        { 
+          symbol: 'USDT', 
+          balance: wallet.usdt_balance, 
+          value: wallet.usdt_balance * prices.tether 
+        },
+        { 
+          symbol: 'SOL', 
+          balance: wallet.sol_balance, 
+          value: wallet.sol_balance * prices.solana 
+        },
+        { 
+          symbol: 'ELOITS', 
+          balance: wallet.eloits_balance, 
+          value: wallet.eloits_balance * prices.eloits 
+        }
+      ].filter(asset => asset.balance > 0);
 
-      let filteredOffers = mockOffers;
+      const totalValue = assets.reduce((sum, asset) => sum + asset.value, 0);
 
-      if (filters?.asset) {
-        filteredOffers = filteredOffers.filter(
-          (offer) => offer.asset === filters.asset,
-        );
-      }
-      if (filters?.fiatCurrency) {
-        filteredOffers = filteredOffers.filter(
-          (offer) => offer.fiatCurrency === filters.fiatCurrency,
-        );
-      }
-      if (filters?.type) {
-        filteredOffers = filteredOffers.filter(
-          (offer) => offer.type === filters.type,
-        );
-      }
+      const assetsWithPercentage = assets.map(asset => ({
+        ...asset,
+        percentage: totalValue > 0 ? (asset.value / totalValue) * 100 : 0
+      }));
 
-      return filteredOffers;
-    } catch (error) {
-      console.error("Error loading P2P offers:", error);
-      throw new Error("Failed to load P2P offers");
-    }
-  }
-
-  async createP2POffer(offerData: any) {
-    try {
-      // Mock creation - in real app would call API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       return {
-        id: Date.now().toString(),
-        ...offerData,
-        status: "ACTIVE",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        totalValue,
+        assets: assetsWithPercentage
       };
     } catch (error) {
-      console.error("Error creating P2P offer:", error);
-      throw new Error("Failed to create P2P offer");
+      console.error("Error in getPortfolioValue:", error);
+      return null;
     }
   }
 
-  async getP2PTrades(userId?: string) {
+  // Get recent market activity
+  static async getMarketActivity(limit = 10): Promise<any[]> {
     try {
-      // Mock user trades
-      return [
-        {
-          id: "trade1",
-          offerId: "1",
-          buyerId: "buyer1",
-          sellerId: "seller1",
-          asset: "BTC",
-          fiatCurrency: "USD",
-          amount: 0.1,
-          price: 43250,
-          totalPrice: 4325,
-          paymentMethod: "bank",
-          status: "COMPLETED",
-          messages: [],
-          buyer: {
-            id: "buyer1",
-            username: "BuyerUser",
-            isVerified: true,
-            kycLevel: 2,
-            rating: 4.8,
-            totalTrades: 45,
-            completionRate: 100,
-            avgReleaseTime: 180000,
-            isOnline: true,
-            lastSeen: new Date().toISOString(),
-          },
-          seller: {
-            id: "seller1",
-            username: "SellerUser",
-            isVerified: true,
-            kycLevel: 2,
-            rating: 4.9,
-            totalTrades: 78,
-            completionRate: 99,
-            avgReleaseTime: 150000,
-            isOnline: true,
-            lastSeen: new Date().toISOString(),
-          },
-          createdAt: "2024-01-14T15:30:00Z",
-          updatedAt: "2024-01-14T15:45:00Z",
-        },
-      ];
+      // In a real implementation, this would fetch recent trades, price changes, etc.
+      // For now, we'll return mock data
+      const activity = [];
+      for (let i = 0; i < limit; i++) {
+        activity.push({
+          id: `activity_${i}`,
+          type: ['trade', 'price_change', 'new_listing'][Math.floor(Math.random() * 3)],
+          symbol: ['BTC', 'ETH', 'USDT', 'SOL', 'ELOITS'][Math.floor(Math.random() * 5)],
+          value: Math.random() * 10000,
+          change: (Math.random() - 0.5) * 10,
+          timestamp: new Date(Date.now() - Math.random() * 86400000)
+        });
+      }
+      return activity;
     } catch (error) {
-      console.error("Error loading P2P trades:", error);
-      throw new Error("Failed to load P2P trades");
+      console.error("Error in getMarketActivity:", error);
+      return [];
     }
   }
 }

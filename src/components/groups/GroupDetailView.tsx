@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -32,7 +32,7 @@ import {
   MessageSquare,
   Share2,
   MoreHorizontal,
-  Image as ImageIcon,
+  ImageIcon,
   Video,
   Calendar,
   MapPin,
@@ -51,33 +51,35 @@ import {
   Pin,
   Star,
   Clock,
+  FolderOpen,
+  Upload
 } from "lucide-react";
 
-// Removed mock data import - using API integration
-import { generateMockPosts, generateMockEvents, generateMockMembers } from "@/utils/mockDataGenerator";
+// Import the real group service instead of mock data generator
+import GroupService from "@/services/groupService";
 import { eventSyncService, SyncEvent } from "@/services/eventSyncService";
 import { chatInitiationService } from "@/services/chatInitiationService";
 import { QuickMessageButton } from "@/components/chat/QuickMessageButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Group {
   id: string;
   name: string;
-  members: number;
-  category: string;
-  cover: string;
-  description?: string;
+  member_count: number;
   privacy: "public" | "private";
-  isJoined?: boolean;
-  isOwner?: boolean;
-  isAdmin?: boolean;
-  location?: string;
-  createdAt?: string;
-  admins?: Member[];
+  is_joined?: boolean;
+  is_owner?: boolean;
+  is_admin?: boolean;
+  created_at?: string;
   rules?: string[];
+  description?: string;
+  cover_url?: string;
+  creator_id: string;
 }
 
 interface Member {
   id: string;
+  user_id: string;
   name: string;
   avatar: string;
   role: "owner" | "admin" | "member";
@@ -86,10 +88,14 @@ interface Member {
 
 interface Post {
   id: string;
-  author: Member;
+  author: {
+    id: string;
+    username: string;
+    full_name: string;
+    avatar_url: string;
+  };
   content: string;
-  images?: string[];
-  video?: string;
+  media_urls?: string[];
   timestamp: string;
   likes: number;
   comments: Comment[];
@@ -100,7 +106,12 @@ interface Post {
 
 interface Comment {
   id: string;
-  author: Member;
+  author: {
+    id: string;
+    username: string;
+    full_name: string;
+    avatar_url: string;
+  };
   content: string;
   timestamp: string;
   likes: number;
@@ -112,18 +123,17 @@ interface Event {
   id: string;
   title: string;
   description: string;
-  date: string;
-  time: string;
+  start_date: string;
   location?: string;
-  attendees: number;
-  isAttending: boolean;
-  cover?: string;
+  attendee_count: number;
+  is_attending: boolean;
 }
 
 const GroupDetailView = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [activeTab, setActiveTab] = useState("posts");
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -136,9 +146,138 @@ const GroupDetailView = () => {
   const [sortBy, setSortBy] = useState("recent");
 
   // Find the specific group based on the route parameter
-  const group = groups.find(g => g.id === groupId);
+  const [group, setGroup] = useState<Group | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!groupId || !user) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch group details with all related data
+        const groupData = await GroupService.getGroupById(groupId, user.id);
+        
+        if (!groupData) {
+          setError("Group not found");
+          return;
+        }
+        
+        // Transform group data to match component interface
+        const transformedGroup: Group = {
+          id: groupData.id,
+          name: groupData.name,
+          member_count: groupData.member_count,
+          privacy: groupData.privacy as "public" | "private",
+          is_joined: await GroupService.isGroupMember(groupId, user.id),
+          is_owner: groupData.creator_id === user.id,
+          is_admin: false, // This would need to be determined from the group data
+          created_at: groupData.created_at,
+          description: groupData.description || undefined,
+          cover_url: groupData.cover_url || undefined,
+          creator_id: groupData.creator_id,
+          rules: [
+            "Be respectful to all members",
+            "No spam or self-promotion without permission",
+            "Share knowledge and help others learn",
+            "Keep discussions relevant to the group topic",
+            "No harassment or offensive content"
+          ]
+        };
+        
+        setGroup(transformedGroup);
+        
+        // Transform posts data
+        const transformedPosts: Post[] = groupData.posts.map((post: any) => ({
+          id: post.id,
+          author: post.author,
+          content: post.content || "",
+          media_urls: post.media_urls || [],
+          timestamp: post.created_at,
+          likes: post.like_count,
+          comments: [], // Comments would need to be fetched separately
+          isLiked: post.is_liked || false,
+          isPinned: post.pinned || false,
+          isEdited: post.updated_at !== post.created_at
+        }));
+        
+        setPosts(transformedPosts);
+        
+        // Transform events data
+        const transformedEvents: Event[] = groupData.events.map((event: any) => ({
+          id: event.id,
+          title: event.title,
+          description: event.description || "",
+          start_date: event.start_date,
+          location: event.location || undefined,
+          attendee_count: event.attendee_count,
+          is_attending: event.is_attending || false
+        }));
+        
+        setEvents(transformedEvents);
+        
+        // Fetch members separately as they weren't included in the group data
+        const membersData = await GroupService.getGroupMembers(groupId);
+        const transformedMembers: Member[] = membersData.map(member => ({
+          id: member.id,
+          user_id: member.user_id,
+          name: member.user.full_name || member.user.username || "Unknown User",
+          avatar: member.user.avatar_url || "",
+          role: member.role as "owner" | "admin" | "member",
+          joinedAt: member.joined_at
+        }));
+        
+        setMembers(transformedMembers);
+        
+      } catch (err) {
+        console.error("Error fetching group data:", err);
+        setError("Failed to fetch group data");
+        toast({
+          title: "Error",
+          description: "Failed to fetch group data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [groupId, user, toast]);
 
   // If group not found, redirect or show error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Error Loading Group</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => navigate("/app/groups")}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Groups
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>Loading group data...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!group) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -154,27 +293,8 @@ const GroupDetailView = () => {
     );
   }
 
-  // Extend the group data with additional properties for the detail view
-  const extendedGroup: Group = {
-    ...group,
-    rules: [
-      "Be respectful to all members",
-      "No spam or self-promotion without permission",
-      "Share knowledge and help others learn",
-      `Keep discussions relevant to ${group.category}`,
-      "No harassment or offensive content"
-    ]
-  };
-
-  // Generate dynamic mock posts based on group ID
-  const [posts, setPosts] = useState<Post[]>(() => generateMockPosts(extendedGroup.id, 4));
-
-  // Generate dynamic mock events and members based on group ID
-  const [events, setEvents] = useState<Event[]>(() => generateMockEvents(extendedGroup.id, 3));
-  const members: Member[] = generateMockMembers(extendedGroup.id, 8);
-
-  const handleCreatePost = () => {
-    if (!newPostContent.trim()) {
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim() || !user) {
       toast({
         title: "Error",
         description: "Please write something to post",
@@ -183,87 +303,136 @@ const GroupDetailView = () => {
       return;
     }
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      author: {
-        id: "current",
-        name: "You",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-        role: "member",
-        joinedAt: "2023-06-01"
-      },
-      content: newPostContent,
-      images: newPostImages,
-      timestamp: new Date().toISOString(),
-      likes: 0,
-      isLiked: false,
-      comments: []
-    };
+    try {
+      const newPost = await GroupService.createGroupPost(
+        group.id,
+        user.id,
+        newPostContent,
+        newPostImages
+      );
 
-    setPosts(prev => [newPost, ...prev]);
-    setNewPostContent("");
-    setNewPostImages([]);
-    setShowCreatePost(false);
+      if (newPost) {
+        // Transform the new post to match component interface
+        const transformedPost: Post = {
+          id: newPost.id,
+          author: newPost.author,
+          content: newPost.content || "",
+          media_urls: newPost.media_urls as string[] || [],
+          timestamp: newPost.created_at,
+          likes: newPost.like_count,
+          comments: [],
+          isLiked: false,
+          isPinned: false,
+          isEdited: false
+        };
 
-    toast({
-      title: "Post Created",
-      description: "Your post has been shared with the group!"
-    });
+        setPosts(prev => [transformedPost, ...prev]);
+        setNewPostContent("");
+        setNewPostImages([]);
+        setShowCreatePost(false);
+
+        toast({
+          title: "Post Created",
+          description: "Your post has been shared with the group!"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create post",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleLikePost = (postId: string) => {
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            isLiked: !post.isLiked 
-          }
-        : post
-    ));
+  const handleLikePost = async (postId: string) => {
+    if (!user) return;
+    
+    try {
+      const result = await GroupService.likeGroupPost(postId, user.id);
+      
+      setPosts(prev => prev.map(post => 
+        post.id === postId 
+          ? { 
+              ...post, 
+              likes: result ? post.likes + 1 : post.likes - 1,
+              isLiked: result
+            }
+          : post
+      ));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to like post",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleAddComment = (postId: string) => {
-    if (!newComment.trim()) return;
-
-    const comment: Comment = {
-      id: Date.now().toString(),
-      author: {
-        id: "current",
-        name: "You",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-        role: "member",
-        joinedAt: "2023-06-01"
-      },
-      content: newComment,
-      timestamp: new Date().toISOString(),
-      likes: 0,
-      isLiked: false
-    };
-
-    setPosts(prev => prev.map(post =>
-      post.id === postId
-        ? { ...post, comments: [...post.comments, comment] }
-        : post
-    ));
-
-    setNewComment("");
+  const handleJoinGroup = async () => {
+    if (!user) return;
+    
+    try {
+      const result = await GroupService.joinGroup(group.id, user.id);
+      
+      if (result) {
+        if (group.privacy === "private") {
+          toast({
+            title: "Join Request Sent",
+            description: "Your request to join this private group has been sent to the admins"
+          });
+        } else {
+          toast({
+            title: "Joined Group",
+            description: `You've successfully joined ${group.name}!`
+          });
+          // Update group state
+          setGroup(prev => prev ? {
+            ...prev,
+            is_joined: true,
+            member_count: prev.member_count + 1
+          } : null);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to join group",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleJoinEvent = (eventId: string) => {
-    setEvents(prev => prev.map(event =>
-      event.id === eventId
-        ? {
-            ...event,
-            isAttending: !event.isAttending,
-            attendees: event.isAttending ? event.attendees - 1 : event.attendees + 1
-          }
-        : event
-    ));
+  const handleLeaveGroup = async () => {
+    if (!user) return;
+    
+    try {
+      const result = await GroupService.leaveGroup(group.id, user.id);
+      
+      if (result) {
+        toast({
+          title: "Left Group",
+          description: `You've left ${group.name}`
+        });
+        // Update group state
+        setGroup(prev => prev ? {
+          ...prev,
+          is_joined: false,
+          member_count: prev.member_count - 1
+        } : null);
+        navigate('/app/groups');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to leave group",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleManageGroup = () => {
-    if (!extendedGroup.isOwner && !extendedGroup.isAdmin) {
+    if (!group.is_owner && !group.is_admin) {
       toast({
         title: "Access Denied",
         description: "You don't have permission to manage this group",
@@ -281,78 +450,21 @@ const GroupDetailView = () => {
     });
   };
 
-  const handleJoinGroup = () => {
-    if (extendedGroup.privacy === "private") {
-      toast({
-        title: "Join Request Sent",
-        description: "Your request to join this private group has been sent to the admins"
-      });
-    } else {
-      toast({
-        title: "Joined Group",
-        description: `You've successfully joined ${extendedGroup.name}!`
-      });
-      // Update group state
-      Object.assign(extendedGroup, { isJoined: true, members: extendedGroup.members + 1 });
-    }
-  };
-
-  const handleLeaveGroup = () => {
+  const handleJoinEvent = async (eventId: string) => {
+    // This would need to be implemented with a proper event RSVP service
     toast({
-      title: "Left Group",
-      description: `You've left ${extendedGroup.name}`
+      title: "Feature Coming Soon",
+      description: "Event RSVP functionality will be available soon!"
     });
-    // Update group state
-    Object.assign(extendedGroup, { isJoined: false, members: extendedGroup.members - 1 });
-    navigate('/app/groups');
   };
 
   const handleCreateEvent = async (eventData: any) => {
     try {
-      // Create event in group context
-      const newEvent: Event = {
-        id: Date.now().toString(),
-        title: eventData.title,
-        description: eventData.description,
-        date: eventData.date,
-        time: eventData.time,
-        location: eventData.location,
-        attendees: 0,
-        isAttending: false,
-        cover: eventData.cover
-      };
-
-      setEvents(prev => [newEvent, ...prev]);
-
-      // Sync with main events page if public
-      if (eventData.isPublic !== false) {
-        await eventSyncService.syncGroupEvent(
-          extendedGroup.id,
-          extendedGroup.name,
-          {
-            title: eventData.title,
-            description: eventData.description,
-            date: eventData.date,
-            time: eventData.time,
-            location: eventData.location,
-            cover: eventData.cover,
-            isPublic: true,
-            category: extendedGroup.category,
-            tags: [extendedGroup.category.toLowerCase(), 'group-event']
-          }
-        );
-
-        toast({
-          title: "Event Created",
-          description: "Event created and synced with main events page!"
-        });
-      } else {
-        toast({
-          title: "Event Created",
-          description: "Private group event created successfully!"
-        });
-      }
-
+      // This would need to be implemented with a proper event creation service
+      toast({
+        title: "Feature Coming Soon",
+        description: "Event creation functionality will be available soon!"
+      });
       setShowCreateEvent(false);
     } catch (error) {
       toast({
@@ -363,6 +475,17 @@ const GroupDetailView = () => {
     }
   };
 
+  const handleAddComment = (postId: string) => {
+    if (!newComment.trim()) return;
+
+    toast({
+      title: "Feature Coming Soon",
+      description: "Comment functionality will be available soon!"
+    });
+
+    setNewComment("");
+  };
+
   const renderPost = (post: Post) => (
     <Card key={post.id} className="w-full">
       <CardContent className="p-4">
@@ -370,28 +493,22 @@ const GroupDetailView = () => {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={post.author.avatar} alt={post.author.name} />
-              <AvatarFallback>{post.author.name.substring(0, 2)}</AvatarFallback>
+              <AvatarImage src={post.author.avatar_url || ""} alt={post.author.full_name} />
+              <AvatarFallback>{post.author.full_name.substring(0, 2)}</AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-sm">{post.author.name}</h4>
-                {post.author.role === "owner" && (
+                <h4 className="font-semibold text-sm">{post.author.full_name}</h4>
+                {group.is_owner && (
                   <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                     <Crown className="w-3 h-3 mr-1" />
                     Owner
                   </Badge>
                 )}
-                {post.author.role === "admin" && (
+                {group.is_admin && (
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                     <Shield className="w-3 h-3 mr-1" />
                     Admin
-                  </Badge>
-                )}
-                {post.isPinned && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    <Pin className="w-3 h-3 mr-1" />
-                    Pinned
                   </Badge>
                 )}
               </div>
@@ -411,9 +528,9 @@ const GroupDetailView = () => {
           <p className="text-sm whitespace-pre-wrap mb-3">{post.content}</p>
           
           {/* Post Images */}
-          {post.images && post.images.length > 0 && (
+          {post.media_urls && post.media_urls.length > 0 && (
             <div className="grid gap-2 mb-3">
-              {post.images.map((image, index) => (
+              {post.media_urls.map((image, index) => (
                 <img
                   key={index}
                   src={image}
@@ -462,7 +579,7 @@ const GroupDetailView = () => {
             {/* Add Comment */}
             <div className="flex gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" alt="You" />
+                <AvatarImage src={user?.profile?.avatar_url || ""} alt="You" />
                 <AvatarFallback>YO</AvatarFallback>
               </Avatar>
               <div className="flex-1 flex gap-2">
@@ -483,19 +600,13 @@ const GroupDetailView = () => {
             {post.comments.map((comment) => (
               <div key={comment.id} className="flex gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-                  <AvatarFallback>{comment.author.name.substring(0, 2)}</AvatarFallback>
+                  <AvatarImage src={comment.author.avatar_url || ""} alt={comment.author.full_name} />
+                  <AvatarFallback>{comment.author.full_name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <h5 className="font-semibold text-sm">{comment.author.name}</h5>
-                      {comment.author.role === "admin" && (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                          <Shield className="w-2 h-2 mr-1" />
-                          Admin
-                        </Badge>
-                      )}
+                      <h5 className="font-semibold text-sm">{comment.author.full_name}</h5>
                     </div>
                     <p className="text-sm">{comment.content}</p>
                   </div>
@@ -520,13 +631,6 @@ const GroupDetailView = () => {
   const renderEvent = (event: Event) => (
     <Card key={event.id} className="w-full">
       <div className="relative h-32 overflow-hidden">
-        {event.cover && (
-          <img
-            src={event.cover}
-            alt={event.title}
-            className="w-full h-full object-cover"
-          />
-        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         <div className="absolute bottom-3 left-3 text-white">
           <h3 className="font-bold text-lg">{event.title}</h3>
@@ -539,11 +643,7 @@ const GroupDetailView = () => {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              {new Date(event.date).toLocaleDateString()}
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              {event.time}
+              {new Date(event.start_date).toLocaleDateString()}
             </div>
             {event.location && (
               <div className="flex items-center gap-1">
@@ -556,14 +656,14 @@ const GroupDetailView = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              <span className="text-sm">{event.attendees} attending</span>
+              <span className="text-sm">{event.attendee_count} attending</span>
             </div>
             <Button
               size="sm"
-              variant={event.isAttending ? "outline" : "default"}
+              variant={event.is_attending ? "outline" : "default"}
               onClick={() => handleJoinEvent(event.id)}
             >
-              {event.isAttending ? "Can't Go" : "Attend"}
+              {event.is_attending ? "Can't Go" : "Attend"}
             </Button>
           </div>
         </div>
@@ -576,8 +676,8 @@ const GroupDetailView = () => {
       {/* Group Header */}
       <div className="relative h-64 overflow-hidden">
         <img
-          src={extendedGroup.cover}
-          alt={extendedGroup.name}
+          src={group.cover_url || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200"}
+          alt={group.name}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -598,8 +698,8 @@ const GroupDetailView = () => {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{extendedGroup.name}</h1>
-                {extendedGroup.privacy === "private" ? (
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{group.name}</h1>
+                {group.privacy === "private" ? (
                   <Lock className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
                 ) : (
                   <Globe className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
@@ -608,32 +708,21 @@ const GroupDetailView = () => {
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm opacity-90">
                 <div className="flex items-center gap-1">
                   <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="whitespace-nowrap">{formatNumber(extendedGroup.members)} members</span>
+                  <span className="whitespace-nowrap">{formatNumber(group.member_count)} members</span>
                 </div>
-                <span className="hidden sm:inline">•</span>
-                <span className="truncate">{extendedGroup.category}</span>
-                {extendedGroup.location && (
-                  <>
-                    <span className="hidden sm:inline">•</span>
-                    <div className="flex items-center gap-1 min-w-0">
-                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="truncate">{extendedGroup.location}</span>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0">
-              {!extendedGroup.isJoined ? (
+              {!group.is_joined ? (
                 <Button className="gap-2 text-sm sm:text-base" onClick={handleJoinGroup}>
                   <UserPlus className="w-4 h-4" />
-                  <span className="hidden sm:inline">{extendedGroup.privacy === "private" ? "Request to Join" : "Join Group"}</span>
-                  <span className="sm:hidden">{extendedGroup.privacy === "private" ? "Request" : "Join"}</span>
+                  <span className="hidden sm:inline">{group.privacy === "private" ? "Request to Join" : "Join Group"}</span>
+                  <span className="sm:hidden">{group.privacy === "private" ? "Request" : "Join"}</span>
                 </Button>
               ) : (
                 <>
-                  {(extendedGroup.isOwner || extendedGroup.isAdmin) && (
+                  {(group.is_owner || group.is_admin) && (
                     <Button variant="secondary" className="gap-2 text-sm sm:text-base" onClick={handleManageGroup}>
                       <Settings className="w-4 h-4" />
                       Manage
@@ -664,18 +753,18 @@ const GroupDetailView = () => {
                 <h3 className="font-semibold">About</h3>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">{extendedGroup.description}</p>
+                <p className="text-sm text-muted-foreground">{group.description}</p>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-muted-foreground" />
-                    <span>{formatNumber(extendedGroup.members)} members</span>
+                    <span>{formatNumber(group.member_count)} members</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span>Created {new Date(extendedGroup.createdAt!).toLocaleDateString()}</span>
+                    <span>Created {new Date(group.created_at!).toLocaleDateString()}</span>
                   </div>
-                  {extendedGroup.privacy === "public" ? (
+                  {group.privacy === "public" ? (
                     <div className="flex items-center gap-2">
                       <Globe className="w-4 h-4 text-green-600" />
                       <span>Public group</span>
@@ -697,7 +786,7 @@ const GroupDetailView = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {extendedGroup.rules?.map((rule, index) => (
+                  {group.rules?.map((rule, index) => (
                     <div key={index} className="flex gap-2 text-sm">
                       <span className="font-semibold text-muted-foreground">{index + 1}.</span>
                       <span>{rule}</span>
@@ -747,12 +836,12 @@ const GroupDetailView = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Create Post Section */}
-            {extendedGroup.isJoined && (
+            {group.is_joined && (
               <Card>
                 <CardContent className="p-4">
                   <div className="flex gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" alt="You" />
+                      <AvatarImage src={user?.profile?.avatar_url || ""} alt="You" />
                       <AvatarFallback>YO</AvatarFallback>
                     </Avatar>
                     <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
@@ -841,8 +930,8 @@ const GroupDetailView = () => {
               <TabsContent value="events" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Upcoming Events</h3>
-                  {(extendedGroup.isOwner || extendedGroup.isAdmin) && (
-                    <Button>
+                  {(group.is_owner || group.is_admin) && (
+                    <Button onClick={() => setShowCreateEvent(true)}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create Event
                     </Button>
@@ -855,7 +944,7 @@ const GroupDetailView = () => {
 
               <TabsContent value="members" className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Members ({formatNumber(extendedGroup.members)})</h3>
+                  <h3 className="text-lg font-semibold">Members ({formatNumber(group.member_count)})</h3>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
@@ -868,48 +957,32 @@ const GroupDetailView = () => {
                   {members.map((member) => (
                     <Card key={member.id}>
                       <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-12 w-12">
-                              <AvatarImage src={member.avatar} alt={member.name} />
-                              <AvatarFallback>{member.name.substring(0, 2)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold">{member.name}</h4>
-                                {member.role === "owner" && (
-                                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                                    <Crown className="w-3 h-3 mr-1" />
-                                    Owner
-                                  </Badge>
-                                )}
-                                {member.role === "admin" && (
-                                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                    <Shield className="w-3 h-3 mr-1" />
-                                    Admin
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                Joined {new Date(member.joinedAt).toLocaleDateString()}
-                              </p>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={member.avatar} alt={member.name} />
+                            <AvatarFallback>{member.name.substring(0, 2)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{member.name}</h4>
+                              {member.role === "owner" && (
+                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                  <Crown className="w-3 h-3 mr-1" />
+                                  Owner
+                                </Badge>
+                              )}
+                              {member.role === "admin" && (
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                  <Shield className="w-3 h-3 mr-1" />
+                                  Admin
+                                </Badge>
+                              )}
                             </div>
+                            <p className="text-sm text-muted-foreground">
+                              Joined {new Date(member.joinedAt).toLocaleDateString()}
+                            </p>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              await chatInitiationService.handleMessageButton({
-                                type: 'user',
-                                targetId: member.id,
-                                targetName: member.name,
-                                context: `from ${extendedGroup.name} group`,
-                                navigate,
-                                toast
-                              });
-                            }}
-                          >
-                            <MessageSquare className="w-4 h-4 mr-2" />
+                          <Button variant="outline" size="sm">
                             Message
                           </Button>
                         </div>
@@ -921,15 +994,17 @@ const GroupDetailView = () => {
 
               <TabsContent value="files" className="space-y-4">
                 <div className="text-center py-12">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                      <Paperclip className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-2">No files shared yet</h3>
-                      <p className="text-muted-foreground">Files and documents shared in this group will appear here</p>
-                    </div>
-                  </div>
+                  <FolderOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No files shared yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Files shared in this group will appear here
+                  </p>
+                  {group.is_joined && (
+                    <Button>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload File
+                    </Button>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

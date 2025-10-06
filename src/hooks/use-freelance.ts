@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { freelanceService } from "@/services/freelanceService";
+import { FreelanceService as freelanceService } from "@/services/freelanceService";
 import { escrowService } from "@/services/escrowService";
 import { freelanceMessagingService } from "@/services/freelanceMessagingService";
 import {
@@ -465,12 +465,16 @@ export const useFreelanceProject = (projectId: string) => {
   const updateProjectStatus = useCallback(
     async (status: Project["status"]) => {
       try {
-        const updatedProject = await freelanceService.updateProjectStatus(
+        const success = await freelanceService.updateProjectStatus(
           projectId,
           status,
         );
-        if (updatedProject) {
-          setProject(updatedProject);
+        if (success) {
+          // Reload the project to get the updated status
+          const updatedProject = await freelanceService.getProject(projectId);
+          if (updatedProject) {
+            setProject(updatedProject);
+          }
           toast({
             title: "Success",
             description: "Project status updated",

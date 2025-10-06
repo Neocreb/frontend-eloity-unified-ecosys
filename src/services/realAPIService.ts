@@ -148,11 +148,16 @@ export class RealAPIService {
   private async fetchCoinGeckoData(
     symbol: string,
   ): Promise<APIResponse<CryptoPrice>> {
-    // CoinGecko free API - no key required
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${symbol}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
+    // CoinGecko API with optional key for higher rate limits
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${symbol}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24h_vol=true`;
+    
+    // Note: In a real frontend application, API keys should be handled on the server-side
+    // This is just for demonstration purposes. In production, this should be proxied through your backend.
+    const apiKey = import.meta.env?.VITE_COINGECKO_API_KEY || '';
+    const headers = apiKey ? { 'X-CG-Pro-API-Key': apiKey } : {};
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { headers });
       if (!response.ok) throw new Error("API request failed");
 
       const data = await response.json();
