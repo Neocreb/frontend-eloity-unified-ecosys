@@ -48,6 +48,7 @@ import {
   MessageSquare,
   Image,
   Video,
+  CheckCircle,
   Music,
   FileImage,
   FileVideo,
@@ -508,7 +509,8 @@ export const DataManagement: React.FC = () => {
         return node.textContent;
       }
 
-      for (const child of node.children) {
+      for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
         const key = child.tagName;
         const value = xmlToObject(child);
 

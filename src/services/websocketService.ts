@@ -200,5 +200,9 @@ export interface WebSocketEvents {
   content_engagement: { creatorId: string; type: 'like' | 'share' | 'comment' | 'view'; contentId: string; contentTitle: string; contentType: 'video' | 'post' | 'livestream' };
   milestone_achieved: { creatorId: string; milestone: { id: string; title: string; target: number; reward: number } };
   livestream_viewers: { creatorId: string; count: number };
+  
+  // P2P Escrow events
+  escrow_update: { transactionId: string; transaction: any };
+  escrow_timeout_warning: { transactionId: string; timeRemaining: number };
 }
 
