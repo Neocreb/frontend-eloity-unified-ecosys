@@ -273,8 +273,9 @@ export const EnhancedMessage: React.FC<EnhancedMessageProps> = ({
   };
 
   const renderMessageContent = () => {
-    // @ts-ignore - Flexible metadata access with comprehensive typing bypass
-    const metadata = (message.metadata || {}) as any;
+    // @ts-expect-error - Flexible metadata access with comprehensive typing bypass
+    // @ts-ignore
+    const metadata: any = (message.metadata || {});
     
     switch (message.type) {
       case "sticker":
