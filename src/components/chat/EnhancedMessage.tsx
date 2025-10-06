@@ -273,8 +273,7 @@ export const EnhancedMessage: React.FC<EnhancedMessageProps> = ({
   };
 
   const renderMessageContent = () => {
-    // @ts-expect-error - Flexible metadata access with comprehensive typing bypass
-    // @ts-ignore
+    // @ts-ignore - Flexible metadata access
     const metadata: any = (message.metadata || {});
     
     switch (message.type) {
@@ -466,8 +465,6 @@ export const EnhancedMessage: React.FC<EnhancedMessageProps> = ({
         );
 
       case "media":
-        const { metadata } = message;
-
         if (metadata?.mediaType === "image" || (!metadata?.mediaType && message.content.match(/\.(jpg|jpeg|png|gif|webp)$/i))) {
           return (
             <div className="max-w-sm">

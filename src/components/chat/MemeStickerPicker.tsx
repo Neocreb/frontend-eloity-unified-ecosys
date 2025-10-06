@@ -62,9 +62,12 @@ import {
   UserStickerLibrary,
   EMOJI_STICKER_PACKS
 } from "@/types/sticker";
-import { SAMPLE_MEMES, SAMPLE_GIFS, COMMUNITY_MEME_GIF_PACKS } from "@/data/sampleMemesGifsData";
 import { EnhancedMediaCreationPanel } from "./EnhancedMediaCreationPanel";
 import { useUserCollections } from "@/contexts/UserCollectionsContext";
+
+// Placeholder for community content - will be fetched from Supabase
+const SAMPLE_MEMES: any[] = [];
+const SAMPLE_GIFS: any[] = [];
 
 interface MemeStickerPickerProps {
   onStickerSelect: (sticker: StickerData) => void;
@@ -77,7 +80,7 @@ interface MemeStickerPickerProps {
 const STICKER_TABS: StickerPickerTab[] = [
   { id: "memes", name: "Memes", icon: <Zap className="w-4 h-4" /> },
   { id: "gifs", name: "GIFs", icon: <Camera className="w-4 h-4" /> },
-  { id: "create", name: "Create", icon: <Plus className="w-4 h-4" /> },
+  { id: "add_new", name: "Create", icon: <Plus className="w-4 h-4" /> },
 ];
 
 export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
@@ -110,7 +113,6 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
     isPublic: true,
     isPremium: false,
     isOfficial: false,
-    isCustom: false,
     tags: ["memes", "community", "unified"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -133,7 +135,6 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
     isPublic: true,
     isPremium: false,
     isOfficial: false,
-    isCustom: false,
     tags: ["gifs", "animated", "community", "unified"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -170,7 +171,6 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       isPublic: true,
       isPremium: false,
       isOfficial: false,
-      isCustom: false,
       tags: ["memes", "community", "unified"],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -193,7 +193,6 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       isPublic: true,
       isPremium: false,
       isOfficial: false,
-      isCustom: false,
       tags: ["gifs", "animated", "community", "unified"],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
