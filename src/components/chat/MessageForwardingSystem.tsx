@@ -347,7 +347,7 @@ export const MessageForwardingSystem: React.FC<MessageForwardingSystemProps> = (
           </div>
         </div>
         
-        <Checkbox checked={isSelected} readOnly />
+        <Checkbox checked={isSelected} disabled />
       </div>
     </Card>
   );

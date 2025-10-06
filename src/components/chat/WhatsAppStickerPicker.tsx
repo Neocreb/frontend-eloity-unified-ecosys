@@ -211,7 +211,7 @@ export const WhatsAppStickerPicker: React.FC<StickerPickerProps> = ({
     )}>
       {/* Pack tabs */}
       <div className="flex items-center border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-        <ScrollArea orientation="horizontal" className="w-full">
+        <ScrollArea className="w-full">
           <div className={cn(
             "flex items-center space-x-1",
             isMobile ? "p-1.5" : "p-2"
