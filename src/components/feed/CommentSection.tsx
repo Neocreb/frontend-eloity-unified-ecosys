@@ -188,7 +188,7 @@ const CommentSection = ({
                       </button>
                       <VirtualGiftsAndTips
                         recipientId={comment.user_id}
-                        recipientName={comment.author?.name || 'User'}
+                        recipientName={comment.author?.name || comment.author?.username || 'User'}
                       />
                       <span>2h</span>
                     </div>

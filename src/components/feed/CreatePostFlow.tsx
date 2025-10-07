@@ -915,7 +915,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
               <div className="space-y-3">
                 <div>
                   <Label>Test variant</Label>
-                  <Select value={abTestVariant} onValueChange={setABTestVariant}>
+                  <Select value={abTestVariant} onValueChange={setAbTestVariant}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
