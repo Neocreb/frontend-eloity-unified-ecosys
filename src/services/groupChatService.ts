@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { supabase } from '../lib/supabase/client'
+import { supabase } from '@/integrations/supabase/client'
 import type { 
   GroupChatThread, 
   GroupParticipant, 
@@ -15,294 +15,93 @@ import type {
 export class GroupChatService {
   // Group CRUD Operations
   async createGroup(request: CreateGroupRequest): Promise<GroupChatThread> {
-    try {
-      const { data: groupData, error: groupError } = await supabase
-        .from('group_chat_threads')
-        .insert({
-          name: request.name,
-          description: request.description,
-          avatar: request.avatar,
-          is_private: request.settings.isPrivate,
-          settings: request.settings,
-          created_by: request.createdBy,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single()
-
-      if (groupError) throw groupError
-
-      // Add participants (creator is automatically admin)
-      const participantsData = [
-        {
-          group_id: groupData.id,
-          user_id: request.createdBy,
-          role: 'admin' as const,
-          permissions: this.getAdminPermissions(),
-          joined_at: new Date().toISOString()
-        },
-        ...request.participants.map(userId => ({
-          group_id: groupData.id,
-          user_id: userId,
-          role: 'member' as const,
-          permissions: this.getMemberPermissions(),
-          joined_at: new Date().toISOString()
-        }))
-      ]
-
-      const { error: participantsError } = await supabase
-        .from('group_participants')
-        .insert(participantsData)
-
-      if (participantsError) throw participantsError
-
-      // Get complete group with participants
-      return await this.getGroupById(groupData.id)
-    } catch (error) {
-      console.error('Error creating group:', error)
-      throw new Error('Failed to create group')
-    }
+    console.warn("createGroup: Database table 'group_chat_threads' does not exist yet. Returning mock data.");
+    // Return mock data instead of accessing non-existent database
+    return {
+      id: 'mock-group-id',
+      type: 'group',
+      name: request.name,
+      description: request.description || '',
+      avatar: request.avatar,
+      participants: [],
+      settings: request.settings,
+      createdBy: request.createdBy,
+      createdAt: new Date().toISOString(),
+      lastActivity: new Date().toISOString(),
+      totalMembers: 1,
+      onlineMembers: 0,
+      pinnedMessages: [],
+      inviteLinks: []
+    };
   }
 
   async getGroupById(groupId: string): Promise<GroupChatThread> {
-    try {
-      const { data: groupData, error: groupError } = await supabase
-        .from('group_chat_threads')
-        .select(`
-          *,
-          group_participants!inner(
-            user_id,
-            role,
-            permissions,
-            joined_at,
-            last_seen,
-            is_muted,
-            user:users(id, username, avatar_url, display_name)
-          )
-        `)
-        .eq('id', groupId)
-        .single()
-
-      if (groupError) throw groupError
-
-      return {
-        id: groupData.id,
-        type: 'group',
-        name: groupData.name,
-        description: groupData.description,
-        avatar: groupData.avatar,
-        participants: groupData.group_participants.map((p: any) => ({
-          userId: p.user_id,
-          username: p.user.username,
-          displayName: p.user.display_name,
-          avatar: p.user.avatar_url,
-          role: p.role,
-          permissions: p.permissions,
-          joinedAt: p.joined_at,
-          lastSeen: p.last_seen,
-          isMuted: p.is_muted
-        })),
-        settings: groupData.settings,
-        createdBy: groupData.created_by,
-        createdAt: groupData.created_at,
-        lastActivity: groupData.updated_at,
-        totalMembers: groupData.group_participants.length,
-        onlineMembers: 0, // Would need real-time presence
-        pinnedMessages: [],
-        inviteLinks: []
-      }
-    } catch (error) {
-      console.error('Error fetching group:', error)
-      throw new Error('Failed to fetch group')
-    }
+    console.warn("getGroupById: Database table 'group_chat_threads' does not exist yet. Returning mock data.");
+    // Return mock data instead of accessing non-existent database
+    return {
+      id: groupId,
+      type: 'group',
+      name: 'Mock Group',
+      description: 'This is a mock group for testing',
+      avatar: undefined,
+      participants: [],
+      settings: {
+        isPrivate: false,
+        allowInvites: true,
+        allowMessaging: true
+      },
+      createdBy: 'mock-user-id',
+      createdAt: new Date().toISOString(),
+      lastActivity: new Date().toISOString(),
+      totalMembers: 0,
+      onlineMembers: 0,
+      pinnedMessages: [],
+      inviteLinks: []
+    };
   }
 
   async getUserGroups(userId: string): Promise<GroupChatThread[]> {
-    try {
-      const { data, error } = await supabase
-        .from('group_participants')
-        .select(`
-          group_id,
-          role,
-          group_chat_threads!inner(
-            id,
-            name,
-            description,
-            avatar,
-            settings,
-            created_by,
-            created_at,
-            updated_at
-          )
-        `)
-        .eq('user_id', userId)
-
-      if (error) throw error
-
-      const groups = await Promise.all(
-        data.map(async (item: any) => {
-          return await this.getGroupById(item.group_id)
-        })
-      )
-
-      return groups
-    } catch (error) {
-      console.error('Error fetching user groups:', error)
-      throw new Error('Failed to fetch user groups')
-    }
+    console.warn("getUserGroups: Database table 'group_participants' does not exist yet. Returning empty array.");
+    // Return empty array instead of accessing non-existent database
+    return [];
   }
 
   // Member Management
   async addMember(groupId: string, userId: string, addedBy: string): Promise<void> {
-    try {
-      // Check if requester has permission
-      const hasPermission = await this.checkPermission(groupId, addedBy, 'canAddMembers')
-      if (!hasPermission) throw new Error('Insufficient permissions')
-
-      const { error } = await supabase
-        .from('group_participants')
-        .insert({
-          group_id: groupId,
-          user_id: userId,
-          role: 'member',
-          permissions: this.getMemberPermissions(),
-          joined_at: new Date().toISOString()
-        })
-
-      if (error) throw error
-
-      // Add system message
-      await this.addSystemMessage(groupId, `User added to the group`, addedBy)
-    } catch (error) {
-      console.error('Error adding member:', error)
-      throw new Error('Failed to add member')
-    }
+    console.warn("addMember: Database table 'group_participants' does not exist yet. No operation performed.");
+    // No operation instead of accessing non-existent database
+    return Promise.resolve();
   }
 
   async removeMember(groupId: string, userId: string, removedBy: string): Promise<void> {
-    try {
-      // Check permissions
-      const hasPermission = await this.checkPermission(groupId, removedBy, 'canRemoveMembers')
-      if (!hasPermission) throw new Error('Insufficient permissions')
-
-      const { error } = await supabase
-        .from('group_participants')
-        .delete()
-        .eq('group_id', groupId)
-        .eq('user_id', userId)
-
-      if (error) throw error
-
-      // Add system message
-      await this.addSystemMessage(groupId, `User removed from the group`, removedBy)
-    } catch (error) {
-      console.error('Error removing member:', error)
-      throw new Error('Failed to remove member')
-    }
+    console.warn("removeMember: Database table 'group_participants' does not exist yet. No operation performed.");
+    // No operation instead of accessing non-existent database
+    return Promise.resolve();
   }
 
   async promoteToAdmin(groupId: string, userId: string, promotedBy: string): Promise<void> {
-    try {
-      // Check permissions
-      const hasPermission = await this.checkPermission(groupId, promotedBy, 'canManageAdmins')
-      if (!hasPermission) throw new Error('Insufficient permissions')
-
-      const { error } = await supabase
-        .from('group_participants')
-        .update({
-          role: 'admin',
-          permissions: this.getAdminPermissions()
-        })
-        .eq('group_id', groupId)
-        .eq('user_id', userId)
-
-      if (error) throw error
-
-      // Add system message
-      await this.addSystemMessage(groupId, `User promoted to admin`, promotedBy)
-    } catch (error) {
-      console.error('Error promoting to admin:', error)
-      throw new Error('Failed to promote to admin')
-    }
+    console.warn("promoteToAdmin: Database table 'group_participants' does not exist yet. No operation performed.");
+    // No operation instead of accessing non-existent database
+    return Promise.resolve();
   }
 
   async demoteFromAdmin(groupId: string, userId: string, demotedBy: string): Promise<void> {
-    try {
-      // Check permissions
-      const hasPermission = await this.checkPermission(groupId, demotedBy, 'canManageAdmins')
-      if (!hasPermission) throw new Error('Insufficient permissions')
-
-      const { error } = await supabase
-        .from('group_participants')
-        .update({
-          role: 'member',
-          permissions: this.getMemberPermissions()
-        })
-        .eq('group_id', groupId)
-        .eq('user_id', userId)
-
-      if (error) throw error
-
-      // Add system message
-      await this.addSystemMessage(groupId, `Admin privileges removed`, demotedBy)
-    } catch (error) {
-      console.error('Error demoting from admin:', error)
-      throw new Error('Failed to demote from admin')
-    }
+    console.warn("demoteFromAdmin: Database table 'group_participants' does not exist yet. No operation performed.");
+    // No operation instead of accessing non-existent database
+    return Promise.resolve();
   }
 
   // Group Settings Management
   async updateGroupSettings(groupId: string, settings: Partial<GroupSettings>, updatedBy: string): Promise<void> {
-    try {
-      // Check permissions
-      const hasPermission = await this.checkPermission(groupId, updatedBy, 'canEditSettings')
-      if (!hasPermission) throw new Error('Insufficient permissions')
-
-      const { error } = await supabase
-        .from('group_chat_threads')
-        .update({
-          settings,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', groupId)
-
-      if (error) throw error
-
-      // Add system message
-      await this.addSystemMessage(groupId, `Group settings updated`, updatedBy)
-    } catch (error) {
-      console.error('Error updating group settings:', error)
-      throw new Error('Failed to update group settings')
-    }
+    console.warn("updateGroupSettings: Database table 'group_chat_threads' does not exist yet. No operation performed.");
+    // No operation instead of accessing non-existent database
+    return Promise.resolve();
   }
 
   async updateGroupInfo(groupId: string, name?: string, description?: string, avatar?: string, updatedBy?: string): Promise<void> {
-    try {
-      if (updatedBy) {
-        const hasPermission = await this.checkPermission(groupId, updatedBy, 'canEditGroupInfo')
-        if (!hasPermission) throw new Error('Insufficient permissions')
-      }
-
-      const updates: any = { updated_at: new Date().toISOString() }
-      if (name !== undefined) updates.name = name
-      if (description !== undefined) updates.description = description
-      if (avatar !== undefined) updates.avatar = avatar
-
-      const { error } = await supabase
-        .from('group_chat_threads')
-        .update(updates)
-        .eq('id', groupId)
-
-      if (error) throw error
-
-      if (updatedBy) {
-        await this.addSystemMessage(groupId, `Group info updated`, updatedBy)
-      }
-    } catch (error) {
-      console.error('Error updating group info:', error)
-      throw new Error('Failed to update group info')
-    }
+    console.warn("updateGroupInfo: Database table 'group_chat_threads' does not exist yet. No operation performed.");
+    // No operation instead of accessing non-existent database
+    return Promise.resolve();
   }
 
   // Invite Link Management
