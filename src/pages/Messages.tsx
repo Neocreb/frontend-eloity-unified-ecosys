@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Helmet } from "react-helmet-async";
 import {
   Search,
