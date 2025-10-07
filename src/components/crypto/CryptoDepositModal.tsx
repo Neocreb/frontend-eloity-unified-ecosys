@@ -146,6 +146,7 @@ const supportedCryptos: CryptoCurrency[] = [
 export default function CryptoDepositModal({
   isOpen,
   onClose,
+  onSuccess,
   onKYCSubmit,
 }: CryptoDepositModalProps) {
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoCurrency | null>(

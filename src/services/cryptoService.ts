@@ -962,6 +962,40 @@ export class CryptoService {
       autoRenew: false
     };
   }
+
+  async getP2POffers(): Promise<any[]> {
+    // Fetch P2P offers from database
+    try {
+      const { data, error } = await supabase
+        .from('p2p_offers')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false});
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching P2P offers:', error);
+      return [];
+    }
+  }
+
+  async createP2POffer(offerData: any): Promise<any> {
+    // Create P2P offer in database
+    try {
+      const { data, error } = await supabase
+        .from('p2p_offers')
+        .insert(offerData)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating P2P offer:', error);
+      return null;
+    }
+  }
 }
 
 // Export singleton instance
