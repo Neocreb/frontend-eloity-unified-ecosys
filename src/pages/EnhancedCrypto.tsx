@@ -34,6 +34,13 @@ import {
   DollarSign,
   Eye,
   Heart,
+  Coins,
+  Lock,
+  Unlock,
+  Gift,
+  Percent,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,13 +87,35 @@ export default function EnhancedCrypto() {
     null,
   );
   const [isCryptoDetailOpen, setIsCryptoDetailOpen] = useState(false);
+  const [stakingProducts, setStakingProducts] = useState<any[]>([]);
+  const [stakingPositions, setStakingPositions] = useState<any[]>([]);
 
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
     loadCryptoData();
+    loadStakingData();
   }, []);
+
+  const loadStakingData = async () => {
+    try {
+      const [productsData, positionsData] = await Promise.all([
+        cryptoService.getStakingProducts(),
+        cryptoService.getStakingPositions(),
+      ]);
+
+      setStakingProducts(productsData);
+      setStakingPositions(positionsData);
+    } catch (error) {
+      console.error("Failed to load staking data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load staking data",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Real-time updates every 30 seconds
   useEffect(() => {
@@ -111,13 +140,9 @@ export default function EnhancedCrypto() {
     try {
       // Load data with individual error handling to prevent total failure
       const results = await Promise.allSettled([
-        cryptoService.getCryptocurrencies(20),
+        cryptoService.getCryptocurrencies(),
         cryptoService.getMarketData(),
         cryptoService.getPortfolio(),
-        cryptoService.getOrderBook(selectedPair),
-        cryptoService.getRecentTrades(selectedPair, 10),
-        cryptoService.getNews(6),
-        cryptoService.getEducationContent(),
         blogService.getBlogPosts({ limit: 6 }),
       ]);
 
@@ -125,14 +150,8 @@ export default function EnhancedCrypto() {
       if (results[0].status === "fulfilled") setCryptos(results[0].value || []);
       if (results[1].status === "fulfilled") setMarketData(results[1].value);
       if (results[2].status === "fulfilled") setPortfolio(results[2].value);
-      if (results[3].status === "fulfilled") setOrderBook(results[3].value);
-      if (results[4].status === "fulfilled")
-        setRecentTrades(results[4].value || []);
-      if (results[5].status === "fulfilled") setNews(results[5].value || []);
-      if (results[6].status === "fulfilled")
-        setEducationContent(results[6].value || []);
-      if (results[7].status === "fulfilled")
-        setBlogPosts(results[7].value?.posts || []);
+      if (results[3].status === "fulfilled")
+        setBlogPosts(results[3].value?.posts || []);
 
       setLastUpdated(new Date());
 
@@ -194,7 +213,41 @@ export default function EnhancedCrypto() {
     }
   };
 
-  const formatCurrency = (value: number) => {
+  const calculateTotalStakingValue = () => {
+    return stakingPositions.reduce((total, position) => {
+      const assetPrice = getAssetPrice(position.asset);
+      return total + position.amount * assetPrice;
+    }, 0);
+  };
+
+  const calculateTotalDailyRewards = () => {
+    return stakingPositions.reduce(
+      (total, position) => total + position.dailyReward,
+      0,
+    );
+  };
+
+  const getAssetPrice = (asset: string) => {
+    // Mock prices - in real app, get from portfolio or market data
+    const prices: Record<string, number> = {
+      ETH: 2645.89,
+      BTC: 43250.67,
+      BNB: 315.8,
+      ADA: 0.48,
+      DOT: 7.45,
+      AVAX: 38.92,
+    };
+    return prices[asset] || 1;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  const formatLargeCurrency = (value: number) => {
     if (typeof value !== "number" || isNaN(value)) {
       return "$0.00";
     }
@@ -215,10 +268,25 @@ export default function EnhancedCrypto() {
   };
 
   const formatPercentage = (value: number) => {
-    if (typeof value !== "number" || isNaN(value)) {
-      return "0.00%";
-    }
+    if (typeof value !== "number" || isNaN(value)) return "0.00%";
     return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+  };
+
+  const getRiskColor = (risks: string[]) => {
+    if (risks.some((r) => r.toLowerCase().includes("high")))
+      return "text-red-600";
+    if (risks.some((r) => r.toLowerCase().includes("medium")))
+      return "text-yellow-600";
+    return "text-green-600";
+  };
+
+  const getDaysRemaining = (endDate?: string) => {
+    if (!endDate) return null;
+    const end = new Date(endDate);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
   };
 
   const safeToFixed = (value: number | undefined, decimals = 2) => {
@@ -329,6 +397,13 @@ export default function EnhancedCrypto() {
                       <span>P2P</span>
                     </TabsTrigger>
                     <TabsTrigger
+                      value="defi"
+                      className="flex items-center gap-1 text-xs py-2 px-3 min-w-max rounded-md data-[state=active]:bg-teal-500 data-[state=active]:text-white transition-all whitespace-nowrap"
+                    >
+                      <Target className="h-3 w-3 flex-shrink-0" />
+                      <span>DeFi</span>
+                    </TabsTrigger>
+                    <TabsTrigger
                       value="portfolio"
                       className="flex items-center gap-1 text-xs py-2 px-3 min-w-max rounded-md data-[state=active]:bg-orange-500 data-[state=active]:text-white transition-all whitespace-nowrap"
                     >
@@ -348,7 +423,7 @@ export default function EnhancedCrypto() {
 
               {/* Desktop Tabs - Grid Layout */}
               <div className="hidden sm:block">
-                <TabsList className="grid w-full grid-cols-5 bg-gray-100 dark:bg-slate-700 p-1 rounded-lg mx-2 my-2">
+                <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-slate-700 p-1 rounded-lg mx-2 my-2">
                   <TabsTrigger
                     value="overview"
                     className="flex items-center justify-center gap-2 text-sm py-3 px-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
@@ -369,6 +444,13 @@ export default function EnhancedCrypto() {
                   >
                     <Users className="h-4 w-4" />
                     <span className="hidden lg:inline">P2P</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="defi"
+                    className="flex items-center gap-2 text-sm py-3 px-4 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                  >
+                    <Target className="h-4 w-4" />
+                    <span className="hidden lg:inline">DeFi</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="portfolio"
@@ -419,7 +501,7 @@ export default function EnhancedCrypto() {
                               Market Cap
                             </p>
                             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-800 dark:text-blue-200">
-                              {formatCurrency(
+                              {formatLargeCurrency(
                                 marketData.globalStats?.totalMarketCap || 0,
                               )}
                             </p>
@@ -452,7 +534,7 @@ export default function EnhancedCrypto() {
                               24h Volume
                             </p>
                             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-800 dark:text-green-200">
-                              {formatCurrency(
+                              {formatLargeCurrency(
                                 marketData.globalStats?.totalVolume24h || 0,
                               )}
                             </p>
@@ -505,10 +587,10 @@ export default function EnhancedCrypto() {
                               Fear & Greed
                             </p>
                             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-800 dark:text-purple-200">
-                              {marketData.fearGreedIndex || 65}
+                              {marketData.fearGreedIndex?.value || 65}
                             </p>
                             <p className="text-xs sm:text-sm font-semibold text-yellow-600">
-                              Greed
+                              {marketData.fearGreedIndex?.classification || 'Greed'}
                             </p>
                           </div>
                           <div className="p-2 bg-purple-500/20 rounded-lg">
@@ -990,6 +1072,382 @@ export default function EnhancedCrypto() {
                 className="mt-4 sm:mt-6 space-y-4 sm:space-y-6"
               >
                 <EnhancedCryptoPortfolio />
+              </TabsContent>
+
+              {/* DeFi Tab */}
+              <TabsContent
+                value="defi"
+                className="mt-4 sm:mt-6 space-y-4 sm:space-y-6"
+              >
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold">DeFi Dashboard</h2>
+                      <p className="text-gray-600">
+                        Stake, earn, and participate in decentralized finance
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" onClick={loadStakingData}>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Lock className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Total Staked</div>
+                            <div className="text-xl font-bold">
+                              {formatCurrency(calculateTotalStakingValue())}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <Gift className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Daily Rewards</div>
+                            <div className="text-xl font-bold">
+                              {formatCurrency(
+                                calculateTotalDailyRewards() * getAssetPrice("ETH"),
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-purple-100 rounded-lg">
+                            <BarChart3 className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Active Positions</div>
+                            <div className="text-xl font-bold">
+                              {stakingPositions.length}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-orange-100 rounded-lg">
+                            <Percent className="h-5 w-5 text-orange-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Avg APY</div>
+                            <div className="text-xl font-bold">
+                              {stakingPositions.length > 0
+                                ? formatPercentage(
+                                    stakingPositions.reduce((sum, p) => sum + p.apy, 0) /
+                                      stakingPositions.length,
+                                  )
+                                : "0.00%"}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Tabs defaultValue="staking" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="staking">Staking Products</TabsTrigger>
+                      <TabsTrigger value="positions">My Positions</TabsTrigger>
+                    </TabsList>
+
+                    {/* Staking Products Tab */}
+                    <TabsContent value="staking" className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Coins className="h-5 w-5" />
+                            Available Staking Products
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {stakingProducts.map((product) => (
+                              <Card
+                                key={product.id}
+                                className="border-2 hover:border-blue-200 transition-colors"
+                              >
+                                <CardContent className="p-6">
+                                  <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                        {product.asset}
+                                      </div>
+                                      <div>
+                                        <div className="font-semibold text-lg">
+                                          {product.asset} Staking
+                                        </div>
+                                        <Badge
+                                          variant={
+                                            product.type === "FLEXIBLE"
+                                              ? "default"
+                                              : "secondary"
+                                          }
+                                        >
+                                          {product.type}
+                                        </Badge>
+                                      </div>
+                                    </div>
+
+                                    <div className="text-right">
+                                      <div className="text-2xl font-bold text-green-600">
+                                        {formatPercentage(product.apy)}
+                                      </div>
+                                      <div className="text-sm text-gray-600">APY</div>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-3 mb-4">
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-gray-600">Min Amount:</span>
+                                      <span className="font-medium">
+                                        {product.minAmount} {product.asset}
+                                      </span>
+                                    </div>
+
+                                    {product.duration && (
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Duration:</span>
+                                        <span className="font-medium">
+                                          {product.duration} days
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-gray-600">Total Staked:</span>
+                                      <span className="font-medium">
+                                        {formatCurrency(
+                                          product.totalStaked *
+                                            getAssetPrice(product.asset),
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-2 mb-4">
+                                    <div className="text-sm font-medium">Features:</div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {product.features.map((feature: string, index: number): JSX.Element => (
+                                        <Badge
+                                          key={index}
+                                          variant="outline"
+                                          className="text-xs"
+                                        >
+                                          {feature}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-2 mb-4">
+                                    <div className="text-sm font-medium flex items-center gap-1">
+                                      <AlertTriangle className="h-4 w-4" />
+                                      Risks:
+                                    </div>
+                                    <div className="text-xs text-gray-600 space-y-1">
+                                      {product.risks.map((risk: string, index: number): JSX.Element => (
+                                        <div key={index}>• {risk}</div>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <Button
+                                    className="w-full"
+                                    onClick={() => {
+                                      toast({
+                                        title: "Staking Coming Soon",
+                                        description: `Staking for ${product.asset} will be available soon.`,
+                                      });
+                                    }}
+                                    disabled={!product.isActive}
+                                  >
+                                    <Lock className="h-4 w-4 mr-2" />
+                                    Stake Now
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    {/* My Positions Tab */}
+                    <TabsContent value="positions" className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Target className="h-5 w-5" />
+                            My Staking Positions
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {stakingPositions.length > 0 ? (
+                            <div className="space-y-4">
+                              {stakingPositions.map((position) => {
+                                const daysRemaining = getDaysRemaining(position.endDate);
+                                const assetPrice = getAssetPrice(position.asset);
+                                const totalValue = position.amount * assetPrice;
+
+                                return (
+                                  <Card key={position.id} className="border">
+                                    <CardContent className="p-6">
+                                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4">
+                                          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                            {position.asset}
+                                          </div>
+
+                                          <div>
+                                            <div className="font-semibold text-lg">
+                                              {position.amount} {position.asset}
+                                            </div>
+                                            <div className="text-sm text-gray-600">
+                                              {formatCurrency(totalValue)} •{" "}
+                                              {formatPercentage(position.apy)} APY
+                                            </div>
+                                            <Badge
+                                              variant={
+                                                position.status === "ACTIVE"
+                                                  ? "default"
+                                                  : "secondary"
+                                              }
+                                              className="mt-1"
+                                            >
+                                              {position.status}
+                                            </Badge>
+                                          </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                                          <div>
+                                            <div className="text-sm text-gray-600">
+                                              Daily Reward
+                                            </div>
+                                            <div className="font-semibold">
+                                              {position.dailyReward.toFixed(6)}{" "}
+                                              {position.rewardAsset}
+                                            </div>
+                                          </div>
+
+                                          <div>
+                                            <div className="text-sm text-gray-600">
+                                              Total Rewards
+                                            </div>
+                                            <div className="font-semibold text-green-600">
+                                              {position.totalRewards.toFixed(6)}{" "}
+                                              {position.rewardAsset}
+                                            </div>
+                                          </div>
+
+                                          <div>
+                                            <div className="text-sm text-gray-600">
+                                              Started
+                                            </div>
+                                            <div className="font-semibold">
+                                              {new Date(
+                                                position.startDate,
+                                              ).toLocaleDateString()}
+                                            </div>
+                                          </div>
+
+                                          <div>
+                                            <div className="text-sm text-gray-600">
+                                              {daysRemaining !== null
+                                                ? "Days Left"
+                                                : "Duration"}
+                                            </div>
+                                            <div className="font-semibold">
+                                              {daysRemaining !== null ? (
+                                                <span
+                                                  className={cn(
+                                                    daysRemaining <= 7
+                                                      ? "text-orange-600"
+                                                      : "text-blue-600",
+                                                  )}
+                                                >
+                                                  {daysRemaining} days
+                                                </span>
+                                              ) : (
+                                                "Flexible"
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                          {position.autoRenew && (
+                                            <Button variant="outline" size="sm">
+                                              <RefreshCw className="h-4 w-4 mr-2" />
+                                              Auto-Renew
+                                            </Button>
+                                          )}
+
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              toast({
+                                                title: "Unstaking Coming Soon",
+                                                description: `Unstaking for ${position.asset} will be available soon.`,
+                                              });
+                                            }}
+                                          >
+                                            <Unlock className="h-4 w-4 mr-2" />
+                                            Unstake
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-center py-12">
+                              <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">
+                                No Staking Positions
+                              </h3>
+                              <p className="text-gray-600 mb-4">
+                                Start staking to earn passive income
+                              </p>
+                              <Button onClick={() => setActiveTab("staking")}>
+                                Explore Staking Products
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </TabsContent>
 
               {/* Learn Tab */}

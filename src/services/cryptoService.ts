@@ -3,6 +3,8 @@ import {
   TradingPair,
   Portfolio,
   MarketData,
+  StakingProduct,
+  StakingPosition,
 } from "@/types/crypto";
 import { realAPIService } from "@/services/realAPIService";
 import { supabase } from "@/integrations/supabase/client";
@@ -312,56 +314,61 @@ export const mockPortfolio: Portfolio = {
 
 // Simplified service class with real database connections
 export class CryptoService {
+  private readonly COINGECKO_API_KEY = 'CG-ZmDHBa3kaPCNF2a2xg2mA5je';
+  private readonly COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+
   // Enhanced method to get cryptocurrencies with real data when available
   async getCryptocurrencies(): Promise<Cryptocurrency[]> {
     try {
-      // Try to fetch real data from our database first
-      const { data, error } = await supabase
-        .from('crypto_prices')
-        .select('*')
-        .order('market_cap_rank', { ascending: true })
-        .limit(100);
+      // Fetch real data from CoinGecko API
+      const response = await fetch(
+        `${this.COINGECKO_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h,7d,30d`,
+        {
+          headers: {
+            'x-cg-demo-api-key': this.COINGECKO_API_KEY
+          }
+        }
+      );
 
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        // Convert database data to Cryptocurrency format
-        return data.map(price => ({
-          id: price.symbol.toLowerCase(),
-          symbol: price.symbol,
-          name: price.name,
-          image: `https://assets.coingecko.com/coins/images/${price.symbol.toLowerCase()}/large/${price.symbol.toLowerCase()}.png`,
-          current_price: price.price_usd,
-          market_cap: price.market_cap,
-          market_cap_rank: price.market_cap_rank,
-          fully_diluted_valuation: price.max_supply ? price.max_supply * price.price_usd : 0,
-          total_volume: price.volume_24h,
-          high_24h: price.high_24h,
-          low_24h: price.low_24h,
-          price_change_24h: price.price_change_24h,
-          price_change_percentage_24h: price.price_change_24h ? (price.price_change_24h / (price.price_usd - price.price_change_24h)) * 100 : 0,
-          price_change_percentage_7d: 0, // Would need historical data
-          price_change_percentage_30d: 0, // Would need historical data
-          market_cap_change_24h: 0, // Would need historical data
-          market_cap_change_percentage_24h: 0, // Would need historical data
-          circulating_supply: price.circulating_supply,
-          total_supply: price.total_supply,
-          max_supply: price.max_supply,
-          ath: 0, // Would need historical data
-          ath_change_percentage: 0, // Would need historical data
-          ath_date: "", // Would need historical data
-          atl: 0, // Would need historical data
-          atl_change_percentage: 0, // Would need historical data
-          atl_date: "", // Would need historical data
-          last_updated: price.last_updated,
-          sparkline_in_7d: [] // Would need historical data
-        }));
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.status}`);
       }
 
-      // Fallback to mock data if no real data available
-      return mockCryptocurrencies;
+      const data = await response.json();
+
+      // Convert CoinGecko data to Cryptocurrency format
+      return data.map((coin: any) => ({
+        id: coin.id,
+        symbol: coin.symbol,
+        name: coin.name,
+        image: coin.image,
+        current_price: coin.current_price,
+        market_cap: coin.market_cap,
+        market_cap_rank: coin.market_cap_rank,
+        fully_diluted_valuation: coin.fully_diluted_valuation,
+        total_volume: coin.total_volume,
+        high_24h: coin.high_24h,
+        low_24h: coin.low_24h,
+        price_change_24h: coin.price_change_24h,
+        price_change_percentage_24h: coin.price_change_percentage_24h,
+        price_change_percentage_7d: coin.price_change_percentage_7d_in_currency || 0,
+        price_change_percentage_30d: coin.price_change_percentage_30d_in_currency || 0,
+        market_cap_change_24h: coin.market_cap_change_24h,
+        market_cap_change_percentage_24h: coin.market_cap_change_percentage_24h,
+        circulating_supply: coin.circulating_supply,
+        total_supply: coin.total_supply,
+        max_supply: coin.max_supply,
+        ath: coin.ath,
+        ath_change_percentage: coin.ath_change_percentage,
+        ath_date: coin.ath_date,
+        atl: coin.atl,
+        atl_change_percentage: coin.atl_change_percentage,
+        atl_date: coin.atl_date,
+        last_updated: coin.last_updated,
+        sparkline_in_7d: coin.sparkline_in_7d?.price || []
+      }));
     } catch (error) {
-      console.error("Error fetching cryptocurrency data, using mock data:", error);
+      console.error("Error fetching cryptocurrency data from CoinGecko, using mock data:", error);
       return mockCryptocurrencies;
     }
   }
@@ -464,51 +471,57 @@ export class CryptoService {
   // Enhanced method to get a single cryptocurrency with real data when available
   async getCryptocurrencyById(id: string): Promise<Cryptocurrency | null> {
     try {
-      const { data, error } = await supabase
-        .from('crypto_prices')
-        .select('*')
-        .eq('symbol', id.toUpperCase())
-        .single();
+      // Fetch real data from CoinGecko API
+      const response = await fetch(
+        `${this.COINGECKO_BASE_URL}/coins/${id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=true`,
+        {
+          headers: {
+            'x-cg-demo-api-key': this.COINGECKO_API_KEY
+          }
+        }
+      );
 
-      if (error) throw error;
-
-      if (data) {
-        return {
-          id: data.symbol.toLowerCase(),
-          symbol: data.symbol,
-          name: data.name,
-          image: `https://assets.coingecko.com/coins/images/${data.symbol.toLowerCase()}/large/${data.symbol.toLowerCase()}.png`,
-          current_price: data.price_usd,
-          market_cap: data.market_cap,
-          market_cap_rank: data.market_cap_rank,
-          fully_diluted_valuation: data.max_supply ? data.max_supply * data.price_usd : 0,
-          total_volume: data.volume_24h,
-          high_24h: data.high_24h,
-          low_24h: data.low_24h,
-          price_change_24h: data.price_change_24h,
-          price_change_percentage_24h: data.price_change_24h ? (data.price_change_24h / (data.price_usd - data.price_change_24h)) * 100 : 0,
-          price_change_percentage_7d: 0, // Would need historical data
-          price_change_percentage_30d: 0, // Would need historical data
-          market_cap_change_24h: 0, // Would need historical data
-          market_cap_change_percentage_24h: 0, // Would need historical data
-          circulating_supply: data.circulating_supply,
-          total_supply: data.total_supply,
-          max_supply: data.max_supply,
-          ath: 0, // Would need historical data
-          ath_change_percentage: 0, // Would need historical data
-          ath_date: "", // Would need historical data
-          atl: 0, // Would need historical data
-          atl_change_percentage: 0, // Would need historical data
-          atl_date: "", // Would need historical data
-          last_updated: data.last_updated,
-          sparkline_in_7d: [] // Would need historical data
-        };
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.status}`);
       }
 
-      // Fallback to mock data
-      return mockCryptocurrencies.find((c) => c.id === id) || null;
+      const data = await response.json();
+
+      // Convert CoinGecko data to Cryptocurrency format
+      const coin: Cryptocurrency = {
+        id: data.id,
+        symbol: data.symbol,
+        name: data.name,
+        image: data.image.large,
+        current_price: data.market_data.current_price.usd,
+        market_cap: data.market_data.market_cap.usd,
+        market_cap_rank: data.market_cap_rank,
+        fully_diluted_valuation: data.market_data.fully_diluted_valuation.usd,
+        total_volume: data.market_data.total_volume.usd,
+        high_24h: data.market_data.high_24h.usd,
+        low_24h: data.market_data.low_24h.usd,
+        price_change_24h: data.market_data.price_change_24h,
+        price_change_percentage_24h: data.market_data.price_change_percentage_24h,
+        price_change_percentage_7d: data.market_data.price_change_percentage_7d,
+        price_change_percentage_30d: data.market_data.price_change_percentage_30d,
+        market_cap_change_24h: data.market_data.market_cap_change_24h,
+        market_cap_change_percentage_24h: data.market_data.market_cap_change_percentage_24h,
+        circulating_supply: data.market_data.circulating_supply,
+        total_supply: data.market_data.total_supply,
+        max_supply: data.market_data.max_supply,
+        ath: data.market_data.ath.usd,
+        ath_change_percentage: data.market_data.ath_change_percentage,
+        ath_date: data.market_data.ath_date,
+        atl: data.market_data.atl.usd,
+        atl_change_percentage: data.market_data.atl_change_percentage,
+        atl_date: data.market_data.atl_date,
+        last_updated: data.last_updated,
+        sparkline_in_7d: data.market_data.sparkline_7d.price || []
+      };
+
+      return coin;
     } catch (error) {
-      console.error(`Error fetching cryptocurrency ${id}:`, error);
+      console.error(`Error fetching cryptocurrency ${id} from CoinGecko:`, error);
       // Fallback to mock data
       return mockCryptocurrencies.find((c) => c.id === id) || null;
     }
@@ -645,11 +658,24 @@ export class CryptoService {
   }
 
   // Create P2P offer
-  static async createP2POffer(offerData: Partial<P2POffer> & { user_id: string }): Promise<P2POffer | null> {
+  static async createP2POffer(offerData: any): Promise<any | null> {
     try {
+      // Map P2POffer interface to database structure
+      const dbOfferData = {
+        amount: offerData.totalAmount || offerData.amount,
+        crypto_type: offerData.asset || offerData.crypto_type,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        offer_type: offerData.type || offerData.offer_type,
+        payment_method: offerData.paymentMethods ? JSON.stringify(offerData.paymentMethods) : "",
+        price_per_unit: offerData.price || offerData.price_per_unit,
+        user_id: offerData.userId || offerData.user_id,
+        notes: offerData.terms || offerData.notes || "",
+        status: offerData.status || "active"
+      };
+
       const { data, error } = await supabase
         .from("p2p_offers")
-        .insert(offerData)
+        .insert(dbOfferData)
         .select()
         .single();
 
