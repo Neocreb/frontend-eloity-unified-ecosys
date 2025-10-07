@@ -4,7 +4,7 @@ import type { Database } from "@/integrations/supabase/types";
 // Define types based on the database schema
 type Group = Database["public"]["Tables"]["groups"]["Row"];
 type GroupMember = Database["public"]["Tables"]["group_members"]["Row"];
-type SocialPost = Database["public"]["Tables"]["social_posts"]["Row"];
+type SocialPost = Database["public"]["Tables"]["posts"]["Row"];
 type Event = Database["public"]["Tables"]["events"]["Row"];
 
 export interface GroupWithDetails extends Group {
@@ -95,14 +95,7 @@ class GroupService {
           id,
           user_id,
           role,
-          joined_at,
-          users (
-            id,
-            username,
-            full_name,
-            avatar_url,
-            is_verified
-          )
+          joined_at
         `)
         .eq("group_id", groupId)
         .limit(limit);
@@ -112,19 +105,41 @@ class GroupService {
         return [];
       }
 
-      return data.map(member => ({
-        id: member.id,
-        user_id: member.user_id,
-        role: member.role,
-        joined_at: member.joined_at,
-        user: {
-          id: member.users?.id || "",
-          username: member.users?.username || "",
-          full_name: member.users?.full_name || "",
-          avatar_url: member.users?.avatar_url || "",
-          is_verified: member.users?.is_verified || false
-        }
-      }));
+      // Fetch user profiles separately
+      const userIds = data.map(member => member.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, username, full_name, avatar_url, is_verified")
+        .in("user_id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return [];
+      }
+
+      return data.map(member => {
+        const profile = profiles.find(p => p.user_id === member.user_id) || {
+          user_id: member.user_id,
+          username: "",
+          full_name: "",
+          avatar_url: "",
+          is_verified: false
+        };
+        
+        return {
+          id: member.id,
+          user_id: member.user_id,
+          role: member.role,
+          joined_at: member.joined_at,
+          user: {
+            id: profile.user_id,
+            username: profile.username || "",
+            full_name: profile.full_name || "",
+            avatar_url: profile.avatar_url || "",
+            is_verified: profile.is_verified || false
+          }
+        };
+      });
     } catch (error) {
       console.error("Error in getGroupMembers:", error);
       return [];
@@ -135,26 +150,18 @@ class GroupService {
   static async getGroupPosts(groupId: string, userId?: string, limit: number = 20): Promise<GroupPost[]> {
     try {
       const { data, error } = await supabase
-        .from("social_posts")
+        .from("posts")
         .select(`
           id,
           user_id,
           content,
           type,
-          media_urls,
+          image_url,
           like_count,
-          comment_count,
           created_at,
-          updated_at,
-          users (
-            id,
-            username,
-            full_name,
-            avatar_url
-          )
+          updated_at
         `)
         .eq("group_id", groupId)
-        .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .limit(limit);
 
@@ -179,24 +186,45 @@ class GroupService {
         }
       }
 
-      return data.map(post => ({
-        id: post.id,
-        user_id: post.user_id,
-        content: post.content || "",
-        type: post.type,
-        media_urls: post.media_urls as string[] || [],
-        like_count: post.like_count,
-        comment_count: post.comment_count,
-        created_at: post.created_at,
-        updated_at: post.updated_at,
-        author: {
-          id: post.users?.id || "",
-          username: post.users?.username || "",
-          full_name: post.users?.full_name || "",
-          avatar_url: post.users?.avatar_url || ""
-        },
-        is_liked: likedPostIds.includes(post.id)
-      }));
+      // Fetch user profiles for post authors
+      const userIds = [...new Set(data.map(post => post.user_id))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, username, full_name, avatar_url")
+        .in("user_id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return [];
+      }
+
+      return data.map(post => {
+        const authorProfile = profiles.find(p => p.user_id === post.user_id) || {
+          user_id: post.user_id,
+          username: "",
+          full_name: "",
+          avatar_url: ""
+        };
+        
+        return {
+          id: post.id,
+          user_id: post.user_id,
+          content: post.content || "",
+          type: post.type || "text",
+          image_url: post.image_url,
+          like_count: post.like_count || 0,
+          comment_count: 0, // This would need to be fetched from post_comments table
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          author: {
+            id: authorProfile.user_id,
+            username: authorProfile.username || "",
+            full_name: authorProfile.full_name || "",
+            avatar_url: authorProfile.avatar_url || ""
+          },
+          is_liked: likedPostIds.includes(post.id)
+        };
+      });
     } catch (error) {
       console.error("Error in getGroupPosts:", error);
       return [];
@@ -218,13 +246,7 @@ class GroupService {
           attendee_count,
           creator_id,
           created_at,
-          updated_at,
-          users (
-            id,
-            username,
-            full_name,
-            avatar_url
-          )
+          updated_at
         `)
         .eq("group_id", groupId)
         .order("start_date", { ascending: true })
@@ -252,25 +274,46 @@ class GroupService {
         }
       }
 
-      return data.map(event => ({
-        id: event.id,
-        title: event.title,
-        description: event.description || "",
-        start_date: event.start_date,
-        end_date: event.end_date,
-        location: event.location,
-        attendee_count: event.attendee_count,
-        creator_id: event.creator_id,
-        created_at: event.created_at,
-        updated_at: event.updated_at,
-        creator: {
-          id: event.users?.id || "",
-          username: event.users?.username || "",
-          full_name: event.users?.full_name || "",
-          avatar_url: event.users?.avatar_url || ""
-        },
-        is_attending: attendingEventIds.includes(event.id)
-      }));
+      // Fetch user profiles for event creators
+      const userIds = [...new Set(data.map(event => event.creator_id))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, username, full_name, avatar_url")
+        .in("user_id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return [];
+      }
+
+      return data.map(event => {
+        const creatorProfile = profiles.find(p => p.user_id === event.creator_id) || {
+          user_id: event.creator_id,
+          username: "",
+          full_name: "",
+          avatar_url: ""
+        };
+        
+        return {
+          id: event.id,
+          title: event.title,
+          description: event.description || "",
+          start_date: event.start_date,
+          end_date: event.end_date,
+          location: event.location,
+          attendee_count: event.attendee_count,
+          creator_id: event.creator_id,
+          created_at: event.created_at,
+          updated_at: event.updated_at,
+          creator: {
+            id: creatorProfile.user_id,
+            username: creatorProfile.username || "",
+            full_name: creatorProfile.full_name || "",
+            avatar_url: creatorProfile.avatar_url || ""
+          },
+          is_attending: attendingEventIds.includes(event.id)
+        };
+      });
     } catch (error) {
       console.error("Error in getGroupEvents:", error);
       return [];
@@ -360,16 +403,14 @@ class GroupService {
   static async createGroupPost(groupId: string, userId: string, content: string, mediaUrls?: string[]): Promise<GroupPost | null> {
     try {
       const { data, error } = await supabase
-        .from("social_posts")
+        .from("posts")
         .insert({
           group_id: groupId,
           user_id: userId,
           content: content,
-          media_urls: mediaUrls || [],
+          image_url: mediaUrls && mediaUrls.length > 0 ? mediaUrls[0] : null,
           type: "text",
-          visibility: "public",
           like_count: 0,
-          comment_count: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -378,17 +419,10 @@ class GroupService {
           user_id,
           content,
           type,
-          media_urls,
+          image_url,
           like_count,
-          comment_count,
           created_at,
-          updated_at,
-          users (
-            id,
-            username,
-            full_name,
-            avatar_url
-          )
+          updated_at
         `)
         .single();
 
@@ -403,22 +437,41 @@ class GroupService {
         .update({ post_count: supabase.rpc('groups.post_count + 1') })
         .eq("id", groupId);
 
+      // Fetch user profile for the author
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id, username, full_name, avatar_url")
+        .eq("user_id", userId)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
+
+      const authorProfile = profile || {
+        user_id: userId,
+        username: "",
+        full_name: "",
+        avatar_url: ""
+      };
+
       return {
         id: data.id,
         user_id: data.user_id,
         content: data.content || "",
-        type: data.type,
-        media_urls: data.media_urls as string[] || [],
-        like_count: data.like_count,
-        comment_count: data.comment_count,
+        type: data.type || "text",
+        image_url: data.image_url,
+        like_count: data.like_count || 0,
+        comment_count: 0,
         created_at: data.created_at,
         updated_at: data.updated_at,
         author: {
-          id: data.users?.id || "",
-          username: data.users?.username || "",
-          full_name: data.users?.full_name || "",
-          avatar_url: data.users?.avatar_url || ""
-        }
+          id: authorProfile.user_id,
+          username: authorProfile.username || "",
+          full_name: authorProfile.full_name || "",
+          avatar_url: authorProfile.avatar_url || ""
+        },
+        is_liked: false
       };
     } catch (error) {
       console.error("Error in createGroupPost:", error);
@@ -456,8 +509,8 @@ class GroupService {
 
         // Decrement like count
         await supabase
-          .from("social_posts")
-          .update({ like_count: supabase.rpc('social_posts.like_count - 1') })
+          .from("posts")
+          .update({ like_count: supabase.rpc('posts.like_count - 1') })
           .eq("id", postId);
 
         return false; // Indicates unliked
@@ -468,7 +521,6 @@ class GroupService {
           .insert({
             post_id: postId,
             user_id: userId,
-            reaction_type: "like",
             created_at: new Date().toISOString()
           });
 
@@ -479,8 +531,8 @@ class GroupService {
 
         // Increment like count
         await supabase
-          .from("social_posts")
-          .update({ like_count: supabase.rpc('social_posts.like_count + 1') })
+          .from("posts")
+          .update({ like_count: supabase.rpc('posts.like_count + 1') })
           .eq("id", postId);
 
         return true; // Indicates liked

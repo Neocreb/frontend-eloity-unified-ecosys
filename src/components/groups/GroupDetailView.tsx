@@ -317,7 +317,7 @@ const GroupDetailView = () => {
           id: newPost.id,
           author: newPost.author,
           content: newPost.content || "",
-          media_urls: newPost.media_urls as string[] || [],
+          media_urls: newPost.image_url ? [newPost.image_url] : [],
           timestamp: newPost.created_at,
           likes: newPost.like_count,
           comments: [],
