@@ -33,7 +33,7 @@ import {
   SearchFilters,
   Project,
 } from "@/types/freelance";
-import { FreelanceService as freelanceService } from "@/services/freelanceService";
+import { FreelanceService } from "@/services/freelanceService";
 import FreelancerProfileCard from "@/components/freelance/FreelancerProfileCard";
 import JobCard from "@/components/freelance/JobCard";
 import ProposalForm from "@/components/freelance/ProposalForm";
