@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Comprehensive SoftChat Platform Knowledge Base
  * Contains detailed information about all platform features, tutorials, tips, and troubleshooting

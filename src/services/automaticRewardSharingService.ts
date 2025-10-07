@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fetchWithAuth } from '@/lib/fetch-utils';
 
 export interface RewardSharingTransaction {

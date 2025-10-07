@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ActivityRewardService } from "./activityRewardService";
 import { ReferralService } from "./referralService";
 

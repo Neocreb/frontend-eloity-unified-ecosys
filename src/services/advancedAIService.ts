@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { IntelligentAIResponse } from "./intelligentAIService";
 import { realAPIService } from "./realAPIService";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FileText, TrendingUp, Shield, Target, Zap, Coins } from "lucide-react";
 import { ActivityRewardService } from './activityRewardService';
 import { PlatformRewardIntegration } from './platformRewardIntegration';

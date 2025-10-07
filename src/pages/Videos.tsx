@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import {

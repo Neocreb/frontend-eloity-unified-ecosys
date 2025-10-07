@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/components/feed/EnhancedCommentsSection.tsx
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";

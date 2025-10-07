@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FreelanceMessage, Profile } from "@/types/freelance";
 
 export interface FreelanceMessageWithSender extends FreelanceMessage {

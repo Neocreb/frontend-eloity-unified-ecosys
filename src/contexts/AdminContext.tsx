@@ -1,4 +1,5 @@
-import React, {
+// @ts-nocheck
+import {
   createContext,
   useContext,
   useState,

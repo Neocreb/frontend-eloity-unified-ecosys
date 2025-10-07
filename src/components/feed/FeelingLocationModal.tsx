@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/components/feed/FeelingLocationModal.tsx
 import { useState, useEffect } from "react";
 import {

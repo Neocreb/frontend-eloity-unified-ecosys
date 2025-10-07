@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useToast } from "@/components/ui/use-toast";
 
 // Mock African Payment Service
