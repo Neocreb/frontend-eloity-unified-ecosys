@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode, type FC } from 'react';
 import { currencyService, type ConversionOptions, type ConversionResult } from '@/services/currencyService';
 import { 
   type Currency, 
@@ -40,7 +40,7 @@ interface CurrencyProviderProps {
   defaultCurrency?: string;
 }
 
-export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ 
+export const CurrencyProvider: FC<CurrencyProviderProps> = ({ 
   children, 
   defaultCurrency = DEFAULT_CURRENCY 
 }) => {
