@@ -144,22 +144,31 @@ export default function EnhancedP2PMarketplace({
     } catch (error) {
       console.error("Failed to load P2P data:", error);
       // Use mock data for testing filters
-      const mockOffers = [
+      const mockOffers: any[] = [
         {
           id: "offer-1",
-          type: "SELL",
+          userId: "user-1",
+          type: "SELL" as const,
           asset: selectedAsset,
           fiatCurrency: selectedFiat,
           price: 45000,
           minAmount: 100,
           maxAmount: 5000,
+          totalAmount: 10000,
           availableAmount: 10000,
           paymentMethods: [
-            { id: "bank", name: "Bank Transfer" },
-            { id: "mobile", name: "Mobile Money" }
+            { id: "bank", name: "Bank Transfer", type: "BANK_TRANSFER" as const, processingTime: "1-2 hours", isActive: true },
+            { id: "mobile", name: "Mobile Money", type: "DIGITAL_WALLET" as const, processingTime: "Instant", isActive: true }
           ],
           terms: "Payment within 15 minutes",
+          status: "ACTIVE" as const,
+          completionRate: 98.5,
+          avgReleaseTime: 12,
+          totalTrades: 125,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           user: {
+            id: "user-1",
             username: "CryptoTrader01",
             avatar: "",
             rating: 4.8,
@@ -167,24 +176,34 @@ export default function EnhancedP2PMarketplace({
             completionRate: 98.5,
             avgReleaseTime: 12,
             isVerified: true,
-            kycLevel: "2"
+            kycLevel: 2,
+            isOnline: true
           }
         },
         {
           id: "offer-2",
-          type: "BUY",
+          userId: "user-2",
+          type: "BUY" as const,
           asset: selectedAsset,
           fiatCurrency: selectedFiat,
           price: 44800,
           minAmount: 50,
           maxAmount: 3000,
+          totalAmount: 8000,
           availableAmount: 8000,
           paymentMethods: [
-            { id: "paypal", name: "PayPal" },
-            { id: "wise", name: "Wise" }
+            { id: "paypal", name: "PayPal", type: "DIGITAL_WALLET" as const, processingTime: "Instant", isActive: true },
+            { id: "wise", name: "Wise", type: "BANK_TRANSFER" as const, processingTime: "1-3 hours", isActive: true }
           ],
           terms: "Quick release guaranteed",
+          status: "ACTIVE" as const,
+          completionRate: 99.1,
+          avgReleaseTime: 8,
+          totalTrades: 89,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           user: {
+            id: "user-2",
             username: "FastTrader",
             avatar: "",
             rating: 4.9,
@@ -192,7 +211,8 @@ export default function EnhancedP2PMarketplace({
             completionRate: 99.1,
             avgReleaseTime: 8,
             isVerified: true,
-            kycLevel: "3"
+            kycLevel: 3,
+            isOnline: true
           }
         }
       ];
@@ -206,23 +226,13 @@ export default function EnhancedP2PMarketplace({
   const handleCreateOffer = async () => {
     try {
       const offerData = {
-        type: newOffer.type,
-        asset: newOffer.asset,
-        fiatCurrency: newOffer.fiatCurrency,
-        price: parseFloat(newOffer.price),
-        minAmount: parseFloat(newOffer.minAmount),
-        maxAmount: parseFloat(newOffer.maxAmount),
-        totalAmount: parseFloat(newOffer.totalAmount),
-        availableAmount: parseFloat(newOffer.totalAmount),
-        paymentMethods: paymentMethods.filter((pm) =>
-          newOffer.paymentMethods.includes(pm.id),
-        ),
-        terms: newOffer.terms,
-        autoReply: newOffer.autoReply,
-        status: "ACTIVE" as const,
-        completionRate: 0,
-        avgReleaseTime: 0,
-        totalTrades: 0,
+        crypto_type: newOffer.asset,
+        offer_type: newOffer.type.toLowerCase(),
+        amount: parseFloat(newOffer.totalAmount),
+        price_per_unit: parseFloat(newOffer.price),
+        payment_method: newOffer.paymentMethods.join(','),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        notes: newOffer.terms || undefined,
       };
 
       const createdOffer = await cryptoService.createP2POffer(offerData);

@@ -963,14 +963,24 @@ export class CryptoService {
     };
   }
 
-  async getP2POffers(): Promise<any[]> {
+  async getP2POffers(filters?: { asset?: string; fiatCurrency?: string; type?: string }): Promise<any[]> {
     // Fetch P2P offers from database
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('p2p_offers')
         .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false});
+        .eq('status', 'active');
+      
+      if (filters?.asset) {
+        query = query.eq('crypto_type', filters.asset);
+      }
+      if (filters?.type) {
+        query = query.eq('offer_type', filters.type.toLowerCase());
+      }
+      
+      query = query.order('created_at', { ascending: false });
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data || [];
@@ -980,12 +990,24 @@ export class CryptoService {
     }
   }
 
-  async createP2POffer(offerData: any): Promise<any> {
+  async createP2POffer(offerData: {
+    crypto_type: string;
+    offer_type: string;
+    amount: number;
+    price_per_unit: number;
+    payment_method: string;
+    expires_at: string;
+    notes?: string;
+  }): Promise<any> {
     // Create P2P offer in database
     try {
       const { data, error } = await supabase
         .from('p2p_offers')
-        .insert(offerData)
+        .insert({
+          ...offerData,
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          status: 'active'
+        })
         .select()
         .single();
       
