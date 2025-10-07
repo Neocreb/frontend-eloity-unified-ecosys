@@ -964,11 +964,20 @@ export class CryptoService {
   }
 
   async getP2POffers(filters?: { asset?: string; fiatCurrency?: string; type?: string }): Promise<any[]> {
-    // Fetch P2P offers from database
+    // Fetch P2P offers from database with user profile data
     try {
       let query = supabase
         .from('p2p_offers')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            user_id,
+            full_name,
+            username,
+            avatar_url,
+            is_verified
+          )
+        `)
         .eq('status', 'active');
       
       if (filters?.asset) {
@@ -983,7 +992,46 @@ export class CryptoService {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data || [];
+      
+      // Map database format to UI format
+      return (data || []).map((offer: any) => ({
+        id: offer.id,
+        userId: offer.user_id,
+        type: offer.offer_type.toUpperCase(),
+        asset: offer.crypto_type,
+        fiatCurrency: 'USD', // Default for now
+        price: parseFloat(offer.price_per_unit),
+        minAmount: 0, // Not in current schema
+        maxAmount: parseFloat(offer.amount),
+        totalAmount: parseFloat(offer.amount),
+        availableAmount: parseFloat(offer.amount),
+        paymentMethods: offer.payment_method ? offer.payment_method.split(',').map((pm: string) => ({
+          id: pm.trim().toLowerCase().replace(/\s+/g, '_'),
+          name: pm.trim(),
+          type: 'BANK_TRANSFER',
+          processingTime: '1-2 hours',
+          isActive: true
+        })) : [],
+        terms: offer.notes || '',
+        status: offer.status.toUpperCase(),
+        completionRate: 0, // Would need separate table for stats
+        avgReleaseTime: 0,
+        totalTrades: 0,
+        createdAt: offer.created_at,
+        updatedAt: offer.created_at,
+        user: {
+          id: offer.user_id,
+          username: offer.profiles?.username || 'Anonymous',
+          avatar: offer.profiles?.avatar_url || '',
+          isVerified: offer.profiles?.is_verified || false,
+          kycLevel: 1,
+          rating: 5.0,
+          totalTrades: 0,
+          completionRate: 100,
+          avgReleaseTime: 15,
+          isOnline: true
+        }
+      }));
     } catch (error) {
       console.error('Error fetching P2P offers:', error);
       return [];
