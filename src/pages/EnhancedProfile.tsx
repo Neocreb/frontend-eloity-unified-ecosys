@@ -20,7 +20,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import UserListModal from "@/components/profile/UserListModal";
-import EnhancedShareDialog from "@/components/feed/EnhancedShareDialog";
+import { ProfilePostCard } from "@/components/profile/ProfilePostCard";
 import { EnhancedCommentsSection } from "@/components/feed/EnhancedCommentsSection";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
 import { Bookmark } from "lucide-react";
@@ -1247,127 +1247,61 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                         };
                       }).filter((p) => privacyAllowed(p.privacy));
 
-                      return normalized.map((post) => (
-                        <Card key={post.id} className="hover:shadow-md transition-shadow">
-                          <CardContent className="p-4 sm:p-6">
-                            <div className="flex items-start gap-3">
-                              <Avatar className="h-10 w-10 flex-shrink-0">
-                                <AvatarImage src={post.author.avatar} alt={post.author.name} />
-                                <AvatarFallback>
-                                  {post.author.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 space-y-3">
-                                <div>
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <span className="font-medium">{post.author.name}</span>
-                                    <span className="text-muted-foreground">@{post.author.username}</span>
-                                    <span className="text-muted-foreground">•</span>
-                                    <span className="text-muted-foreground">{typeof post.createdAt === 'string' ? post.createdAt : ''}</span>
-                                  </div>
-                                  {post.content && <p className="mt-2">{post.content}</p>}
-                                </div>
+                      const handlePostDelete = (postId: string) => {
+                        setPosts((prev) => prev.filter((p: any) => String(p.id ?? p.post_id ?? p.uuid ?? p.id) !== postId));
+                        toast({
+                          title: "Post deleted",
+                          description: "Your post has been removed from your profile.",
+                        });
+                      };
 
-                                {post.image && (
-                                  <div className="rounded-lg overflow-hidden">
-                                    <img src={post.image} alt="Post image" className="w-full h-auto max-h-96 object-cover" />
-                                  </div>
-                                )}
+                      const handlePrivacyChange = (postId: string, privacy: string) => {
+                        setPosts((prev) =>
+                          prev.map((p: any) =>
+                            String(p.id ?? p.post_id ?? p.uuid ?? p.id) === postId
+                              ? { ...p, privacy }
+                              : p
+                          )
+                        );
+                      };
 
-                                <div className="pt-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1 sm:gap-3">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={cn("flex items-center gap-1 px-2 py-1.5 h-auto", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._liked && "text-red-500")}
-                                        onClick={() => {
-                                          setPosts((prev: any[]) => prev.map((p: any) => {
-                                            const id = String(p.id ?? p.post_id ?? p.uuid ?? p.id);
-                                            if (String(id) === String(post.id)) {
-                                              const likedFlag = !!p._liked;
-                                              const likes = (p.likes || p.interactions?.likes || 0) + (likedFlag ? -1 : 1);
-                                              return { ...p, _liked: !likedFlag, likes, interactions: { ...(p.interactions || {}), likes } };
-                                            }
-                                            return p;
-                                          }));
-                                        }}
-                                      >
-                                        <Heart className={cn("w-4 h-4", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._liked && "fill-current")} />
-                                        <span className="text-xs sm:text-sm">{post.likes}</span>
-                                      </Button>
+                      const handleLikeToggle = (postId: string, newCount: number, isLiked: boolean) => {
+                        setPosts((prev) =>
+                          prev.map((p: any) =>
+                            String(p.id ?? p.post_id ?? p.uuid ?? p.id) === postId
+                              ? { ...p, likes: newCount, _liked: isLiked }
+                              : p
+                          )
+                        );
+                      };
 
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setOpenCommentsFor((c) => (c === post.id ? null : post.id))}
-                                        className={cn("flex items-center gap-1 px-2 py-1.5 h-auto", openCommentsFor === post.id && "text-blue-500")}
-                                      >
-                                        <MessageSquare className="w-4 h-4" />
-                                        <span className="text-xs sm:text-sm">{post.comments}</span>
-                                      </Button>
+                      const handleSaveToggle = (postId: string, isSaved: boolean) => {
+                        setPosts((prev) =>
+                          prev.map((p: any) =>
+                            String(p.id ?? p.post_id ?? p.uuid ?? p.id) === postId
+                              ? { ...p, _saved: isSaved }
+                              : p
+                          )
+                        );
+                      };
 
-                                      <EnhancedShareDialog
-                                        postId={post.id}
-                                        postContent={post.content}
-                                        postAuthor={{ name: post.author.name, username: post.author.username }}
-                                        trigger={
-                                          <Button variant="ghost" size="sm" className="flex items-center gap-1 px-2 py-1.5 h-auto hover:text-green-500 transition-colors">
-                                            <Share2 className="w-4 h-4" />
-                                            <span className="text-xs sm:text-sm">{post.shares}</span>
-                                          </Button>
-                                        }
-                                      />
-
-                                      <VirtualGiftsAndTips
-                                        recipientId={post.author.id}
-                                        recipientName={post.author.name}
-                                        trigger={
-                                          <Button variant="ghost" size="sm" className="flex items-center gap-1 px-2 py-1.5 h-auto text-yellow-600 hover:text-yellow-700">
-                                            <Gift className="w-4 h-4" />
-                                            <span className="text-xs sm:text-sm hidden sm:inline">Gift</span>
-                                          </Button>
-                                        }
-                                      />
-                                    </div>
-
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className={cn("px-2 py-1.5 h-auto", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._saved && "text-blue-500")}
-                                      onClick={() => {
-                                        setPosts((prev: any[]) => prev.map((p: any) => {
-                                          const id = String(p.id ?? p.post_id ?? p.uuid ?? p.id);
-                                          if (String(id) === String(post.id)) {
-                                            return { ...p, _saved: !p._saved };
-                                          }
-                                          return p;
-                                        }));
-                                      }}
-                                    >
-                                      <Bookmark className={cn("w-4 h-4", (posts as any[]).find(pp => String(pp.id ?? pp.post_id ?? pp.uuid ?? pp.id) === String(post.id))?._saved && "fill-current")} />
-                                    </Button>
-                                  </div>
-
-                                  {openCommentsFor === post.id && (
-                                    <div className="mt-4 border-t pt-4">
-                                      <EnhancedCommentsSection
-                                        postId={post.id}
-                                        isVisible={openCommentsFor === post.id}
-                                        commentsCount={post.comments}
-                                        onCommentsCountChange={() => {}}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
+                      return normalized.length > 0 ? (
+                        normalized.map((post) => (
+                          <ProfilePostCard
+                            key={post.id}
+                            post={post}
+                            isOwnPost={isOwnProfile}
+                            onDelete={handlePostDelete}
+                            onPrivacyChange={handlePrivacyChange}
+                            onLikeToggle={handleLikeToggle}
+                            onSaveToggle={handleSaveToggle}
+                          />
+                        ))
+                      ) : (
+                        <Card className="p-8 text-center">
+                          <p className="text-muted-foreground">No posts yet</p>
                         </Card>
-                      ));
+                      );
                     })()}
                   </div>
                 </TabsContent>
