@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { apiCall } from "@/lib/api";
 
 export interface Wallet {

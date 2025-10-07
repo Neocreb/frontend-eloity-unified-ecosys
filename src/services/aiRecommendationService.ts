@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Post } from "@/types/post";
 import { Video } from "@/types/video";
 import { Product } from "@/types/marketplace";

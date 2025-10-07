@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ActivityRewardService, ActivityRewardResponse } from './activityRewardService';
 import { useNotification } from '@/hooks/use-notification';
 

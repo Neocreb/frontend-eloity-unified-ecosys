@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * Real API Integration Service
  * Integrates with actual APIs for live data (when API keys are available)

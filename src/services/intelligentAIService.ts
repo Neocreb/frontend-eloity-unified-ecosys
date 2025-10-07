@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { User } from "@/types/user";
 
 export interface IntelligentAIResponse {

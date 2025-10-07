@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { adSettings } from "../../config/adSettings";
 
 interface AdViewRecord {

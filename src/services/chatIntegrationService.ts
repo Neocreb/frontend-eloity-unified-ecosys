@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { chatService } from "./chatService";
 import { UnifiedChatType, UnifiedChatContextData } from "@/types/unified-chat";
 

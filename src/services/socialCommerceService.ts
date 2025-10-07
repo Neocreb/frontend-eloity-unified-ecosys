@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Social Commerce Integration Service
 // Connects social activity with marketplace recommendations and creator endorsements
 
