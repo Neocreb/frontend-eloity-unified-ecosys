@@ -1,39 +1,36 @@
-import { cryptoService } from './src/services/cryptoService';
-
+// Test CoinGecko API integration
 async function testCoinGeckoAPI() {
-  console.log('Testing CoinGecko API integration...');
+  const API_KEY = 'CG-ZmDHBa3kaPCNF2a2xg2mA5je';
+  const BASE_URL = 'https://api.coingecko.com/api/v3';
   
   try {
-    // Test getting cryptocurrency data
-    const cryptos = await cryptoService.getCryptocurrencies();
-    console.log(`Retrieved ${cryptos.length} cryptocurrencies`);
+    console.log('Testing CoinGecko API...');
     
-    if (cryptos.length > 0) {
-      console.log('First cryptocurrency:', {
-        id: cryptos[0].id,
-        name: cryptos[0].name,
-        symbol: cryptos[0].symbol,
-        price: cryptos[0].current_price,
-        market_cap: cryptos[0].market_cap
-      });
+    // Test the coins/markets endpoint
+    const response = await fetch(
+      `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=5&page=1`,
+      {
+        headers: {
+          'x-cg-demo-api-key': API_KEY
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
     
-    // Test getting a specific cryptocurrency
-    const bitcoin = await cryptoService.getCryptocurrencyById('bitcoin');
-    if (bitcoin) {
-      console.log('Bitcoin data:', {
-        name: bitcoin.name,
-        price: bitcoin.current_price,
-        market_cap: bitcoin.market_cap
-      });
-    } else {
-      console.log('Failed to retrieve Bitcoin data');
-    }
+    const data = await response.json();
+    console.log('✅ CoinGecko API is working!');
+    console.log('Retrieved', data.length, 'coins');
+    console.log('Top coin:', data[0]?.name, '- $' + data[0]?.current_price);
     
-    console.log('CoinGecko API test completed successfully!');
+    return true;
   } catch (error) {
-    console.error('Error testing CoinGecko API:', error);
+    console.error('❌ CoinGecko API test failed:', error.message);
+    return false;
   }
 }
 
+// Run the test
 testCoinGeckoAPI();
