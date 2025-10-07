@@ -101,15 +101,10 @@ export const CurrencyLink: React.FC<CurrencyLinkProps> = ({
   }
 
   // Default button variant
-  const sizeMap: Record<'sm' | 'lg', 'sm' | 'lg'> = {
-    sm: "sm",
-    lg: "lg"
-  };
-
   return (
     <Button 
       variant="outline" 
-      size={sizeMap[size] || "sm"}
+      size={size === 'md' ? 'sm' : size}
       asChild
       className={cn("flex items-center gap-2", className)}
     >

@@ -468,6 +468,46 @@ export class CryptoService {
     return mockPortfolio;
   }
 
+  async getStakingProducts(): Promise<StakingProduct[]> {
+    // Placeholder for staking products
+    return [];
+  }
+
+  async getStakingPositions(userId: string): Promise<StakingPosition[]> {
+    // Placeholder for user staking positions
+    return [];
+  }
+
+  async stakeAsset(userId: string, asset: string, amount: number, productId: string): Promise<boolean> {
+    // Placeholder for staking
+    return false;
+  }
+
+  async getWatchlist(userId?: string): Promise<any[]> {
+    // Placeholder for watchlist - returns empty array
+    return [];
+  }
+
+  async addToWatchlist(userId: string, asset: string): Promise<any> {
+    // Placeholder - return a mock watchlist item
+    return { id: `watch-${Date.now()}`, asset, price: 0, change24h: 0 };
+  }
+
+  async createAlert(alertData: any): Promise<any> {
+    // Placeholder - return mock alert
+    return { id: `alert-${Date.now()}`, ...alertData };
+  }
+
+  async getOrderBook(pair: string): Promise<any> {
+    // Placeholder for order book
+    return { bids: [], asks: [] };
+  }
+
+  async getRecentTrades(pair: string, limit: number): Promise<any[]> {
+    // Placeholder for recent trades
+    return [];
+  }
+
   // Enhanced method to get a single cryptocurrency with real data when available
   async getCryptocurrencyById(id: string): Promise<Cryptocurrency | null> {
     try {

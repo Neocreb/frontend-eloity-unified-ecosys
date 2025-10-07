@@ -204,16 +204,15 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
         priority: 8,
         author: {
           id: user.id,
-          name: inserted.profiles?.full_name || user.name || "You",
-          username: inserted.profiles?.username || user.username || "you",
-          avatar: inserted.profiles?.avatar_url || user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-          verified: !!inserted.profiles?.is_verified,
-          badges: [],
+          name: user.name || "You",
+          username: user.username || "you",
+          avatar: user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          verified: false,
+          badges: [] as string[],
         },
         content: {
           text: inserted.content,
           media: inserted.image_url ? [{ type: mediaType || 'image', url: inserted.image_url, alt: "User uploaded media" }] : [],
-          location: inserted.location || undefined,
           feeling: feeling || undefined,
           activity: activity || undefined,
           taggedUsers: taggedUsers,
@@ -225,7 +224,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
         },
         interactions: { likes: 0, comments: enableComments ? 0 : -1, shares: 0, views: 0 },
         userInteracted: { liked: false, commented: false, shared: false, saved: false },
-      } as const;
+      };
 
       addPost(newPost);
 
