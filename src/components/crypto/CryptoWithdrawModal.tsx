@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 interface CryptoWithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   onKYCSubmit?: (data: any) => Promise<{success: boolean, error?: any}>;
 }
 
@@ -217,6 +218,9 @@ export default function CryptoWithdrawModal({
         );
       }
 
+      if (onSuccess) {
+        onSuccess();
+      }
       onClose();
       resetForm();
     } catch (error) {
