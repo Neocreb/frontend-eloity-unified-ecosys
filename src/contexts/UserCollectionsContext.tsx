@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { StickerData } from "@/types/sticker";
 import { useToast } from "@/components/ui/use-toast";

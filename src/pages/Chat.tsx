@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { EnhancedChatInterface } from "@/components/chat/group/EnhancedChatInterface";

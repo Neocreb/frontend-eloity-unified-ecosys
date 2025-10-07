@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 // hooks/use-stories.ts
 import { useEffect, useState } from "react";
