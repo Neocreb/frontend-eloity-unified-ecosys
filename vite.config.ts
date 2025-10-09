@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   resolve: {
-    preserveSymlinks: true,
+    preserveSymlinks: false,
     alias: {
       "@": path.resolve(__dirname, "src"),
       // update/remove these if you don't have shared or attached_assets in root
