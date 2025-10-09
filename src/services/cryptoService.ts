@@ -470,18 +470,178 @@ export class CryptoService {
   }
 
   async getStakingProducts(): Promise<StakingProduct[]> {
-    // Placeholder for staking products
-    return [];
+    // Return mock staking products for demonstration
+    return [
+      {
+        id: "eth-staking-1",
+        asset: "ETH",
+        type: "FLEXIBLE",
+        apy: 4.5,
+        minAmount: 0.1,
+        rewardAsset: "ETH",
+        isActive: true,
+        totalStaked: 1250.5,
+        description: "Flexible Ethereum staking with daily rewards",
+        risks: ["Slashing risk", "Smart contract risk"],
+        features: ["No lock-up period", "Daily rewards", "Instant withdrawal"]
+      },
+      {
+        id: "eth-staking-2",
+        asset: "ETH",
+        type: "LOCKED",
+        apy: 6.2,
+        minAmount: 0.5,
+        duration: 90,
+        rewardAsset: "ETH",
+        isActive: true,
+        totalStaked: 2450.8,
+        description: "90-day locked staking with higher rewards",
+        risks: ["Lock-up period", "Slashing risk", "Smart contract risk"],
+        features: ["Higher APY", "Compound rewards", "90-day lock"]
+      },
+      {
+        id: "btc-staking-1",
+        asset: "BTC",
+        type: "LOCKED",
+        apy: 3.8,
+        minAmount: 0.01,
+        duration: 180,
+        rewardAsset: "BTC",
+        isActive: true,
+        totalStaked: 890.2,
+        description: "180-day Bitcoin staking",
+        risks: ["Lock-up period", "Custody risk"],
+        features: ["BTC rewards", "180-day lock", "High security"]
+      },
+      {
+        id: "sol-staking-1",
+        asset: "SOL",
+        type: "FLEXIBLE",
+        apy: 7.2,
+        minAmount: 1,
+        rewardAsset: "SOL",
+        isActive: true,
+        totalStaked: 5600,
+        description: "Flexible Solana staking",
+        risks: ["Network risk", "Smart contract risk"],
+        features: ["No lock-up", "High APY", "Instant withdrawal"]
+      }
+    ];
   }
 
   async getStakingPositions(userId: string): Promise<StakingPosition[]> {
-    // Placeholder for user staking positions
-    return [];
+    // Return mock staking positions for demonstration
+    return [
+      {
+        id: "position-1",
+        productId: "eth-staking-1",
+        asset: "ETH",
+        amount: 2.5,
+        rewardAsset: "ETH",
+        apy: 4.5,
+        dailyReward: 0.00031,
+        totalRewards: 0.042,
+        startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "ACTIVE",
+        autoRenew: true
+      },
+      {
+        id: "position-2",
+        productId: "sol-staking-1",
+        asset: "SOL",
+        amount: 15,
+        rewardAsset: "SOL",
+        apy: 7.2,
+        dailyReward: 0.0032,
+        totalRewards: 0.18,
+        startDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "ACTIVE",
+        autoRenew: false
+      }
+    ];
   }
 
   async stakeAsset(userId: string, asset: string, amount: number, productId: string): Promise<boolean> {
-    // Placeholder for staking
-    return false;
+    // Mock staking implementation
+    console.log(`Staking ${amount} ${asset} for user ${userId} with product ${productId}`);
+    // In a real implementation, this would interact with smart contracts or DeFi protocols
+    return true;
+  }
+
+  async getDeFiProtocols(): Promise<any[]> {
+    // Return mock DeFi protocols for demonstration
+    return [
+      {
+        id: "aave",
+        name: "Aave",
+        description: "Decentralized lending and borrowing protocol",
+        tvl: 8500000000,
+        apyRange: { min: 2.5, max: 8.7 },
+        assets: ["ETH", "USDC", "DAI", "USDT"],
+        type: "LENDING"
+      },
+      {
+        id: "uniswap",
+        name: "Uniswap",
+        description: "Decentralized exchange and liquidity protocol",
+        tvl: 4200000000,
+        apyRange: { min: 5.2, max: 45.8 },
+        assets: ["ETH", "USDC", "DAI", "USDT", "WBTC"],
+        type: "DEX"
+      },
+      {
+        id: "compound",
+        name: "Compound",
+        description: "Algorithmic money market protocol",
+        tvl: 3800000000,
+        apyRange: { min: 1.8, max: 6.4 },
+        assets: ["ETH", "USDC", "DAI", "USDT", "WBTC"],
+        type: "LENDING"
+      },
+      {
+        id: "curve",
+        name: "Curve",
+        description: "Exchange liquidity pool for stablecoins",
+        tvl: 3100000000,
+        apyRange: { min: 3.2, max: 18.5 },
+        assets: ["USDC", "DAI", "USDT", "FRAX"],
+        type: "DEX"
+      }
+    ];
+  }
+
+  async getDeFiPositions(userId: string): Promise<DeFiPosition[]> {
+    // Return mock DeFi positions for demonstration
+    return [
+      {
+        id: "defi-pos-1",
+        protocol: "Aave",
+        type: "LENDING",
+        asset: "USDC",
+        amount: 1000,
+        apy: 4.8,
+        rewards: [
+          { asset: "AAVE", amount: 0.5, apy: 0, value: 12.5 }
+        ],
+        value: 1000,
+        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "ACTIVE"
+      },
+      {
+        id: "defi-pos-2",
+        protocol: "Uniswap",
+        type: "LP",
+        asset: "ETH/USDC",
+        amount: 5.2,
+        apy: 12.4,
+        rewards: [
+          { asset: "UNI", amount: 8.3, apy: 0, value: 45.2 }
+        ],
+        value: 26500,
+        startDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "ACTIVE"
+      }
+    ];
   }
 
   async getWatchlist(userId?: string): Promise<any[]> {

@@ -102,13 +102,16 @@ export default function EnhancedCrypto() {
     if (!user?.id) return;
     
     try {
-      const [productsData, positionsData] = await Promise.all([
+      const [productsData, positionsData, protocolsData, defiPositionsData] = await Promise.all([
         cryptoService.getStakingProducts(),
         cryptoService.getStakingPositions(user.id),
+        cryptoService.getDeFiProtocols(),
+        cryptoService.getDeFiPositions(user.id),
       ]);
 
       setStakingProducts(productsData);
       setStakingPositions(positionsData);
+      // In a full implementation, you would also set protocols and defi positions
     } catch (error) {
       console.error("Failed to load staking data:", error);
       toast({
@@ -312,6 +315,15 @@ export default function EnhancedCrypto() {
     });
     setPrice("");
     setAmount("");
+  };
+
+  const handleStake = async (product: any) => {
+    if (!user?.id) return;
+    
+    toast({
+      title: "Staking Coming Soon",
+      description: `Staking for ${product.asset} will be available soon.`,
+    });
   };
 
   const currentPair = cryptos.find(
@@ -1281,12 +1293,7 @@ export default function EnhancedCrypto() {
 
                                   <Button
                                     className="w-full"
-                                    onClick={() => {
-                                      toast({
-                                        title: "Staking Coming Soon",
-                                        description: `Staking for ${product.asset} will be available soon.`,
-                                      });
-                                    }}
+                                    onClick={() => handleStake(product)}
                                     disabled={!product.isActive}
                                   >
                                     <Lock className="h-4 w-4 mr-2" />

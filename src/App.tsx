@@ -387,7 +387,7 @@ const AppRoutes = () => {
         >
           <Route index element={<Navigate to="feed" replace />} />
           <Route path="feed" element={<EnhancedFeedWithTabs />} />
-          {/* <Route path="feed-demo" element={<FeedWithFollowDemo />} /> */}
+          {/* <Route path="feed-demo" element={<FeedWithFollowDemo />} */}
           <Route path="create" element={<EnhancedFreelance />} />
           <Route path="freelance" element={<FreelanceJobs />} />
           <Route
@@ -506,6 +506,7 @@ const AppRoutes = () => {
           <Route path="crypto-p2p" element={<CryptoP2P />} />
           <Route path="crypto-portfolio" element={<CryptoPortfolio />} />
           <Route path="crypto-learn" element={<CryptoLearn />} />
+          <Route path="defi" element={<DeFi />} />
           <Route path="course/:courseId" element={<CourseDetail />} />
           <Route path="course/:courseId/lesson/:lessonId" element={<LessonViewer />} />
           <Route path="article/:articleId" element={<ArticleViewer />} />

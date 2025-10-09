@@ -147,7 +147,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5002;
 
 // Create HTTP server and WebSocket server
 const server = createServer(app);

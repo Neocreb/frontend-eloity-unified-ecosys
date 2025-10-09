@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,10 @@ import {
   ExternalLink,
   RefreshCw,
   Plus,
+  Banknote,
+  Wallet,
+  Users,
+  Activity,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,6 +74,7 @@ export default function DeFiDashboard() {
     [],
   );
   const [defiPositions, setDefiPositions] = useState<DeFiPosition[]>([]);
+  const [defiProtocols, setDefiProtocols] = useState<any[]>([]);
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<StakingProduct | null>(
@@ -95,15 +100,19 @@ export default function DeFiDashboard() {
     
     setIsLoading(true);
     try {
-      const [productsData, positionsData, portfolioData] = await Promise.all([
+      const [productsData, positionsData, portfolioData, protocolsData, defiPositionsData] = await Promise.all([
         cryptoService.getStakingProducts(),
         cryptoService.getStakingPositions(user.id),
         cryptoService.getPortfolio(),
+        cryptoService.getDeFiProtocols(),
+        cryptoService.getDeFiPositions(user.id),
       ]);
 
       setStakingProducts(productsData);
       setStakingPositions(positionsData);
       setPortfolio(portfolioData);
+      setDefiProtocols(protocolsData);
+      setDefiPositions(defiPositionsData);
     } catch (error) {
       console.error("Failed to load DeFi data:", error);
       toast({
@@ -191,10 +200,13 @@ export default function DeFiDashboard() {
     // Mock prices - in real app, get from portfolio or market data
     const prices: Record<string, number> = {
       ETH: 2645.89,
+      BTC: 43250.67,
       BNB: 315.8,
       ADA: 0.48,
       DOT: 7.45,
       AVAX: 38.92,
+      SOL: 98.45,
+      USDC: 1.0,
     };
     return prices[asset] || 1;
   };
@@ -204,6 +216,26 @@ export default function DeFiDashboard() {
       style: "currency",
       currency: "USD",
     }).format(amount);
+  };
+
+  const formatLargeCurrency = (value: number) => {
+    if (typeof value !== "number" || isNaN(value)) {
+      return "$0.00";
+    }
+
+    if (value >= 1000000000) {
+      return `$${(value / 1000000000).toFixed(2)}B`;
+    } else if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(2)}M`;
+    } else if (value >= 1000) {
+      return `$${(value / 1000).toFixed(2)}K`;
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: value < 1 ? 6 : 2,
+    }).format(value);
   };
 
   const formatPercentage = (value: number) => {
@@ -633,13 +665,147 @@ export default function DeFiDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                <Zap className="h-12 w-12 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  DeFi Integration Coming Soon
-                </h3>
-                <p>Access to lending, borrowing, and yield farming protocols</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {defiProtocols.length > 0 ? (
+                  defiProtocols.map((protocol) => (
+                    <Card key={protocol.id} className="border hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
+                              {protocol.name.charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg">{protocol.name}</h3>
+                              <p className="text-sm text-gray-600">{protocol.type}</p>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            TVL: {formatLargeCurrency(protocol.tvl)}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-4">{protocol.description}</p>
+                        
+                        <div className="flex justify-between items-center mb-4">
+                          <div>
+                            <div className="text-sm text-gray-600">APY Range</div>
+                            <div className="font-semibold">
+                              {formatPercentage(protocol.apyRange.min)} - {formatPercentage(protocol.apyRange.max)}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-gray-600">Supported Assets</div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {protocol.assets.slice(0, 3).map((asset: string, index: number) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {asset}
+                                </Badge>
+                              ))}
+                              {protocol.assets.length > 3 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{protocol.assets.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <Button className="w-full" variant="outline">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Connect to {protocol.name}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <Zap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      DeFi Protocols
+                    </h3>
+                    <p className="text-gray-600">
+                      Connect to DeFi protocols to earn yield on your crypto assets
+                    </p>
+                  </div>
+                )}
               </div>
+              
+              {/* DeFi Positions */}
+              {defiPositions.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">Your DeFi Positions</h3>
+                  <div className="space-y-4">
+                    {defiPositions.map((position) => (
+                      <Card key={position.id} className="border">
+                        <CardContent className="p-6">
+                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                {position.protocol.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-lg">
+                                  {position.protocol} - {position.type}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {position.amount} {position.asset}
+                                </div>
+                                <Badge
+                                  variant={
+                                    position.status === "ACTIVE"
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                  className="mt-1"
+                                >
+                                  {position.status}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-center">
+                              <div>
+                                <div className="text-sm text-gray-600">Value</div>
+                                <div className="font-semibold">
+                                  {formatCurrency(position.value)}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="text-sm text-gray-600">APY</div>
+                                <div className="font-semibold text-green-600">
+                                  {formatPercentage(position.apy)}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="text-sm text-gray-600">Rewards</div>
+                                <div className="font-semibold">
+                                  {position.rewards.length > 0 
+                                    ? `${position.rewards[0].amount} ${position.rewards[0].asset}`
+                                    : "None"}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm">
+                                <Activity className="h-4 w-4 mr-2" />
+                                Details
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Manage
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -652,9 +818,11 @@ export default function DeFiDashboard() {
                 <CardTitle>Staking Performance</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                  <p>Performance charts coming soon...</p>
+                <div className="h-64 flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4" />
+                    <p>Performance charts coming soon...</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -664,9 +832,11 @@ export default function DeFiDashboard() {
                 <CardTitle>Reward History</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  <PieChart className="h-12 w-12 mx-auto mb-4" />
-                  <p>Reward analytics coming soon...</p>
+                <div className="h-64 flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <PieChart className="h-12 w-12 mx-auto mb-4" />
+                    <p>Reward analytics coming soon...</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
