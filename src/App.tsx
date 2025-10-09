@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -695,12 +695,12 @@ const App = () => {
   console.log("App rendering");
 
   // Setup global error handlers for fetch aborts
-  React.useEffect(() => {
+  useEffect(() => {
     setupGlobalErrorHandlers();
   }, []);
 
   // Register service worker for PWA
-  React.useEffect(() => {
+  useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")

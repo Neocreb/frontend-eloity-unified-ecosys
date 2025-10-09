@@ -53,10 +53,6 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: [
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
-      "react/jsx-dev-runtime",
       "react-router-dom",
       "@radix-ui/react-dialog",
       "@radix-ui/react-dropdown-menu",
