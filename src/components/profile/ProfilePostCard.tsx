@@ -1,11 +1,10 @@
-// @ts-nocheck
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, MessageSquare, Share2, Gift, Bookmark, Lock, Users, Globe } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { PostActionsMenu } from "./PostActionsMenu";
 import EnhancedShareDialog from "@/components/feed/EnhancedShareDialog";
 import { EnhancedCommentsSection } from "@/components/feed/EnhancedCommentsSection";
@@ -13,26 +12,30 @@ import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
+interface PostAuthor {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  verified: boolean;
+}
+
+interface Post {
+  id: string;
+  content: string;
+  image?: string;
+  createdAt: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  privacy: string;
+  author: PostAuthor;
+  _liked?: boolean;
+  _saved?: boolean;
+}
+
 interface ProfilePostCardProps {
-  post: {
-    id: string;
-    content: string;
-    image?: string;
-    createdAt: string;
-    likes: number;
-    comments: number;
-    shares: number;
-    privacy: string;
-    author: {
-      id: string;
-      name: string;
-      username: string;
-      avatar: string;
-      verified: boolean;
-    };
-    _liked?: boolean;
-    _saved?: boolean;
-  };
+  post: Post;
   isOwnPost: boolean;
   onDelete?: (postId: string) => void;
   onPrivacyChange?: (postId: string, privacy: string) => void;
@@ -40,14 +43,14 @@ interface ProfilePostCardProps {
   onSaveToggle?: (postId: string, isSaved: boolean) => void;
 }
 
-export const ProfilePostCard: React.FC<ProfilePostCardProps> = ({
+export const ProfilePostCard = ({
   post,
   isOwnPost,
   onDelete,
   onPrivacyChange,
   onLikeToggle,
   onSaveToggle,
-}) => {
+}: ProfilePostCardProps) => {
   const { toast } = useToast();
   const [showComments, setShowComments] = useState(false);
   const [isLiked, setIsLiked] = useState(post._liked || false);
@@ -118,7 +121,7 @@ export const ProfilePostCard: React.FC<ProfilePostCardProps> = ({
             <AvatarFallback>
               {post.author.name
                 .split(" ")
-                .map((n) => n[0])
+                .map((n: string) => n[0])
                 .join("")}
             </AvatarFallback>
           </Avatar>
@@ -148,9 +151,10 @@ export const ProfilePostCard: React.FC<ProfilePostCardProps> = ({
                   isOwnPost={isOwnPost}
                   currentPrivacy={post.privacy}
                   onDelete={() => onDelete?.(post.id)}
-                  onPrivacyChange={(privacy) =>
+                  onPrivacyChange={(privacy: string) =>
                     onPrivacyChange?.(post.id, privacy)
                   }
+                  onEdit={() => {}}
                 />
               </div>
               {post.content && <p className="mt-2">{post.content}</p>}

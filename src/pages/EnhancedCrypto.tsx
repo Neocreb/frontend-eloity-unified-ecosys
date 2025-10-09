@@ -99,10 +99,12 @@ export default function EnhancedCrypto() {
   }, []);
 
   const loadStakingData = async () => {
+    if (!user?.id) return;
+    
     try {
       const [productsData, positionsData] = await Promise.all([
         cryptoService.getStakingProducts(),
-        cryptoService.getStakingPositions(),
+        cryptoService.getStakingPositions(user.id),
       ]);
 
       setStakingProducts(productsData);

@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { UserService, UserWithProfile } from "./userService";
+import { UserService, type UserWithProfile } from "./userService";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"];
 type PostInsert = Database["public"]["Tables"]["posts"]["Insert"];
@@ -48,13 +47,7 @@ export class PostService {
     try {
       const { data, error } = await supabase
         .from("posts")
-        .select(`
-          *,
-          users (
-            *,
-            profiles (*)
-          )
-        `)
+        .select("*")
         .eq("id", postId)
         .single();
 
@@ -64,6 +57,9 @@ export class PostService {
       }
 
       if (!data) return null;
+
+      // Get author data separately
+      const author = await UserService.getUserById(data.user_id);
 
       // Get likes count
       const likesCount = await this.getPostLikesCount(postId);
@@ -76,7 +72,7 @@ export class PostService {
 
       return {
         ...data,
-        author: data.users as UserWithProfile,
+        author,
         likes_count: likesCount,
         comments_count: commentsCount,
         liked_by_user: likedByUser
@@ -101,18 +97,12 @@ export class PostService {
         return [];
       }
 
-      const followingUserIds = followingIds.map((f: any) => f.following_id);
+      const followingUserIds = followingIds.map((f) => f.following_id);
       followingUserIds.push(userId); // Include own posts
 
       const { data, error } = await supabase
         .from("posts")
-        .select(`
-          *,
-          users (
-            *,
-            profiles (*)
-          )
-        `)
+        .select("*")
         .in("user_id", followingUserIds)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
@@ -124,14 +114,15 @@ export class PostService {
 
       // Enhance posts with additional data
       const enhancedPosts = await Promise.all(
-        data.map(async (post: any) => {
+        data.map(async (post) => {
+          const author = await UserService.getUserById(post.user_id);
           const likesCount = await this.getPostLikesCount(post.id);
           const commentsCount = await this.getPostCommentsCount(post.id);
           const likedByUser = await this.isPostLikedByUser(post.id, userId);
 
           return {
             ...post,
-            author: post.users as UserWithProfile,
+            author,
             likes_count: likesCount,
             comments_count: commentsCount,
             liked_by_user: likedByUser
@@ -151,13 +142,7 @@ export class PostService {
     try {
       const { data, error } = await supabase
         .from("posts")
-        .select(`
-          *,
-          users (
-            *,
-            profiles (*)
-          )
-        `)
+        .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
@@ -167,16 +152,18 @@ export class PostService {
         return [];
       }
 
+      // Get author data once for all posts
+      const author = await UserService.getUserById(userId);
+
       // Enhance posts with additional data
       const enhancedPosts = await Promise.all(
-        data.map(async (post: any) => {
+        data.map(async (post) => {
           const likesCount = await this.getPostLikesCount(post.id);
           const commentsCount = await this.getPostCommentsCount(post.id);
-          // We don't check if user liked their own post, but we could if needed
 
           return {
             ...post,
-            author: post.users as UserWithProfile,
+            author,
             likes_count: likesCount,
             comments_count: commentsCount,
             liked_by_user: false
@@ -381,7 +368,7 @@ export class PostService {
 
       // Enhance comments with additional data
       const enhancedComments = await Promise.all(
-        data.map(async (comment: any) => {
+        data.map(async (comment) => {
           // Get author profile
           const author = await UserService.getUserById(comment.user_id);
           
@@ -434,13 +421,7 @@ export class PostService {
     try {
       const { data, error } = await supabase
         .from("posts")
-        .select(`
-          *,
-          users (
-            *,
-            profiles (*)
-          )
-        `)
+        .select("*")
         .ilike("content", `%${query}%`)
         .order("created_at", { ascending: false })
         .limit(limit);
@@ -452,14 +433,14 @@ export class PostService {
 
       // Enhance posts with additional data
       const enhancedPosts = await Promise.all(
-        data.map(async (post: any) => {
+        data.map(async (post) => {
+          const author = await UserService.getUserById(post.user_id);
           const likesCount = await this.getPostLikesCount(post.id);
           const commentsCount = await this.getPostCommentsCount(post.id);
-          // We don't check if user liked the post in search, but we could if needed
 
           return {
             ...post,
-            author: post.users as UserWithProfile,
+            author,
             likes_count: likesCount,
             comments_count: commentsCount,
             liked_by_user: false

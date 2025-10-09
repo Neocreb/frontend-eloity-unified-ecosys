@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,14 +46,14 @@ interface PostActionsMenuProps {
   onEdit?: () => void;
 }
 
-export const PostActionsMenu: React.FC<PostActionsMenuProps> = ({
+export const PostActionsMenu = ({
   postId,
   isOwnPost,
   currentPrivacy = "public",
   onDelete,
   onPrivacyChange,
   onEdit,
-}) => {
+}: PostActionsMenuProps) => {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);

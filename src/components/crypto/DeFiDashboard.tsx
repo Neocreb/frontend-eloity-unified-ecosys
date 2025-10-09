@@ -53,6 +53,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { cryptoService } from "@/services/cryptoService";
 import {
   StakingProduct,
@@ -81,17 +82,22 @@ export default function DeFiDashboard() {
     useState<StakingPosition | null>(null);
 
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    loadDeFiData();
-  }, []);
+    if (user?.id) {
+      loadDeFiData();
+    }
+  }, [user?.id]);
 
   const loadDeFiData = async () => {
+    if (!user?.id) return;
+    
     setIsLoading(true);
     try {
       const [productsData, positionsData, portfolioData] = await Promise.all([
         cryptoService.getStakingProducts(),
-        cryptoService.getStakingPositions(),
+        cryptoService.getStakingPositions(user.id),
         cryptoService.getPortfolio(),
       ]);
 
@@ -111,16 +117,21 @@ export default function DeFiDashboard() {
   };
 
   const handleStake = async () => {
-    if (!selectedProduct || !stakeAmount) return;
+    if (!selectedProduct || !stakeAmount || !user?.id) return;
 
     try {
       const amount = parseFloat(stakeAmount);
-      const newPosition = await cryptoService.stakeAsset(
-        selectedProduct.id,
+      await cryptoService.stakeAsset(
+        user.id,
+        selectedProduct.asset,
         amount,
+        selectedProduct.id,
       );
 
-      setStakingPositions((prev) => [...prev, newPosition]);
+      // Reload staking positions after successful stake
+      const positionsData = await cryptoService.getStakingPositions(user.id);
+      setStakingPositions(positionsData);
+      
       setStakeAmount("");
       setShowStakeDialog(false);
       setSelectedProduct(null);
