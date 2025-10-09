@@ -253,6 +253,9 @@ const ProfessionalCrypto = () => {
       case "learn":
         navigate("/app/crypto-learn");
         break;
+      case "defi":
+        navigate("/app/defi");
+        break;
       default:
         break;
     }
@@ -313,12 +316,13 @@ const ProfessionalCrypto = () => {
           />
 
           {/* Quick Navigation Links */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             {[
               { label: "Trade", icon: ArrowUpDown, color: "from-green-500 to-emerald-600", description: "Spot & Futures Trading", section: "trading" },
               { label: "P2P", icon: Users, color: "from-blue-500 to-cyan-600", description: "Peer-to-Peer Trading", section: "p2p" },
               { label: "Portfolio", icon: PieChart, color: "from-purple-500 to-violet-600", description: "Asset Management", section: "portfolio" },
               { label: "Learn", icon: BookOpen, color: "from-orange-500 to-red-600", description: "Education Center", section: "learn" },
+              { label: "DeFi", icon: Target, color: "from-teal-500 to-cyan-600", description: "Yield & Lending Hub", section: "defi" },
             ].map((item, index) => (
               <Card
                 key={index}
