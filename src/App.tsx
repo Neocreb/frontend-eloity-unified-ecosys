@@ -111,6 +111,7 @@ import CryptoTrading from "./pages/CryptoTrading";
 import CryptoP2P from "./pages/CryptoP2P";
 import CryptoPortfolio from "./pages/CryptoPortfolio";
 import CryptoLearn from "./pages/CryptoLearn";
+import DeFi from "./pages/DeFi";
 import CourseDetail from "./pages/CourseDetail";
 import LessonViewer from "./pages/LessonViewer";
 import ArticleViewer from "./pages/ArticleViewer";
