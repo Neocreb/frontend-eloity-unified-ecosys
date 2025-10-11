@@ -30,7 +30,7 @@ router.get('/users', async (req, res) => {
 
     let followingIds: string[] = [];
     if (userId) {
-      const followingRows = await db.select().from(followers).where(followers.follower_id.eq(userId)).execute();
+      const followingRows = await db.select().from(followers).where(eq(followers.follower_id, userId)).execute();
       followingIds = followingRows.map((r: any) => r.following_id);
     }
 
