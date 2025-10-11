@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,9 @@ import {
   Star,
   ArrowRight,
   Eye,
+  Loader2,
 } from "lucide-react";
-import { mockUsers } from "@/data/mockUsers.ts";
+import { UserService, UserWithProfile } from "@/services/userService";
 
 // Simple Badge component since import is failing
 const SimpleBadge = ({ children, variant = "secondary", className = "" }: { 
@@ -32,65 +33,107 @@ const SimpleBadge = ({ children, variant = "secondary", className = "" }: {
 
 export const ProfileDemo: React.FC = () => {
   const navigate = useNavigate();
+  const [users, setUsers] = useState<UserWithProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const demoUsers = [
-    {
-      key: "sarah_tech",
-      user: mockUsers.sarah_tech,
-      title: "Tech Entrepreneur & Seller",
-      description: "Marketplace seller with verified business account",
-      features: [
-        "Store Management",
-        "Product Listings",
-        "Customer Reviews",
-        "Business Analytics",
-      ],
-      icon: <Store className="w-6 h-6 text-green-600" />,
-    },
-    {
-      key: "alex_dev",
-      user: mockUsers.alex_dev,
-      title: "Full Stack Developer",
-      description: "Professional freelancer offering development services",
-      features: [
-        "Service Offerings",
-        "Portfolio Showcase",
-        "Client Reviews",
-        "Project History",
-      ],
-      icon: <Code className="w-6 h-6 text-blue-600" />,
-    },
-    {
-      key: "mike_crypto",
-      user: mockUsers.mike_crypto,
-      title: "Crypto Trader",
-      description: "Experienced trader with P2P marketplace access",
-      features: [
-        "Trading History",
-        "P2P Rating",
-        "Security Settings",
-        "Portfolio Tracking",
-      ],
-      icon: <TrendingUp className="w-6 h-6 text-orange-600" />,
-    },
-    {
-      key: "emma_creates",
-      user: mockUsers.emma_creates,
-      title: "Content Creator",
-      description: "Digital artist sharing creative content",
-      features: [
-        "Content Portfolio",
-        "Social Stats",
-        "Brand Partnerships",
-        "Creator Tools",
-      ],
-      icon: <Camera className="w-6 h-6 text-purple-600" />,
-    },
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch up to 4 users from the database
+        const fetchedUsers = await UserService.searchUsers("", 4);
+        
+        if (fetchedUsers && fetchedUsers.length > 0) {
+          setUsers(fetchedUsers);
+        } else {
+          setError("No users found in the database");
+        }
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError("Failed to load users");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Define demo categories based on user index or role
+  const getDemoCategory = (index: number) => {
+    const categories = [
+      {
+        title: "Tech Entrepreneur & Seller",
+        description: "Marketplace seller with verified business account",
+        features: [
+          "Store Management",
+          "Product Listings",
+          "Customer Reviews",
+          "Business Analytics",
+        ],
+        icon: <Store className="w-6 h-6 text-green-600" />,
+      },
+      {
+        title: "Full Stack Developer",
+        description: "Professional freelancer offering development services",
+        features: [
+          "Service Offerings",
+          "Portfolio Showcase",
+          "Client Reviews",
+          "Project History",
+        ],
+        icon: <Code className="w-6 h-6 text-blue-600" />,
+      },
+      {
+        title: "Crypto Trader",
+        description: "Experienced trader with P2P marketplace access",
+        features: [
+          "Trading History",
+          "P2P Rating",
+          "Security Settings",
+          "Portfolio Tracking",
+        ],
+        icon: <TrendingUp className="w-6 h-6 text-orange-600" />,
+      },
+      {
+        title: "Content Creator",
+        description: "Digital artist sharing creative content",
+        features: [
+          "Content Portfolio",
+          "Social Stats",
+          "Brand Partnerships",
+          "Creator Tools",
+        ],
+        icon: <Camera className="w-6 h-6 text-purple-600" />,
+      },
+    ];
+    
+    return categories[index % categories.length];
+  };
 
   const handleViewProfile = (username: string) => {
     navigate(`/app/profile/${username}`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground mb-4">{error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -104,20 +147,22 @@ export const ProfileDemo: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {demoUsers.map((demo) => (
-          <Card key={demo.key} className="hover:shadow-lg transition-shadow">
+        {users.map((user, index) => {
+          const demo = getDemoCategory(index);
+          return (
+          <Card key={user.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start gap-4">
                 <Avatar className="w-16 h-16">
                   <AvatarImage
-                    src={demo.user.profile?.avatar_url}
-                    alt={demo.user.profile?.full_name}
+                    src={user.avatar_url || ""}
+                    alt={user.full_name || "User"}
                   />
                   <AvatarFallback className="text-lg">
-                    {demo.user.profile?.full_name
+                    {user.full_name
                       ?.split(" ")
                       .map((n: string) => n[0])
-                      .join("") || "U"}
+                      .join("") || user.username?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
 
@@ -127,10 +172,10 @@ export const ProfileDemo: React.FC = () => {
                     <CardTitle className="text-lg">{demo.title}</CardTitle>
                   </div>
                   <h3 className="font-semibold text-lg mb-1">
-                    {demo.user.profile?.full_name}
+                    {user.full_name || user.username}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-2">
-                    @{demo.user.profile?.username}
+                    @{user.username}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {demo.description}
@@ -144,17 +189,18 @@ export const ProfileDemo: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4 text-muted-foreground" />
                   <span>
-                    {demo.user.profile?.followers_count || 0} followers
+                    {user.profile?.followers_count || 0} followers
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span>{demo.user.profile?.reputation || 0} rating</span>
+                  <span>{user.profile?.reputation || user.points || 0} rating</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Eye className="w-4 h-4 text-muted-foreground" />
-                  <span>{demo.user.profile?.profile_views || 0} views</span>
-                </div>
+                {user.is_verified && (
+                  <SimpleBadge variant="secondary" className="text-xs">
+                    Verified
+                  </SimpleBadge>
+                )}
               </div>
 
               <div>
@@ -169,13 +215,13 @@ export const ProfileDemo: React.FC = () => {
               </div>
 
               <p className="text-sm text-muted-foreground line-clamp-2">
-                {demo.user.profile?.bio}
+                {user.bio || "No bio available"}
               </p>
 
               <Button
                 className="w-full"
                 onClick={() =>
-                  handleViewProfile(demo.user.profile?.username || "")
+                  handleViewProfile(user.username || "")
                 }
               >
                 View Profile
@@ -183,37 +229,28 @@ export const ProfileDemo: React.FC = () => {
               </Button>
             </CardContent>
           </Card>
-        ))}
+        )})}
       </div>
 
-      <div className="bg-muted/50 rounded-lg p-6 text-center">
-        <h2 className="text-xl font-semibold mb-2">Try It Out!</h2>
-        <p className="text-muted-foreground mb-4">
-          Click on any profile above to see the comprehensive profile system in
-          action. You can also try visiting /profile/any_username to see how
-          mock users are generated.
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/app/profile/john_doe")}
-          >
-            Try: john_doe
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/app/profile/jane_smith")}
-          >
-            Try: jane_smith
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/app/profile/crypto_master")}
-          >
-            Try: crypto_master
-          </Button>
+      {users.length > 0 && (
+        <div className="bg-muted/50 rounded-lg p-6 text-center">
+          <h2 className="text-xl font-semibold mb-2">Try It Out!</h2>
+          <p className="text-muted-foreground mb-4">
+            Click on any profile above to see the comprehensive profile system in action.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {users.slice(0, 3).map((user) => (
+              <Button
+                key={user.id}
+                variant="outline"
+                onClick={() => navigate(`/app/profile/${user.username}`)}
+              >
+                Try: {user.username}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
