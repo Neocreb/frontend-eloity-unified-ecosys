@@ -358,7 +358,8 @@ export const chatService = {
   // Mark notification as read
   async markNotificationAsRead(notificationId: string): Promise<void> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) return;
 
       const { data: message } = await supabase
