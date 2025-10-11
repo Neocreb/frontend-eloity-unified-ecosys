@@ -25,14 +25,21 @@ class ApiClient {
 
     const response = await fetch(url, config);
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Unknown error" }));
-      throw new Error(errorData.error || `HTTP ${response.status}`);
+    // Read body once and reuse the parsed result to avoid "body stream already read" errors
+    const text = await response.text();
+    let parsed: any;
+    try {
+      parsed = text ? JSON.parse(text) : null;
+    } catch (e) {
+      parsed = text;
     }
 
-    return response.json();
+    if (!response.ok) {
+      const errorMessage = (parsed && parsed.error) || parsed?.message || `HTTP ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return parsed as T;
   }
 
   // Auth methods
