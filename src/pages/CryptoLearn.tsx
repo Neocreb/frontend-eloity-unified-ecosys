@@ -106,6 +106,10 @@ const CryptoLearn = () => {
   const handleBackToCrypto = () => {
     navigate("/app/crypto");
   };
+  const handleRefresh = () => {
+    setIsLoading(true);
+    loadData();
+  };
 
   const handleCourseClick = (courseId: string) => {
     navigate(`/app/course/${courseId}`);
