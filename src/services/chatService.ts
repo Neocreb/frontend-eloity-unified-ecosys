@@ -88,8 +88,9 @@ export const chatService = {
       }
 
       return filtered;
-    } catch (error) {
-      console.error('Error fetching chat threads:', error);
+    } catch (error: any) {
+      const safe = error instanceof Error ? `${error.message}\n${error.stack || ''}` : (() => { try { return JSON.stringify(error); } catch { return String(error); } })();
+      console.error('Error fetching chat threads:', safe);
       return [];
     }
   },
