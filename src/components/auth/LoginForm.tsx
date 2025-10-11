@@ -15,7 +15,6 @@ interface LoginFormProps {
   isSubmitting: boolean;
   error: string | null;
   onSubmit: (e: React.FormEvent) => Promise<void>;
-  onDemoLogin: () => Promise<void>;
   onForgotPassword: () => Promise<void> | void;
 }
 
@@ -29,7 +28,6 @@ const LoginForm = ({
   isSubmitting,
   error,
   onSubmit,
-  onDemoLogin,
   onForgotPassword,
 }: LoginFormProps) => {
   return (
@@ -84,12 +82,6 @@ const LoginForm = ({
         {isSubmitting ? "Processing..." : "Sign In"}
       </Button>
 
-      <div className="mt-4 text-center text-sm text-muted-foreground">
-        <span>Demo access: </span>
-        <Button variant="link" className="p-0 h-auto" onClick={onDemoLogin}>
-          Login with demo account
-        </Button>
-      </div>
     </form>
   );
 };
