@@ -1641,7 +1641,18 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Content</h2>
                 <p className="text-gray-600 dark:text-gray-400">Performance by content</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <Select value={timeRange} onValueChange={(v) => setTimeRange(v)}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7d">Last 7d</SelectItem>
+                    <SelectItem value="30d">Last 30d</SelectItem>
+                    <SelectItem value="90d">Last 90d</SelectItem>
+                    <SelectItem value="all">All time</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" onClick={handleFilterContent}>
                   <Filter className="w-4 h-4 mr-2" />
                   Filter Content
