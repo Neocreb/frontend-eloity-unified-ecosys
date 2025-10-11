@@ -8,64 +8,55 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Custom fetch that logs failures without consuming the original response body.
-// We clone the response for any diagnostic reads so the original Response stream
-// remains unread for Supabase internals which will parse it later.
+// Custom fetch that logs failures without interfering with downstream consumers.
+// We avoid reading the response body directly; when possible we create a fresh
+// Response instance containing the same bytes so later readers (like
+// supabase-js internals) can safely consume the body even if an upstream
+// consumer drained the original stream.
 const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
 
-    if (!res.ok) {
-      try {
-        const url = typeof input === 'string' ? input : (input as Request).url;
-        const ct = res.headers.get('content-type') || '';
+    // Log headers/metadata only; avoid reading body here to prevent interfering
+    // with downstream consumers. If possible, create a fresh Response copy so
+    // later readers can safely consume it even if upstream code already consumed
+    // the original stream.
+    try {
+      const url = typeof input === 'string' ? input : (input as Request).url;
+      const ct = res.headers.get('content-type') || '';
+      const metadata = { url, status: res.status, statusText: res.statusText, type: res.type, contentType: ct };
 
-        // Avoid reading the response body here (even via clone), which can lead to
-        // "body stream already read" errors in edge cases. Only capture headers/metadata.
-        const bodyPreview: string | null = null;
-
-        const metadata = {
-          url,
-          status: res.status,
-          statusText: res.statusText,
-          type: res.type,
-          contentType: ct,
-          bodyPreview,
-        };
-
-        // If this is a REST v1 404/400, it's likely the table is missing or permissions
-        // prevent access. Provide a clearer warn and include the table name when possible.
-        try {
-          const restMatch = typeof url === 'string' ? url.match(/\/rest\/v1\/([a-zA-Z0-9_]+)/) : null;
-          const tableName = restMatch ? restMatch[1] : null;
-
-          if ((res.status === 404 || res.status === 400) && tableName) {
-            console.warn(`Supabase REST ${res.status} for table \"${tableName}\": the table may not exist or is unauthorized. URL: ${url}`);
-            try {
-              console.warn('Supabase request metadata:', JSON.stringify(metadata));
-            } catch (e) {
-              console.warn('Supabase request metadata (could not stringify)');
-            }
-          } else {
-            // Log structured metadata and a safe stringified version for systems that
-            // convert objects to strings (avoids "[object Object]" messages).
-            console.error('Supabase request failed', metadata);
-            try {
-              console.error('Supabase request failed (stringified):', JSON.stringify(metadata));
-            } catch (stringifyErr) {
-              // Fallback: log the object only
-              console.error('Supabase request failed (stringify error):', stringifyErr);
-            }
-          }
-        } catch (e) {
-          console.error('Supabase request failed (metadata logging error)', e);
+      if ((res.status === 404 || res.status === 400) && typeof url === 'string') {
+        const restMatch = url.match(/\/rest\/v1\/([a-zA-Z0-9_]+)/);
+        const tableName = restMatch ? restMatch[1] : null;
+        if (tableName) {
+          console.warn(`Supabase REST ${res.status} for table "${tableName}": the table may not exist or is unauthorized. URL: ${url}`);
+          try { console.warn('Supabase request metadata:', JSON.stringify(metadata)); } catch (_) { console.warn('Supabase request metadata (could not stringify)'); }
         }
-      } catch (e) {
-        console.error('Supabase request failed (metadata logging error)', e);
+      } else if (!res.ok) {
+        console.error('Supabase request failed', metadata);
+        try { console.error('Supabase request failed (stringified):', JSON.stringify(metadata)); } catch (_) { /* ignore */ }
       }
+    } catch (e) {
+      console.error('Supabase metadata log error', e);
     }
 
-    return res;
+    // Attempt to return a fresh Response instance with the same body contents so
+    // downstream consumers can read it even if the original stream was consumed.
+    try {
+      const buffer = await res.arrayBuffer();
+      const headers = new Headers();
+      res.headers.forEach((v, k) => headers.set(k, v));
+      const newRes = new Response(buffer, { status: res.status, statusText: res.statusText, headers });
+      return newRes as any;
+    } catch (readErr) {
+      // If we can't read/clone the body (it may already be consumed), fall back
+      // to returning the original response. This may still surface the original
+      // "body stream already read" error; in that case the upstream consumer is
+      // responsible for not draining the response before Supabase.
+      console.warn('debugFetch: could not clone response body, returning original response', readErr);
+      return res;
+    }
   } catch (networkError) {
     console.error('Supabase network error', networkError);
     throw networkError;
