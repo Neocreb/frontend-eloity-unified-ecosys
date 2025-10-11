@@ -1128,7 +1128,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-2 whitespace-nowrap px-3">
               <FileText className="w-4 h-4" />
-              <span>Posts</span>
+              <span>Contents</span>
             </TabsTrigger>
             <TabsTrigger value="revenue" className="flex items-center gap-2 whitespace-nowrap px-3">
               <DollarSign className="w-4 h-4" />
