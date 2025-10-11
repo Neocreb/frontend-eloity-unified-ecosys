@@ -144,19 +144,39 @@ class WalletServiceClass {
       const cryptoTransactions = await CryptoService.getUserTransactions(user.id, 20);
 
       // Get other transaction types
-      const { data: rewardTransactions } = await supabase
-        .from('user_rewards')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      let rewardTransactions: any[] = [];
+      try {
+        const { data: _rewardTransactions, error: rewardError } = await supabase
+          .from('user_rewards')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (rewardError) {
+          console.warn('Supabase user_rewards fetch failed, returning empty list:', rewardError);
+        }
+        rewardTransactions = _rewardTransactions || [];
+      } catch (err) {
+        console.warn('Error fetching user_rewards via Supabase:', err);
+        rewardTransactions = [];
+      }
 
-      const { data: orderTransactions } = await supabase
-        .from('marketplace_orders')
-        .select('*')
-        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      let orderTransactions: any[] = [];
+      try {
+        const { data: _orderTransactions, error: orderError } = await supabase
+          .from('marketplace_orders')
+          .select('*')
+          .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (orderError) {
+          console.warn('Supabase marketplace_orders fetch failed, returning empty list:', orderError);
+        }
+        orderTransactions = _orderTransactions || [];
+      } catch (err) {
+        console.warn('Error fetching marketplace_orders via Supabase:', err);
+        orderTransactions = [];
+      }
 
       // Combine and format all transactions
       const transactions: Transaction[] = [];
