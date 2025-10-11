@@ -40,14 +40,24 @@ const debugFetch: typeof fetch = async (input, init) => {
           bodyPreview = null;
         }
 
-        console.error('Supabase request failed', {
+        const metadata = {
           url,
           status: res.status,
           statusText: res.statusText,
           type: res.type,
           contentType: ct,
           bodyPreview,
-        });
+        };
+
+        // Log structured metadata and a safe stringified version for systems that
+        // convert objects to strings (avoids "[object Object]" messages).
+        console.error('Supabase request failed', metadata);
+        try {
+          console.error('Supabase request failed (stringified):', JSON.stringify(metadata));
+        } catch (stringifyErr) {
+          // Fallback: log the object only
+          console.error('Supabase request failed (stringify error):', stringifyErr);
+        }
       } catch (e) {
         console.error('Supabase request failed (metadata logging error)', e);
       }
