@@ -261,14 +261,6 @@ export default function DeFiDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Toolbar */}
-      <div className="flex items-center justify-end">
-        <Button variant="outline" onClick={loadDeFiData}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
