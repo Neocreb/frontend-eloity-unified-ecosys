@@ -27,6 +27,8 @@ const DeFi = () => {
   const handleBackToCrypto = () => {
     navigate("/app/crypto");
   };
+  const [refreshTick, setRefreshTick] = useState(0);
+  const handleRefresh = () => setRefreshTick((t) => t + 1);
 
   if (!user) {
     return null; // Will redirect to auth
@@ -42,28 +44,37 @@ const DeFi = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-950/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Page Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBackToCrypto}
-                className="-ml-2 text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to Crypto
-              </Button>
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+          <div className="mb-6 flex items-center justify-between gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBackToCrypto}
+              aria-label="Back to Crypto"
+              className="shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0 text-center">
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
                 DeFi Dashboard
               </h1>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+                Stake, earn, and participate in decentralized finance
+              </p>
             </div>
-            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
-              Stake, earn, and participate in decentralized finance
-            </p>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              aria-label="Refresh"
+              className="shrink-0"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </Button>
           </div>
 
           {/* DeFi Dashboard Component */}
-          <DeFiDashboard />
+          <DeFiDashboard key={refreshTick} />
         </div>
       </div>
     </>
