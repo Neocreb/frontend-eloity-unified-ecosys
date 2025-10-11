@@ -74,6 +74,7 @@ import referralRouter from './routes/referral.js';
 import rewardSharingRouter from './routes/rewardSharing.js';
 import pioneerBadgeRouter from './routes/pioneerBadge.js';
 import adminRouter from './routes/admin.js';
+import exploreRouter from './routes/explore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -449,6 +450,7 @@ app.use('/api/referral', referralRouter);
 app.use('/api/rewards', rewardSharingRouter);
 app.use('/api/pioneer', pioneerBadgeRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/explore', exploreRouter);
 
 // =============================================================================
 // CORE AUTHENTICATION ENDPOINTS
