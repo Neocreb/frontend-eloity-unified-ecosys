@@ -40,14 +40,42 @@ const debugFetch: typeof fetch = async (input, init) => {
           bodyPreview = null;
         }
 
-        console.error('Supabase request failed', {
+        const metadata = {
           url,
           status: res.status,
           statusText: res.statusText,
           type: res.type,
           contentType: ct,
           bodyPreview,
-        });
+        };
+
+        // If this is a REST v1 404/400, it's likely the table is missing or permissions
+        // prevent access. Provide a clearer warn and include the table name when possible.
+        try {
+          const restMatch = typeof url === 'string' ? url.match(/\/rest\/v1\/([a-zA-Z0-9_]+)/) : null;
+          const tableName = restMatch ? restMatch[1] : null;
+
+          if ((res.status === 404 || res.status === 400) && tableName) {
+            console.warn(`Supabase REST ${res.status} for table \"${tableName}\": the table may not exist or is unauthorized. URL: ${url}`);
+            try {
+              console.warn('Supabase request metadata:', JSON.stringify(metadata));
+            } catch (e) {
+              console.warn('Supabase request metadata (could not stringify)');
+            }
+          } else {
+            // Log structured metadata and a safe stringified version for systems that
+            // convert objects to strings (avoids "[object Object]" messages).
+            console.error('Supabase request failed', metadata);
+            try {
+              console.error('Supabase request failed (stringified):', JSON.stringify(metadata));
+            } catch (stringifyErr) {
+              // Fallback: log the object only
+              console.error('Supabase request failed (stringify error):', stringifyErr);
+            }
+          }
+        } catch (e) {
+          console.error('Supabase request failed (metadata logging error)', e);
+        }
       } catch (e) {
         console.error('Supabase request failed (metadata logging error)', e);
       }
