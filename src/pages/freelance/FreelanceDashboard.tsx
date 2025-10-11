@@ -248,6 +248,10 @@ export const FreelanceDashboard: React.FC = () => {
     ];
   };
 
+  // Local derived values from helper functions to avoid ReferenceError
+  const recentActivities = getRecentActivities();
+  const urgentTasks = getUrgentTasks();
+
   const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
     <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <CardContent className="p-6">
