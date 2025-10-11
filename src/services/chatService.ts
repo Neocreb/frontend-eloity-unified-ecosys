@@ -48,9 +48,9 @@ export const chatService = {
 
       // Transform to ChatThread format
       const threads: ChatThread[] = (conversations || []).map((conv: any) => {
-        const participant = conv.chat_participants.find((p: any) => p.user_id === user.id);
+        const participant = (conv.chat_participants || []).find((p: any) => p.user_id === user.id);
         const unreadCount = participant?.last_read_message_id ? 0 : 1; // Simplified unread logic
-        
+
         return {
           id: conv.id,
           type: conv.type === 'group' ? 'social' : 'freelance', // Map to your types
