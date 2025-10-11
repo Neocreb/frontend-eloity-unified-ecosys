@@ -1878,6 +1878,72 @@ const EnhancedCreatorDashboard: React.FC = () => {
               </CardContent>
             </Card>
 
+            {/* Selected Content Modal */}
+            {selectedContent && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                <div className="bg-white dark:bg-gray-800 rounded-lg w-[90%] max-w-3xl p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold">{selectedContent.title}</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Badge variant="outline" className="text-xs">{selectedContent.type}</Badge>
+                        <span>{new Date(selectedContent.publishDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setSelectedContent(null)}>Close</Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <img src={selectedContent.thumbnail} alt="thumb" className="w-full h-48 object-cover rounded-lg mb-2" />
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{selectedContent.description}</p>
+                    </div>
+                    <div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">Views</div>
+                          <div className="font-bold">{selectedContent.views}</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">Engagement</div>
+                          <div className="font-bold">{selectedContent.engagement}</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">Revenue</div>
+                          <div className="font-bold">{selectedContent.revenue}</div>
+                        </div>
+                        {selectedContent.duration && (
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-600">Duration</div>
+                            <div className="font-bold">{selectedContent.duration}</div>
+                          </div>
+                        )}
+
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <h4 className="text-sm font-semibold mb-2">Detailed Analytics</h4>
+                          <div className="text-sm text-gray-600 space-y-2">
+                            {selectedContent.analytics && Object.entries(selectedContent.analytics).map(([key, value]) => (
+                              <div key={key} className="flex items-center justify-between">
+                                <div className="capitalize text-xs text-gray-500">{key.replace(/([A-Z])/g, ' $1')}</div>
+                                <div className="font-medium text-sm">{Array.isArray(value) ? value.join(', ') : String(value)}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-4">
+                          <Button onClick={() => handleViewOriginal(selectedContent)}>View Original</Button>
+                          <Button variant="outline" onClick={() => handleShareContent(selectedContent)}>Share</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Content Creation Tools */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCreateContent('video')}>
