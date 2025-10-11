@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, PieChart, TrendingUp, BarChart3 } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import EnhancedCryptoPortfolio from "@/components/crypto/EnhancedCryptoPortfolio";
 
 const CryptoPortfolio = () => {
@@ -28,6 +27,8 @@ const CryptoPortfolio = () => {
   const handleBackToCrypto = () => {
     navigate("/app/crypto");
   };
+  const [refreshTick, setRefreshTick] = useState(0);
+  const handleRefresh = () => setRefreshTick((t) => t + 1);
 
   if (!user) {
     return null; // Will redirect to auth
@@ -42,31 +43,38 @@ const CryptoPortfolio = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-950/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBackToCrypto}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Crypto
-              </Button>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
-                  Portfolio
-                </h1>
-                <p className="text-muted-foreground">
-                  Manage your crypto investments
-                </p>
-              </div>
+          {/* Page Header */}
+          <div className="mb-6 flex items-center justify-between gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBackToCrypto}
+              aria-label="Back to Crypto"
+              className="shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0 text-center">
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                Portfolio
+              </h1>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+                Manage your crypto investments
+              </p>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              aria-label="Refresh"
+              className="shrink-0"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </Button>
           </div>
 
           {/* Portfolio Management Component */}
-          <EnhancedCryptoPortfolio />
+          <EnhancedCryptoPortfolio key={refreshTick} />
         </div>
       </div>
     </>
