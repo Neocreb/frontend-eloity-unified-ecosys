@@ -42,27 +42,25 @@ const DeFi = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-950/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+          {/* Page Header */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleBackToCrypto}
-                className="flex items-center gap-2"
+                className="-ml-2 text-muted-foreground hover:text-foreground"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Crypto
               </Button>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
-                  DeFi Dashboard
-                </h1>
-                <p className="text-muted-foreground">
-                  Stake, earn, and participate in decentralized finance
-                </p>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                DeFi Dashboard
+              </h1>
             </div>
+            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
+              Stake, earn, and participate in decentralized finance
+            </p>
           </div>
 
           {/* DeFi Dashboard Component */}
