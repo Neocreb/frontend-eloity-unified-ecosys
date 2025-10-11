@@ -2,7 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { db } from '../../server/enhanced-index.js';
 import { profiles, followers } from '../../shared/enhanced-schema.js';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 const router = express.Router();
 
