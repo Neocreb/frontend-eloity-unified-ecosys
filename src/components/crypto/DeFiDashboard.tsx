@@ -261,21 +261,12 @@ export default function DeFiDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">DeFi Dashboard</h1>
-          <p className="text-gray-600">
-            Stake, earn, and participate in decentralized finance
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={loadDeFiData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
+      {/* Toolbar */}
+      <div className="flex items-center justify-end">
+        <Button variant="outline" onClick={loadDeFiData}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       {/* Summary Cards */}
