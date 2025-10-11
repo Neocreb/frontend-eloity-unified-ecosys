@@ -94,6 +94,11 @@ export function useSuggestedUsersData(max: number = 6) {
         return data.slice(0, max);
       } catch (error) {
         console.error("Failed to load suggested users:", error);
+        try {
+          console.error("Failed to load suggested users (stringified):", JSON.stringify(error));
+        } catch (e) {
+          // ignore
+        }
         return [];
       }
     },
