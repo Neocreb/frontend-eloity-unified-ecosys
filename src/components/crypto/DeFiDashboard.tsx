@@ -261,80 +261,6 @@ export default function DeFiDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Lock className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Total Staked</div>
-                <div className="text-xl font-bold">
-                  {formatCurrency(calculateTotalStakingValue())}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Gift className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Daily Rewards</div>
-                <div className="text-xl font-bold">
-                  {formatCurrency(
-                    calculateTotalDailyRewards() * getAssetPrice("ETH"),
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <BarChart3 className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Active Positions</div>
-                <div className="text-xl font-bold">
-                  {stakingPositions.length}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Percent className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Avg APY</div>
-                <div className="text-xl font-bold">
-                  {stakingPositions.length > 0
-                    ? formatPercentage(
-                        stakingPositions.reduce((sum, p) => sum + p.apy, 0) /
-                          stakingPositions.length,
-                      )
-                    : "0.00%"}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="staking">Staking</TabsTrigger>
@@ -826,6 +752,80 @@ export default function DeFiDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Lock className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Total Staked</div>
+                <div className="text-xl font-bold">
+                  {formatCurrency(calculateTotalStakingValue())}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Gift className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Daily Rewards</div>
+                <div className="text-xl font-bold">
+                  {formatCurrency(
+                    calculateTotalDailyRewards() * getAssetPrice("ETH"),
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Active Positions</div>
+                <div className="text-xl font-bold">
+                  {stakingPositions.length}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Percent className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Avg APY</div>
+                <div className="text-xl font-bold">
+                  {stakingPositions.length > 0
+                    ? formatPercentage(
+                        stakingPositions.reduce((sum, p) => sum + p.apy, 0) /
+                          stakingPositions.length,
+                      )
+                    : "0.00%"}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Stake Dialog */}
       <Dialog open={showStakeDialog} onOpenChange={setShowStakeDialog}>
