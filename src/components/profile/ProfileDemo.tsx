@@ -15,7 +15,7 @@ import {
   ArrowRight,
   Eye,
 } from "lucide-react";
-import { mockUsers } from "@/data/mockUsers";
+import { mockUsers } from "@/data/mockUsers.ts";
 
 // Simple Badge component since import is failing
 const SimpleBadge = ({ children, variant = "secondary", className = "" }: { 
