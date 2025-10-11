@@ -51,8 +51,9 @@ export const exploreService = {
   },
 
   async getSuggestedUsers(limit: number = 5): Promise<SuggestedUser[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const userRes = await supabase.auth.getUser();
+    const user = userRes?.data?.user ?? null;
+
     // Get users the current user is not following
     let query = supabase
       .from('profiles')
@@ -62,15 +63,16 @@ export const exploreService = {
 
     if (user) {
       // Exclude users already followed
-      const { data: following } = await supabase
+      const followersRes = await supabase
         .from('followers')
         .select('following_id')
         .eq('follower_id', user.id);
+      const following = followersRes?.data ?? null;
 
       if (following && following.length > 0) {
-        const followingIds = (following.map(f => f.following_id) as string[]).filter(Boolean);
+        const followingIds = (following.map((f: any) => f.following_id) as string[]).filter(Boolean);
         // PostgREST expects a parenthesized list; string/UUID values must be quoted
-        const formatted = followingIds.map(id => `'${id}'`).join(',');
+        const formatted = followingIds.map((id) => `'${id}'`).join(',');
         query = query.not('user_id', 'in', `(${formatted})`);
       }
 
@@ -81,7 +83,7 @@ export const exploreService = {
     const { data, error } = await query;
 
     if (error) throw error;
-    return (data || []).map(profile => ({
+    return (data || []).map((profile: any) => ({
       id: profile.user_id,
       username: profile.username || 'unknown',
       full_name: profile.full_name || 'Unknown User',
