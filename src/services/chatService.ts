@@ -22,7 +22,8 @@ export const chatService = {
   // Get all chat threads for a user
   async getChatThreads(filter?: ChatFilter): Promise<ChatThread[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) throw new Error("Not authenticated");
 
       let query = supabase
@@ -132,7 +133,8 @@ export const chatService = {
   // Create a new chat thread
   async createChatThread(request: StartChatRequest): Promise<ChatThread> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) throw new Error("Not authenticated");
 
       const { data: conversation, error } = await supabase
@@ -235,7 +237,8 @@ export const chatService = {
   // Send a message
   async sendMessage(request: SendMessageRequest & { currentUserId?: string }): Promise<ChatMessage> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) throw new Error("Not authenticated");
 
       const { data: message, error } = await supabase
