@@ -141,35 +141,34 @@ const CryptoLearn = () => {
 
       <div className="min-h-screen bg-platform">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBackToCrypto}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Crypto
-              </Button>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  Learn
-                </h1>
-                <p className="text-muted-foreground">
-                  Crypto education and tutorials
-                </p>
-              </div>
+          {/* Page Header */}
+          <div className="mb-6 flex items-center justify-between gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBackToCrypto}
+              aria-label="Back to Crypto"
+              className="shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0 text-center">
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                Learn
+              </h1>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+                Crypto education and tutorials
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                <GraduationCap className="h-4 w-4 text-orange-600" />
-              </div>
-              <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
-                Learn & Earn
-              </span>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              aria-label="Refresh"
+              className="shrink-0"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </Button>
           </div>
 
           {/* Progress Banner */}
