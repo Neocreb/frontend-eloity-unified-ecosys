@@ -120,35 +120,6 @@ const EnhancedAuthForm = () => {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      console.log("Attempting demo login");
-      // Demo credentials - these should be environment variables in production
-      const DEMO_EMAIL = "demo@eloity.com";
-      const DEMO_PASSWORD = "password123";
-      const result = await login(DEMO_EMAIL, DEMO_PASSWORD);
-      if (result.error) {
-        const errorMessage = result.error.message || "Demo login failed";
-        setError(errorMessage);
-        notification.error(errorMessage);
-        console.error("Demo login error:", result.error);
-      } else {
-        notification.success("Successfully logged in with demo account!");
-        console.log("Demo login successful, navigating to /feed");
-        navigate("/app/feed", { replace: true });
-      }
-    } catch (err: any) {
-      console.error("Demo login error:", err);
-      const errorMessage = err.message || "Demo login failed";
-      setError(errorMessage);
-      notification.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // Use the combined error from auth context and local state
   const displayError = error || (authError ? authError.message : null);
@@ -167,7 +138,6 @@ const EnhancedAuthForm = () => {
           <div className="text-xs text-red-500">
             <p>• Double-check your email address</p>
             <p>• Make sure your password is correct</p>
-            <p>• Try the demo login if you don't have an account</p>
           </div>
         )}
         {isUserExistsError && (
@@ -192,16 +162,6 @@ const EnhancedAuthForm = () => {
           <TabsTrigger value="register">Register</TabsTrigger>
         </TabsList>
         <CardContent className="pt-4">
-          {/* Demo Account Info */}
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <h4 className="text-sm font-medium text-blue-800 mb-1">Demo Account Available</h4>
-            <p className="text-xs text-blue-600">
-              Demo credentials are available for testing purposes.
-            </p>
-            <p className="text-xs text-blue-500 mt-1">
-              Click "Demo Login" for quick access, or create your own account.
-            </p>
-          </div>
 
           <TabsContent value="login">
             <LoginForm
@@ -214,7 +174,6 @@ const EnhancedAuthForm = () => {
               isSubmitting={isSubmitting}
               error={displayError}
               onSubmit={handleSubmit}
-              onDemoLogin={handleDemoLogin}
               onForgotPassword={handleForgotPassword}
             />
           </TabsContent>

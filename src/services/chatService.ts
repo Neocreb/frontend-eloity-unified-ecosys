@@ -22,7 +22,8 @@ export const chatService = {
   // Get all chat threads for a user
   async getChatThreads(filter?: ChatFilter): Promise<ChatThread[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) throw new Error("Not authenticated");
 
       let query = supabase
@@ -47,9 +48,9 @@ export const chatService = {
 
       // Transform to ChatThread format
       const threads: ChatThread[] = (conversations || []).map((conv: any) => {
-        const participant = conv.chat_participants.find((p: any) => p.user_id === user.id);
+        const participant = (conv.chat_participants || []).find((p: any) => p.user_id === user.id);
         const unreadCount = participant?.last_read_message_id ? 0 : 1; // Simplified unread logic
-        
+
         return {
           id: conv.id,
           type: conv.type === 'group' ? 'social' : 'freelance', // Map to your types
@@ -87,8 +88,9 @@ export const chatService = {
       }
 
       return filtered;
-    } catch (error) {
-      console.error('Error fetching chat threads:', error);
+    } catch (error: any) {
+      const safe = error instanceof Error ? `${error.message}\n${error.stack || ''}` : (() => { try { return JSON.stringify(error); } catch { return String(error); } })();
+      console.error('Error fetching chat threads:', safe);
       return [];
     }
   },
@@ -132,7 +134,8 @@ export const chatService = {
   // Create a new chat thread
   async createChatThread(request: StartChatRequest): Promise<ChatThread> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) throw new Error("Not authenticated");
 
       const { data: conversation, error } = await supabase
@@ -235,7 +238,8 @@ export const chatService = {
   // Send a message
   async sendMessage(request: SendMessageRequest & { currentUserId?: string }): Promise<ChatMessage> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) throw new Error("Not authenticated");
 
       const { data: message, error } = await supabase
@@ -355,7 +359,8 @@ export const chatService = {
   // Mark notification as read
   async markNotificationAsRead(notificationId: string): Promise<void> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
       if (!user) return;
 
       const { data: message } = await supabase

@@ -92,13 +92,25 @@ export function useSuggestedUsersData(max: number = 6) {
       try {
         const data = await exploreService.getSuggestedUsers(max);
         return data.slice(0, max);
-      } catch (error) {
-        console.error("Failed to load suggested users:", error);
-        try {
-          console.error("Failed to load suggested users (stringified):", JSON.stringify(error));
-        } catch (e) {
-          // ignore
-        }
+      } catch (error: any) {
+        // Log errors safely without attempting to re-read response bodies
+        const safeLog = (err: any) => {
+          if (!err) return String(err);
+          if (err instanceof Error) return `${err.message}\n${err.stack}`;
+          try {
+            return JSON.stringify(err);
+          } catch (_) {
+            // Fallback for non-serializable objects (e.g., Response with consumed body)
+            try {
+              return String(err);
+            } catch (__)
+            {
+              return "[unserializable error]";
+            }
+          }
+        };
+
+        console.error("Failed to load suggested users:", safeLog(error));
         return [];
       }
     },
