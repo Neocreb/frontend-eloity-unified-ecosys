@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { apiCall } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
+import { CryptoService } from "./cryptoService";
 
 export interface Wallet {
   id: string;
@@ -39,21 +41,6 @@ export interface SendMoneyRequest {
   description?: string;
 }
 
-// Centralized balance data - single source of truth
-const CENTRALIZED_BALANCE_DATA = {
-  crypto: 125670.45, // Matches cryptoService.ts mockPortfolio totalValue
-  ecommerce: 8947.32,
-  rewards: 3245.18,
-  freelance: 12890.67,
-};
-
-// Calculate total from individual sources
-const TOTAL_BALANCE =
-  CENTRALIZED_BALANCE_DATA.crypto +
-  CENTRALIZED_BALANCE_DATA.ecommerce +
-  CENTRALIZED_BALANCE_DATA.rewards +
-  CENTRALIZED_BALANCE_DATA.freelance;
-
 class WalletServiceClass {
   async getWallet(): Promise<Wallet> {
     const response = await apiCall("/api/wallet");
@@ -61,69 +48,160 @@ class WalletServiceClass {
   }
 
   async getWalletBalance(): Promise<WalletBalance> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return {
+          total: 0,
+          crypto: 0,
+          ecommerce: 0,
+          rewards: 0,
+          freelance: 0,
+        };
+      }
 
-    return {
-      total: TOTAL_BALANCE,
-      crypto: CENTRALIZED_BALANCE_DATA.crypto,
-      ecommerce: CENTRALIZED_BALANCE_DATA.ecommerce,
-      rewards: CENTRALIZED_BALANCE_DATA.rewards,
-      freelance: CENTRALIZED_BALANCE_DATA.freelance,
-    };
+      // Get crypto balance from wallet
+      const cryptoBalance = await CryptoService.getWalletBalance(user.id);
+      const cryptoTotal = cryptoBalance?.totalValueUSD || 0;
+
+      // Get ecommerce balance (from marketplace earnings)
+      const { data: ecommerceData } = await supabase
+        .from('marketplace_orders')
+        .select('total_amount')
+        .eq('seller_id', user.id)
+        .eq('status', 'completed');
+      
+      const ecommerceTotal = ecommerceData?.reduce((sum, order) => 
+        sum + parseFloat(order.total_amount), 0) || 0;
+
+      // Get rewards balance (from activity rewards)
+      const { data: rewardsData } = await supabase
+        .from('user_rewards')
+        .select('amount')
+        .eq('user_id', user.id);
+      
+      const rewardsTotal = rewardsData?.reduce((sum, reward) => 
+        sum + parseFloat(reward.amount), 0) || 0;
+
+      // Get freelance balance (from freelance projects)
+      const { data: freelanceData } = await supabase
+        .from('freelance_projects')
+        .select('budget')
+        .eq('freelancer_id', user.id)
+        .eq('status', 'completed');
+      
+      const freelanceTotal = freelanceData?.reduce((sum, project) => 
+        sum + parseFloat(project.budget), 0) || 0;
+
+      const total = cryptoTotal + ecommerceTotal + rewardsTotal + freelanceTotal;
+
+      return {
+        total,
+        crypto: cryptoTotal,
+        ecommerce: ecommerceTotal,
+        rewards: rewardsTotal,
+        freelance: freelanceTotal,
+      };
+    } catch (error) {
+      console.error('Error fetching wallet balance:', error);
+      return {
+        total: 0,
+        crypto: 0,
+        ecommerce: 0,
+        rewards: 0,
+        freelance: 0,
+      };
+    }
   }
 
   async getTransactions(): Promise<Transaction[]> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 150));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
 
-    return [
-      {
-        id: "1",
-        type: "earned",
-        amount: 2450.00,
-        source: "crypto",
-        description: "Bitcoin trading profit",
-        timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        status: "completed",
-      },
-      {
-        id: "2",
-        type: "earned",
-        amount: 850.50,
-        source: "freelance",
-        description: "Project completion payment",
-        timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-        status: "completed",
-      },
-      {
-        id: "3",
-        type: "earned",
-        amount: 125.75,
-        source: "rewards",
-        description: "Daily activity bonus",
-        timestamp: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-        status: "completed",
-      },
-      {
-        id: "4",
-        type: "earned",
-        amount: 1200.00,
-        source: "ecommerce",
-        description: "Product sales revenue",
-        timestamp: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
-        status: "completed",
-      },
-      {
-        id: "5",
-        type: "withdrawal",
-        amount: -500.00,
-        source: "bank",
-        description: "ATM withdrawal",
-        timestamp: new Date(Date.now() - 432000000).toISOString(), // 5 days ago
-        status: "completed",
-      },
-    ];
+      // Get crypto transactions
+      const cryptoTransactions = await CryptoService.getUserTransactions(user.id, 20);
+
+      // Get other transaction types
+      const { data: rewardTransactions } = await supabase
+        .from('user_rewards')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const { data: orderTransactions } = await supabase
+        .from('marketplace_orders')
+        .select('*')
+        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Combine and format all transactions
+      const transactions: Transaction[] = [];
+
+      // Add crypto transactions
+      if (cryptoTransactions && cryptoTransactions.length > 0) {
+        for (const tx of cryptoTransactions) {
+          transactions.push({
+            id: tx.id,
+            type: tx.transaction_type === 'deposit' ? 'earned' : 'withdrawal',
+            amount: tx.amount.toString(),
+            currency: tx.crypto_type,
+            source: 'crypto',
+            description: `${tx.transaction_type} - ${tx.crypto_type}`,
+            status: tx.status,
+            timestamp: tx.created_at,
+            createdAt: tx.created_at,
+          });
+        }
+      }
+
+      // Add reward transactions
+      if (rewardTransactions && rewardTransactions.length > 0) {
+        for (const reward of rewardTransactions) {
+          transactions.push({
+            id: reward.id,
+            type: 'earned',
+            amount: reward.amount.toString(),
+            currency: 'ELOITS',
+            source: 'rewards',
+            description: reward.activity_type || 'Activity reward',
+            status: 'completed',
+            timestamp: reward.created_at,
+            createdAt: reward.created_at,
+          });
+        }
+      }
+
+      // Add marketplace transactions
+      if (orderTransactions && orderTransactions.length > 0) {
+        for (const order of orderTransactions) {
+          const isSeller = order.seller_id === user.id;
+          transactions.push({
+            id: order.id,
+            type: isSeller ? 'earned' : 'withdrawal',
+            amount: order.total_amount.toString(),
+            currency: 'USD',
+            source: 'ecommerce',
+            description: isSeller ? 'Product sale' : 'Product purchase',
+            status: order.status,
+            timestamp: order.created_at,
+            createdAt: order.created_at,
+          });
+        }
+      }
+
+      // Sort by timestamp
+      transactions.sort((a, b) => 
+        new Date(b.timestamp!).getTime() - new Date(a.timestamp!).getTime()
+      );
+
+      return transactions.slice(0, 20);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      return [];
+    }
   }
 
   async sendMoney(
@@ -142,16 +220,47 @@ class WalletServiceClass {
     type?: string;
     currency?: string;
   }): Promise<Transaction[]> {
-    const queryParams = new URLSearchParams();
-    if (params?.limit) queryParams.append("limit", params.limit.toString());
-    if (params?.offset) queryParams.append("offset", params.offset.toString());
-    if (params?.type) queryParams.append("type", params.type);
-    if (params?.currency) queryParams.append("currency", params.currency);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
 
-    const response = await apiCall(
-      `/api/wallet/history?${queryParams.toString()}`,
-    );
-    return response.transactions;
+      const limit = params?.limit || 20;
+      const offset = params?.offset || 0;
+
+      let query = supabase
+        .from('crypto_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (params?.type) {
+        query = query.eq('transaction_type', params.type);
+      }
+
+      if (params?.currency) {
+        query = query.eq('crypto_type', params.currency);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return (data || []).map(tx => ({
+        id: tx.id,
+        type: tx.transaction_type === 'deposit' ? 'earned' : 'withdrawal',
+        amount: tx.amount.toString(),
+        currency: tx.crypto_type,
+        source: 'crypto',
+        description: `${tx.transaction_type} - ${tx.crypto_type}`,
+        status: tx.status,
+        timestamp: tx.created_at,
+        createdAt: tx.created_at,
+      }));
+    } catch (error) {
+      console.error('Error fetching transaction history:', error);
+      return [];
+    }
   }
 
   static formatBalance(balance: string, currency: string): string {
