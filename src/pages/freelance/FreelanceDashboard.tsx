@@ -599,7 +599,7 @@ export const FreelanceDashboard: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {getRecentActivities().map((activity) => (
+                      {recentActivities.map((activity) => (
                         <div key={activity.id} className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                           <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-full">
                             {activity.type === "message" && <MessageCircle className="w-4 h-4 text-blue-600" />}
@@ -636,7 +636,7 @@ export const FreelanceDashboard: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {getUrgentTasks().map((task) => (
+                      {urgentTasks.map((task) => (
                         <div key={task.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                           <p className="font-medium text-sm mb-1 text-gray-900 dark:text-white">
                             {task.title}

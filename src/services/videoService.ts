@@ -1,0 +1,292 @@
+import { supabase } from "@/integrations/supabase/client";
+
+export interface Video {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  duration: number | null;
+  views_count: number;
+  likes_count: number;
+  comments_count: number;
+  shares_count: number;
+  category: string | null;
+  tags: string[] | null;
+  is_monetized: boolean;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    username: string;
+    full_name: string;
+    avatar_url: string;
+    is_verified: boolean;
+  };
+}
+
+export interface VideoComment {
+  id: string;
+  video_id: string;
+  user_id: string;
+  content: string;
+  parent_id: string | null;
+  likes_count: number;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    username: string;
+    full_name: string;
+    avatar_url: string;
+  };
+}
+
+export const videoService = {
+  async getVideos(limit: number = 20, offset: number = 0, category?: string): Promise<Video[]> {
+    let query = supabase
+      .from('videos')
+      .select('*')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
+
+    if (category && category !== 'all') {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    // Get user profiles separately
+    const userIds = Array.from(new Set(data.map(v => v.user_id)));
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, username, full_name, avatar_url, is_verified')
+      .in('user_id', userIds);
+
+    const profileMap = new Map(
+      (profiles || []).map(p => [p.user_id, p])
+    );
+
+    return data.map(video => {
+      const profile = profileMap.get(video.user_id);
+      return {
+        ...video,
+        user: profile ? {
+          username: profile.username || 'unknown',
+          full_name: profile.full_name || 'Unknown User',
+          avatar_url: profile.avatar_url || '',
+          is_verified: profile.is_verified || false
+        } : undefined
+      };
+    });
+  },
+
+  async getVideoById(id: string): Promise<Video | null> {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username, full_name, avatar_url, is_verified')
+      .eq('user_id', data.user_id)
+      .single();
+
+    return {
+      ...data,
+      user: profile ? {
+        username: profile.username || 'unknown',
+        full_name: profile.full_name || 'Unknown User',
+        avatar_url: profile.avatar_url || '',
+        is_verified: profile.is_verified || false
+      } : undefined
+    };
+  },
+
+  async createVideo(videoData: {
+    title: string;
+    description?: string;
+    video_url: string;
+    thumbnail_url?: string;
+    duration?: number;
+    category?: string;
+    tags?: string[];
+  }): Promise<Video> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('videos')
+      .insert({
+        ...videoData,
+        user_id: user.id
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async recordView(videoId: string, watchDuration: number, completed: boolean): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from('video_views')
+      .insert({
+        video_id: videoId,
+        user_id: user?.id || null,
+        watch_duration: watchDuration,
+        completed
+      });
+
+    if (error) throw error;
+
+    // Increment view count
+    const { data: currentVideo } = await supabase
+      .from('videos')
+      .select('views_count')
+      .eq('id', videoId)
+      .single();
+
+    if (currentVideo) {
+      await supabase
+        .from('videos')
+        .update({ views_count: currentVideo.views_count + 1 })
+        .eq('id', videoId);
+    }
+  },
+
+  async likeVideo(videoId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('video_likes')
+      .insert({
+        video_id: videoId,
+        user_id: user.id
+      });
+
+    if (error) throw error;
+
+    // Increment likes count
+    const { data: currentVideo } = await supabase
+      .from('videos')
+      .select('likes_count')
+      .eq('id', videoId)
+      .single();
+
+    if (currentVideo) {
+      await supabase
+        .from('videos')
+        .update({ likes_count: currentVideo.likes_count + 1 })
+        .eq('id', videoId);
+    }
+  },
+
+  async unlikeVideo(videoId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('video_likes')
+      .delete()
+      .eq('video_id', videoId)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    // Decrement likes count
+    const { data: currentVideo } = await supabase
+      .from('videos')
+      .select('likes_count')
+      .eq('id', videoId)
+      .single();
+
+    if (currentVideo && currentVideo.likes_count > 0) {
+      await supabase
+        .from('videos')
+        .update({ likes_count: currentVideo.likes_count - 1 })
+        .eq('id', videoId);
+    }
+  },
+
+  async getVideoComments(videoId: string): Promise<VideoComment[]> {
+    const { data, error } = await supabase
+      .from('video_comments')
+      .select('*')
+      .eq('video_id', videoId)
+      .is('parent_id', null)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    // Get user profiles separately
+    const userIds = Array.from(new Set(data.map(c => c.user_id)));
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, username, full_name, avatar_url')
+      .in('user_id', userIds);
+
+    const profileMap = new Map(
+      (profiles || []).map(p => [p.user_id, p])
+    );
+
+    return data.map(comment => {
+      const profile = profileMap.get(comment.user_id);
+      return {
+        ...comment,
+        user: profile ? {
+          username: profile.username || 'unknown',
+          full_name: profile.full_name || 'Unknown User',
+          avatar_url: profile.avatar_url || ''
+        } : undefined
+      };
+    });
+  },
+
+  async addComment(videoId: string, content: string, parentId?: string): Promise<VideoComment> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('video_comments')
+      .insert({
+        video_id: videoId,
+        user_id: user.id,
+        content,
+        parent_id: parentId || null
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Increment comments count
+    const { data: currentVideo } = await supabase
+      .from('videos')
+      .select('comments_count')
+      .eq('id', videoId)
+      .single();
+
+    if (currentVideo) {
+      await supabase
+        .from('videos')
+        .update({ comments_count: currentVideo.comments_count + 1 })
+        .eq('id', videoId);
+    }
+
+    return data;
+  }
+};

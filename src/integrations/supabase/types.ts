@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          related_id: string | null
+          related_type: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          related_id?: string | null
+          related_type?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          related_id?: string | null
+          related_type?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_banking_access: {
         Row: {
           accessed_at: string
@@ -73,6 +109,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      battles: {
+        Row: {
+          battle_type: string
+          challenger_id: string
+          challenger_score: number
+          created_at: string
+          id: string
+          live_stream_id: string
+          opponent_id: string | null
+          opponent_score: number
+          status: string
+          time_remaining: number | null
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          battle_type: string
+          challenger_id: string
+          challenger_score?: number
+          created_at?: string
+          id?: string
+          live_stream_id: string
+          opponent_id?: string | null
+          opponent_score?: number
+          status?: string
+          time_remaining?: number | null
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          battle_type?: string
+          challenger_id?: string
+          challenger_score?: number
+          created_at?: string
+          id?: string
+          live_stream_id?: string
+          opponent_id?: string | null
+          opponent_score?: number
+          status?: string
+          time_remaining?: number | null
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battles_live_stream_id_fkey"
+            columns: ["live_stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -1047,6 +1136,33 @@ export type Database = {
         }
         Relationships: []
       }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          trending_score: number
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          trending_score?: number
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          trending_score?: number
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       job_postings: {
         Row: {
           applications_count: number | null
@@ -1149,6 +1265,51 @@ export type Database = {
           user_id?: string
           verification_status?: string
           verified_at?: string | null
+        }
+        Relationships: []
+      }
+      live_streams: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          id: string
+          is_active: boolean
+          started_at: string
+          stream_key: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          viewer_count: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          started_at?: string
+          stream_key?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          viewer_count?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          started_at?: string
+          stream_key?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          viewer_count?: number
         }
         Relationships: []
       }
@@ -1424,6 +1585,80 @@ export type Database = {
           price_per_unit?: number
           status?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      page_followers: {
+        Row: {
+          created_at: string
+          id: string
+          page_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_followers_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          avatar_url: string | null
+          category: string | null
+          cover_url: string | null
+          created_at: string
+          creator_id: string
+          description: string | null
+          follower_count: number
+          id: string
+          is_verified: boolean
+          name: string
+          privacy: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          follower_count?: number
+          id?: string
+          is_verified?: boolean
+          name: string
+          privacy?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          follower_count?: number
+          id?: string
+          is_verified?: boolean
+          name?: string
+          privacy?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1908,6 +2143,53 @@ export type Database = {
           viewer_id?: string
         }
         Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          project_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          project_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          project_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       test_connection: {
         Row: {
@@ -2550,6 +2832,178 @@ export type Database = {
           updated_at?: string | null
           username?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      video_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          likes_count: number
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "video_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_comments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_likes: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_likes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_views: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          user_id: string | null
+          video_id: string
+          watch_duration: number
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          video_id: string
+          watch_duration?: number
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          video_id?: string
+          watch_duration?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_views_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          category: string | null
+          comments_count: number
+          created_at: string
+          description: string | null
+          duration: number | null
+          id: string
+          is_monetized: boolean
+          is_public: boolean
+          likes_count: number
+          shares_count: number
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          video_url: string
+          views_count: number
+        }
+        Insert: {
+          category?: string | null
+          comments_count?: number
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_monetized?: boolean
+          is_public?: boolean
+          likes_count?: number
+          shares_count?: number
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          video_url: string
+          views_count?: number
+        }
+        Update: {
+          category?: string | null
+          comments_count?: number
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_monetized?: boolean
+          is_public?: boolean
+          likes_count?: number
+          shares_count?: number
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+          views_count?: number
         }
         Relationships: []
       }

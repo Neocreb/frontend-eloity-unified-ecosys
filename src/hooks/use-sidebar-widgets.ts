@@ -29,13 +29,13 @@ export function useQuickLinksStats(): QuickLinkItem[] {
   // Groups/Pages from real database (using exploreService)
   const { data: groupsData } = useQuery({
     queryKey: ["sidebar-groups"],
-    queryFn: () => exploreService.getGroups(10),
+    queryFn: () => exploreService.getSuggestedGroups(10),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: pagesData } = useQuery({
     queryKey: ["sidebar-pages"],
-    queryFn: () => exploreService.getPages(10),
+    queryFn: () => exploreService.getSuggestedPages(10),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -73,7 +73,7 @@ export function useTrendingTopicsData() {
     queryKey: ["trending-topics"],
     queryFn: async () => {
       try {
-        const data = await exploreService.getTrendingTopics(10);
+        const data = await exploreService.getTrendingHashtags(10);
         return data;
       } catch (error) {
         console.error("Failed to load trending topics:", error);

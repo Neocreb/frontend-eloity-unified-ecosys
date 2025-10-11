@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { liveStreamService } from '@/services/liveStreamService';
 
 export interface LiveStreamData {
   id: string;
@@ -16,7 +17,7 @@ export interface LiveStreamData {
   viewerCount: number;
   isActive: boolean;
   startedAt: Date;
-  isUserOwned?: boolean; // Track if current user owns this stream
+  isUserOwned?: boolean;
   category?: string;
   streamKey?: string;
   battleData?: {
@@ -35,62 +36,81 @@ export interface LiveStreamData {
   };
 }
 
-// Mock data for initial state
-const mockLiveContent: LiveStreamData[] = [
-  {
-    id: "live1",
-    type: "live",
-    user: {
-      id: "user1",
-      username: "crypto_guru",
-      displayName: "Crypto Guru",
-      avatar: "https://i.pravatar.cc/150?img=10",
-      verified: true,
-      followerCount: 50000,
-    },
-    title: "Bitcoin Analysis Live",
-    description: "LIVE: Bitcoin analysis and market predictions! 🔴 Join the discussion",
-    viewerCount: 1250,
-    isActive: true,
-    startedAt: new Date(Date.now() - 1800000), // Started 30 mins ago
-    category: "crypto",
-  },
-  {
-    id: "battle1",
-    type: "battle",
-    user: {
-      id: "user2",
-      username: "dance_master",
-      displayName: "Dance Master",
-      avatar: "https://i.pravatar.cc/150?img=3",
-      verified: true,
-      followerCount: 892000,
-    },
-    title: "Epic Dance Battle",
-    description: "🔥 LIVE BATTLE: Epic Dance Battle vs @melody_queen! Vote with gifts! ⚡",
-    viewerCount: 2480,
-    isActive: true,
-    startedAt: new Date(Date.now() - 900000), // Started 15 mins ago
-    category: "dance",
-    battleData: {
-      opponent: {
-        id: "user3",
-        username: "melody_queen",
-        displayName: "Melody Queen",
-        avatar: "https://i.pravatar.cc/150?img=5",
-      },
-      type: "dance",
-      timeRemaining: 180, // 3 minutes left
-      scores: {
-        user1: 2450,
-        user2: 3120,
-      },
-    },
-  },
-];
-
 export function useLiveContent() {
-  const [liveContent, setLiveContent] = useState<LiveStreamData[]>(mockLiveContent);
+  const [liveContent, setLiveContent] = useState<LiveStreamData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load real data from database
+  const loadLiveContent = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [streams, battles] = await Promise.all([
+        liveStreamService.getActiveLiveStreams(),
+        liveStreamService.getActiveBattles()
+      ]);
+
+      const liveStreams: LiveStreamData[] = streams.map(stream => ({
+        id: stream.id,
+        type: 'live',
+        user: {
+          id: stream.user_id,
+          username: stream.user?.username || 'unknown',
+          displayName: stream.user?.full_name || 'Unknown User',
+          avatar: stream.user?.avatar_url || '',
+          verified: stream.user?.is_verified || false,
+          followerCount: 0
+        },
+        title: stream.title,
+        description: stream.description || '',
+        viewerCount: stream.viewer_count,
+        isActive: stream.is_active,
+        startedAt: new Date(stream.started_at),
+        category: stream.category || undefined,
+        streamKey: stream.stream_key || undefined
+      }));
+
+      const battleStreams: LiveStreamData[] = battles.map(item => ({
+        id: item.id,
+        type: 'battle',
+        user: {
+          id: item.user_id,
+          username: item.user?.username || 'unknown',
+          displayName: item.user?.full_name || 'Unknown User',
+          avatar: item.user?.avatar_url || '',
+          verified: item.user?.is_verified || false,
+          followerCount: 0
+        },
+        title: item.title,
+        description: item.description || '',
+        viewerCount: item.viewer_count,
+        isActive: item.is_active,
+        startedAt: new Date(item.started_at),
+        category: item.category || undefined,
+        battleData: {
+          type: item.battle.battle_type,
+          timeRemaining: item.battle.time_remaining || undefined,
+          scores: {
+            user1: item.battle.challenger_score,
+            user2: item.battle.opponent_score
+          }
+        }
+      }));
+
+      setLiveContent([...liveStreams, ...battleStreams]);
+    } catch (error) {
+      console.error('Failed to load live content:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLiveContent();
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(loadLiveContent, 30000);
+    return () => clearInterval(interval);
+  }, [loadLiveContent]);
 
   // Simulate real-time updates
   useEffect(() => {
