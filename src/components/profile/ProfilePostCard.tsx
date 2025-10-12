@@ -10,6 +10,7 @@ import EnhancedShareDialog from "@/components/feed/EnhancedShareDialog";
 import { EnhancedCommentsSection } from "@/components/feed/EnhancedCommentsSection";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
 interface PostAuthor {
@@ -57,32 +58,38 @@ export const ProfilePostCard = ({
   const [isSaved, setIsSaved] = useState(post._saved || false);
   const [likeCount, setLikeCount] = useState(post.likes);
 
+  const { user } = useAuth();
+
   const handleLike = async () => {
     const newIsLiked = !isLiked;
-    const newCount = newIsLiked ? likeCount + 1 : likeCount - 1;
-    
+    const newCount = newIsLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
+
+    // Optimistic UI update
     setIsLiked(newIsLiked);
     setLikeCount(newCount);
     onLikeToggle?.(post.id, newCount, newIsLiked);
+
+    const likerId = user?.id || post.author.id;
 
     try {
       if (newIsLiked) {
         await supabase.from("post_likes").insert({
           post_id: post.id,
-          user_id: post.author.id,
+          user_id: likerId,
         });
       } else {
         await supabase
           .from("post_likes")
           .delete()
           .eq("post_id", post.id)
-          .eq("user_id", post.author.id);
+          .eq("user_id", likerId);
       }
     } catch (error) {
       console.error("Error toggling like:", error);
       // Revert on error
       setIsLiked(!newIsLiked);
-      setLikeCount(post.likes);
+      setLikeCount(post.likes ?? 0);
+      onLikeToggle?.(post.id, post.likes ?? 0, !newIsLiked);
     }
   };
 
