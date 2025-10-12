@@ -128,6 +128,10 @@ import PlatformSettings from "./pages/admin/PlatformSettings";
 import ContentModeration from "./pages/admin/ContentModeration";
 import AdminMarketplace from "./pages/admin/AdminMarketplace";
 import AdminCrypto from "./pages/admin/AdminCrypto";
+import AdminDeFi from "./pages/admin/AdminDeFi";
+import AdminGiftCards from "./pages/admin/AdminGiftCards";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminCourses from "./pages/admin/AdminCourses";
 import AdminFreelance from "./pages/admin/AdminFreelance";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminLogs from "./pages/admin/AdminLogs";
@@ -619,6 +623,10 @@ const AppRoutes = () => {
         <Route path="delivery" element={<DeliveryProvidersAdmin />} />
         <Route path="delivery/tracking" element={<DeliveryTrackingAdmin />} />
         <Route path="crypto" element={<AdminCrypto />} />
+        <Route path="defi" element={<AdminDeFi />} />
+        <Route path="gift-cards" element={<AdminGiftCards />} />
+        <Route path="blog" element={<AdminBlog />} />
+        <Route path="courses" element={<AdminCourses />} />
         <Route path="freelance" element={<AdminFreelance />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="logs" element={<AdminLogs />} />
