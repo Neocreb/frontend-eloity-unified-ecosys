@@ -367,7 +367,10 @@ export function updateBlogPost(id: string, updates: Partial<BlogPost>): BlogPost
 }
 
 export function setBlogPostStatus(id: string, status: BlogPost["status"]): BlogPost | null {
-  return updateBlogPost(id, { status, publishedAt: status === "published" ? new Date().toISOString() : undefined });
+  if (status === "published") {
+    return updateBlogPost(id, { status, publishedAt: new Date().toISOString() });
+  }
+  return updateBlogPost(id, { status });
 }
 
 export function deleteBlogPost(id: string): boolean {
