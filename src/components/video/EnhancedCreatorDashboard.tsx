@@ -508,6 +508,71 @@ const EnhancedCreatorDashboard: React.FC = () => {
     } catch {}
   }, [timeRange]);
 
+  // Debounce search term
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
+
+  // Fetch content page whenever filters/sort/search/page change
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setContentLoading(true);
+      try {
+        const { data, total } = await fetchContentPage({ types: selectedTypes.map(s => s.toLowerCase()), range: timeRange, sort: sortBy, search: debouncedSearchTerm, pageNum: page, size: pageSize });
+        if (!cancelled) {
+          setContentPageData(data);
+          setContentTotal(total);
+        }
+      } catch (err) {
+        console.error('Content fetch failed', err);
+      } finally {
+        if (!cancelled) setContentLoading(false);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, [selectedTypes, timeRange, sortBy, debouncedSearchTerm, page, pageSize]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedTypes.join(','), timeRange, sortBy, debouncedSearchTerm, pageSize]);
+
+  const exportContentItem = (item: any, format: 'csv' | 'json' = 'csv') => {
+    const payload = {
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      views: item.views,
+      engagement: item.engagement,
+      revenue: item.revenue,
+      analytics: item.analytics || {}
+    };
+
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `${item.title.replace(/\s+/g,'-')}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      return;
+    }
+
+    // CSV
+    const rows: string[] = [];
+    rows.push(['Metric','Value'].join(','));
+    rows.push(['Title',`"${payload.title}"`].join(','));
+    rows.push(['Type',payload.type].join(','));
+    rows.push(['Views',payload.views].join(','));
+    rows.push(['Engagement',payload.engagement].join(','));
+    rows.push(['Revenue',payload.revenue].join(','));
+    Object.entries(payload.analytics).forEach(([k,v]) => rows.push([k, Array.isArray(v) ? v.join('|') : String(v)].join(',')));
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `${item.title.replace(/\s+/g,'-')}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  };
+
   const totalRevenue = platformFeatures.reduce((sum, feature) => {
     const revenueMetric = feature.metrics.find(m => m.title.includes("Revenue") || m.title.includes("Earnings"));
     if (revenueMetric && typeof revenueMetric.value === 'string') {
