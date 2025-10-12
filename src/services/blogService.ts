@@ -313,6 +313,71 @@ The improvements will make DeFi applications faster and cheaper to use...
   },
 ];
 
+const BLOG_STORAGE_KEY = "eloity_blog_posts_extra";
+
+function loadExtraBlogPosts(): BlogPost[] {
+  try {
+    const raw = localStorage.getItem(BLOG_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as BlogPost[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveExtraBlogPosts(posts: BlogPost[]) {
+  try {
+    localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+  } catch {}
+}
+
+function getAllPosts(): BlogPost[] {
+  const extras = loadExtraBlogPosts();
+  return [...mockBlogPosts, ...extras];
+}
+
+export function createBlogPost(input: Omit<BlogPost, "id" | "publishedAt" | "updatedAt" | "likes" | "views"> & { status?: BlogPost["status"] }): BlogPost {
+  const now = new Date().toISOString();
+  const id = `post_${Date.now()}`;
+  const status: BlogPost["status"] = input.status || "draft";
+  const readingTime = input.readingTime || Math.max(3, Math.round(input.content.split(/\s+/).length / 200));
+  const post: BlogPost = {
+    ...input,
+    id,
+    readingTime,
+    likes: 0,
+    views: 0,
+    status,
+    publishedAt: status === "published" ? now : now,
+    updatedAt: now,
+  } as BlogPost;
+  const list = loadExtraBlogPosts();
+  list.unshift(post);
+  saveExtraBlogPosts(list);
+  return post;
+}
+
+export function updateBlogPost(id: string, updates: Partial<BlogPost>): BlogPost | null {
+  const list = loadExtraBlogPosts();
+  const idx = list.findIndex(p => p.id === id);
+  if (idx === -1) return null;
+  const updated: BlogPost = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
+  list[idx] = updated;
+  saveExtraBlogPosts(list);
+  return updated;
+}
+
+export function setBlogPostStatus(id: string, status: BlogPost["status"]): BlogPost | null {
+  return updateBlogPost(id, { status, publishedAt: status === "published" ? new Date().toISOString() : undefined });
+}
+
+export function deleteBlogPost(id: string): boolean {
+  const list = loadExtraBlogPosts();
+  const next = list.filter(p => p.id !== id);
+  if (next.length === list.length) return false;
+  saveExtraBlogPosts(next);
+  return true;
+}
+
 class BlogService {
   // Get all blog posts with optional filtering (simple version)
   async getBlogPostsSimple(
@@ -321,7 +386,7 @@ class BlogService {
     difficulty?: string,
     limit?: number,
   ): Promise<BlogPost[]> {
-    let filteredPosts = [...mockBlogPosts];
+    let filteredPosts = [...getAllPosts()];
 
     if (category) {
       filteredPosts = filteredPosts.filter(
@@ -360,7 +425,7 @@ class BlogService {
 
   // Get single blog post by slug
   async getBlogPost(slug: string): Promise<BlogPost | null> {
-    const post = mockBlogPosts.find((post) => post.slug === slug);
+    const post = getAllPosts().find((post) => post.slug === slug);
     return post || null;
   }
 
@@ -371,7 +436,7 @@ class BlogService {
 
   // Get RSS feed items for crypto learning
   async getRSSFeedItems(limit: number = 10): Promise<RSSFeedItem[]> {
-    const posts = await this.getBlogPosts();
+    const posts = (await this.getBlogPosts()).posts;
 
     return posts.slice(0, limit).map((post) => ({
       id: post.id,
@@ -402,9 +467,9 @@ class BlogService {
 
   // Get blog statistics
   async getBlogStats(): Promise<BlogStats> {
-    const totalPosts = mockBlogPosts.length;
-    const totalViews = mockBlogPosts.reduce((sum, post) => sum + post.views, 0);
-    const totalLikes = mockBlogPosts.reduce((sum, post) => sum + post.likes, 0);
+    const totalPosts = getAllPosts().length;
+    const totalViews = getAllPosts().reduce((sum, post) => sum + post.views, 0);
+    const totalLikes = getAllPosts().reduce((sum, post) => sum + post.likes, 0);
     // Mock comment count
     const totalComments = Math.floor(totalLikes * 0.3);
 
@@ -444,7 +509,7 @@ class BlogService {
     limit?: number;
     offset?: number;
   }): Promise<{ posts: BlogPost[]; total: number; hasMore: boolean }> {
-    let filteredPosts = [...mockBlogPosts];
+    let filteredPosts = [...getAllPosts()];
 
     if (filters?.category) {
       filteredPosts = filteredPosts.filter(
