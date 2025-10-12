@@ -94,3 +94,21 @@ export const giftCardService = {
     return list.slice(0, limit);
   },
 };
+
+export function updateGiftCardStatus(id: string, status: GiftCardStatus): GiftCardRecord | null {
+  const list = load();
+  const idx = list.findIndex((r) => r.id === id);
+  if (idx === -1) return null;
+  const updated: GiftCardRecord = { ...list[idx], status };
+  list[idx] = updated;
+  save(list);
+  return updated;
+}
+
+export function deleteGiftCardRecord(id: string): boolean {
+  const list = load();
+  const next = list.filter((r) => r.id !== id);
+  if (next.length === list.length) return false;
+  save(next);
+  return true;
+}
