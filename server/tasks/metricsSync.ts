@@ -86,6 +86,28 @@ export default function startMetricsSync(db: any, intervalMs = 5 * 60 * 1000) {
           };
           await db.delete(content_analytics).where(eq(content_analytics.source_type, 'product'), eq(content_analytics.source_id, pr.id)).execute();
           await db.insert(content_analytics).values(row).execute();
+
+          try {
+            if (supabaseServer) {
+              const up = {
+                source_type: row.source_type,
+                source_id: row.source_id,
+                title: row.title,
+                type: row.type,
+                platform: row.platform,
+                publish_date: row.publish_date,
+                views: row.views,
+                engagement: row.engagement,
+                revenue: row.revenue,
+                analytics: row.analytics,
+                thumbnail: row.thumbnail,
+                updated_at: new Date().toISOString()
+              };
+              await supabaseServer.from('content_analytics').upsert(up, { onConflict: ['source_type', 'source_id'] });
+            }
+          } catch (e) {
+            console.warn('metricsSync: supabase upsert failed for product', e.message || e);
+          }
         }
       } catch (e) {
         console.warn('metricsSync: failed to aggregate products', e.message || e);
