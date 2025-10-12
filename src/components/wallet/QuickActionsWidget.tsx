@@ -281,6 +281,16 @@ const QuickActionsWidget = () => {
         isOpen={showTopUpModal}
         onClose={() => setShowTopUpModal(false)}
       />
+
+      <BuyGiftCardModal
+        isOpen={showBuyGiftModal}
+        onClose={() => setShowBuyGiftModal(false)}
+      />
+
+      <SellGiftCardModal
+        isOpen={showSellGiftModal}
+        onClose={() => setShowSellGiftModal(false)}
+      />
     </div>
   );
 };
