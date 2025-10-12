@@ -2088,6 +2088,22 @@ const EnhancedCreatorDashboard: React.FC = () => {
                                 <div className="font-medium text-sm">{Array.isArray(value) ? value.join(', ') : String(value)}</div>
                               </div>
                             ))}
+
+                            {/* Small trend chart when array data is available */}
+                            {(() => {
+                              const arr = selectedContent.analytics?.salesTrend || selectedContent.analytics?.viewsOverTime || null;
+                              if (!arr || !Array.isArray(arr)) return null;
+                              const labels = arr.map((_, i) => `T-${arr.length - i}`);
+                              const data = {
+                                labels,
+                                datasets: [{ label: 'Trend', data: arr, borderColor: 'rgba(75,192,192,1)', backgroundColor: 'rgba(75,192,192,0.1)', tension: 0.3 }]
+                              };
+                              return (
+                                <div className="mt-3">
+                                  <Line data={data} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
 
