@@ -134,6 +134,14 @@ try {
   console.error('Failed to start metrics sync:', e);
 }
 
+// Optional: start BullMQ-based queue if REDIS_URL is provided for more robust scheduling
+import { startMetricsQueue } from './queue/metricsQueue.js';
+try {
+  startMetricsQueue(db);
+} catch (e) {
+  console.error('Failed to start metrics queue:', e);
+}
+
 // Configure logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
