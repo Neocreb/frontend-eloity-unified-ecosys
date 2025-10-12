@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { content_analytics, posts, products } from '../../shared/enhanced-schema.js';
 
+// metricsSync: aggregates posts and products into content_analytics table
+
 export default function startMetricsSync(db: any, intervalMs = 5 * 60 * 1000) {
   const aggregate = async () => {
     try {
