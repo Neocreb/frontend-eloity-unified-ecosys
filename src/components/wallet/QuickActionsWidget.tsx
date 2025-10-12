@@ -132,6 +132,20 @@ const QuickActionsWidget = () => {
       color: "bg-indigo-500 hover:bg-indigo-600",
       action: () => setShowTopUpModal(true),
     },
+    {
+      id: "buy-gift",
+      label: "Buy Gift Cards",
+      icon: <Gift className="h-4 w-4" />,
+      color: "bg-pink-500 hover:bg-pink-600",
+      action: () => setShowBuyGiftModal(true),
+    },
+    {
+      id: "sell-gift",
+      label: "Sell Gift Cards",
+      icon: <Store className="h-4 w-4" />,
+      color: "bg-emerald-500 hover:bg-emerald-600",
+      action: () => setShowSellGiftModal(true),
+    },
   ];
 
   // Smart Recommendations removed from this widget to avoid duplication on the dashboard
