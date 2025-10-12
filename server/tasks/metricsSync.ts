@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { content_analytics, products } from '../../shared/enhanced-schema.js';
 import { posts } from '../../shared/schema.js';
+import supabaseServer from '../supabaseServer.js';
 
 // metricsSync: aggregates posts and products into content_analytics table
 
