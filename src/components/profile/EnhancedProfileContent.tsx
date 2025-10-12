@@ -36,6 +36,7 @@ import { UserProfile } from "@/types/user";
 import { Product } from "@/types/marketplace";
 import CreatorDashboard from "@/components/video/CreatorDashboard";
 import CreatorStudioAccess from "@/components/video/CreatorStudioAccess";
+import { ProfilePostCard } from "@/components/profile/ProfilePostCard";
 
 interface EnhancedProfileContentProps {
   profile: UserProfile;
@@ -66,64 +67,6 @@ export const EnhancedProfileContent: React.FC<EnhancedProfileContentProps> = ({
     return num.toString();
   };
 
-  const PostCard: React.FC<{ post: any }> = ({ post }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-            <AvatarFallback>
-              {profile.full_name
-                ?.split(" ")
-                .map((n) => n[0])
-                .join("") || "U"}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold">{profile.full_name}</span>
-              <span className="text-muted-foreground text-sm">
-                @{profile.username}
-              </span>
-              <span className="text-muted-foreground text-sm">•</span>
-              <span className="text-muted-foreground text-sm">
-                {formatDistanceToNow(
-                  new Date(post.created_at || post.createdAt),
-                )}{" "}
-                ago
-              </span>
-            </div>
-            <p className="text-sm mb-3 whitespace-pre-line leading-relaxed">
-              {post.content}
-            </p>
-            {post.image && (
-              <div className="mb-4">
-                <img
-                  src={post.image}
-                  alt="Post content"
-                  className="rounded-lg max-w-full h-auto border max-h-96 object-cover"
-                />
-              </div>
-            )}
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <button className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                <Heart className="h-4 w-4" />
-                <span>{post.likes || 0}</span>
-              </button>
-              <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
-                <MessageSquare className="h-4 w-4" />
-                <span>{post.comments || 0}</span>
-              </button>
-              <button className="flex items-center gap-1 hover:text-green-500 transition-colors">
-                <Share2 className="h-4 w-4" />
-                <span>{post.shares || 0}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
     <Card className="group hover:shadow-lg transition-all duration-200">
@@ -428,9 +371,53 @@ export const EnhancedProfileContent: React.FC<EnhancedProfileContentProps> = ({
 
         <TabsContent value="posts" className="space-y-4 mt-6">
           {posts.length > 0 ? (
-            posts.map((post, index) => (
-              <PostCard key={post.id || index} post={post} />
-            ))
+            posts.map((post, index) => {
+              const mappedPost = {
+                id: post.id ?? post.post_id ?? String(post.id ?? index),
+                content: post.content ?? post.text ?? (post.content && post.content.text) ?? "",
+                image: post.image ?? post.image_url ?? post.imageUrl ?? null,
+                createdAt: post.created_at ?? post.createdAt ?? new Date().toISOString(),
+                likes: post.likes ?? post.likes_count ?? 0,
+                comments: post.comments ?? post.comments_count ?? 0,
+                shares: post.shares ?? 0,
+                privacy: post.privacy ?? "public",
+                author: {
+                  id: post.user_id ?? post.author?.id ?? profile.id,
+                  name: post.author?.full_name ?? profile.full_name ?? profile.displayName,
+                  username: post.author?.username ?? profile.username,
+                  avatar: post.author?.avatar_url ?? profile.avatar_url ?? profile.avatar,
+                  verified: false,
+                },
+                _liked: post.liked_by_user ?? false,
+                _saved: post._saved ?? false,
+              };
+
+              return (
+                <ProfilePostCard
+                  key={mappedPost.id || index}
+                  post={mappedPost as any}
+                  isOwnPost={String(mappedPost.author.id) === String(profile.id)}
+                  onLikeToggle={(postId, newCount, isLiked) => {
+                    setPosts((prev) =>
+                      prev.map((p) =>
+                        (p.id ?? p.post_id ?? String(p.id)) === postId
+                          ? { ...p, likes: newCount, _liked: isLiked }
+                          : p
+                      )
+                    );
+                  }}
+                  onSaveToggle={(postId, isSaved) => {
+                    setPosts((prev) =>
+                      prev.map((p) =>
+                        (p.id ?? p.post_id ?? String(p.id)) === postId
+                          ? { ...p, _saved: isSaved }
+                          : p
+                      )
+                    );
+                  }}
+                />
+              );
+            })
           ) : (
             <Card>
               <CardContent className="p-8 text-center">
