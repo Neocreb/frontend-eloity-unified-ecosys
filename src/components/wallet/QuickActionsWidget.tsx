@@ -79,6 +79,8 @@ const QuickActionsWidget = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showPayBillModal, setShowPayBillModal] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [showBuyGiftModal, setShowBuyGiftModal] = useState(false);
+  const [showSellGiftModal, setShowSellGiftModal] = useState(false);
 
   // Quick Actions
   const quickActions: QuickAction[] = [
