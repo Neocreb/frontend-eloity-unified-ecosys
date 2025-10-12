@@ -75,7 +75,6 @@ import rewardSharingRouter from './routes/rewardSharing.js';
 import pioneerBadgeRouter from './routes/pioneerBadge.js';
 import adminRouter from './routes/admin.js';
 import exploreRouter from './routes/explore.js';
-import startMetricsSync from './tasks/metricsSync.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -126,21 +125,6 @@ global.useMockData = useMockData;
 
 // Export the database connection for use in routes
 export { db };
-
-// Start background metrics sync (aggregations)
-try {
-  startMetricsSync(db);
-} catch (e) {
-  console.error('Failed to start metrics sync:', e);
-}
-
-// Optional: start BullMQ-based queue if REDIS_URL is provided for more robust scheduling
-import { startMetricsQueue } from './queue/metricsQueue.js';
-try {
-  startMetricsQueue(db);
-} catch (e) {
-  console.error('Failed to start metrics queue:', e);
-}
 
 // Configure logger
 const logger = winston.createLogger({

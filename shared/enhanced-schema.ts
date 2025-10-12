@@ -1,9 +1,6 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, numeric, integer, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users, followers } from './schema';
-
-// Re-export some commonly used tables from shared/schema
-export { followers };
+import { users } from './schema';
 
 // Profiles table
 export const profiles = pgTable('profiles', {
@@ -343,24 +340,6 @@ export const user_activity_sessions = pgTable('user_activity_sessions', {
   device_info: jsonb('device_info'),
   engagement_score: numeric('engagement_score', { precision: 5, scale: 2 }).default('0'),
   created_at: timestamp('created_at').defaultNow(),
-});
-
-// Content analytics table used by dashboards and aggregations
-export const content_analytics = pgTable('content_analytics', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  source_type: text('source_type').notNull(), // e.g., 'post'|'product'|'stream'
-  source_id: uuid('source_id').notNull(),
-  title: text('title').notNull(),
-  type: text('type').notNull(),
-  platform: text('platform').notNull(),
-  publish_date: timestamp('publish_date').defaultNow(),
-  views: integer('views').default(0),
-  engagement: text('engagement'),
-  revenue: numeric('revenue', { precision: 12, scale: 2 }).default('0'),
-  analytics: jsonb('analytics'),
-  thumbnail: text('thumbnail'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // Freelance jobs table
