@@ -127,6 +127,13 @@ global.useMockData = useMockData;
 // Export the database connection for use in routes
 export { db };
 
+// Start background metrics sync (aggregations)
+try {
+  startMetricsSync(db);
+} catch (e) {
+  console.error('Failed to start metrics sync:', e);
+}
+
 // Configure logger
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
