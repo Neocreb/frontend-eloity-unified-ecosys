@@ -181,52 +181,59 @@ const EnhancedCreatorDashboard: React.FC = () => {
   };
 
   // Fetch / compute paginated content (simulates server-side)
+  // Replace simulated fetch with Supabase-backed service
+  import { fetchContentPageSupabase } from '@/services/contentService';
+
   const fetchContentPage = async ({ types, range, sort, search, pageNum, size }:
     { types: string[]; range: string; sort: string; search: string; pageNum: number; size: number }) => {
+    // Use cache key for identical queries
     const key = JSON.stringify({ types: types.slice().sort(), range, sort, search, pageNum, size });
     const cached = cacheRef.current.get(key);
     if (cached && Date.now() - cached.ts < 1000 * 60) {
       return { data: cached.data, total: cached.total };
     }
 
-    // Simulate server work
-    await new Promise(r => setTimeout(r, 300));
-    const now = new Date();
-    const rangeMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
-
-    const filtered = topPerformingContent.filter(item => {
-      const typeMatch = types.length === 0 || types.includes(item.type.toLowerCase());
-      const dateMatch = (() => {
-        if (range === 'all') return true;
-        const pd = new Date(item.publishDate);
-        if (isNaN(pd.getTime())) return true;
-        const diffDays = Math.floor((now.getTime() - pd.getTime()) / (1000 * 60 * 60 * 24));
-        return typeof rangeMap[range] === 'number' ? diffDays <= rangeMap[range] : true;
-      })();
-      const searchMatch = !search || item.title.toLowerCase().includes(search.toLowerCase()) || (item.description || '').toLowerCase().includes(search.toLowerCase());
-      return typeMatch && dateMatch && searchMatch;
-    });
-
-    // Sorting
-    const sorted = filtered.slice().sort((a, b) => {
-      switch (sort) {
-        case 'views':
-          return parseAbbrev(parseInt(String(b.views).replace(/[^0-9]/g,''), 10) || parseAbbrev(b.views)) - parseAbbrev(parseInt(String(a.views).replace(/[^0-9]/g,''), 10) || parseAbbrev(a.views));
-        case 'engagement':
-          return parseFloat(String(b.engagement).replace(/[^0-9.]/g,'')) - parseFloat(String(a.engagement).replace(/[^0-9.]/g,''));
-        case 'revenue':
-          return parseAbbrev(String(b.revenue).replace(/[^0-9.]/g,'')) - parseAbbrev(String(a.revenue).replace(/[^0-9.]/g,''));
-        default:
-          return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
-      }
-    });
-
-    const total = sorted.length;
-    const start = (pageNum - 1) * size;
-    const data = sorted.slice(start, start + size);
-
-    cacheRef.current.set(key, { ts: Date.now(), data, total });
-    return { data, total };
+    try {
+      const { data, total } = await fetchContentPageSupabase({ types, range, sort, search, page: pageNum, pageSize: size });
+      cacheRef.current.set(key, { ts: Date.now(), data, total });
+      return { data, total };
+    } catch (err) {
+      console.error('Supabase fetch failed, falling back to local mock', err);
+      // Fallback to local mock if supabase fails
+      // reuse existing in-memory topPerformingContent filter logic
+      const now = new Date();
+      const rangeMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+      const filtered = topPerformingContent.filter(item => {
+        const typeMatch = types.length === 0 || types.includes(item.type.toLowerCase());
+        const dateMatch = (() => {
+          if (range === 'all') return true;
+          const pd = new Date(item.publishDate);
+          if (isNaN(pd.getTime())) return true;
+          const diffDays = Math.floor((now.getTime() - pd.getTime()) / (1000 * 60 * 60 * 24));
+          return typeof rangeMap[range] === 'number' ? diffDays <= rangeMap[range] : true;
+        })();
+        const searchMatch = !search || item.title.toLowerCase().includes(search.toLowerCase()) || (item.description || '').toLowerCase().includes(search.toLowerCase());
+        return typeMatch && dateMatch && searchMatch;
+      });
+      // basic sort same as before
+      const sorted = filtered.slice().sort((a, b) => {
+        switch (sort) {
+          case 'views':
+            return parseAbbrev(String(b.views)) - parseAbbrev(String(a.views));
+          case 'engagement':
+            return parseFloat(String(b.engagement).replace(/[^0-9.]/g,'')) - parseFloat(String(a.engagement).replace(/[^0-9.]/g,''));
+          case 'revenue':
+            return parseAbbrev(String(b.revenue)) - parseAbbrev(String(a.revenue));
+          default:
+            return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
+        }
+      });
+      const total = sorted.length;
+      const start = (pageNum - 1) * size;
+      const data = sorted.slice(start, start + size);
+      cacheRef.current.set(key, { ts: Date.now(), data, total });
+      return { data, total };
+    }
   };
   const [setupComplete, setSetupComplete] = useState(() => {
     try {
