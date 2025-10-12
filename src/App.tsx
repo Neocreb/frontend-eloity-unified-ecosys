@@ -460,6 +460,7 @@ const AppRoutes = () => {
           <Route path="wallet/transactions" element={<WalletTransactions />} />
           <Route path="wallet/integrations" element={<WalletIntegrations />} />
           <Route path="wallet/cards" element={<WalletCards />} />
+          <Route path="wallet/gift-cards" element={<GiftCards />} />
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
