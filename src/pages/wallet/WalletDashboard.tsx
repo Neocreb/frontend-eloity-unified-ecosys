@@ -99,6 +99,9 @@ const DashboardInner = () => {
                 <DropdownMenuItem onClick={()=>navigate('/app/wallet/integrations')} className="flex items-center gap-2">
                   <PlugZap className="h-4 w-4"/> Integrations
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={()=>navigate('/app/wallet/gift-cards')} className="flex items-center gap-2">
+                  <Gift className="h-4 w-4"/> Gift Cards
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             {/* Hidden withdraw trigger for QuickActionsWidget */}

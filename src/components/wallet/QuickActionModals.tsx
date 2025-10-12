@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useI18n } from "@/contexts/I18nContext";
+import { analyticsService } from "@/services/analyticsService";
+import { giftCardService } from "@/services/giftCardService";
 import {
   Dialog,
   DialogContent,
@@ -1133,7 +1136,8 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
 // Buy Gift Card Modal
 export const BuyGiftCardModal = ({ isOpen, onClose }: BuyGiftCardModalProps) => {
   const { toast } = useToast();
-  const { walletBalance } = useWalletContext();
+  const { walletBalance, addLocalTransaction, adjustSourceBalance } = useWalletContext();
+  const { t } = useI18n();
 
   const [formData, setFormData] = useState({
     retailer: "",
@@ -1163,32 +1167,45 @@ export const BuyGiftCardModal = ({ isOpen, onClose }: BuyGiftCardModalProps) => 
     setIsLoading(true);
     try {
       const amount = parseFloat(formData.amount);
-      if (!formData.retailer) throw new Error("Please select a retailer");
-      if (!amount || amount <= 0) throw new Error("Please enter a valid amount");
+      if (!formData.retailer) throw new Error(t("wallet.giftCards.errors.selectRetailer") || "Please select a retailer");
+      if (!amount || amount <= 0) throw new Error(t("wallet.giftCards.errors.validAmount") || "Please enter a valid amount");
+
+      if (formData.recipientEmail) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.recipientEmail)) {
+          throw new Error(t("wallet.giftCards.errors.validEmail") || "Please enter a valid email");
+        }
+      }
 
       const sourceBalance = walletBalance?.[formData.source as keyof typeof walletBalance] || 0;
-      if (amount > sourceBalance) throw new Error("Insufficient balance in selected source");
+      if (amount > sourceBalance) throw new Error(t("wallet.errors.insufficient") || "Insufficient balance in selected source");
 
-      await new Promise((r) => setTimeout(r, 1500));
+      const record = await giftCardService.purchase({ retailerId: formData.retailer, amount, recipientEmail: formData.recipientEmail || undefined });
 
-      const code = Array.from({ length: 16 }, () =>
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".charAt(Math.floor(Math.random() * 36))
-      )
-        .join("")
-        .replace(/(.{4})/g, "$1-")
-        .slice(0, 19);
+      const tx = {
+        id: record.id,
+        type: "withdrawal" as const,
+        amount: -amount,
+        source: (formData.source as any),
+        description: `Gift card purchase • ${record.retailerName}`,
+        timestamp: new Date().toISOString(),
+        status: "completed" as const,
+      };
+      addLocalTransaction(tx as any);
+      adjustSourceBalance(formData.source as any, -amount);
+      analyticsService.track("wallet_transaction_added", { kind: "giftcard_purchase", amount, source: formData.source });
 
       toast({
-        title: "Gift Card Purchased",
-        description: `${retailers.find(r=>r.value===formData.retailer)?.label} • $${amount.toFixed(2)} • Code: ${code}`,
+        title: t("wallet.giftCards.purchaseSuccess") || "Gift Card Purchased",
+        description: `${retailers.find(r=>r.value===formData.retailer)?.label} • $${amount.toFixed(2)} • Code: ${record.code}`,
       });
 
       onClose();
       setFormData({ retailer: "", amount: "", recipientEmail: "", source: "total" });
     } catch (error) {
       toast({
-        title: "Purchase Failed",
-        description: error instanceof Error ? error.message : "Unable to complete purchase",
+        title: t("wallet.giftCards.purchaseFailed") || "Purchase Failed",
+        description: error instanceof Error ? error.message : (t("wallet.giftCards.purchaseFailedGeneric") || "Unable to complete purchase"),
         variant: "destructive",
       });
     } finally {
@@ -1268,6 +1285,8 @@ export const BuyGiftCardModal = ({ isOpen, onClose }: BuyGiftCardModalProps) => 
 // Sell Gift Card Modal
 export const SellGiftCardModal = ({ isOpen, onClose }: SellGiftCardModalProps) => {
   const { toast } = useToast();
+  const { addLocalTransaction, adjustSourceBalance } = useWalletContext();
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     retailer: "",
     code: "",
@@ -1299,23 +1318,40 @@ export const SellGiftCardModal = ({ isOpen, onClose }: SellGiftCardModalProps) =
     setIsLoading(true);
     try {
       const fv = parseFloat(formData.faceValue);
-      if (!formData.retailer) throw new Error("Please select a retailer");
-      if (!fv || fv <= 0) throw new Error("Enter a valid face value amount");
-      if (!formData.code || formData.code.replace(/[^A-Za-z0-9]/g, '').length < 8) throw new Error("Enter a valid gift card code");
+      if (!formData.retailer) throw new Error(t("wallet.giftCards.errors.selectRetailer") || "Please select a retailer");
+      if (!fv || fv <= 0) throw new Error(t("wallet.giftCards.errors.validAmount") || "Enter a valid face value amount");
+      const codePlain = formData.code.replace(/[^A-Za-z0-9]/g, "");
+      if (!/^[A-Za-z0-9]{8,25}$/.test(codePlain)) throw new Error(t("wallet.giftCards.errors.validCode") || "Enter a valid gift card code");
 
-      await new Promise((r) => setTimeout(r, 1500));
+      const record = await giftCardService.submitSell({ retailerId: formData.retailer, faceValue: fv, code: formData.code, pin: formData.pin || undefined });
+
+      // For demo: credit payout immediately
+      const payout = record.payout || 0;
+      if (payout > 0) {
+        addLocalTransaction({
+          id: record.id,
+          type: "earned" as const,
+          amount: payout,
+          source: "ecommerce" as any,
+          description: `Gift card sale • ${record.retailerName}`,
+          timestamp: new Date().toISOString(),
+          status: "completed" as const,
+        } as any);
+        adjustSourceBalance("ecommerce" as any, payout);
+        analyticsService.track("wallet_transaction_added", { kind: "giftcard_sell", payout });
+      }
 
       toast({
-        title: "Gift Card Submitted",
-        description: `Verification started. Estimated payout $${estimatedPayout.toFixed(2)} will be credited shortly.`,
+        title: t("wallet.giftCards.sellSubmitted") || "Gift Card Submitted",
+        description: `Verification started. Estimated payout $${(record.payout || 0).toFixed(2)} will be credited shortly.`,
       });
 
       onClose();
       setFormData({ retailer: "", code: "", pin: "", faceValue: "" });
     } catch (error) {
       toast({
-        title: "Submission Failed",
-        description: error instanceof Error ? error.message : "Unable to submit card",
+        title: t("wallet.giftCards.sellFailed") || "Submission Failed",
+        description: error instanceof Error ? error.message : (t("wallet.giftCards.sellFailedGeneric") || "Unable to submit card"),
         variant: "destructive",
       });
     } finally {
