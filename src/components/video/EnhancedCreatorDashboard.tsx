@@ -110,6 +110,10 @@ import {
   Home,
   Globe,
 } from "lucide-react";
+import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+import { fetchContentPageSupabase } from '@/services/contentService';
 
 interface MetricCard {
   title: string;
@@ -153,6 +157,82 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Advanced content filtering/pagination states
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // multi-select types
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [contentPageData, setContentPageData] = useState<any[]>([]);
+  const [contentTotal, setContentTotal] = useState(0);
+  const [contentLoading, setContentLoading] = useState(false);
+  const cacheRef = React.useRef(new Map<string, { ts: number; data: any; total: number }>());
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  // Helpers for parsing abbreviated numbers like 45.2K or $23.4K
+  const parseAbbrev = (v: string | number) => {
+    if (typeof v === 'number') return v;
+    const s = String(v).trim();
+    if (!s) return 0;
+    const negative = s.startsWith('-');
+    const cleaned = s.replace(/[^0-9.]/g, '');
+    const num = parseFloat(cleaned) || 0;
+    if (s.toLowerCase().endsWith('k')) return num * 1000 * (negative ? -1 : 1);
+    if (s.toLowerCase().endsWith('m')) return num * 1000000 * (negative ? -1 : 1);
+    return num * (negative ? -1 : 1);
+  };
+
+  // Fetch / compute paginated content (simulates server-side)
+    const fetchContentPage = async ({ types, range, sort, search, pageNum, size }:
+    { types: string[]; range: string; sort: string; search: string; pageNum: number; size: number }) => {
+    // Use cache key for identical queries
+    const key = JSON.stringify({ types: types.slice().sort(), range, sort, search, pageNum, size });
+    const cached = cacheRef.current.get(key);
+    if (cached && Date.now() - cached.ts < 1000 * 60) {
+      return { data: cached.data, total: cached.total };
+    }
+
+    try {
+      const { data, total } = await fetchContentPageSupabase({ types, range, sort, search, page: pageNum, pageSize: size });
+      cacheRef.current.set(key, { ts: Date.now(), data, total });
+      return { data, total };
+    } catch (err) {
+      console.error('Supabase fetch failed, falling back to local mock', err);
+      // Fallback to local mock if supabase fails
+      // reuse existing in-memory topPerformingContent filter logic
+      const now = new Date();
+      const rangeMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+      const filtered = topPerformingContent.filter(item => {
+        const typeMatch = types.length === 0 || types.includes(item.type.toLowerCase());
+        const dateMatch = (() => {
+          if (range === 'all') return true;
+          const pd = new Date(item.publishDate);
+          if (isNaN(pd.getTime())) return true;
+          const diffDays = Math.floor((now.getTime() - pd.getTime()) / (1000 * 60 * 60 * 24));
+          return typeof rangeMap[range] === 'number' ? diffDays <= rangeMap[range] : true;
+        })();
+        const searchMatch = !search || item.title.toLowerCase().includes(search.toLowerCase()) || (item.description || '').toLowerCase().includes(search.toLowerCase());
+        return typeMatch && dateMatch && searchMatch;
+      });
+      // basic sort same as before
+      const sorted = filtered.slice().sort((a, b) => {
+        switch (sort) {
+          case 'views':
+            return parseAbbrev(String(b.views)) - parseAbbrev(String(a.views));
+          case 'engagement':
+            return parseFloat(String(b.engagement).replace(/[^0-9.]/g,'')) - parseFloat(String(a.engagement).replace(/[^0-9.]/g,''));
+          case 'revenue':
+            return parseAbbrev(String(b.revenue)) - parseAbbrev(String(a.revenue));
+          default:
+            return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
+        }
+      });
+      const total = sorted.length;
+      const start = (pageNum - 1) * size;
+      const data = sorted.slice(start, start + size);
+      cacheRef.current.set(key, { ts: Date.now(), data, total });
+      return { data, total };
+    }
+  };
   const [setupComplete, setSetupComplete] = useState(() => {
     try {
       if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
@@ -432,6 +512,88 @@ const EnhancedCreatorDashboard: React.FC = () => {
       }
     } catch {}
   }, [timeRange]);
+
+  // Debounce search term
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
+
+  // Fetch content page whenever filters/sort/search/page change
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setContentLoading(true);
+      try {
+        const { data, total } = await fetchContentPage({ types: selectedTypes.map(s => s.toLowerCase()), range: timeRange, sort: sortBy, search: debouncedSearchTerm, pageNum: page, size: pageSize });
+        if (!cancelled) {
+          setContentPageData(data);
+          setContentTotal(total);
+        }
+      } catch (err) {
+        console.error('Content fetch failed', err);
+      } finally {
+        if (!cancelled) setContentLoading(false);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, [selectedTypes, timeRange, sortBy, debouncedSearchTerm, page, pageSize]);
+
+  // Try to dynamically import react-window for virtualization to avoid hard dependency
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const mod = await import('react-window');
+        if (!mounted) return;
+        (window as any).__reactWindow = mod;
+        (window as any).__reactWindowAvailable = true;
+      } catch (e) {
+        // react-window not installed, skip virtualization
+        (window as any).__reactWindowAvailable = false;
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedTypes.join(','), timeRange, sortBy, debouncedSearchTerm, pageSize]);
+
+  const exportContentItem = (item: any, format: 'csv' | 'json' = 'csv') => {
+    const payload = {
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      views: item.views,
+      engagement: item.engagement,
+      revenue: item.revenue,
+      analytics: item.analytics || {}
+    };
+
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `${item.title.replace(/\s+/g,'-')}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      return;
+    }
+
+    // CSV
+    const rows: string[] = [];
+    rows.push(['Metric','Value'].join(','));
+    rows.push(['Title',`"${payload.title}"`].join(','));
+    rows.push(['Type',payload.type].join(','));
+    rows.push(['Views',payload.views].join(','));
+    rows.push(['Engagement',payload.engagement].join(','));
+    rows.push(['Revenue',payload.revenue].join(','));
+    Object.entries(payload.analytics).forEach(([k,v]) => rows.push([k, Array.isArray(v) ? v.join('|') : String(v)].join(',')));
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `${item.title.replace(/\s+/g,'-')}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  };
 
   const totalRevenue = platformFeatures.reduce((sum, feature) => {
     const revenueMetric = feature.metrics.find(m => m.title.includes("Revenue") || m.title.includes("Earnings"));
@@ -1128,7 +1290,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-2 whitespace-nowrap px-3">
               <FileText className="w-4 h-4" />
-              <span>Posts</span>
+              <span>Contents</span>
             </TabsTrigger>
             <TabsTrigger value="revenue" className="flex items-center gap-2 whitespace-nowrap px-3">
               <DollarSign className="w-4 h-4" />
@@ -1197,6 +1359,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
       </div>
 
       {/* Quick Stats Overview */}
+      {activeSection === "overview" && (
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1267,6 +1430,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {selectedContent ? (
@@ -1639,7 +1803,18 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Content</h2>
                 <p className="text-gray-600 dark:text-gray-400">Performance by content</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <Select value={timeRange} onValueChange={(v) => setTimeRange(v)}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7d">Last 7d</SelectItem>
+                    <SelectItem value="30d">Last 30d</SelectItem>
+                    <SelectItem value="90d">Last 90d</SelectItem>
+                    <SelectItem value="all">All time</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" onClick={handleFilterContent}>
                   <Filter className="w-4 h-4 mr-2" />
                   Filter Content
@@ -1791,58 +1966,239 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   Top Performing Content Analysis
                 </CardTitle>
                 <CardDescription>Top performing content</CardDescription>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {['Video','Post','Product','Stream'].map((t) => {
+                    const lc = t.toLowerCase();
+                    const active = selectedTypes.includes(lc);
+                    return (
+                      <Button key={t} variant={active ? 'default' : 'outline'} size="sm" onClick={() => { setPage(1); setSelectedTypes(prev => active ? prev.filter(x => x !== lc) : [...prev, lc]); }}>
+                        {t}
+                      </Button>
+                    );
+                  })}
+
+                  <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(1); }}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Most Recent</SelectItem>
+                      <SelectItem value="views">Top Views</SelectItem>
+                      <SelectItem value="engagement">Top Engagement</SelectItem>
+                      <SelectItem value="revenue">Top Revenue</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(parseInt(v)); setPage(1); }}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 / page</SelectItem>
+                      <SelectItem value="10">10 / page</SelectItem>
+                      <SelectItem value="20">20 / page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
+
               <CardContent>
                 <div className="space-y-4">
-                  {topPerformingContent.map((content, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => setSelectedContent(content)}
-                    >
-                      <div className="flex-shrink-0">
-                        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                          {content.type === "Video" && <Video className="w-8 h-8 text-red-500" />}
-                          {content.type === "Product" && <ShoppingBag className="w-8 h-8 text-green-500" />}
-                          {content.type === "Post" && <FileText className="w-8 h-8 text-blue-500" />}
-                          {content.type === "Stream" && <Radio className="w-8 h-8 text-pink-500" />}
+                  {contentLoading ? (
+                    <div className="p-6 text-center">Loading content...</div>
+                  ) : contentPageData.length > 0 ? (
+                    (() => {
+                      // Try to dynamically load react-window for virtualization
+                      const Virtualized = (window as any).__reactWindowAvailable;
+                      if (Virtualized) {
+                        const { FixedSizeList } = (window as any).__reactWindow;
+                        const itemHeight = 96;
+                        const height = Math.min(600, itemHeight * contentPageData.length);
+                        return (
+                          <FixedSizeList
+                            height={height}
+                            itemCount={contentPageData.length}
+                            itemSize={itemHeight}
+                            width="100%"
+                            overscanCount={5}
+                          >
+                            {({ index, style }) => {
+                              const content = contentPageData[index];
+                              return (
+                                <div style={style} key={content.id || index} className="p-2">
+                                  <div className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedContent(content)}>
+                                    <div className="flex-shrink-0">
+                                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                        {content.type === "Video" && <Video className="w-8 h-8 text-red-500" />}
+                                        {content.type === "Product" && <ShoppingBag className="w-8 h-8 text-green-500" />}
+                                        {content.type === "Post" && <FileText className="w-8 h-8 text-blue-500" />}
+                                        {content.type === "Stream" && <Radio className="w-8 h-8 text-pink-500" />}
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-semibold text-gray-900 dark:text-white truncate">{content.title}</h4>
+                                        <Badge variant="outline" className="text-xs">{content.type}</Badge>
+                                        <Badge variant="secondary" className="text-xs">{content.platform}</Badge>
+                                      </div>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{content.description}</p>
+                                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{content.views}</span>
+                                        <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{content.engagement}</span>
+                                        <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{content.revenue}</span>
+                                        <span>{new Date(content.publishDate).toLocaleDateString()}</span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-lg font-bold text-green-600">{content.revenue}</div>
+                                      <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); exportContentItem(content, 'csv'); }}>Export</Button>
+                                      <Button variant="ghost" size="sm"><ChevronRight className="w-4 h-4" /></Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }}
+                          </FixedSizeList>
+                        );
+                      }
+
+                      // Fallback simple mapping
+                      return contentPageData.map((content, index) => (
+                        <div key={content.id || index} className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedContent(content)}>
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                              {content.type === "Video" && <Video className="w-8 h-8 text-red-500" />}
+                              {content.type === "Product" && <ShoppingBag className="w-8 h-8 text-green-500" />}
+                              {content.type === "Post" && <FileText className="w-8 h-8 text-blue-500" />}
+                              {content.type === "Stream" && <Radio className="w-8 h-8 text-pink-500" />}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 dark:text-white truncate">{content.title}</h4>
+                              <Badge variant="outline" className="text-xs">{content.type}</Badge>
+                              <Badge variant="secondary" className="text-xs">{content.platform}</Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{content.description}</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{content.views}</span>
+                              <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{content.engagement}</span>
+                              <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{content.revenue}</span>
+                              <span>{new Date(content.publishDate).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-green-600">{content.revenue}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); exportContentItem(content, 'csv'); }}>Export</Button>
+                            <Button variant="ghost" size="sm"><ChevronRight className="w-4 h-4" /></Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900 dark:text-white truncate">{content.title}</h4>
-                          <Badge variant="outline" className="text-xs">{content.type}</Badge>
-                          <Badge variant="secondary" className="text-xs">{content.platform}</Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{content.description}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            {content.views}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Heart className="w-3 h-3" />
-                            {content.engagement}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />
-                            {content.revenue}
-                          </span>
-                          <span>{new Date(content.publishDate).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-green-600">{content.revenue}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
+                      ));
+                    })()
+                  ) : (
+                    <div className="p-4 text-center text-gray-600">No content matches the selected filters.</div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-sm text-gray-600">Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, contentTotal)} of {contentTotal}</div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Prev</Button>
+                      <div className="text-sm">Page {page}</div>
+                      <Button size="sm" variant="outline" onClick={() => setPage(p => p + 1)} disabled={page * pageSize >= contentTotal}>Next</Button>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Selected Content Modal */}
+            {selectedContent && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                <div className="bg-white dark:bg-gray-800 rounded-lg w-[90%] max-w-3xl p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold">{selectedContent.title}</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Badge variant="outline" className="text-xs">{selectedContent.type}</Badge>
+                        <span>{new Date(selectedContent.publishDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setSelectedContent(null)}>Close</Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <img src={selectedContent.thumbnail} alt="thumb" className="w-full h-48 object-cover rounded-lg mb-2" />
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{selectedContent.description}</p>
+                    </div>
+                    <div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">Views</div>
+                          <div className="font-bold">{selectedContent.views}</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">Engagement</div>
+                          <div className="font-bold">{selectedContent.engagement}</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">Revenue</div>
+                          <div className="font-bold">{selectedContent.revenue}</div>
+                        </div>
+                        {selectedContent.duration && (
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-600">Duration</div>
+                            <div className="font-bold">{selectedContent.duration}</div>
+                          </div>
+                        )}
+
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <h4 className="text-sm font-semibold mb-2">Detailed Analytics</h4>
+                          <div className="text-sm text-gray-600 space-y-2">
+                            {selectedContent.analytics && Object.entries(selectedContent.analytics).map(([key, value]) => (
+                              <div key={key} className="flex items-center justify-between">
+                                <div className="capitalize text-xs text-gray-500">{key.replace(/([A-Z])/g, ' $1')}</div>
+                                <div className="font-medium text-sm">{Array.isArray(value) ? value.join(', ') : String(value)}</div>
+                              </div>
+                            ))}
+
+                            {/* Small trend chart when array data is available */}
+                            {(() => {
+                              const arr = selectedContent.analytics?.salesTrend || selectedContent.analytics?.viewsOverTime || null;
+                              if (!arr || !Array.isArray(arr)) return null;
+                              const labels = arr.map((_, i) => `T-${arr.length - i}`);
+                              const data = {
+                                labels,
+                                datasets: [{ label: 'Trend', data: arr, borderColor: 'rgba(75,192,192,1)', backgroundColor: 'rgba(75,192,192,0.1)', tension: 0.3 }]
+                              };
+                              return (
+                                <div className="mt-3">
+                                  <Line data={data} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-4">
+                          <Button onClick={() => handleViewOriginal(selectedContent)}>View Original</Button>
+                          <Button variant="outline" onClick={() => handleShareContent(selectedContent)}>Share</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Content Creation Tools */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

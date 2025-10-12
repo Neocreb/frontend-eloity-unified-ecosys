@@ -63,25 +63,40 @@ const debugFetch: typeof fetch = async (input, init) => {
   }
 };
 
+let _supabase: any;
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   console.error('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
+  // Provide a defensive stub to avoid runtime "Failed to fetch" errors when
+  // code attempts to call supabase methods while the env is not set.
+  const missingMsg = 'Supabase client not initialized: missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY.';
+  const thrower = () => { throw new Error(missingMsg); };
+  // Minimal proxy that throws on any usage and helps callers fail fast with a clear message.
+  // This prevents attempts to perform network fetches to an invalid URL (which cause the generic "Failed to fetch").
+  // Consumers should handle this error or configure the environment correctly.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _supabase = new Proxy({}, {
+    get() { return thrower; },
+    apply() { return thrower; },
+  });
+} else {
+  _supabase = createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        storage: typeof window !== 'undefined' ? localStorage : undefined,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+      global: {
+        fetch: debugFetch,
+      },
+    }
+  );
 }
 
-export const supabase = createClient<Database>(
-  SUPABASE_URL || '',
-  SUPABASE_PUBLISHABLE_KEY || '',
-  {
-    auth: {
-      storage: localStorage,
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-    global: {
-      fetch: debugFetch,
-    },
-  }
-);
+export const supabase = _supabase;
 
 // Export createClient for re-export compatibility
 export { createClient };
