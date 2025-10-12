@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useI18n } from "@/contexts/I18nContext";
+import { analyticsService } from "@/services/analyticsService";
+import { giftCardService } from "@/services/giftCardService";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +40,8 @@ import {
   Clock,
   Building,
   Receipt,
+  Gift,
+  Store,
 } from "lucide-react";
 
 interface SendMoneyModalProps {
@@ -60,6 +65,16 @@ interface PayBillModalProps {
 }
 
 interface TopUpModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface BuyGiftCardModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface SellGiftCardModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
@@ -584,7 +599,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
     utilities: {
       label: "Utilities & Electricity",
       providers: [
-        // Nigerian Electricity Companies
         "EEDC (Enugu Electricity)",
         "EKEDC (Eko Electricity)",
         "IKEDC (Ikeja Electric)",
@@ -593,14 +607,12 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
         "KEDCO (Kano Electricity)",
         "YEDC (Yola Electricity)",
         "JEDC (Jos Electricity)",
-        // Other African Utilities
         "KPLC (Kenya Power)",
         "ECG (Electricity Company of Ghana)",
         "ZESCO (Zambia Electricity)",
         "ESKOM (South Africa)",
         "JIRAMA (Madagascar)",
         "BEL (Botswana Energy)",
-        // US/International
         "Electric Company",
         "Gas Company",
         "Water Department",
@@ -609,7 +621,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
     internet: {
       label: "Internet & Cable",
       providers: [
-        // African ISPs
         "MTN Fiber",
         "Airtel Broadband",
         "Vodafone Fiber",
@@ -620,7 +631,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
         "Swift Networks",
         "Smile Communications",
         "Rain (South Africa)",
-        // US/International
         "Comcast",
         "Verizon",
         "AT&T",
@@ -630,7 +640,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
     phone: {
       label: "Mobile Phone",
       providers: [
-        // African Mobile Providers
         "MTN",
         "Airtel",
         "Vodafone",
@@ -644,7 +653,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
         "Telkom Mobile",
         "Econet",
         "Telecel",
-        // US/International
         "Verizon",
         "AT&T",
         "T-Mobile",
@@ -654,7 +662,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
     cable_tv: {
       label: "Cable TV & Entertainment",
       providers: [
-        // African Pay-TV
         "DStv",
         "GOtv",
         "StarTimes",
@@ -665,7 +672,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
         "DSTV Premium",
         "DSTV Compact",
         "DSTV Family",
-        // International
         "Netflix",
         "Amazon Prime",
         "Hulu",
@@ -675,7 +681,6 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
     insurance: {
       label: "Insurance",
       providers: [
-        // African Insurance
         "AIICO Insurance",
         "AXA Mansard",
         "Old Mutual",
@@ -686,14 +691,13 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
         "NICON Insurance",
         "Custodian Insurance",
         "Jubilee Insurance",
-        // US/International
         "State Farm",
         "Allstate",
         "GEICO",
         "Progressive",
       ],
     },
-  };
+  } as const;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -870,7 +874,6 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   
   const services = [
-    // African Mobile Networks (Primary)
     { value: "mtn", label: "MTN" },
     { value: "airtel", label: "Airtel" },
     { value: "vodafone", label: "Vodafone" },
@@ -887,7 +890,6 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
     { value: "moov", label: "Moov Africa" },
     { value: "expresso", label: "Expresso" },
 
-    // Country-Specific Networks
     { value: "mtn_ng", label: "MTN Nigeria" },
     { value: "mtn_za", label: "MTN South Africa" },
     { value: "mtn_gh", label: "MTN Ghana" },
@@ -897,7 +899,6 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
     { value: "airtel_tz", label: "Airtel Tanzania" },
     { value: "airtel_ug", label: "Airtel Uganda" },
 
-    // US/International (for global users)
     { value: "verizon", label: "Verizon (US)" },
     { value: "att", label: "AT&T (US)" },
     { value: "tmobile", label: "T-Mobile (US)" },
@@ -907,14 +908,12 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
   ];
 
   const amounts = [
-    // Standard amounts
     { value: "5", label: "$5" },
     { value: "10", label: "$10" },
     { value: "20", label: "$20" },
     { value: "50", label: "$50" },
     { value: "100", label: "$100" },
 
-    // African-friendly amounts (converted from local currencies)
     { value: "2", label: "$2 (₦800)" },
     { value: "3", label: "$3 (₦1,200)" },
     { value: "7", label: "$7 (₦2,800)" },
@@ -936,32 +935,29 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
         throw new Error("Please enter a valid amount");
       }
 
-      // Validate phone number (supports various African formats)
       const cleanPhone = formData.phoneNumber.replace(/\D/g, "");
-      const phoneRegex = /^(\d{10,15})$/; // Support 10-15 digits for international formats
+      const phoneRegex = /^(\d{10,15})$/;
 
       if (!phoneRegex.test(cleanPhone)) {
         throw new Error("Please enter a valid phone number (10-15 digits)");
       }
 
-      // Additional validation for common African formats
       const isValidAfrican =
         cleanPhone.length >= 10 &&
-        (cleanPhone.startsWith("234") || // Nigeria
-         cleanPhone.startsWith("254") || // Kenya
-         cleanPhone.startsWith("233") || // Ghana
-         cleanPhone.startsWith("27") ||  // South Africa
-         cleanPhone.startsWith("256") || // Uganda
-         cleanPhone.startsWith("255") || // Tanzania
-         cleanPhone.startsWith("260") || // Zambia
-         cleanPhone.length === 10 ||     // Local format
-         cleanPhone.length === 11);      // Local with area code
+        (cleanPhone.startsWith("234") || 
+         cleanPhone.startsWith("254") || 
+         cleanPhone.startsWith("233") || 
+         cleanPhone.startsWith("27") ||  
+         cleanPhone.startsWith("256") || 
+         cleanPhone.startsWith("255") || 
+         cleanPhone.startsWith("260") || 
+         cleanPhone.length === 10 ||     
+         cleanPhone.length === 11);
 
       if (!isValidAfrican && cleanPhone.length < 10) {
         throw new Error("Please enter a valid African phone number");
       }
 
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       toast({
@@ -1047,18 +1043,13 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
               onChange={(e) => {
                 let value = e.target.value.replace(/[^\d+\-\s\(\)]/g, "");
 
-                // Smart formatting based on input
                 if (value.startsWith("+234")) {
-                  // Nigerian format: +234 XXX XXX XXXX
                   value = value.replace(/(\+234)(\d{3})(\d{3})(\d{4})/, "$1 $2 $3 $4");
                 } else if (value.startsWith("+254")) {
-                  // Kenyan format: +254 XXX XXX XXX
                   value = value.replace(/(\+254)(\d{3})(\d{3})(\d{3})/, "$1 $2 $3 $4");
                 } else if (value.startsWith("0")) {
-                  // Local African format: 0XXX XXX XXXX
                   value = value.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3");
                 } else if (!value.startsWith("+") && value.length === 10) {
-                  // US format: (XXX) XXX-XXXX
                   value = value.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
                 }
 
@@ -1075,7 +1066,6 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
           <div className="space-y-3">
             <Label>Quick Amounts</Label>
 
-            {/* Standard USD amounts */}
             <div>
               <p className="text-xs text-gray-600 mb-2">Standard Amounts (USD)</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1093,7 +1083,6 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
               </div>
             </div>
 
-            {/* African currency equivalent amounts */}
             <div>
               <p className="text-xs text-gray-600 mb-2">African Local Currency Equivalents</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1137,6 +1126,286 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
             <Button type="submit" disabled={isLoading} className="flex-1 h-11">
               {isLoading ? "Processing..." : "Top Up"}
             </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Buy Gift Card Modal
+export const BuyGiftCardModal = ({ isOpen, onClose }: BuyGiftCardModalProps) => {
+  const { toast } = useToast();
+  const { walletBalance, addLocalTransaction, adjustSourceBalance } = useWalletContext();
+  const { t } = useI18n();
+
+  const [formData, setFormData] = useState({
+    retailer: "",
+    amount: "",
+    recipientEmail: "",
+    source: "total",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const retailers = [
+    { value: "amazon", label: "Amazon" },
+    { value: "itunes", label: "Apple iTunes" },
+    { value: "play", label: "Google Play" },
+    { value: "steam", label: "Steam" },
+    { value: "netflix", label: "Netflix" },
+    { value: "uber", label: "Uber" },
+    { value: "walmart", label: "Walmart" },
+    { value: "target", label: "Target" },
+    { value: "jumia", label: "Jumia" },
+    { value: "konga", label: "Konga" },
+  ];
+
+  const quickAmounts = ["10", "25", "50", "100", "200"];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const amount = parseFloat(formData.amount);
+      if (!formData.retailer) throw new Error(t("wallet.giftCards.errors.selectRetailer") || "Please select a retailer");
+      if (!amount || amount <= 0) throw new Error(t("wallet.giftCards.errors.validAmount") || "Please enter a valid amount");
+
+      if (formData.recipientEmail) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.recipientEmail)) {
+          throw new Error(t("wallet.giftCards.errors.validEmail") || "Please enter a valid email");
+        }
+      }
+
+      const sourceBalance = walletBalance?.[formData.source as keyof typeof walletBalance] || 0;
+      if (amount > sourceBalance) throw new Error(t("wallet.errors.insufficient") || "Insufficient balance in selected source");
+
+      const record = await giftCardService.purchase({ retailerId: formData.retailer, amount, recipientEmail: formData.recipientEmail || undefined });
+
+      const tx = {
+        id: record.id,
+        type: "withdrawal" as const,
+        amount: -amount,
+        source: (formData.source as any),
+        description: `Gift card purchase • ${record.retailerName}`,
+        timestamp: new Date().toISOString(),
+        status: "completed" as const,
+      };
+      addLocalTransaction(tx as any);
+      adjustSourceBalance(formData.source as any, -amount);
+      analyticsService.track("wallet_transaction_added", { kind: "giftcard_purchase", amount, source: formData.source });
+
+      toast({
+        title: t("wallet.giftCards.purchaseSuccess") || "Gift Card Purchased",
+        description: `${retailers.find(r=>r.value===formData.retailer)?.label} • $${amount.toFixed(2)} • Code: ${record.code}`,
+      });
+
+      onClose();
+      setFormData({ retailer: "", amount: "", recipientEmail: "", source: "total" });
+    } catch (error) {
+      toast({
+        title: t("wallet.giftCards.purchaseFailed") || "Purchase Failed",
+        description: error instanceof Error ? error.message : (t("wallet.giftCards.purchaseFailedGeneric") || "Unable to complete purchase"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Gift className="h-5 w-5 text-fuchsia-600" />
+            Buy Gift Card
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Retailer</Label>
+            <Select value={formData.retailer} onValueChange={(v)=>setFormData(p=>({...p, retailer:v}))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select retailer" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                {retailers.map((r)=> (
+                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Amount (USD)</Label>
+            <div className="grid grid-cols-5 gap-2">
+              {quickAmounts.map((qa)=> (
+                <Button key={qa} type="button" variant={formData.amount===qa?"default":"outline"} onClick={()=>setFormData(p=>({...p, amount: qa}))}>{`$${qa}`}</Button>
+              ))}
+            </div>
+            <div className="relative mt-2">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Input type="number" step="0.01" placeholder="0.00" value={formData.amount} onChange={(e)=>setFormData(p=>({...p, amount: e.target.value}))} className="pl-10" required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Send To (optional)</Label>
+            <Input type="email" placeholder="Recipient email (leave blank to keep in wallet)" value={formData.recipientEmail} onChange={(e)=>setFormData(p=>({...p, recipientEmail: e.target.value}))} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Payment Source</Label>
+            <Select value={formData.source} onValueChange={(v)=>setFormData(p=>({...p, source:v}))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="total">Total Balance (${walletBalance?.total.toFixed(2) || "0.00"})</SelectItem>
+                <SelectItem value="ecommerce">E-commerce (${walletBalance?.ecommerce.toFixed(2) || "0.00"})</SelectItem>
+                <SelectItem value="crypto">Crypto (${walletBalance?.crypto.toFixed(2) || "0.00"})</SelectItem>
+                <SelectItem value="rewards">Rewards (${walletBalance?.rewards.toFixed(2) || "0.00"})</SelectItem>
+                <SelectItem value="freelance">Freelance (${walletBalance?.freelance.toFixed(2) || "0.00"})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1 h-11">Cancel</Button>
+            <Button type="submit" disabled={isLoading} className="flex-1 h-11">{isLoading?"Processing...":"Buy"}</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Sell Gift Card Modal
+export const SellGiftCardModal = ({ isOpen, onClose }: SellGiftCardModalProps) => {
+  const { toast } = useToast();
+  const { addLocalTransaction, adjustSourceBalance } = useWalletContext();
+  const { t } = useI18n();
+  const [formData, setFormData] = useState({
+    retailer: "",
+    code: "",
+    pin: "",
+    faceValue: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const retailers = [
+    { value: "amazon", label: "Amazon", rate: 0.92 },
+    { value: "itunes", label: "Apple iTunes", rate: 0.88 },
+    { value: "play", label: "Google Play", rate: 0.9 },
+    { value: "steam", label: "Steam", rate: 0.85 },
+    { value: "walmart", label: "Walmart", rate: 0.87 },
+    { value: "target", label: "Target", rate: 0.86 },
+    { value: "jumia", label: "Jumia", rate: 0.8 },
+    { value: "konga", label: "Konga", rate: 0.8 },
+  ];
+
+  const selectedRetailer = useMemo(()=> retailers.find(r=>r.value===formData.retailer), [formData.retailer]);
+  const estimatedPayout = useMemo(()=> {
+    const fv = parseFloat(formData.faceValue);
+    if (!fv || !selectedRetailer) return 0;
+    return fv * selectedRetailer.rate;
+  }, [formData.faceValue, selectedRetailer]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const fv = parseFloat(formData.faceValue);
+      if (!formData.retailer) throw new Error(t("wallet.giftCards.errors.selectRetailer") || "Please select a retailer");
+      if (!fv || fv <= 0) throw new Error(t("wallet.giftCards.errors.validAmount") || "Enter a valid face value amount");
+      const codePlain = formData.code.replace(/[^A-Za-z0-9]/g, "");
+      if (!/^[A-Za-z0-9]{8,25}$/.test(codePlain)) throw new Error(t("wallet.giftCards.errors.validCode") || "Enter a valid gift card code");
+
+      const record = await giftCardService.submitSell({ retailerId: formData.retailer, faceValue: fv, code: formData.code, pin: formData.pin || undefined });
+
+      // For demo: credit payout immediately
+      const payout = record.payout || 0;
+      if (payout > 0) {
+        addLocalTransaction({
+          id: record.id,
+          type: "earned" as const,
+          amount: payout,
+          source: "ecommerce" as any,
+          description: `Gift card sale • ${record.retailerName}`,
+          timestamp: new Date().toISOString(),
+          status: "completed" as const,
+        } as any);
+        adjustSourceBalance("ecommerce" as any, payout);
+        analyticsService.track("wallet_transaction_added", { kind: "giftcard_sell", payout });
+      }
+
+      toast({
+        title: t("wallet.giftCards.sellSubmitted") || "Gift Card Submitted",
+        description: `Verification started. Estimated payout $${(record.payout || 0).toFixed(2)} will be credited shortly.`,
+      });
+
+      onClose();
+      setFormData({ retailer: "", code: "", pin: "", faceValue: "" });
+    } catch (error) {
+      toast({
+        title: t("wallet.giftCards.sellFailed") || "Submission Failed",
+        description: error instanceof Error ? error.message : (t("wallet.giftCards.sellFailedGeneric") || "Unable to submit card"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Store className="h-5 w-5 text-emerald-600" />
+            Sell Gift Card
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Retailer</Label>
+            <Select value={formData.retailer} onValueChange={(v)=>setFormData(p=>({...p, retailer:v}))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select retailer" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                {retailers.map((r)=> (
+                  <SelectItem key={r.value} value={r.value}>{r.label} (up to {(r.rate*100).toFixed(0)}%)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Gift Card Code</Label>
+            <Input placeholder="Enter code" value={formData.code} onChange={(e)=>setFormData(p=>({...p, code:e.target.value}))} required />
+          </div>
+
+          <div className="space-y-2">
+            <Label>PIN (if required)</Label>
+            <Input placeholder="Enter PIN (optional)" value={formData.pin} onChange={(e)=>setFormData(p=>({...p, pin:e.target.value}))} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Face Value (USD)</Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Input type="number" step="0.01" placeholder="0.00" value={formData.faceValue} onChange={(e)=>setFormData(p=>({...p, faceValue:e.target.value}))} className="pl-10" required />
+            </div>
+            <p className="text-xs text-gray-600">Estimated payout: <span className="font-medium">${estimatedPayout.toFixed(2)}</span>{selectedRetailer ? ` (${(selectedRetailer.rate*100).toFixed(0)}% of face value)` : ""}</p>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1 h-11">Cancel</Button>
+            <Button type="submit" disabled={isLoading} className="flex-1 h-11">{isLoading?"Submitting...":"Submit"}</Button>
           </div>
         </form>
       </DialogContent>

@@ -10,6 +10,8 @@ import {
   TransferModal,
   PayBillModal,
   TopUpModal,
+  BuyGiftCardModal,
+  SellGiftCardModal,
 } from "./QuickActionModals";
 import EnhancedSendMoneyModal from "./EnhancedSendMoneyModal";
 import {
@@ -28,7 +30,7 @@ import {
   Target,
   Lightbulb,
   Sparkles,
-
+  Store,
 } from "lucide-react";
 
 interface QuickAction {
@@ -77,6 +79,8 @@ const QuickActionsWidget = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showPayBillModal, setShowPayBillModal] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [showBuyGiftModal, setShowBuyGiftModal] = useState(false);
+  const [showSellGiftModal, setShowSellGiftModal] = useState(false);
 
   // Quick Actions
   const quickActions: QuickAction[] = [
@@ -127,6 +131,20 @@ const QuickActionsWidget = () => {
       icon: <Smartphone className="h-4 w-4" />,
       color: "bg-indigo-500 hover:bg-indigo-600",
       action: () => setShowTopUpModal(true),
+    },
+    {
+      id: "buy-gift",
+      label: "Buy Gift Cards",
+      icon: <Gift className="h-4 w-4" />,
+      color: "bg-pink-500 hover:bg-pink-600",
+      action: () => setShowBuyGiftModal(true),
+    },
+    {
+      id: "sell-gift",
+      label: "Sell Gift Cards",
+      icon: <Store className="h-4 w-4" />,
+      color: "bg-emerald-500 hover:bg-emerald-600",
+      action: () => setShowSellGiftModal(true),
     },
   ];
 
@@ -262,6 +280,16 @@ const QuickActionsWidget = () => {
       <TopUpModal
         isOpen={showTopUpModal}
         onClose={() => setShowTopUpModal(false)}
+      />
+
+      <BuyGiftCardModal
+        isOpen={showBuyGiftModal}
+        onClose={() => setShowBuyGiftModal(false)}
+      />
+
+      <SellGiftCardModal
+        isOpen={showSellGiftModal}
+        onClose={() => setShowSellGiftModal(false)}
       />
     </div>
   );

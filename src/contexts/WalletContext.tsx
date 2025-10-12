@@ -18,6 +18,8 @@ interface WalletContextType {
   getTransactionsBySource: (source: string) => Transaction[];
   getTotalEarnings: (days?: number) => number;
   getSourceBalance: (source: keyof WalletBalance) => number;
+  addLocalTransaction: (tx: Transaction) => void;
+  adjustSourceBalance: (source: keyof WalletBalance, delta: number) => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -93,6 +95,24 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     return walletBalance?.[source] || 0;
   };
 
+  const addLocalTransaction = (tx: Transaction) => {
+    setTransactions(prev => [{ ...tx }, ...prev]);
+  };
+
+  const adjustSourceBalance = (source: keyof WalletBalance, delta: number) => {
+    setWalletBalance(prev => {
+      const safePrev = prev || { total: 0, ecommerce: 0, crypto: 0, rewards: 0, freelance: 0 };
+      const next = { ...safePrev } as WalletBalance;
+      if (source !== "total") {
+        // Only adjust specific source; total is derived
+        // Clamp to 0 minimum for demo safety
+        (next as any)[source] = Math.max(0, (next as any)[source] + delta);
+      }
+      next.total = Math.max(0, (next.ecommerce || 0) + (next.crypto || 0) + (next.rewards || 0) + (next.freelance || 0));
+      return next;
+    });
+  };
+
   useEffect(() => {
     // Wrap in try-catch to prevent any unhandled errors from bubbling up
     const initializeWallet = async () => {
@@ -125,6 +145,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     getTransactionsBySource,
     getTotalEarnings,
     getSourceBalance,
+    addLocalTransaction,
+    adjustSourceBalance,
   };
 
   return (

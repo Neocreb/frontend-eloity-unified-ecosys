@@ -82,6 +82,7 @@ import WalletAnalytics from "./pages/wallet/WalletAnalytics";
 import WalletTransactions from "./pages/wallet/WalletTransactions";
 import WalletIntegrations from "./pages/wallet/WalletIntegrations";
 import WalletCards from "./pages/wallet/WalletCards";
+import GiftCards from "./pages/wallet/GiftCards";
 import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -459,6 +460,7 @@ const AppRoutes = () => {
           <Route path="wallet/transactions" element={<WalletTransactions />} />
           <Route path="wallet/integrations" element={<WalletIntegrations />} />
           <Route path="wallet/cards" element={<WalletCards />} />
+          <Route path="wallet/gift-cards" element={<GiftCards />} />
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
