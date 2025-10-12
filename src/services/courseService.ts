@@ -1109,20 +1109,77 @@ Remember that no single indicator is perfect, and moving averages work best as p
 // Mock user progress data
 let userProgressData: { [userId: string]: UserProgress[] } = {};
 
+const COURSE_STORAGE_KEY = "eloity_courses_extra";
+
+function loadExtraCourses(): Course[] {
+  try {
+    const raw = localStorage.getItem(COURSE_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Course[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveExtraCourses(list: Course[]) {
+  try {
+    localStorage.setItem(COURSE_STORAGE_KEY, JSON.stringify(list));
+  } catch {}
+}
+
+function getAllCourseData(): Course[] {
+  return [...getCompleteCoursesWithExtendedData(mockCourses), ...loadExtraCourses()];
+}
+
+export function createCourse(course: Omit<Course, "students" | "rating" | "totalLessons" | "enrolled" | "progress" | "completedLessons"> & Partial<Pick<Course, "students" | "rating" | "totalLessons" | "enrolled" | "progress" | "completedLessons">>): Course {
+  const id = course.id || `course_${Date.now()}`;
+  const newCourse: Course = {
+    ...course,
+    id,
+    students: course.students ?? 0,
+    rating: course.rating ?? 0,
+    totalLessons: course.totalLessons ?? (course.lessons?.length || 0),
+    enrolled: course.enrolled ?? false,
+    progress: course.progress ?? 0,
+    completedLessons: course.completedLessons ?? 0,
+  } as Course;
+  const list = loadExtraCourses();
+  list.unshift(newCourse);
+  saveExtraCourses(list);
+  return newCourse;
+}
+
+export function updateCourse(id: string, updates: Partial<Course>): Course | null {
+  const list = loadExtraCourses();
+  const idx = list.findIndex(c => c.id === id);
+  if (idx === -1) return null;
+  const updated: Course = { ...list[idx], ...updates } as Course;
+  list[idx] = updated;
+  saveExtraCourses(list);
+  return updated;
+}
+
+export function deleteCourse(id: string): boolean {
+  const list = loadExtraCourses();
+  const next = list.filter(c => c.id !== id);
+  if (next.length === list.length) return false;
+  saveExtraCourses(next);
+  return true;
+}
+
 class CourseService {
   // Get all courses with complete lesson data
   getAllCourses(): Course[] {
-    return getCompleteCoursesWithExtendedData(mockCourses);
+    return getAllCourseData();
   }
 
   // Get course by ID
   getCourseById(courseId: string): Course | null {
-    return mockCourses.find(course => course.id === courseId) || null;
+    return getAllCourseData().find(course => course.id === courseId) || null;
   }
 
   // Get courses by level
   getCoursesByLevel(level: string): Course[] {
-    return mockCourses.filter(course => course.level === level);
+    return getAllCourseData().filter(course => course.level === level);
   }
 
   // Get user's enrolled courses
