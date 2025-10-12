@@ -10,6 +10,8 @@ import {
   TransferModal,
   PayBillModal,
   TopUpModal,
+  BuyGiftCardModal,
+  SellGiftCardModal,
 } from "./QuickActionModals";
 import EnhancedSendMoneyModal from "./EnhancedSendMoneyModal";
 import {
@@ -28,7 +30,7 @@ import {
   Target,
   Lightbulb,
   Sparkles,
-
+  Store,
 } from "lucide-react";
 
 interface QuickAction {
