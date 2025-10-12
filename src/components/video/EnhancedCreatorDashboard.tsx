@@ -156,6 +156,78 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Advanced content filtering/pagination states
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // multi-select types
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [contentPageData, setContentPageData] = useState<any[]>([]);
+  const [contentTotal, setContentTotal] = useState(0);
+  const [contentLoading, setContentLoading] = useState(false);
+  const cacheRef = React.useRef(new Map<string, { ts: number; data: any; total: number }>());
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  // Helpers for parsing abbreviated numbers like 45.2K or $23.4K
+  const parseAbbrev = (v: string | number) => {
+    if (typeof v === 'number') return v;
+    const s = String(v).trim();
+    if (!s) return 0;
+    const negative = s.startsWith('-');
+    const cleaned = s.replace(/[^0-9.]/g, '');
+    const num = parseFloat(cleaned) || 0;
+    if (s.toLowerCase().endsWith('k')) return num * 1000 * (negative ? -1 : 1);
+    if (s.toLowerCase().endsWith('m')) return num * 1000000 * (negative ? -1 : 1);
+    return num * (negative ? -1 : 1);
+  };
+
+  // Fetch / compute paginated content (simulates server-side)
+  const fetchContentPage = async ({ types, range, sort, search, pageNum, size }:
+    { types: string[]; range: string; sort: string; search: string; pageNum: number; size: number }) => {
+    const key = JSON.stringify({ types: types.slice().sort(), range, sort, search, pageNum, size });
+    const cached = cacheRef.current.get(key);
+    if (cached && Date.now() - cached.ts < 1000 * 60) {
+      return { data: cached.data, total: cached.total };
+    }
+
+    // Simulate server work
+    await new Promise(r => setTimeout(r, 300));
+    const now = new Date();
+    const rangeMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+
+    const filtered = topPerformingContent.filter(item => {
+      const typeMatch = types.length === 0 || types.includes(item.type.toLowerCase());
+      const dateMatch = (() => {
+        if (range === 'all') return true;
+        const pd = new Date(item.publishDate);
+        if (isNaN(pd.getTime())) return true;
+        const diffDays = Math.floor((now.getTime() - pd.getTime()) / (1000 * 60 * 60 * 24));
+        return typeof rangeMap[range] === 'number' ? diffDays <= rangeMap[range] : true;
+      })();
+      const searchMatch = !search || item.title.toLowerCase().includes(search.toLowerCase()) || (item.description || '').toLowerCase().includes(search.toLowerCase());
+      return typeMatch && dateMatch && searchMatch;
+    });
+
+    // Sorting
+    const sorted = filtered.slice().sort((a, b) => {
+      switch (sort) {
+        case 'views':
+          return parseAbbrev(parseInt(String(b.views).replace(/[^0-9]/g,''), 10) || parseAbbrev(b.views)) - parseAbbrev(parseInt(String(a.views).replace(/[^0-9]/g,''), 10) || parseAbbrev(a.views));
+        case 'engagement':
+          return parseFloat(String(b.engagement).replace(/[^0-9.]/g,'')) - parseFloat(String(a.engagement).replace(/[^0-9.]/g,''));
+        case 'revenue':
+          return parseAbbrev(String(b.revenue).replace(/[^0-9.]/g,'')) - parseAbbrev(String(a.revenue).replace(/[^0-9.]/g,''));
+        default:
+          return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
+      }
+    });
+
+    const total = sorted.length;
+    const start = (pageNum - 1) * size;
+    const data = sorted.slice(start, start + size);
+
+    cacheRef.current.set(key, { ts: Date.now(), data, total });
+    return { data, total };
+  };
   const [setupComplete, setSetupComplete] = useState(() => {
     try {
       if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
