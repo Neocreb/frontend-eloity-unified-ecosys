@@ -182,10 +182,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
   };
 
   // Fetch / compute paginated content (simulates server-side)
-  // Replace simulated fetch with Supabase-backed service
-  import { fetchContentPageSupabase } from '@/services/contentService';
-
-  const fetchContentPage = async ({ types, range, sort, search, pageNum, size }:
+    const fetchContentPage = async ({ types, range, sort, search, pageNum, size }:
     { types: string[]; range: string; sort: string; search: string; pageNum: number; size: number }) => {
     // Use cache key for identical queries
     const key = JSON.stringify({ types: types.slice().sort(), range, sort, search, pageNum, size });
