@@ -541,6 +541,23 @@ const EnhancedCreatorDashboard: React.FC = () => {
     return () => { cancelled = true; };
   }, [selectedTypes, timeRange, sortBy, debouncedSearchTerm, page, pageSize]);
 
+  // Try to dynamically import react-window for virtualization to avoid hard dependency
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const mod = await import('react-window');
+        if (!mounted) return;
+        (window as any).__reactWindow = mod;
+        (window as any).__reactWindowAvailable = true;
+      } catch (e) {
+        // react-window not installed, skip virtualization
+        (window as any).__reactWindowAvailable = false;
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
