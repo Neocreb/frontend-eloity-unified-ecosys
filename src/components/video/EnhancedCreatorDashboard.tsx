@@ -1991,40 +1991,100 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   {contentLoading ? (
                     <div className="p-6 text-center">Loading content...</div>
                   ) : contentPageData.length > 0 ? (
-                    contentPageData.map((content, index) => (
-                      <div key={content.id || index} className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedContent(content)}>
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                            {content.type === "Video" && <Video className="w-8 h-8 text-red-500" />}
-                            {content.type === "Product" && <ShoppingBag className="w-8 h-8 text-green-500" />}
-                            {content.type === "Post" && <FileText className="w-8 h-8 text-blue-500" />}
-                            {content.type === "Stream" && <Radio className="w-8 h-8 text-pink-500" />}
+                    (() => {
+                      // Try to dynamically load react-window for virtualization
+                      const Virtualized = (window as any).__reactWindowAvailable;
+                      if (Virtualized) {
+                        const { FixedSizeList } = (window as any).__reactWindow;
+                        const itemHeight = 96;
+                        const height = Math.min(600, itemHeight * contentPageData.length);
+                        return (
+                          <FixedSizeList
+                            height={height}
+                            itemCount={contentPageData.length}
+                            itemSize={itemHeight}
+                            width="100%"
+                            overscanCount={5}
+                          >
+                            {({ index, style }) => {
+                              const content = contentPageData[index];
+                              return (
+                                <div style={style} key={content.id || index} className="p-2">
+                                  <div className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedContent(content)}>
+                                    <div className="flex-shrink-0">
+                                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                        {content.type === "Video" && <Video className="w-8 h-8 text-red-500" />}
+                                        {content.type === "Product" && <ShoppingBag className="w-8 h-8 text-green-500" />}
+                                        {content.type === "Post" && <FileText className="w-8 h-8 text-blue-500" />}
+                                        {content.type === "Stream" && <Radio className="w-8 h-8 text-pink-500" />}
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-semibold text-gray-900 dark:text-white truncate">{content.title}</h4>
+                                        <Badge variant="outline" className="text-xs">{content.type}</Badge>
+                                        <Badge variant="secondary" className="text-xs">{content.platform}</Badge>
+                                      </div>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{content.description}</p>
+                                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{content.views}</span>
+                                        <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{content.engagement}</span>
+                                        <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{content.revenue}</span>
+                                        <span>{new Date(content.publishDate).toLocaleDateString()}</span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-lg font-bold text-green-600">{content.revenue}</div>
+                                      <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); exportContentItem(content, 'csv'); }}>Export</Button>
+                                      <Button variant="ghost" size="sm"><ChevronRight className="w-4 h-4" /></Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }}
+                          </FixedSizeList>
+                        );
+                      }
+
+                      // Fallback simple mapping
+                      return contentPageData.map((content, index) => (
+                        <div key={content.id || index} className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedContent(content)}>
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                              {content.type === "Video" && <Video className="w-8 h-8 text-red-500" />}
+                              {content.type === "Product" && <ShoppingBag className="w-8 h-8 text-green-500" />}
+                              {content.type === "Post" && <FileText className="w-8 h-8 text-blue-500" />}
+                              {content.type === "Stream" && <Radio className="w-8 h-8 text-pink-500" />}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 dark:text-white truncate">{content.title}</h4>
+                              <Badge variant="outline" className="text-xs">{content.type}</Badge>
+                              <Badge variant="secondary" className="text-xs">{content.platform}</Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{content.description}</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{content.views}</span>
+                              <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{content.engagement}</span>
+                              <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{content.revenue}</span>
+                              <span>{new Date(content.publishDate).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-green-600">{content.revenue}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); exportContentItem(content, 'csv'); }}>Export</Button>
+                            <Button variant="ghost" size="sm"><ChevronRight className="w-4 h-4" /></Button>
                           </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900 dark:text-white truncate">{content.title}</h4>
-                            <Badge variant="outline" className="text-xs">{content.type}</Badge>
-                            <Badge variant="secondary" className="text-xs">{content.platform}</Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{content.description}</p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{content.views}</span>
-                            <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{content.engagement}</span>
-                            <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{content.revenue}</span>
-                            <span>{new Date(content.publishDate).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-green-600">{content.revenue}</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); exportContentItem(content, 'csv'); }}>Export</Button>
-                          <Button variant="ghost" size="sm"><ChevronRight className="w-4 h-4" /></Button>
-                        </div>
-                      </div>
-                    ))
+                      ));
+                    })()
                   ) : (
                     <div className="p-4 text-center text-gray-600">No content matches the selected filters.</div>
                   )}
