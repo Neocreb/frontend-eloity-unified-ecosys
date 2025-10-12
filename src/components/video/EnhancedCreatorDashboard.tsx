@@ -1944,33 +1944,50 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   Top Performing Content Analysis
                 </CardTitle>
                 <CardDescription>Top performing content</CardDescription>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {['Video','Post','Product','Stream'].map((t) => {
+                    const lc = t.toLowerCase();
+                    const active = selectedTypes.includes(lc);
+                    return (
+                      <Button key={t} variant={active ? 'default' : 'outline'} size="sm" onClick={() => { setPage(1); setSelectedTypes(prev => active ? prev.filter(x => x !== lc) : [...prev, lc]); }}>
+                        {t}
+                      </Button>
+                    );
+                  })}
+
+                  <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(1); }}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Most Recent</SelectItem>
+                      <SelectItem value="views">Top Views</SelectItem>
+                      <SelectItem value="engagement">Top Engagement</SelectItem>
+                      <SelectItem value="revenue">Top Revenue</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(parseInt(v)); setPage(1); }}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 / page</SelectItem>
+                      <SelectItem value="10">10 / page</SelectItem>
+                      <SelectItem value="20">20 / page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
+
               <CardContent>
                 <div className="space-y-4">
-                  {(() => {
-                    const now = new Date();
-                    const withinRange = (publishDateStr: string) => {
-                      if (timeRange === 'all') return true;
-                      const pd = new Date(publishDateStr);
-                      if (isNaN(pd.getTime())) return true;
-                      const diffDays = Math.floor((now.getTime() - pd.getTime()) / (1000 * 60 * 60 * 24));
-                      const rangeMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90 };
-                      return typeof rangeMap[timeRange] === 'number' ? diffDays <= rangeMap[timeRange] : true;
-                    };
-
-                    const normalizedFilter = filterType ? filterType.toLowerCase() : 'all';
-                    const filtered = topPerformingContent.filter(item => {
-                      const typeMatch = normalizedFilter === 'all' || item.type.toLowerCase() === normalizedFilter;
-                      const dateMatch = withinRange(item.publishDate);
-                      return typeMatch && dateMatch;
-                    });
-
-                    return filtered.length > 0 ? filtered.map((content, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => setSelectedContent(content)}
-                      >
+                  {contentLoading ? (
+                    <div className="p-6 text-center">Loading content...</div>
+                  ) : contentPageData.length > 0 ? (
+                    contentPageData.map((content, index) => (
+                      <div key={content.id || index} className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedContent(content)}>
                         <div className="flex-shrink-0">
                           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                             {content.type === "Video" && <Video className="w-8 h-8 text-red-500" />}
@@ -1987,18 +2004,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">{content.description}</p>
                           <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <Eye className="w-3 h-3" />
-                              {content.views}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Heart className="w-3 h-3" />
-                              {content.engagement}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="w-3 h-3" />
-                              {content.revenue}
-                            </span>
+                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{content.views}</span>
+                            <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{content.engagement}</span>
+                            <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{content.revenue}</span>
                             <span>{new Date(content.publishDate).toLocaleDateString()}</span>
                           </div>
                         </div>
@@ -2006,14 +2014,24 @@ const EnhancedCreatorDashboard: React.FC = () => {
                           <div className="text-lg font-bold text-green-600">{content.revenue}</div>
                           <div className="text-sm text-gray-600 dark:text-gray-400">Revenue</div>
                         </div>
-                        <Button variant="ghost" size="sm">
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); exportContentItem(content, 'csv'); }}>Export</Button>
+                          <Button variant="ghost" size="sm"><ChevronRight className="w-4 h-4" /></Button>
+                        </div>
                       </div>
-                    )) : (
-                      <div className="p-4 text-center text-gray-600">No content matches the selected filters.</div>
-                    );
-                  })()}
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-600">No content matches the selected filters.</div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="text-sm text-gray-600">Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, contentTotal)} of {contentTotal}</div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Prev</Button>
+                      <div className="text-sm">Page {page}</div>
+                      <Button size="sm" variant="outline" onClick={() => setPage(p => p + 1)} disabled={page * pageSize >= contentTotal}>Next</Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
