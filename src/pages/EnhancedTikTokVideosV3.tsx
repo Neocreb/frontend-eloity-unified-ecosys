@@ -1486,17 +1486,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Accessibility Settings */}
-      <Dialog open={isAccessibilityOpen} onOpenChange={setIsAccessibilityOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Accessibility Settings</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <EnhancedAccessibilityFeatures />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
