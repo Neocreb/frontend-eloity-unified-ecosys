@@ -458,9 +458,9 @@ const AdminChat = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-4">
-                    <Button onClick={handleSaveAds} disabled={isSavingAds}>{isSavingAds ? "Saving..." : "Save Ad"}</Button>
-                    <Button variant="ghost" onClick={() => setEditingAd(null)}>Cancel</Button>
+                  <div className="flex items-center gap-2 mt-4" role="group" aria-label="Ad form actions">
+                    <Button type="button" onClick={handleSaveAds} aria-label="Save ad" disabled={isSavingAds}>{isSavingAds ? "Saving..." : "Save Ad"}</Button>
+                    <Button type="button" variant="ghost" onClick={() => setEditingAd(null)} aria-label="Cancel editing ad">Cancel</Button>
                   </div>
                 </div>
               )}
