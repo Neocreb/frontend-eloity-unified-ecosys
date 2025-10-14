@@ -275,6 +275,11 @@ const EnhancedSettings = () => {
   const [indexProfile, setIndexProfile] = useState(
     user?.settings?.index_profile ?? true,
   );
+
+  // Content filter preferences
+  const [contentHideSensitive, setContentHideSensitive] = useState<boolean>(user?.settings?.content_hide_sensitive ?? false);
+  const [contentSafeSearch, setContentSafeSearch] = useState<string>(user?.settings?.content_safe_search || 'moderate');
+  const [blockedKeywords, setBlockedKeywords] = useState<string>((user?.settings?.blocked_keywords || []).join(', '));
   const [showActivity, setShowActivity] = useState(
     user?.settings?.show_activity ?? true,
   );
