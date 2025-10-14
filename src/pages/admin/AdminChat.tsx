@@ -411,8 +411,8 @@ const AdminChat = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button size="sm" variant="outline" onClick={() => handleStartEditAd(ad)}>Edit</Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleDeleteAd(ad.id)}>Delete</Button>
+                              <Button size="sm" variant="outline" onClick={() => handleStartEditAd(ad)} aria-label={`Edit ad ${ad.id}`}>Edit</Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleDeleteAd(ad.id)} aria-label={`Delete ad ${ad.id}`}>Delete</Button>
                             </div>
                           </TableCell>
                         </TableRow>
