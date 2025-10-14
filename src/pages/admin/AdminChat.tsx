@@ -371,8 +371,8 @@ const AdminChat = () => {
               <p className="text-sm text-gray-600">Manage in-chat advertisement entries shown to users</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={handleAddNewAd}>Add Ad</Button>
-              <Button variant="ghost" onClick={loadAds}>Reload</Button>
+              <Button onClick={handleAddNewAd} aria-label="Add new ad">Add Ad</Button>
+              <Button variant="ghost" onClick={loadAds} aria-label="Reload ads">Reload</Button>
             </div>
           </div>
 
