@@ -1126,7 +1126,7 @@ function saveExtraCourses(list: Course[]) {
   } catch {}
 }
 
-function getAllCourseData(): Course[] {
+export function getAllCourseData(): Course[] {
   return [...getCompleteCoursesWithExtendedData(mockCourses), ...loadExtraCourses()];
 }
 
