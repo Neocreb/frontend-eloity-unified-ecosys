@@ -980,16 +980,22 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="hover:bg-gray-800"
-                    onClick={() => setIsAccessibilityOpen(true)}
+                    onClick={() => navigate('/app/settings')}
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     Accessibility
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-800">
+                  <DropdownMenuItem
+                    className="hover:bg-gray-800"
+                    onClick={() => navigate('/app/settings')}
+                  >
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-800">
+                  <DropdownMenuItem
+                    className="hover:bg-gray-800"
+                    onClick={() => navigate('/app/settings')}
+                  >
                     <Filter className="w-4 h-4 mr-2" />
                     Content Filters
                   </DropdownMenuItem>
