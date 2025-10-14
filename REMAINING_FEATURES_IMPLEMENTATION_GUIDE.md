@@ -103,6 +103,98 @@ CREATE TABLE call_sessions (
 - Create notification preferences system
 - Add in-app notification center
 
+### 6. Analytics Services
+**Current Status**: Partial implementation with mock data fallbacks
+**Files Affected**:
+- [src/services/unifiedAnalyticsService.ts](file:///C:/Users/HP/.qoder/frontend-eloity-unified-ecosys-1/src/services/unifiedAnalyticsService.ts)
+- Analytics dashboard components
+
+**Implementation Requirements**:
+- Connect to real data sources for all metrics
+- Implement real-time analytics processing
+- Add advanced reporting and visualization
+- Create data warehousing solution for historical analytics
+
+### 7. Balance Services
+**Current Status**: Partial implementation with mock pricing
+**Files Affected**:
+- [src/services/walletService.ts](file:///C:/Users/HP/.qoder/frontend-eloity-unified-ecosys-1/src/services/walletService.ts)
+- [src/services/realtimeCryptoService.ts](file:///C:/Users/HP/.qoder/frontend-eloity-unified-ecosys-1/src/services/realtimeCryptoService.ts)
+
+**Implementation Requirements**:
+- Integrate with real cryptocurrency price APIs
+- Implement real-time balance updates
+- Add advanced financial tracking and reporting
+- Create balance history and trend analysis
+
+### 8. Posts and Comments
+**Current Status**: Partial implementation with mock content generation
+**Files Affected**:
+- [src/utils/feedUtils.ts](file:///C:/Users/HP/.qoder/frontend-eloity-unified-ecosys-1/src/utils/feedUtils.ts)
+- Social feed components
+
+**Implementation Requirements**:
+- Implement real post creation and management
+- Add advanced content recommendation algorithms
+- Implement real-time social interactions
+- Add content moderation at scale
+
+### 9. Stories
+**Current Status**: Database tables exist but limited frontend implementation
+**Files Affected**:
+- Story-related database tables
+- Limited frontend components
+
+**Implementation Requirements**:
+- Implement complete story creation and viewing functionality
+- Add real-time story updates
+- Implement story analytics and insights
+- Add story monetization features
+
+### 10. Events
+**Current Status**: Partial implementation with mock events
+**Files Affected**:
+- [src/services/communityEventsService.ts](file:///C:/Users/HP/.qoder/frontend-eloity-unified-ecosys-1/src/services/communityEventsService.ts)
+- Event management components
+
+**Implementation Requirements**:
+- Implement real event creation and management
+- Add event ticketing and payment processing
+- Implement event analytics and tracking
+- Add event recommendation system
+
+### 11. Challenges
+**Current Status**: Partial implementation with mock challenges
+**Files Affected**:
+- [src/services/challengesService.ts](file:///C:/Users/HP/.qoder/frontend-eloity-unified-ecosys-1/src/services/challengesService.ts)
+- Challenge components
+
+**Implementation Requirements**:
+- Implement real challenge creation and tracking
+- Add challenge participation and reward distribution
+- Implement challenge analytics
+- Add challenge recommendation system
+
+### 12. Pages
+**Current Status**: Not implemented
+**Requirements**:
+- Page creation and management system
+- Page analytics and insights
+- Page monetization features
+- Page collaboration tools
+
+### 13. Groups
+**Current Status**: Partial implementation with mock data
+**Files Affected**:
+- [src/services/groupService.ts](file:///C:/Users/HP/.qoder/frontend-eloity-unified-ecosys-1/src/services/groupService.ts)
+- Group management components
+
+**Implementation Requirements**:
+- Implement complete group creation and management
+- Add group analytics and insights
+- Implement group monetization features
+- Add advanced group collaboration tools
+
 ## 🗂 Database Schema Updates Required
 
 ### Additional Tables for Complete Implementation
@@ -197,6 +289,108 @@ CREATE TABLE notification_preferences (
   updated_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(user_id, notification_type)
 );
+
+-- Analytics
+CREATE TABLE user_analytics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  metric_type VARCHAR(50) NOT NULL,
+  metric_data JSONB,
+  recorded_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Stories
+CREATE TABLE user_stories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  media_url TEXT NOT NULL,
+  media_type VARCHAR(10) NOT NULL, -- 'image', 'video'
+  caption TEXT,
+  expires_at TIMESTAMP NOT NULL,
+  views_count INTEGER DEFAULT 0,
+  likes_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE story_views (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  story_id UUID NOT NULL REFERENCES user_stories(id),
+  user_id UUID NOT NULL REFERENCES users(id),
+  viewed_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(story_id, user_id)
+);
+
+-- Events
+CREATE TABLE community_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  creator_id UUID NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  event_type VARCHAR(50) NOT NULL,
+  start_date TIMESTAMP NOT NULL,
+  end_date TIMESTAMP NOT NULL,
+  location TEXT,
+  max_attendees INTEGER,
+  is_private BOOLEAN DEFAULT false,
+  cover_image_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE event_attendees (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID NOT NULL REFERENCES community_events(id),
+  user_id UUID NOT NULL REFERENCES users(id),
+  status VARCHAR(20) DEFAULT 'interested', -- 'interested', 'going', 'attended'
+  registered_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(event_id, user_id)
+);
+
+-- Challenges
+CREATE TABLE challenges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  creator_id UUID NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  hashtag VARCHAR(100),
+  start_date TIMESTAMP NOT NULL,
+  end_date TIMESTAMP NOT NULL,
+  prize_pool DECIMAL,
+  rules TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Pages
+CREATE TABLE pages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  category VARCHAR(100),
+  cover_image_url TEXT,
+  profile_image_url TEXT,
+  is_verified BOOLEAN DEFAULT false,
+  followers_count INTEGER DEFAULT 0,
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Groups
+CREATE TABLE groups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  category VARCHAR(100),
+  privacy_level VARCHAR(20) DEFAULT 'public', -- 'public', 'private', 'unlisted'
+  cover_image_url TEXT,
+  profile_image_url TEXT,
+  member_count INTEGER DEFAULT 0,
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
 ## 🔧 API Endpoints to Implement
@@ -244,6 +438,63 @@ GET /api/notifications/preferences - Get notification preferences
 PUT /api/notifications/preferences - Update notification preferences
 ```
 
+### Analytics Services
+```
+GET /api/analytics/user/{userId} - Get user analytics
+GET /api/analytics/platform - Get platform analytics
+POST /api/analytics/export - Export analytics data
+GET /api/analytics/realtime - Get real-time metrics
+```
+
+### Stories
+```
+POST /api/stories - Create story
+GET /api/stories/feed - Get stories feed
+GET /api/stories/{userId} - Get user stories
+DELETE /api/stories/{id} - Delete story
+POST /api/stories/{id}/view - Record story view
+```
+
+### Events
+```
+POST /api/events - Create event
+GET /api/events - List events
+GET /api/events/{id} - Get event details
+PUT /api/events/{id} - Update event
+DELETE /api/events/{id} - Delete event
+POST /api/events/{id}/attend - Attend event
+```
+
+### Challenges
+```
+POST /api/challenges - Create challenge
+GET /api/challenges - List challenges
+GET /api/challenges/{id} - Get challenge details
+POST /api/challenges/{id}/participate - Participate in challenge
+POST /api/challenges/{id}/submit - Submit challenge entry
+```
+
+### Pages
+```
+POST /api/pages - Create page
+GET /api/pages - List pages
+GET /api/pages/{id} - Get page details
+PUT /api/pages/{id} - Update page
+DELETE /api/pages/{id} - Delete page
+POST /api/pages/{id}/follow - Follow page
+```
+
+### Groups
+```
+POST /api/groups - Create group
+GET /api/groups - List groups
+GET /api/groups/{id} - Get group details
+PUT /api/groups/{id} - Update group
+DELETE /api/groups/{id} - Delete group
+POST /api/groups/{id}/join - Join group
+POST /api/groups/{id}/leave - Leave group
+```
+
 ## 🛠 Implementation Steps
 
 ### Phase 1: Core Infrastructure (Week 1-2)
@@ -264,6 +515,18 @@ PUT /api/notifications/preferences - Update notification preferences
 3. Add compliance reporting
 4. Implement portfolio analytics
 
+### Phase 4: Social Features (Week 7-8)
+1. Implement complete stories functionality
+2. Add real event management system
+3. Implement challenge system
+4. Create pages and groups functionality
+
+### Phase 5: Analytics and Monitoring (Week 9-10)
+1. Connect all services to real analytics
+2. Implement real-time balance updates
+3. Add advanced reporting features
+4. Create data warehousing solution
+
 ## 🔒 Security Considerations
 
 1. **API Key Management**: Store provider API keys encrypted in database
@@ -279,6 +542,7 @@ PUT /api/notifications/preferences - Update notification preferences
 3. **KYC Verification Analytics**: Track approval rates and processing times
 4. **Crypto Trading Analytics**: Monitor trading volumes and user behavior
 5. **Notification Metrics**: Track delivery and engagement rates
+6. **Social Engagement Analytics**: Track posts, stories, events, and group interactions
 
 ## 🧪 Testing Requirements
 
@@ -311,5 +575,8 @@ PUT /api/notifications/preferences - Update notification preferences
 3. **KYC Approval Time**: <24 hours for automated verification
 4. **Crypto Order Execution**: <1 second latency
 5. **Notification Delivery**: <5 seconds for push notifications
+6. **Analytics Accuracy**: >99% data accuracy
+7. **Balance Update Latency**: <1 second for real-time updates
+8. **Social Feature Engagement**: 20% increase in user interactions
 
-This implementation guide provides a roadmap for completing the remaining features and making the platform fully functional with real backend services instead of mockups or placeholders.
+This implementation guide provides a comprehensive roadmap for completing the remaining features and making the platform fully functional with real backend services instead of mockups or placeholders.
