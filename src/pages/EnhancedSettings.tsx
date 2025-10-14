@@ -1423,7 +1423,26 @@ const EnhancedSettings = () => {
                     />
                   </div>
                 </div>
-                
+
+                {/* Advanced accessibility controls embedded here */}
+                <div className="mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Accessibility className="w-5 h-5" />
+                        Advanced Accessibility
+                      </CardTitle>
+                      <CardDescription>Fine-grained accessibility options</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <EnhancedAccessibilityFeatures onSettingsChange={(s) => {
+                        try { window.localStorage.setItem('settings:accessibility', JSON.stringify(s)); } catch {};
+                        toast({ title: 'Accessibility settings updated' });
+                      }} />
+                    </CardContent>
+                  </Card>
+                </div>
+
                 <Button onClick={saveAppearanceSettings} disabled={isLoading}>
                   <Save className="w-4 h-4 mr-2" />
                   Save Appearance Settings
