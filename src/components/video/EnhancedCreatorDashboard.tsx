@@ -1357,24 +1357,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <span className="hidden sm:inline ml-2">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </Button>
 
-              {/* Quick Links - routes to related pages/settings */}
-              <div className="ml-auto flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setActiveSection('insights'); navigate('/app/unified-creator-studio?tab=insights'); }}>
-                  Creator Analytics
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/app/rewards')}>
-                  Creator Economy
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/app/settings')}>
-                  Settings
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/app/settings#accessibility')}>
-                  Accessibility
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/app/settings#content-filters')}>
-                  Content Filters
-                </Button>
-              </div>
             </div>
           </div>
         </div>
