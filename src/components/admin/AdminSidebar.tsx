@@ -32,6 +32,8 @@ import {
   DollarSign,
   Zap,
   Route,
+  Gift,
+  BookOpen,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -144,6 +146,34 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className = "" }) => {
       icon: <Bitcoin className="w-5 h-5" />,
       requiredPermission: "crypto.view",
       description: "Trading oversight",
+    },
+    {
+      path: "/admin/defi",
+      label: "DeFi",
+      icon: <TrendingUp className="w-5 h-5" />,
+      requiredPermission: "crypto.view",
+      description: "Manage DeFi products and protocols",
+    },
+    {
+      path: "/admin/gift-cards",
+      label: "Gift Cards",
+      icon: <Gift className="w-5 h-5" />,
+      requiredPermission: "financial.view",
+      description: "Gift card purchases & sells",
+    },
+    {
+      path: "/admin/blog",
+      label: "Blog",
+      icon: <FileText className="w-5 h-5" />,
+      requiredPermission: "content.moderate",
+      description: "Create and publish posts",
+    },
+    {
+      path: "/admin/courses",
+      label: "Courses",
+      icon: <BookOpen className="w-5 h-5" />,
+      requiredPermission: "crypto.view",
+      description: "Manage Learn courses",
     },
     {
       path: "/admin/freelance",

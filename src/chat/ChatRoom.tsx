@@ -49,6 +49,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedVideoCall } from "@/components/chat/EnhancedVideoCall";
 import { EnhancedMessage, EnhancedChatMessage } from "@/components/chat/EnhancedMessage";
+import ChatAd from "@/components/chat/ChatAd";
+import { chatAdsService } from "@/services/chatAdsService";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import WhatsAppChatInput from "@/components/chat/WhatsAppChatInput";
 
@@ -676,32 +678,69 @@ export const ChatRoom: React.FC = () => {
           </div>
         ) : (
           <>
-            {messages.map((message, index) => {
-              const previousMessage = index > 0 ? messages[index - 1] : null;
-              const isGrouped = shouldGroupMessages(message, previousMessage);
-              const enhancedMessage = convertToEnhancedMessage(message);
+            {(() => {
+              // Interleave ads for group chats only. Config: show ad every N messages.
+              const ads = thread.isGroup ? chatAdsService.getAdsForThread(thread.id) : [];
+              const frequency = 8; // show ad after every 8 messages
+              const items: React.ReactNode[] = [];
 
-              return (
-                <div
-                  key={message.id}
-                  className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <EnhancedMessage
-                    message={enhancedMessage}
-                    currentUserId={user?.id || ""}
-                    isCurrentUser={message.senderId === user?.id}
-                    isMobile={isMobile}
-                    onReply={handleReplyToMessage}
-                    onReact={handleReactToMessage}
-                    onEdit={handleEditMessage}
-                    onDelete={handleDeleteMessageEnhanced}
-                    showAvatar={!isGrouped}
-                    groupWithPrevious={isGrouped}
-                  />
-                </div>
-              );
-            })}
+              messages.forEach((message, index) => {
+                const previousMessage = index > 0 ? messages[index - 1] : null;
+                const isGrouped = shouldGroupMessages(message, previousMessage);
+                const enhancedMessage = convertToEnhancedMessage(message);
+
+                items.push(
+                  <div
+                    key={`msg_${message.id}`}
+                    className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <EnhancedMessage
+                      message={enhancedMessage}
+                      currentUserId={user?.id || ""}
+                      isCurrentUser={message.senderId === user?.id}
+                      isMobile={isMobile}
+                      onReply={handleReplyToMessage}
+                      onReact={handleReactToMessage}
+                      onEdit={handleEditMessage}
+                      onDelete={handleDeleteMessageEnhanced}
+                      showAvatar={!isGrouped}
+                      groupWithPrevious={isGrouped}
+                    />
+                  </div>
+                );
+
+                // insert ad after every frequency messages if ads available
+                if (ads.length > 0 && thread.isGroup && (index + 1) % frequency === 0) {
+                  const adIndex = Math.floor((index + 1) / frequency) % ads.length;
+                  const ad = ads[adIndex];
+                  items.push(
+                    <div key={`ad_${ad.id}_${index}`} className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                      <ChatAd
+                        ad={ad}
+                        onClickCTA={(adId) => {
+                          chatAdsService.trackAdClick(adId);
+                        }}
+                        onDismiss={(adId) => {
+                          // persist dismissed ad state per thread
+                          try {
+                            const key = `dismissed_ads_${thread.id}`;
+                            const raw = localStorage.getItem(key) || "[]";
+                            const arr = JSON.parse(raw);
+                            if (!arr.includes(adId)) {
+                              arr.push(adId);
+                              localStorage.setItem(key, JSON.stringify(arr));
+                            }
+                          } catch (e) {}
+                        }}
+                      />
+                    </div>
+                  );
+                }
+              });
+
+              return items;
+            })()}
             <div ref={messagesEndRef} />
           </>
         )}
