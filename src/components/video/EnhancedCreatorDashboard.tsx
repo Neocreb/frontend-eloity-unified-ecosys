@@ -3062,6 +3062,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
               </CardContent>
             </Card>
 
+            {/* Insert full Creator Analytics component (previously shown on video page) */}
+            <div>
+              <EnhancedCreatorAnalytics />
+            </div>
+
             {/* Content Recommendations */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
