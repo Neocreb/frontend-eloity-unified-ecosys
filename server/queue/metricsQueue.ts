@@ -1,25 +1,35 @@
-import { Queue, Worker, QueueScheduler } from 'bullmq';
 import startMetricsSync from '../tasks/metricsSync.js';
 
 const REDIS_URL = process.env.REDIS_URL || '';
 
-let queue: Queue | null = null;
-let worker: Worker | null = null;
-let scheduler: QueueScheduler | null = null;
+let queue: any = null;
+let worker: any = null;
+let scheduler: any = null;
 
-export function startMetricsQueue(db: any) {
+export async function startMetricsQueue(db: any) {
   if (!REDIS_URL) {
     console.log('REDIS_URL not set; metrics queue not started. Using simple setInterval-based sync.');
     return null;
   }
 
+  // Dynamically import bullmq so the dev server doesn't crash when the package is missing
+  let Bullmq: any;
+  try {
+    Bullmq = await import('bullmq');
+  } catch (err) {
+    console.warn('bullmq not installed; metrics queue disabled. Install bullmq for Redis-backed queueing.');
+    return null;
+  }
+
+  const { Queue, Worker, QueueScheduler } = Bullmq;
+
   queue = new Queue('metrics-sync', { connection: REDIS_URL });
   scheduler = new QueueScheduler('metrics-sync', { connection: REDIS_URL });
 
   // Add a repeatable job every 5 minutes
-  queue.add('aggregate', { ts: Date.now() }, { repeat: { every: 5 * 60 * 1000 } }).catch(err => console.error('Queue add failed', err));
+  queue.add('aggregate', { ts: Date.now() }, { repeat: { every: 5 * 60 * 1000 } }).catch((err: any) => console.error('Queue add failed', err));
 
-  worker = new Worker('metrics-sync', async job => {
+  worker = new Worker('metrics-sync', async (job: any) => {
     console.log('Worker: running metrics aggregation job', job.id);
     try {
       await startMetricsSync(db, 5 * 60 * 1000); // run one aggregation then return
@@ -29,8 +39,8 @@ export function startMetricsQueue(db: any) {
     }
   }, { connection: REDIS_URL });
 
-  worker.on('failed', (job, err) => console.error('Metrics worker failed', job?.id, err));
-  worker.on('completed', job => console.log('Metrics worker completed', job.id));
+  worker.on('failed', (job: any, err: any) => console.error('Metrics worker failed', job?.id, err));
+  worker.on('completed', (job: any) => console.log('Metrics worker completed', job.id));
 
   console.log('Metrics queue started with Redis at', REDIS_URL);
   return { queue, worker, scheduler };
