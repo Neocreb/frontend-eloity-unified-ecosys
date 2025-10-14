@@ -122,6 +122,7 @@ import DataManagement from "@/components/data/DataManagement";
 import CurrencyDemo from "@/components/currency/CurrencyDemo";
 import AIFeatures from "@/components/ai/AIFeatures";
 import MobileTabsFix from "@/components/layout/MobileTabsFix";
+import EnhancedAccessibilityFeatures from '@/components/accessibility/EnhancedAccessibilityFeatures';
 import { supabase } from "@/integrations/supabase/client";
 
 const { SmartFeedCuration, AIContentAssistant } = AIFeatures;
@@ -919,6 +920,24 @@ const EnhancedSettings = () => {
                     Language
                   </span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="accessibility"
+                  className="flex flex-col items-center gap-1 text-xs min-w-[70px] h-auto py-2 px-3 flex-shrink-0"
+                >
+                  <Accessibility className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-[10px] leading-tight whitespace-nowrap">
+                    Accessibility
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="content-filters"
+                  className="flex flex-col items-center gap-1 text-xs min-w-[70px] h-auto py-2 px-3 flex-shrink-0"
+                >
+                  <Filter className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-[10px] leading-tight whitespace-nowrap">
+                    Content Filters
+                  </span>
+                </TabsTrigger>
               </TabsList>
             </div>
           </div>
@@ -1002,6 +1021,20 @@ const EnhancedSettings = () => {
               >
                 <Languages className="w-4 h-4" />
                 <span>Language</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="accessibility"
+                className="flex flex-row items-center gap-2 text-sm"
+              >
+                <Accessibility className="w-4 h-4" />
+                <span>Accessibility</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="content-filters"
+                className="flex flex-row items-center gap-2 text-sm"
+              >
+                <Filter className="w-4 h-4" />
+                <span>Content Filters</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -2144,6 +2177,87 @@ const EnhancedSettings = () => {
                   >
                     Start Verification
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Accessibility Settings */}
+          <TabsContent value="accessibility" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Accessibility className="w-5 h-5" />
+                  Accessibility
+                </CardTitle>
+                <CardDescription>Accessibility options for the platform and media</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <EnhancedAccessibilityFeatures onSettingsChange={(s) => {
+                  try { window.localStorage.setItem('settings:accessibility', JSON.stringify(s)); } catch {};
+                }} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Content Filters */}
+          <TabsContent value="content-filters" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="w-5 h-5" />
+                  Content Filters
+                </CardTitle>
+                <CardDescription>Manage content sensitivity, blocked keywords and safe search</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Hide Sensitive Content</p>
+                        <p className="text-sm text-muted-foreground">Filter nudity, violence and other sensitive categories</p>
+                      </div>
+                      <Switch checked={false} onCheckedChange={() => {}} />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Enable Safe Search</p>
+                        <p className="text-sm text-muted-foreground">Reduce exposure to mature content in discovery</p>
+                      </div>
+                      <Select defaultValue="moderate">
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="off">Off</SelectItem>
+                          <SelectItem value="moderate">Moderate</SelectItem>
+                          <SelectItem value="strict">Strict</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Blocked Keywords (comma separated)</Label>
+                    <Input placeholder="e.g. spoiler, political" />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button variant="default" onClick={() => {
+                      try {
+                        window.localStorage.setItem('settings:contentFilters', JSON.stringify({ safeSearch: 'moderate', blocked: [] }));
+                      } catch {}
+                    }}>
+                      Save Filters
+                    </Button>
+                    <Button variant="ghost" onClick={() => {
+                      try { window.localStorage.removeItem('settings:contentFilters'); } catch {}
+                    }}>
+                      Reset
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
