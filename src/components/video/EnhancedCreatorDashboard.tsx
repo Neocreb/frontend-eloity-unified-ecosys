@@ -137,6 +137,7 @@ interface FeatureAnalytics {
 }
 
 const EnhancedCreatorDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState(() => {
     try {
       if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
