@@ -449,8 +449,8 @@ const AdminChat = () => {
                       <input id="ad-cta-label" aria-describedby="ad-cta-label-desc" className="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" value={editingAd.ctaLabel || ""} onChange={(e) => handleChangeEditingAd("ctaLabel", e.target.value)} />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">CTA URL</label>
-                      <input className="w-full mt-1 p-2 border rounded" value={editingAd.ctaUrl || ""} onChange={(e) => handleChangeEditingAd("ctaUrl", e.target.value)} />
+                      <label htmlFor="ad-cta-url" className="text-sm font-medium">CTA URL</label>
+                      <input id="ad-cta-url" type="url" aria-describedby="ad-cta-url-desc" className="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" value={editingAd.ctaUrl || ""} onChange={(e) => handleChangeEditingAd("ctaUrl", e.target.value)} />
                     </div>
                     <div className="md:col-span-2">
                       <label className="text-sm font-medium">Image URL</label>
