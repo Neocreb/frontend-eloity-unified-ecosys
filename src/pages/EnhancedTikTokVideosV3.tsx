@@ -1482,7 +1482,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
           <div className="h-full overflow-auto p-6">
             <div className="space-y-6">
               <CreatorDashboard />
-              <EnhancedCreatorAnalytics />
             </div>
           </div>
         </DialogContent>
