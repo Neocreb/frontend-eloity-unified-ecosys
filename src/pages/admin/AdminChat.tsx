@@ -433,8 +433,8 @@ const AdminChat = () => {
                   <h3 className="text-lg font-medium mb-3">{ads.find(a => a.id === editingAd.id) ? "Edit Ad" : "Add Ad"}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium">Title</label>
-                      <input className="w-full mt-1 p-2 border rounded" value={editingAd.title || ""} onChange={(e) => handleChangeEditingAd("title", e.target.value)} />
+                      <label htmlFor="ad-title" className="text-sm font-medium">Title</label>
+                      <input id="ad-title" aria-describedby="ad-title-desc" aria-required="true" className="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" value={editingAd.title || ""} onChange={(e) => handleChangeEditingAd("title", e.target.value)} />
                     </div>
                     <div>
                       <label className="text-sm font-medium">Sponsor</label>
