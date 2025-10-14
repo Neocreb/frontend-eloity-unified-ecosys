@@ -2553,8 +2553,61 @@ const EnhancedSettings = () => {
                       onCheckedChange={setIndexProfile}
                     />
                   </div>
+
+                  {/* Content filters embedded into Search & Discovery */}
+                  <div className="mt-4 space-y-4">
+                    <h4 className="font-medium">Content Filters</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">Hide Sensitive Content</p>
+                          <p className="text-sm text-muted-foreground">Filter nudity, violence and other sensitive categories</p>
+                        </div>
+                        <Switch checked={contentHideSensitive} onCheckedChange={setContentHideSensitive} />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">Safe Search Level</p>
+                          <p className="text-sm text-muted-foreground">Reduce exposure to mature content in discovery</p>
+                        </div>
+                        <Select value={contentSafeSearch} onValueChange={setContentSafeSearch}>
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="off">Off</SelectItem>
+                            <SelectItem value="moderate">Moderate</SelectItem>
+                            <SelectItem value="strict">Strict</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Blocked Keywords (comma separated)</Label>
+                      <Input value={blockedKeywords} onChange={(e) => setBlockedKeywords(e.target.value)} placeholder="e.g. spoiler, political" />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button variant="default" onClick={() => {
+                        try {
+                          window.localStorage.setItem('settings:contentFilters', JSON.stringify({ safeSearch: contentSafeSearch, blocked: blockedKeywords.split(',').map(s=>s.trim()).filter(Boolean) }));
+                        } catch {}
+                        toast({ title: 'Content filters saved' });
+                      }}>
+                        Save Filters
+                      </Button>
+                      <Button variant="ghost" onClick={() => {
+                        try { window.localStorage.removeItem('settings:contentFilters'); } catch {}
+                        setBlockedKeywords(''); setContentSafeSearch('moderate'); setContentHideSensitive(false);
+                      }}>
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                
+
                 <Button onClick={savePrivacySettings} disabled={isLoading}>
                   <Save className="w-4 h-4 mr-2" />
                   Save Privacy Settings
