@@ -965,9 +965,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                   className="bg-gray-900 border-gray-700 text-white"
                 >
                   <DropdownMenuItem
-                    onClick={() => {
-                      setIsDashboardOpen(true);
-                    }}
+                    onClick={() => navigate('/app/unified-creator-studio')}
                     className="hover:bg-gray-800"
                   >
                     <Award className="w-4 h-4 mr-2" />
