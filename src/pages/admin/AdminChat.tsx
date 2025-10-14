@@ -441,8 +441,8 @@ const AdminChat = () => {
                       <input id="ad-sponsor" aria-describedby="ad-sponsor-desc" className="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" value={editingAd.sponsor || ""} onChange={(e) => handleChangeEditingAd("sponsor", e.target.value)} />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="text-sm font-medium">Body</label>
-                      <textarea className="w-full mt-1 p-2 border rounded" rows={3} value={editingAd.body || ""} onChange={(e) => handleChangeEditingAd("body", e.target.value)} />
+                      <label htmlFor="ad-body" className="text-sm font-medium">Body</label>
+                      <textarea id="ad-body" aria-describedby="ad-body-desc" className="w-full mt-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3} value={editingAd.body || ""} onChange={(e) => handleChangeEditingAd("body", e.target.value)} />
                     </div>
                     <div>
                       <label className="text-sm font-medium">CTA Label</label>
