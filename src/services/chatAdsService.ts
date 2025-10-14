@@ -1,4 +1,5 @@
-// Simple local mock ad service for chat monetization
+// Chat ad service using Supabase database
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ChatAdRecord {
   id: string;
@@ -8,6 +9,24 @@ export interface ChatAdRecord {
   image?: string;
   ctaLabel?: string;
   ctaUrl?: string;
+  is_active?: boolean;
+  priority?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ChatAdDatabaseRecord {
+  id: string;
+  sponsor?: string;
+  title: string;
+  body?: string;
+  image_url?: string;
+  cta_label?: string;
+  cta_url?: string;
+  is_active?: boolean;
+  priority?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const STORAGE_KEY = "chat_ads_config";
@@ -34,32 +53,162 @@ const DEFAULT_ADS: ChatAdRecord[] = [
 ];
 
 export const chatAdsService = {
-  // Return configured ads; in future this can fetch from API
-  getAdsForThread(threadId?: string): ChatAdRecord[] {
+  // Fetch ads from database
+  async getAdsForThread(threadId?: string): Promise<ChatAdRecord[]> {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return DEFAULT_ADS;
-      const cfg = JSON.parse(raw);
-      if (cfg && Array.isArray(cfg.ads) && cfg.ads.length > 0) return cfg.ads;
-      return DEFAULT_ADS;
+      // Fetch from database
+      const { data, error } = await supabase
+        .from('chat_ads')
+        .select('*')
+        .eq('is_active', true)
+        .order('priority', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error fetching chat ads from database:', error);
+        return DEFAULT_ADS;
+      }
+
+      // Transform database records to match expected format
+      return data.map((ad: ChatAdDatabaseRecord) => ({
+        id: ad.id,
+        sponsor: ad.sponsor,
+        title: ad.title,
+        body: ad.body,
+        image: ad.image_url,
+        ctaLabel: ad.cta_label,
+        ctaUrl: ad.cta_url,
+        is_active: ad.is_active,
+        priority: ad.priority,
+        created_at: ad.created_at,
+        updated_at: ad.updated_at
+      }));
     } catch (e) {
+      console.error('Error fetching chat ads:', e);
       return DEFAULT_ADS;
     }
   },
 
-  // Simple tracking stub
-  trackAdClick(adId: string) {
-    try {
-      const key = `chat_ad_click_${adId}`;
-      const current = parseInt(localStorage.getItem(key) || "0", 10);
-      localStorage.setItem(key, String(current + 1));
-    } catch (e) {}
+  // Default ads for fallback
+  getDefaultAds(): ChatAdRecord[] {
+    return DEFAULT_ADS;
   },
 
-  // Admin helpers
+  // Track ad click (simplified)
+  async trackAdClick(adId: string): Promise<void> {
+    try {
+      // In a real implementation, you might want to track clicks in a separate table
+      console.log(`Ad clicked: ${adId}`);
+    } catch (e) {
+      console.error('Error tracking ad click:', e);
+    }
+  },
+
+  // Save ads config to localStorage as backup
   saveAdsConfig(ads: ChatAdRecord[]) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ ads }));
-    } catch (e) {}
+    } catch (e) {
+      console.error('Error saving ads config to localStorage:', e);
+    }
   },
+
+  // Create a new ad
+  async createAd(ad: Omit<ChatAdRecord, 'id'>): Promise<ChatAdRecord | null> {
+    try {
+      const adData = {
+        sponsor: ad.sponsor,
+        title: ad.title,
+        body: ad.body,
+        image_url: ad.image,
+        cta_label: ad.ctaLabel,
+        cta_url: ad.ctaUrl,
+        is_active: ad.is_active !== undefined ? ad.is_active : true,
+        priority: ad.priority || 0
+      };
+
+      const { data, error } = await supabase
+        .from('chat_ads')
+        .insert(adData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating ad in database:', error);
+        return null;
+      }
+
+      // Transform to match expected format
+      const newAd: ChatAdRecord = {
+        id: data.id,
+        sponsor: data.sponsor,
+        title: data.title,
+        body: data.body,
+        image: data.image_url,
+        ctaLabel: data.cta_label,
+        ctaUrl: data.cta_url,
+        is_active: data.is_active,
+        priority: data.priority,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
+      return newAd;
+    } catch (e) {
+      console.error('Error creating ad:', e);
+      return null;
+    }
+  },
+
+  // Update an existing ad
+  async updateAd(ad: ChatAdRecord): Promise<boolean> {
+    try {
+      const adData = {
+        sponsor: ad.sponsor,
+        title: ad.title,
+        body: ad.body,
+        image_url: ad.image,
+        cta_label: ad.ctaLabel,
+        cta_url: ad.ctaUrl,
+        is_active: ad.is_active,
+        priority: ad.priority,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('chat_ads')
+        .update(adData)
+        .eq('id', ad.id);
+
+      if (error) {
+        console.error('Error updating ad in database:', error);
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      console.error('Error updating ad:', e);
+      return false;
+    }
+  },
+
+  // Delete an ad
+  async deleteAd(adId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('chat_ads')
+        .delete()
+        .eq('id', adId);
+
+      if (error) {
+        console.error('Error deleting ad from database:', error);
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      console.error('Error deleting ad:', e);
+      return false;
+    }
+  }
 };

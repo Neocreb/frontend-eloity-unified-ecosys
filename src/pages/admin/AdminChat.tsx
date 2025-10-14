@@ -56,11 +56,12 @@ const AdminChat = () => {
     loadAds();
   }, []);
 
-  const loadAds = () => {
+  const loadAds = async () => {
     try {
-      const existing = chatAdsService.getAdsForThread();
+      const existing = await chatAdsService.getAdsForThread();
       setAds(existing);
     } catch (e) {
+      console.error("Error loading ads:", e);
       setAds([]);
     }
   };
@@ -169,18 +170,26 @@ const AdminChat = () => {
   const handleSaveAds = async () => {
     try {
       setIsSavingAds(true);
-      const updated = editingAd ? [...ads.filter(a => a.id !== editingAd.id), editingAd] : ads;
-      // Ensure stable ordering: put edited/added ad at end
-      if (editingAd) {
-        // replace/add
-        const deduped = updated.reduce<ChatAdRecord[]>((acc, cur) => {
-          if (!acc.find(a => a.id === cur.id)) acc.push(cur);
-          return acc;
-        }, []);
-        chatAdsService.saveAdsConfig(deduped);
-        setAds(deduped);
-        setEditingAd(null);
-        notification.success("Ads configuration saved");
+      if (editingAd && editingAd.id.startsWith('ad_')) {
+        // This is a new ad
+        const newAd = await chatAdsService.createAd(editingAd);
+        if (newAd) {
+          setAds(prev => [...prev, newAd]);
+          setEditingAd(null);
+          notification.success("Ad created successfully");
+        } else {
+          throw new Error("Failed to create ad");
+        }
+      } else if (editingAd) {
+        // This is an existing ad
+        const success = await chatAdsService.updateAd(editingAd);
+        if (success) {
+          setAds(prev => prev.map(ad => ad.id === editingAd.id ? editingAd : ad));
+          setEditingAd(null);
+          notification.success("Ad updated successfully");
+        } else {
+          throw new Error("Failed to update ad");
+        }
       }
     } catch (e) {
       console.error("Failed to save ads config", e);
@@ -195,14 +204,18 @@ const AdminChat = () => {
     await handleSaveAds();
   };
 
-  const handleDeleteAd = (adId: string) => {
-    const confirmed = window.confirm("Delete this ad?");
+  const handleDeleteAd = async (adId: string) => {
+    const confirmed = window.confirm("Delete this ad? This action cannot be undone.");
     if (!confirmed) return;
-    const updated = ads.filter((a) => a.id !== adId);
+    
     try {
-      chatAdsService.saveAdsConfig(updated);
-      setAds(updated);
-      notification.success("Ad deleted");
+      const success = await chatAdsService.deleteAd(adId);
+      if (success) {
+        setAds(prev => prev.filter(a => a.id !== adId));
+        notification.success("Ad deleted successfully");
+      } else {
+        throw new Error("Failed to delete ad");
+      }
     } catch (e) {
       console.error("Failed to delete ad", e);
       notification.error("Failed to delete ad");
