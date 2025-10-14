@@ -190,6 +190,11 @@ const AdminChat = () => {
     }
   };
 
+  const handleSaveAdsForm = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    await handleSaveAds();
+  };
+
   const handleDeleteAd = (adId: string) => {
     const confirmed = window.confirm("Delete this ad?");
     if (!confirmed) return;
