@@ -17,16 +17,7 @@ Goals:
 Available MCP Integrations (recommended to connect via the Builder.io MCP popover):
 - Supabase — preferred for database, auth, and realtime subscriptions. Connect via [Open MCP popover](#open-mcp-popover). (RECOMMENDED)
 - Neon — alternative serverless Postgres option. [Connect to Neon](#open-mcp-popover)
-- Netlify — host the frontend, CI/CD and deploy previews. [Connect to Netlify](#open-mcp-popover)
-- Zapier — automation and inter-app workflows. [Connect to Zapier](#open-mcp-popover)
-- Figma — design-to-code workflow (use Builder.io Figma plugin). Get plugin from MCP servers or plugin page.
-- Builder.io — CMS for content and assets. [Connect to Builder.io](#open-mcp-popover)
-- Linear — project tracking and issues. [Connect to Linear](#open-mcp-popover)
-- Notion — documentation and handover notes. [Connect to Notion](#open-mcp-popover)
-- Sentry — error monitoring and performance. [Connect to Sentry](#open-mcp-popover)
-- Context7 — docs and up-to-date library references. [Connect to Context7](#open-mcp-popover)
-- Semgrep — static security scanning. [Connect to Semgrep](#open-mcp-popover)
-- Prisma Postgres — ORM and schema management (optional). [Connect to Prisma](#open-mcp-popover)
+
 
 > Note: When you are ready to wire the database, connect Supabase first via the MCP popover.
 
@@ -34,7 +25,7 @@ Available MCP Integrations (recommended to connect via the Builder.io MCP popove
 
 ## High-level Steps (ordered)
 
-1. Connect required MCPs (Supabase, Netlify, Sentry, Builder.io)
+1. Connect required MCPs (Supabase)
 2. Provision database & auth (Supabase): create tables and run migrations
 3. Implement backend endpoints for ads, chat moderation, and admin operations (if not already)
 4. Wire admin UIs to real endpoints; replace localStorage usage (chat ads) with server calls
