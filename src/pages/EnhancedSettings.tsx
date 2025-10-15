@@ -179,6 +179,20 @@ const EnhancedSettings = () => {
   const [availability, setAvailability] = useState(
     user?.profile?.freelance_profile?.availability || "available",
   );
+
+  // If opened with a hash (e.g. #accessibility), scroll that section into view for better UX
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const id = window.location.hash.replace('#', '');
+        const el = document.getElementById(id);
+        if (el && el.scrollIntoView) {
+          // small timeout to allow layout to settle
+          setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+        }
+      }
+    } catch (e) { console.debug('Scroll to hash failed', e); }
+  }, []);
   const [experienceLevel, setExperienceLevel] = useState(
     user?.profile?.freelance_profile?.experience_level || "intermediate",
   );
@@ -1838,7 +1852,7 @@ const EnhancedSettings = () => {
                   </h4>
                   <ul className="text-sm space-y-1">
                     <li>• Level 1: Trade up to $1,000/day</li>
-                    <li>• Level 2: Trade up to $10,000/day, P2P trading</li>
+                    <li>��� Level 2: Trade up to $10,000/day, P2P trading</li>
                     <li>• Level 3: Unlimited trading, premium features</li>
                   </ul>
                 </div>
