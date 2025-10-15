@@ -1425,7 +1425,7 @@ const EnhancedSettings = () => {
                 </div>
 
                 {/* Advanced accessibility controls embedded here */}
-                <div className="mt-4">
+                <div id="accessibility" className="mt-4">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
