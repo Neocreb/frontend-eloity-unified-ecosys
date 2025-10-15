@@ -1338,9 +1338,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
       </div>
 
             {/* Controls Row */}
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="flex flex-nowrap gap-2 items-center overflow-x-auto no-scrollbar py-2" role="toolbar" aria-label="Creator Studio controls">
               {showSearch && (
-                <div className="flex-1 min-w-[160px] sm:min-w-[240px]">
+                <div className="flex-1 min-w-[140px] sm:min-w-[220px]">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -1354,19 +1354,21 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 </div>
               )}
 
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-32 h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7d">Last 7 days</SelectItem>
-                  <SelectItem value="30d">Last 30 days</SelectItem>
-                  <SelectItem value="90d">Last 3 months</SelectItem>
-                  <SelectItem value="1y">Last year</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex-shrink-0">
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger className="w-28 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7d">Last 7 days</SelectItem>
+                    <SelectItem value="30d">Last 30 days</SelectItem>
+                    <SelectItem value="90d">Last 3 months</SelectItem>
+                    <SelectItem value="1y">Last year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <div className="flex items-center gap-1 border rounded-lg p-1">
+              <div className="flex items-center gap-1 border rounded-lg p-1 flex-shrink-0">
                 <Button variant={viewMode === "grid" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("grid")} className="h-7 w-7 p-0" title="Grid View" aria-label="Grid View">
                   <Grid3X3 className="w-3.5 h-3.5" />
                 </Button>
@@ -1375,15 +1377,19 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 </Button>
               </div>
 
-              <Button variant="outline" size="sm" onClick={() => handleExport()} disabled={isExporting} className="h-9 px-3" aria-label="Export analytics">
-                <Download className={cn("w-4 h-4", isExporting && "animate-spin")} />
-                <span className="hidden sm:inline ml-2">{isExporting ? 'Exporting...' : 'Export'}</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleRefreshData} disabled={isRefreshing} className="h-9 px-3" aria-label="Refresh analytics">
-                <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-                <span className="hidden sm:inline ml-2">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
-              </Button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => handleExport()} disabled={isExporting} className="h-9 px-3" aria-label="Export analytics">
+                  <Download className={cn("w-4 h-4", isExporting && "animate-spin")} />
+                  <span className="hidden sm:inline ml-2">{isExporting ? 'Exporting...' : 'Export'}</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleRefreshData} disabled={isRefreshing} className="h-9 px-3" aria-label="Refresh analytics">
+                  <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+                  <span className="hidden sm:inline ml-2">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                </Button>
 
+                {/* Live region for screen readers to announce export/refresh states */}
+                <span aria-live="polite" className="sr-only">{isExporting ? 'Exporting data' : isRefreshing ? 'Refreshing data' : ''}</span>
+              </div>
             </div>
           </div>
         </div>
