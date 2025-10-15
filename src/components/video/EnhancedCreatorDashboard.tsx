@@ -653,11 +653,31 @@ const EnhancedCreatorDashboard: React.FC = () => {
       };
 
       // Download file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      let blob: Blob;
+      if (format === 'csv') {
+        const rows: string[] = [];
+        const addRow = (k: string, v: any) => rows.push([`"${k}"`, `"${String(v).replace(/"/g, '""')}"`].join(','));
+        // Top-level revenue
+        addRow('revenue_total', exportData.revenue.total);
+        exportData.revenue.platforms.forEach((p: any) => addRow(`revenue_${p.name}`, p.revenue));
+        addRow('audience_total', exportData.audience.total);
+        addRow('audience_growth', exportData.audience.growth);
+        addRow('exportDate', exportData.exportDate);
+        // Content: include titles at least
+        exportData.content.forEach((c: any, i: number) => {
+          addRow(`content_${i + 1}_title`, c.title);
+          addRow(`content_${i + 1}_views`, c.views);
+          addRow(`content_${i + 1}_revenue`, c.revenue);
+        });
+        blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      } else {
+        blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      }
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `creator-analytics-${new Date().toISOString().split('T')[0]}.${format}`;
+      a.download = `creator-analytics-${new Date().toISOString().split('T')[0]}.${format === 'csv' ? 'csv' : (format === 'pdf' ? 'json' : 'json')}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
