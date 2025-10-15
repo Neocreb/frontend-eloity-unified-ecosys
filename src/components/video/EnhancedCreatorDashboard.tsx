@@ -154,6 +154,16 @@ const EnhancedCreatorDashboard: React.FC = () => {
     } catch { return 'overview'; }
   });
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('tab') !== activeSection) {
+        sp.set('tab', activeSection);
+        navigate(`${window.location.pathname}?${sp.toString()}`, { replace: true });
+      }
+    } catch {}
+  }, [activeSection, navigate]);
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
