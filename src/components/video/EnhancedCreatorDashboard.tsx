@@ -111,6 +111,8 @@ import {
   Globe,
 } from "lucide-react";
 import { Line } from 'react-chartjs-2';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import EnhancedCreatorAnalytics from '@/components/video/EnhancedCreatorAnalytics';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 import { fetchContentPageSupabase } from '@/services/contentService';
@@ -135,6 +137,7 @@ interface FeatureAnalytics {
 }
 
 const EnhancedCreatorDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState(() => {
     try {
       if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
@@ -143,8 +146,24 @@ const EnhancedCreatorDashboard: React.FC = () => {
     } catch {}
     return "30d";
   });
-  const [activeSection, setActiveSection] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState<string>(() => {
+    try {
+      const t = (typeof window !== 'undefined') ? new URLSearchParams(window.location.search).get('tab') : null;
+      return t || 'overview';
+    } catch { return 'overview'; }
+  });
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('tab') !== activeSection) {
+        sp.set('tab', activeSection);
+        navigate(`${window.location.pathname}?${sp.toString()}`, { replace: true });
+      }
+    } catch {}
+  }, [activeSection, navigate]);
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -634,11 +653,31 @@ const EnhancedCreatorDashboard: React.FC = () => {
       };
 
       // Download file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      let blob: Blob;
+      if (format === 'csv') {
+        const rows: string[] = [];
+        const addRow = (k: string, v: any) => rows.push([`"${k}"`, `"${String(v).replace(/"/g, '""')}"`].join(','));
+        // Top-level revenue
+        addRow('revenue_total', exportData.revenue.total);
+        exportData.revenue.platforms.forEach((p: any) => addRow(`revenue_${p.name}`, p.revenue));
+        addRow('audience_total', exportData.audience.total);
+        addRow('audience_growth', exportData.audience.growth);
+        addRow('exportDate', exportData.exportDate);
+        // Content: include titles at least
+        exportData.content.forEach((c: any, i: number) => {
+          addRow(`content_${i + 1}_title`, c.title);
+          addRow(`content_${i + 1}_views`, c.views);
+          addRow(`content_${i + 1}_revenue`, c.revenue);
+        });
+        blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      } else {
+        blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      }
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `creator-analytics-${new Date().toISOString().split('T')[0]}.${format}`;
+      a.download = `creator-analytics-${new Date().toISOString().split('T')[0]}.${format === 'csv' ? 'csv' : (format === 'pdf' ? 'json' : 'json')}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1264,6 +1303,16 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">Creator Studio</h1>
                   <p className="text-xs text-gray-600 dark:text-gray-400 truncate">Cross-platform analytics</p>
                 </div>
+
+                {/* Jump links - quick navigation between UCS sections */}
+                <div className="hidden md:flex items-center gap-2 ml-4" role="navigation" aria-label="Creator Studio quick links">
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Overview">Home</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('content'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Content">Content</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('revenue'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Revenue">Earnings</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('audience'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Audience">Fans</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('insights'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Insights">Stats</Button>
+                </div>
+
                 <div className="hidden sm:flex items-center gap-1 ml-2">
                   <Button variant="ghost" size="icon" aria-label="Search" onClick={() => setShowSearch(s => !s)}>
                     <Search className="w-4 h-4" />
@@ -1309,9 +1358,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
       </div>
 
             {/* Controls Row */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-nowrap gap-2 items-center overflow-x-auto no-scrollbar py-2" role="toolbar" aria-label="Creator Studio controls">
               {showSearch && (
-                <div className="flex-1 min-w-[200px] sm:min-w-[280px]">
+                <div className="flex-1 min-w-[140px] sm:min-w-[220px]">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -1319,40 +1368,48 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 h-9"
+                      aria-label="Search Creator Studio features"
                     />
                   </div>
                 </div>
               )}
 
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-32 h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7d">Last 7 days</SelectItem>
-                  <SelectItem value="30d">Last 30 days</SelectItem>
-                  <SelectItem value="90d">Last 3 months</SelectItem>
-                  <SelectItem value="1y">Last year</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex-shrink-0">
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger className="w-28 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7d">Last 7 days</SelectItem>
+                    <SelectItem value="30d">Last 30 days</SelectItem>
+                    <SelectItem value="90d">Last 3 months</SelectItem>
+                    <SelectItem value="1y">Last year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <div className="flex items-center gap-1 border rounded-lg p-1">
-                <Button variant={viewMode === "grid" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("grid")} className="h-7 w-7 p-0" title="Grid View">
+              <div className="flex items-center gap-1 border rounded-lg p-1 flex-shrink-0">
+                <Button variant={viewMode === "grid" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("grid")} className="h-7 w-7 p-0" title="Grid View" aria-label="Grid View">
                   <Grid3X3 className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")} className="h-7 w-7 p-0" title="List View">
+                <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")} className="h-7 w-7 p-0" title="List View" aria-label="List View">
                   <List className="w-3.5 h-3.5" />
                 </Button>
               </div>
 
-              <Button variant="outline" size="sm" onClick={() => handleExport()} disabled={isExporting} className="h-9 px-3">
-                <Download className={cn("w-4 h-4", isExporting && "animate-spin")} />
-                <span className="hidden sm:inline ml-2">{isExporting ? 'Exporting...' : 'Export'}</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleRefreshData} disabled={isRefreshing} className="h-9 px-3">
-                <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-                <span className="hidden sm:inline ml-2">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
-              </Button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => handleExport()} disabled={isExporting} className="h-9 px-3" aria-label="Export analytics">
+                  <Download className={cn("w-4 h-4", isExporting && "animate-spin")} />
+                  <span className="hidden sm:inline ml-2">{isExporting ? 'Exporting...' : 'Export'}</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleRefreshData} disabled={isRefreshing} className="h-9 px-3" aria-label="Refresh analytics">
+                  <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+                  <span className="hidden sm:inline ml-2">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                </Button>
+
+                {/* Live region for screen readers to announce export/refresh states */}
+                <span aria-live="polite" className="sr-only">{isExporting ? 'Exporting data' : isRefreshing ? 'Refreshing data' : ''}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1441,7 +1498,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
         <Tabs value={activeSection} onValueChange={setActiveSection} className="space-y-6">
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent id="ucs-overview" value="overview" className="space-y-6">
             {!setupComplete && (
               <Card>
                 <CardHeader>
@@ -1796,7 +1853,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
           </TabsContent>
 
           {/* Content Tab */}
-          <TabsContent value="content" className="space-y-6">
+          <TabsContent id="ucs-content" value="content" className="space-y-6">
             {/* Content Analytics Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -1815,13 +1872,13 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     <SelectItem value="all">All time</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={handleFilterContent}>
+                <Button variant="outline" onClick={handleFilterContent} aria-label="Filter Content">
                   <Filter className="w-4 h-4 mr-2" />
-                  Filter Content
+                  <span className="hidden sm:inline">Filter Content</span>
                 </Button>
-                <Button onClick={() => setShowCreateModal(true)}>
+                <Button onClick={() => setShowCreateModal(true)} aria-label="Create Content">
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Content
+                  <span className="hidden sm:inline">Create Content</span>
                 </Button>
               </div>
             </div>
@@ -3039,6 +3096,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Insert full Creator Analytics component (previously shown on video page) */}
+            <div>
+              <EnhancedCreatorAnalytics />
+            </div>
 
             {/* Content Recommendations */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -47,6 +47,7 @@ import {
   Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -323,8 +324,8 @@ const EnhancedVideosV2: React.FC = () => {
   const [videos, setVideos] = useState<EnhancedVideoData[]>(mockEnhancedVideos);
   const [isRecorderOpen, setIsRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [activeCreativeMode, setActiveCreativeMode] = useState<
     "create" | "discover" | "dashboard" | null
@@ -623,7 +624,7 @@ const EnhancedVideosV2: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsDashboardOpen(true)}
+          onClick={() => navigate('/app/unified-creator-studio')}
           className="w-12 h-12 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30"
         >
           <Award className="w-6 h-6" />
@@ -710,18 +711,7 @@ const EnhancedVideosV2: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Creator Dashboard */}
-      <Dialog open={isDashboardOpen} onOpenChange={setIsDashboardOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Creator Dashboard</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <CreatorDashboard />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
   );
 };
 

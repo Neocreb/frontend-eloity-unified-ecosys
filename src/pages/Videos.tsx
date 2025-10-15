@@ -52,6 +52,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -920,8 +921,8 @@ const Videos: React.FC = () => {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1151,7 +1152,7 @@ const Videos: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsDashboardOpen(true)}
+          onClick={() => navigate('/app/unified-creator-studio')}
           className="w-12 h-12 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30"
           title="Creator Dashboard"
         >
@@ -1230,21 +1231,7 @@ const Videos: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Creator Dashboard */}
-      <Dialog open={isDashboardOpen} onOpenChange={setIsDashboardOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Creator Dashboard</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <div className="space-y-6">
-              <CreatorDashboard />
-              <EnhancedCreatorAnalytics />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
   );
 };
 

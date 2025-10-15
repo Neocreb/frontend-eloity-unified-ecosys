@@ -573,7 +573,6 @@ const EnhancedTikTokVideos: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"live" | "foryou" | "following">(initialTab);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isLiveStreamOpen, setIsLiveStreamOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
@@ -898,7 +897,7 @@ const EnhancedTikTokVideos: React.FC = () => {
                 variant="ghost"
                 size="icon"
                 className="text-white hover:bg-white/20"
-                onClick={() => setIsDashboardOpen(true)}
+                onClick={() => navigate('/app/unified-creator-studio')}
               >
                 <Award className="w-5 h-5" />
               </Button>
@@ -1165,20 +1164,7 @@ const EnhancedTikTokVideos: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Creator Dashboard */}
-      <Dialog open={isDashboardOpen} onOpenChange={setIsDashboardOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Creator Dashboard</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <CreatorDashboard />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-
-    </div>
+        </div>
   );
 };
 
