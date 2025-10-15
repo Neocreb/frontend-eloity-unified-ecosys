@@ -898,7 +898,7 @@ const EnhancedTikTokVideos: React.FC = () => {
                 variant="ghost"
                 size="icon"
                 className="text-white hover:bg-white/20"
-                onClick={() => setIsDashboardOpen(true)}
+                onClick={() => navigate('/app/unified-creator-studio')}
               >
                 <Award className="w-5 h-5" />
               </Button>
