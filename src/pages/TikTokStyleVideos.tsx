@@ -205,7 +205,7 @@ const forYouVideos: VideoData[] = [
       isFollowing: false,
     },
     description:
-      "Mind-blowing AI tools you NEED to try! 🤯 This changes everything! Link in bio #ai #tech #tools",
+      "Mind-blowing AI tools you NEED to try! ��� This changes everything! Link in bio #ai #tech #tools",
     music: {
       title: "Future Tech",
       artist: "Synthwave Studios",
@@ -721,8 +721,8 @@ const TikTokStyleVideos: React.FC = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
