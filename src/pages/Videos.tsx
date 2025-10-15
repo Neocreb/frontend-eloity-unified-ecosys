@@ -1152,7 +1152,7 @@ const Videos: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => { const nav = (window as any).__reactNavigate || null; /* fallback */ } }
+          onClick={() => navigate('/app/unified-creator-studio')}
           className="w-12 h-12 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30"
           title="Creator Dashboard"
         >
