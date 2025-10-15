@@ -924,7 +924,7 @@ const TikTokStyleVideos: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsDashboardOpen(true)}
+          onClick={() => navigate('/app/unified-creator-studio')}
           className="w-11 h-11 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30 backdrop-blur-sm"
           title="Creator Studio"
         >
