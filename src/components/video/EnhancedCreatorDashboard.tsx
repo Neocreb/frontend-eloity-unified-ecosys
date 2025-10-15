@@ -111,7 +111,7 @@ import {
   Globe,
 } from "lucide-react";
 import { Line } from 'react-chartjs-2';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import EnhancedCreatorAnalytics from '@/components/video/EnhancedCreatorAnalytics';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
