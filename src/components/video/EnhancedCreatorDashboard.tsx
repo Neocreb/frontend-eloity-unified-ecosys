@@ -1283,6 +1283,16 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">Creator Studio</h1>
                   <p className="text-xs text-gray-600 dark:text-gray-400 truncate">Cross-platform analytics</p>
                 </div>
+
+                {/* Jump links - quick navigation between UCS sections */}
+                <div className="hidden md:flex items-center gap-2 ml-4" role="navigation" aria-label="Creator Studio quick links">
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('overview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Overview">Home</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('content'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Content">Content</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('revenue'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Revenue">Earnings</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('audience'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Audience">Fans</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveSection('insights'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="Jump to Insights">Stats</Button>
+                </div>
+
                 <div className="hidden sm:flex items-center gap-1 ml-2">
                   <Button variant="ghost" size="icon" aria-label="Search" onClick={() => setShowSearch(s => !s)}>
                     <Search className="w-4 h-4" />
@@ -1328,9 +1338,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
       </div>
 
             {/* Controls Row */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap gap-2 items-center">
               {showSearch && (
-                <div className="flex-1 min-w-[200px] sm:min-w-[280px]">
+                <div className="flex-1 min-w-[160px] sm:min-w-[240px]">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
@@ -1338,6 +1348,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 h-9"
+                      aria-label="Search Creator Studio features"
                     />
                   </div>
                 </div>
@@ -1356,19 +1367,19 @@ const EnhancedCreatorDashboard: React.FC = () => {
               </Select>
 
               <div className="flex items-center gap-1 border rounded-lg p-1">
-                <Button variant={viewMode === "grid" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("grid")} className="h-7 w-7 p-0" title="Grid View">
+                <Button variant={viewMode === "grid" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("grid")} className="h-7 w-7 p-0" title="Grid View" aria-label="Grid View">
                   <Grid3X3 className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")} className="h-7 w-7 p-0" title="List View">
+                <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")} className="h-7 w-7 p-0" title="List View" aria-label="List View">
                   <List className="w-3.5 h-3.5" />
                 </Button>
               </div>
 
-              <Button variant="outline" size="sm" onClick={() => handleExport()} disabled={isExporting} className="h-9 px-3">
+              <Button variant="outline" size="sm" onClick={() => handleExport()} disabled={isExporting} className="h-9 px-3" aria-label="Export analytics">
                 <Download className={cn("w-4 h-4", isExporting && "animate-spin")} />
                 <span className="hidden sm:inline ml-2">{isExporting ? 'Exporting...' : 'Export'}</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleRefreshData} disabled={isRefreshing} className="h-9 px-3">
+              <Button variant="outline" size="sm" onClick={handleRefreshData} disabled={isRefreshing} className="h-9 px-3" aria-label="Refresh analytics">
                 <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
                 <span className="hidden sm:inline ml-2">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </Button>
@@ -1461,7 +1472,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
         <Tabs value={activeSection} onValueChange={setActiveSection} className="space-y-6">
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent id="ucs-overview" value="overview" className="space-y-6">
             {!setupComplete && (
               <Card>
                 <CardHeader>
@@ -1816,7 +1827,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
           </TabsContent>
 
           {/* Content Tab */}
-          <TabsContent value="content" className="space-y-6">
+          <TabsContent id="ucs-content" value="content" className="space-y-6">
             {/* Content Analytics Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -1835,13 +1846,13 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     <SelectItem value="all">All time</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={handleFilterContent}>
+                <Button variant="outline" onClick={handleFilterContent} aria-label="Filter Content">
                   <Filter className="w-4 h-4 mr-2" />
-                  Filter Content
+                  <span className="hidden sm:inline">Filter Content</span>
                 </Button>
-                <Button onClick={() => setShowCreateModal(true)}>
+                <Button onClick={() => setShowCreateModal(true)} aria-label="Create Content">
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Content
+                  <span className="hidden sm:inline">Create Content</span>
                 </Button>
               </div>
             </div>
