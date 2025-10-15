@@ -921,8 +921,8 @@ const Videos: React.FC = () => {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
