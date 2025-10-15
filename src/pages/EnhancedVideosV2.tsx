@@ -624,7 +624,7 @@ const EnhancedVideosV2: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsDashboardOpen(true)}
+          onClick={() => { const navigate = (window as any).__reactNavigate || null; if (navigate) navigate('/app/unified-creator-studio'); else window.location.href = '/app/unified-creator-studio'; }}
           className="w-12 h-12 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30"
         >
           <Award className="w-6 h-6" />
