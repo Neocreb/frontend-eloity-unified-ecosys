@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { formatNumber } from "@/utils/formatters";
 import { useToast } from "@/hooks/use-toast";
 import { QuickMessageButton } from "@/components/chat/QuickMessageButton";
+import { usePage } from "@/hooks/usePages";
+import { useAuth } from "@/hooks/useAuth";
 import {
   ArrowLeft,
   Users,
@@ -64,30 +66,6 @@ import {
 // Removed mock data import - using API integration
 import { marketplaceSyncService, SyncProduct } from "@/services/marketplaceSyncService";
 import { chatInitiationService } from "@/services/chatInitiationService";
-
-interface Page {
-  id: string;
-  name: string;
-  followers: number;
-  category: string;
-  verified: boolean;
-  avatar: string;
-  cover: string;
-  description?: string;
-  pageType: "business" | "brand" | "public_figure" | "community" | "organization";
-  isFollowing?: boolean;
-  isOwner?: boolean;
-  ownerId?: string;
-  website?: string;
-  location?: string;
-  email?: string;
-  phone?: string;
-  createdAt?: string;
-  posts?: number;
-  engagement?: number;
-  hours?: string;
-  about?: string;
-}
 
 interface Post {
   id: string;
@@ -144,6 +122,8 @@ const PageDetailView = () => {
   const { pageId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { page, loading, error, isFollowing, followPage, unfollowPage, refresh } = usePage(pageId || '');
   
   const [activeTab, setActiveTab] = useState("posts");
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -155,16 +135,25 @@ const PageDetailView = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [newReview, setNewReview] = useState({ rating: 5, content: "" });
 
-  // Find the specific page based on the route parameter
-  const page = pages.find(p => p.id === pageId);
+  // If page is loading, show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Loading Page...</h2>
+          <p className="text-muted-foreground">Please wait while we load the page details.</p>
+        </div>
+      </div>
+    );
+  }
 
-  // If page not found, redirect or show error
-  if (!page) {
+  // If page not found or error, show error state
+  if (error || !page) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Page Not Found</h2>
-          <p className="text-muted-foreground mb-4">The page you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-4">The page you're looking for doesn't exist or an error occurred.</p>
           <Button onClick={() => navigate("/app/pages")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Pages
@@ -177,16 +166,23 @@ const PageDetailView = () => {
   // Extend the page data with additional properties for the detail view
   const extendedPage = {
     ...page,
-    cover: page.avatar || "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
+    cover: page.cover_url || "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
     hours: "Mon-Fri 9AM-6PM PST",
-    about: page.description || `Learn more about ${page.name} and what we do.`
+    about: page.description || `Learn more about ${page.name} and what we do.`,
+    isFollowing: isFollowing,
+    isOwner: user?.id === page.creator_id,
+    ownerId: page.creator_id,
+    pageType: "business", // Default type, could be extended
+    followers: page.follower_count,
+    posts: 0, // Would be fetched from posts service
+    engagement: 0, // Would be calculated from posts
   };
 
-  // Mock posts data
+  // Mock posts data - would be replaced with real data from posts service
   const [posts, setPosts] = useState<Post[]>([
     {
       id: "1",
-      content: "🚀 Exciting News! We're launching our new AI-powered analytics platform next week! This revolutionary tool will help businesses make data-driven decisions faster than ever before.\n\nKey features:\n• Real-time data processing\n��� Predictive analytics\n• Custom dashboards\n• Advanced ML algorithms\n\nStay tuned for the official launch! #AI #Analytics #Innovation",
+      content: "🚀 Exciting News! We're launching our new AI-powered analytics platform next week! This revolutionary tool will help businesses make data-driven decisions faster than ever before.\n\nKey features:\n• Real-time data processing\n• Predictive analytics\n• Custom dashboards\n• Advanced ML algorithms\n\nStay tuned for the official launch! #AI #Analytics #Innovation",
       images: ["https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600"],
       timestamp: "2024-01-15T14:30:00Z",
       likes: 342,
@@ -221,7 +217,7 @@ const PageDetailView = () => {
     }
   ]);
 
-  // Mock reviews data
+  // Mock reviews data - would be replaced with real data from reviews service
   const [reviews, setReviews] = useState<Review[]>([
     {
       id: "1",
@@ -249,7 +245,7 @@ const PageDetailView = () => {
     }
   ]);
 
-  // Mock products data
+  // Mock products data - would be replaced with real data from products service
   const products: Product[] = [
     {
       id: "1",
@@ -384,16 +380,28 @@ const PageDetailView = () => {
     });
   };
 
-  const handleFollowPage = () => {
-    extendedPage.isFollowing = !extendedPage.isFollowing;
-    extendedPage.followers += extendedPage.isFollowing ? 1 : -1;
-
-    toast({
-      title: extendedPage.isFollowing ? "Following Page" : "Unfollowed Page",
-      description: extendedPage.isFollowing
-        ? `You're now following ${extendedPage.name}!`
-        : `You've unfollowed ${extendedPage.name}`
-    });
+  const handleFollowPage = async () => {
+    try {
+      if (isFollowing) {
+        await unfollowPage();
+        toast({
+          title: "Unfollowed Page",
+          description: `You've unfollowed ${extendedPage.name}`
+        });
+      } else {
+        await followPage();
+        toast({
+          title: "Following Page",
+          description: `You're now following ${extendedPage.name}!`
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update follow status",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleManagePage = () => {
@@ -414,8 +422,6 @@ const PageDetailView = () => {
       description: "Opening page management interface..."
     });
   };
-
-
 
   const handleAddProduct = async (productData: any) => {
     try {
@@ -443,8 +449,8 @@ const PageDetailView = () => {
           seller: {
             id: extendedPage.id,
             name: extendedPage.name,
-            avatar: extendedPage.avatar,
-            verified: extendedPage.verified
+            avatar: extendedPage.avatar_url,
+            verified: extendedPage.is_verified
           },
           shippingInfo: productData.shippingInfo || {
             freeShipping: false,
@@ -479,13 +485,13 @@ const PageDetailView = () => {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={extendedPage.avatar} alt={extendedPage.name} />
+              <AvatarImage src={extendedPage.avatar_url} alt={extendedPage.name} />
               <AvatarFallback>{extendedPage.name.substring(0, 2)}</AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
                 <h4 className="font-semibold text-sm">{extendedPage.name}</h4>
-                {extendedPage.verified && (
+                {extendedPage.is_verified && (
                   <Verified className="w-4 h-4 text-blue-500" fill="currentColor" />
                 )}
                 {post.isPinned && (
@@ -694,13 +700,13 @@ const PageDetailView = () => {
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-4 border-white flex-shrink-0">
-                  <AvatarImage src={extendedPage.avatar} alt={extendedPage.name} />
+                  <AvatarImage src={extendedPage.avatar_url} alt={extendedPage.name} />
                   <AvatarFallback className="text-lg sm:text-2xl">{extendedPage.name.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
                     <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{extendedPage.name}</h1>
-                    {extendedPage.verified && (
+                    {extendedPage.is_verified && (
                       <Verified className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 flex-shrink-0" fill="currentColor" />
                     )}
                   </div>
@@ -731,11 +737,11 @@ const PageDetailView = () => {
             <div className="flex flex-col sm:flex-row gap-2 sm:flex-wrap">
               <Button
                 onClick={handleFollowPage}
-                variant={extendedPage.isFollowing ? "outline" : "default"}
-                className={`gap-2 text-sm sm:text-base ${extendedPage.isFollowing ? "bg-white/20 border-white/30 text-white hover:bg-white/30" : ""}`}
+                variant={isFollowing ? "outline" : "default"}
+                className={`gap-2 text-sm sm:text-base ${isFollowing ? "bg-white/20 border-white/30 text-white hover:bg-white/30" : ""}`}
                 size="sm"
               >
-                {extendedPage.isFollowing ? (
+                {isFollowing ? (
                   <>
                     <Heart className="w-4 h-4 fill-current" />
                     <span>Following</span>
@@ -795,7 +801,7 @@ const PageDetailView = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span>Created {new Date(extendedPage.createdAt!).toLocaleDateString()}</span>
+                    <span>Created {new Date(extendedPage.created_at).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <PageTypeIcon className="w-4 h-4 text-muted-foreground" />
@@ -917,7 +923,7 @@ const PageDetailView = () => {
                 <CardContent className="p-4">
                   <div className="flex gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={extendedPage.avatar} alt={extendedPage.name} />
+                      <AvatarImage src={extendedPage.avatar_url} alt={extendedPage.name} />
                       <AvatarFallback>{extendedPage.name.substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
@@ -1026,7 +1032,7 @@ const PageDetailView = () => {
                           </div>
                           <div className="flex justify-between">
                             <span>Created:</span>
-                            <span>{new Date(extendedPage.createdAt!).toLocaleDateString()}</span>
+                            <span>{new Date(extendedPage.created_at).toLocaleDateString()}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Followers:</span>
@@ -1093,7 +1099,7 @@ const PageDetailView = () => {
               <TabsContent value="products" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Products & Services</h3>
-                  {page.isOwner && (
+                  {extendedPage.isOwner && (
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
                       Add Product

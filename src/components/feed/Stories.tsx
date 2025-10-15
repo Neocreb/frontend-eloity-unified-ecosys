@@ -7,6 +7,8 @@ import { CreateStoryModal } from "./CreateStory";
 import { useAuth } from "@/contexts/AuthContext";
 import { SponsoredStory } from "@/components/ads/SponsoredStory";
 import { adSettings } from "../../../config/adSettings";
+import { useStories } from "@/hooks/use-stories";
+import StoryViewer from "./StoryViewer";
 
 
 export type Story = {
@@ -18,16 +20,18 @@ export type Story = {
 };
 
 interface StoriesProps {
-  stories: Story[];
-  onViewStory: (storyId: string) => void;
+  onViewStory?: (storyId: string) => void;
   onCreateStory?: () => void;
 }
 
-const Stories = ({ stories, onViewStory, onCreateStory }: StoriesProps) => {
+const Stories = ({ onViewStory, onCreateStory }: StoriesProps) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [storiesWithAds, setStoriesWithAds] = useState<(Story | { id: string; type: 'sponsored_story' | 'ad_story' })[]>([]);
   const notification = useNotification();
   const { user } = useAuth();
+  const { stories, loading, error, refresh } = useStories();
 
   // Create stories list with ads
   useEffect(() => {
@@ -85,12 +89,49 @@ const Stories = ({ stories, onViewStory, onCreateStory }: StoriesProps) => {
 
       notification.success("Story created successfully!");
 
-      // You might want to refresh the stories list here
+      // Refresh stories
+      refresh();
     } catch (error) {
       notification.error("Failed to create story");
       console.error("Error creating story:", error);
     }
   };
+
+  const handleViewStory = (index: number) => {
+    setCurrentStoryIndex(index);
+    setIsStoryViewerOpen(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="mb-6 overflow-x-auto">
+        <div className="flex gap-4 pb-2">
+          <div className="flex flex-col items-center space-y-1 min-w-[70px]">
+            <div className="relative bg-gray-100 p-1 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
+              <Avatar className="h-16 w-16 border-2 border-white animate-pulse">
+                <AvatarFallback>SC</AvatarFallback>
+              </Avatar>
+              <div className="absolute bottom-1 right-1 bg-blue-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs border-2 border-white">
+                <PlusCircle className="h-4 w-4" />
+              </div>
+            </div>
+            <span className="text-xs">Create Story</span>
+          </div>
+
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex flex-col items-center space-y-1 min-w-[70px]">
+              <div className="relative bg-gray-200 p-[2px] rounded-full">
+                <Avatar className="h-16 w-16 border-2 border-white animate-pulse">
+                  <AvatarFallback>U{i}</AvatarFallback>
+                </Avatar>
+              </div>
+              <span className="text-xs animate-pulse">Loading...</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -114,7 +155,7 @@ const Stories = ({ stories, onViewStory, onCreateStory }: StoriesProps) => {
           </div>
 
           {/* Stories with ads */}
-          {storiesWithAds.map((item) => {
+          {storiesWithAds.map((item, index) => {
             if ('type' in item) {
               if (item.type === 'sponsored_story') {
                 return (
@@ -152,7 +193,7 @@ const Stories = ({ stories, onViewStory, onCreateStory }: StoriesProps) => {
                     ? 'bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 p-[2px]'
                     : 'bg-gray-200 p-[2px]'
                     } rounded-full cursor-pointer`}
-                  onClick={() => onViewStory(story.id)}
+                  onClick={() => handleViewStory(index - (adSettings.enableAds ? 1 : 0))} // Adjust index for ad
                 >
                   <Avatar className="h-16 w-16 border-2 border-white">
                     <AvatarImage src={story.avatar} />
@@ -171,6 +212,15 @@ const Stories = ({ stories, onViewStory, onCreateStory }: StoriesProps) => {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateStory}
       />
+
+      {isStoryViewerOpen && (
+        <StoryViewer
+          stories={stories}
+          initialIndex={currentStoryIndex}
+          onClose={() => setIsStoryViewerOpen(false)}
+          onStoryChange={setCurrentStoryIndex}
+        />
+      )}
     </>
   );
 };

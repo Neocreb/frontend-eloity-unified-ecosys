@@ -192,20 +192,17 @@ class RealtimeCryptoService {
       const solWallet = data.find(w => w.chain_type === 'solana');
       const eloitsWallet = data.find(w => w.chain_type === 'eloits');
 
-      // In a real implementation, you would fetch current prices from an API
-      // For now, we'll use mock prices
-      const btcPrice = 50000; // Mock BTC price
-      const ethPrice = 3000;  // Mock ETH price
-      const usdtPrice = 1;    // USDT price
-      const solPrice = 100;   // Mock SOL price
-      const eloitsPrice = 0.1; // Mock ELOITS price
+      // Fetch real prices from the crypto_prices table
+      const prices = await this.getCryptoPrices([
+        'bitcoin', 'ethereum', 'tether', 'solana', 'eloits'
+      ]);
 
       const totalValueUSD = 
-        (btcWallet?.balance || 0) * btcPrice +
-        (ethWallet?.balance || 0) * ethPrice +
-        (usdtWallet?.balance || 0) * usdtPrice +
-        (solWallet?.balance || 0) * solPrice +
-        (eloitsWallet?.balance || 0) * eloitsPrice;
+        (btcWallet?.balance || 0) * prices.bitcoin +
+        (ethWallet?.balance || 0) * prices.ethereum +
+        (usdtWallet?.balance || 0) * prices.tether +
+        (solWallet?.balance || 0) * prices.solana +
+        (eloitsWallet?.balance || 0) * prices.eloits;
 
       return {
         btc: btcWallet?.balance || 0,
@@ -410,7 +407,7 @@ class RealtimeCryptoService {
   // Get user's crypto portfolio value
   async getPortfolioValue(userId: string): Promise<{
     totalValue: number;
-    assets: Array<{ symbol: string; balance: number; value: number; percentage: number }>;
+    assets: Array<{ symbol: string; balance: number; value: number; percentage: number }>[];
   } | null> {
     try {
       const wallet = await this.getUserWallet(userId);
