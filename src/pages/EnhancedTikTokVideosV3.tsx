@@ -576,7 +576,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"live" | "battle" | "foryou" | "following">(initialTab);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isLiveStreamOpen, setIsLiveStreamOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
