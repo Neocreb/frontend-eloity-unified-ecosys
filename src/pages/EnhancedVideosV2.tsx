@@ -324,8 +324,8 @@ const EnhancedVideosV2: React.FC = () => {
   const [videos, setVideos] = useState<EnhancedVideoData[]>(mockEnhancedVideos);
   const [isRecorderOpen, setIsRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [activeCreativeMode, setActiveCreativeMode] = useState<
     "create" | "discover" | "dashboard" | null
