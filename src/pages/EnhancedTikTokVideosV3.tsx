@@ -296,7 +296,7 @@ const liveStreams: VideoData[] = [
       verified: true,
       followerCount: 50000,
     },
-    description: "LIVE: Bitcoin analysis and market predictions! 🔴 Join the discussion",
+    description: "LIVE: Bitcoin analysis and market predictions! ��� Join the discussion",
     music: { title: "Live Stream", artist: "Real Time" },
     stats: { likes: 1250, comments: 345, shares: 89, views: "12.5K watching" },
     hashtags: ["live", "crypto", "bitcoin", "analysis"],
@@ -1471,19 +1471,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Creator Dashboard */}
-      <Dialog open={isDashboardOpen} onOpenChange={setIsDashboardOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Creator Dashboard</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <div className="space-y-6">
-              <CreatorDashboard />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
     </div>
   );
