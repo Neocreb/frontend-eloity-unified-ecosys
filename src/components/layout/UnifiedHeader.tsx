@@ -78,6 +78,7 @@ import {
   Star,
   MapPin,
   ToggleLeft,
+  Truck,
 } from "lucide-react";
 import NotificationsDropdown from "./NotificationsDropdown";
 import { useToast } from "@/hooks/use-toast";
