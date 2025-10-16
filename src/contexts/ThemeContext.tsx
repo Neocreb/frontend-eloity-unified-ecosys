@@ -13,8 +13,15 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    console.error("useTheme called without ThemeProvider context");
-    throw new Error("useTheme must be used within a ThemeProvider");
+    console.warn("useTheme called without ThemeProvider context, using default values");
+    // Return a safe default instead of throwing
+    return {
+      theme: "light" as Theme,
+      setTheme: () => {
+        console.warn("setTheme called without ThemeProvider context");
+      },
+      isDark: false,
+    };
   }
   return context;
 };
