@@ -40,6 +40,16 @@ export interface NotificationSettings {
   frequency: string;
 }
 
+export interface CryptoNotificationPayload {
+  title: string;
+  message: string;
+  symbol?: string;
+  price?: number;
+  priority?: "low" | "medium" | "high" | "urgent";
+  actionUrl?: string;
+  actionLabel?: string;
+}
+
 interface UnifiedNotificationContextType {
   // State
   notifications: UnifiedNotification[];
