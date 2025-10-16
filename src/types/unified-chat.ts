@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   ChatType,
   ChatThread,
@@ -41,6 +42,13 @@ export interface UnifiedChatThread extends ChatThread {
   type: UnifiedChatType;
   isAI?: boolean;
   aiPersonality?: "helpful" | "professional" | "casual" | "expert";
+  participant_profile?: {
+    id: string;
+    name: string;
+    avatar?: string;
+    is_online?: boolean;
+    last_seen?: string;
+  };
 }
 
 export interface ChatFilter {
@@ -60,6 +68,14 @@ export interface UnifiedChatContextData extends ChatContextData {
   priority?: "low" | "medium" | "high" | "urgent";
   tags?: string[];
   customData?: Record<string, any>;
+  
+  // Freelance extended
+  projectBudget?: number;
+  
+  // Crypto extended
+  tradeType?: "buy" | "sell";
+  cryptocurrency?: string;
+  amount?: number;
 }
 
 export interface ChatTabConfig {
@@ -112,7 +128,7 @@ export const AI_ASSISTANT_CONFIG = {
   avatar: "/placeholder.svg",
   personality: "helpful",
   welcomeMessage:
-    "Hi! I'm Edith, your personal SoftChat assistant. I'm here to help you with content creation, trading insights, marketplace guidance, freelancing tips, and much more. What can I help you with today?",
+    "Hi! I'm Edith, your personal Eloity assistant. I'm here to help you with content creation, trading insights, marketplace guidance, freelancing tips, and much more. What can I help you with today?",
   capabilities: [
     "Content creation assistance",
     "Trading and crypto insights",

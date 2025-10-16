@@ -158,14 +158,17 @@ const GroupsAndPagesAdmin = () => {
       ]);
 
       // Transform the data to match our interface
-      const groupsData = (groupsResponse.data || groupsResponse).map((group: any) => ({
+      // Normalize unknown API responses safely
+      const groupsRaw: any = groupsResponse as any;
+      const groupsArray: any[] = Array.isArray(groupsRaw?.data) ? groupsRaw.data : (groupsRaw as any[]);
+      const groupsData = groupsArray.map((group: any) => ({
         id: group.id,
         name: group.name,
         members: group.memberCount || 0,
         category: group.category || "General",
         cover: group.coverImage || "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400",
         description: group.description,
-        privacy: group.privacy === "private" ? "private" : "public",
+        privacy: (group.privacy === "private" ? "private" : "public") as "private" | "public",
         isActive: group.status === "active",
         createdAt: group.createdAt || new Date().toISOString(),
         ownerName: group.owner?.name || "Unknown",
@@ -175,7 +178,9 @@ const GroupsAndPagesAdmin = () => {
         engagement: group.engagement || 0
       }));
 
-      const pagesData = (pagesResponse.data || pagesResponse).map((page: any) => ({
+      const pagesRaw: any = pagesResponse as any;
+      const pagesArray: any[] = Array.isArray(pagesRaw?.data) ? pagesRaw.data : (pagesRaw as any[]);
+      const pagesData = pagesArray.map((page: any) => ({
         id: page.id,
         name: page.name,
         followers: page.followerCount || 0,

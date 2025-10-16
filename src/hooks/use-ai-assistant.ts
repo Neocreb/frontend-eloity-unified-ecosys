@@ -119,7 +119,7 @@ export const useAIAssistant = (): UseAIAssistantReturn => {
         {
           id: "welcome",
           type: "assistant",
-          content: `Hey ${user.username || user.email || "there"}! 👋 I'm ${assistantData.name}, your personal SoftChat assistant.\n\nI'm here to help you succeed on the platform - whether you want to create amazing content, trade crypto, sell products, or earn through freelancing. Just ask me anything and I'll guide you step by step!\n\nWhat would you like to explore first?`,
+          content: `Hey ${user.username || user.email || "there"}! 👋 I'm ${assistantData.name}, your personal Eloity assistant.\n\nI'm here to help you succeed on the platform - whether you want to create amazing content, trade crypto, sell products, or earn through freelancing. Just ask me anything and I'll guide you step by step!\n\nWhat would you like to explore first?`,
           timestamp: new Date(),
         },
       ]);

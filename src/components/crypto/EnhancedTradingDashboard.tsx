@@ -104,7 +104,7 @@ export default function EnhancedTradingDashboard({
         portfolioData,
         watchlistData,
       ] = await Promise.all([
-        cryptoService.getCryptocurrencies(50),
+        cryptoService.getCryptocurrencies(),
         cryptoService.getTradingPairs(),
         cryptoService.getOrderBook(selectedPair),
         cryptoService.getRecentTrades(selectedPair, 20),
@@ -146,7 +146,7 @@ export default function EnhancedTradingDashboard({
 
   const handleAddToWatchlist = async (asset: string) => {
     try {
-      const newItem = await cryptoService.addToWatchlist(asset);
+      const newItem = await cryptoService.addToWatchlist('user-id', asset);
       setWatchlist((prev) => [...prev, newItem]);
       toast({
         title: "Added to Watchlist",

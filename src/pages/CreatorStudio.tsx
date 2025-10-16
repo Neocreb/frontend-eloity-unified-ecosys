@@ -418,7 +418,7 @@ const CreatorStudio: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Helmet>
-        <title>Creator Studio | Softchat</title>
+        <title>Creator Studio | Eloity</title>
         <meta
           name="description"
           content="Comprehensive analytics dashboard for content creators"
@@ -930,7 +930,7 @@ const CreatorStudio: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-purple-700">
-                        SoftPoints
+                        Eloity Points
                       </p>
                       <p className="text-2xl font-bold text-purple-900">
                         2,450
@@ -1140,7 +1140,7 @@ const CreatorStudio: React.FC = () => {
                       time: "1 day ago",
                       icon: Eye,
                       color: "text-green-500",
-                      softPoints: 5,
+                      eloityPoints: 5,
                     },
                   ].map((earning, index) => {
                     const Icon = earning.icon;
@@ -1168,10 +1168,10 @@ const CreatorStudio: React.FC = () => {
                               +${earning.amount}
                             </p>
                           )}
-                          {earning.softPoints && (
+                          {earning.eloityPoints && (
                             <p className="text-xs text-purple-600 flex items-center gap-1">
                               <Star className="w-3 h-3" />
-                              {earning.softPoints} SP
+                              {earning.eloityPoints} SP
                             </p>
                           )}
                         </div>

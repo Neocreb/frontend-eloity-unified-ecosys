@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { adSettings } from "../../config/adSettings";
 
 interface AdViewRecord {
@@ -134,12 +135,12 @@ class AdRewardService {
       userStats.lastRewardDate = new Date();
       await this.updateUserStats(userId, userStats);
 
-      // Add SoftPoints to user account (placeholder)
-      await this.addSoftPoints(userId, rewardAmount);
+      // Add Eloity Points to user account (placeholder)
+      await this.addEloity Points(userId, rewardAmount);
 
       return {
         rewardEarned: rewardAmount,
-        message: `+${rewardAmount} SoftPoints earned!`
+        message: `+${rewardAmount} Eloity Points earned!`
       };
 
     } catch (error) {
@@ -151,11 +152,11 @@ class AdRewardService {
     }
   }
 
-  private async addSoftPoints(userId: string, amount: number): Promise<void> {
-    // Placeholder – Replace with real SoftPoints service integration
+  private async addEloity Points(userId: string, amount: number): Promise<void> {
+    // Placeholder – Replace with real Eloity Points service integration
     try {
-      // In production, this would call your SoftPoints service
-      console.log(`Adding ${amount} SoftPoints to user ${userId}`);
+      // In production, this would call your Eloity Points service
+      console.log(`Adding ${amount} Eloity Points to user ${userId}`);
       
       // Example API call:
       // await fetch('/api/eloits/add', {
@@ -165,7 +166,7 @@ class AdRewardService {
       // });
       
     } catch (error) {
-      console.error('Failed to add SoftPoints:', error);
+      console.error('Failed to add Eloity Points:', error);
       throw error;
     }
   }

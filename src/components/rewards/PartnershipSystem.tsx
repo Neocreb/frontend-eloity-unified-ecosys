@@ -118,14 +118,14 @@ const mockReferralData: ReferralData = {
   tier: "Gold",
   tierProgress: 75,
   nextTierRequirement: 100,
-  referralCode: "SOFTCHAT2024",
+  referralCode: "ELOITY2024",
   customLink: "https://eloity.com/join/johndoe",
 };
 
 const mockPartnerships: Partnership[] = [
   {
     id: "1",
-    name: "SoftChat Pro",
+    name: "Eloity Pro",
     type: "brand",
     status: "active",
     commission: 30,
@@ -238,7 +238,7 @@ export function PartnershipSystem() {
 
   const shareOnSocial = (platform: string) => {
     const message = encodeURIComponent(
-      `Join me on SoftChat! Use my referral link to get started: ${referralData.customLink}`,
+      `Join me on Eloity! Use my referral link to get started: ${referralData.customLink}`,
     );
     const urls = {
       twitter: `https://twitter.com/intent/tweet?text=${message}`,

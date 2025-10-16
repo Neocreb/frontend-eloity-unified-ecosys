@@ -207,7 +207,7 @@ export function P2PEscrowManager({ transactionId, userRole }: P2PEscrowManagerPr
                 <p><span className="font-medium">Amount:</span> {transaction.amount} {transaction.currency}</p>
                 <p><span className="font-medium">Price:</span> {formatCurrency(transaction.price)}</p>
                 <p><span className="font-medium">Total Value:</span> {formatCurrency(transaction.amount * transaction.price)}</p>
-                <p><span className="font-medium">Created:</span> {formatTime(transaction.createdAt)}</p>
+                <p><span className="font-medium">Created:</span> {new Date(transaction.createdAt).toLocaleString()}</p>
               </div>
             </div>
             
@@ -321,7 +321,7 @@ export function P2PEscrowManager({ transactionId, userRole }: P2PEscrowManagerPr
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-              <span className="text-sm">Transaction Created - {formatTime(transaction.createdAt)}</span>
+              <span className="text-sm">Transaction Created - {new Date(transaction.createdAt).toLocaleString()}</span>
             </div>
             
             {transaction.status !== 'pending' && (

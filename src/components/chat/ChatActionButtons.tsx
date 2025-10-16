@@ -54,22 +54,25 @@ export const ChatActionButton: React.FC<ChatActionButtonProps> = ({
   onClick,
   className,
   children,
-}) => (
-  <Button
-    variant={variant}
-    size={size}
-    disabled={disabled || loading}
-    onClick={onClick}
-    className={cn("flex items-center gap-2", className)}
-  >
-    {loading ? (
-      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-    ) : (
-      <MessageCircle className="w-4 h-4" />
-    )}
-    {children}
-  </Button>
-);
+}) => {
+  const normalizedSize = size === "md" ? ("default" as const) : size;
+  return (
+    <Button
+      variant={variant}
+      size={normalizedSize}
+      disabled={disabled || loading}
+      onClick={onClick}
+      className={cn("flex items-center gap-2", className)}
+    >
+      {loading ? (
+        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+      ) : (
+        <MessageCircle className="w-4 h-4" />
+      )}
+      {children}
+    </Button>
+  );
+};
 
 // Freelance-specific chat button
 export const FreelanceChatButton: React.FC<FreelanceChatButtonProps> = ({

@@ -755,7 +755,7 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
                 <div className="text-center text-white mb-4">
                   <div className="text-3xl mb-2">{selectedGift.icon}</div>
                   <div className="font-medium">{selectedGift.name}</div>
-                  <div className="text-yellow-400">{selectedGift.value} SoftPoints</div>
+                  <div className="text-yellow-400">{selectedGift.value} Eloity Points</div>
                 </div>
                 
                 <div className="text-white text-sm mb-4">Send to:</div>

@@ -125,7 +125,7 @@ const CreatorEconomyHub: React.FC<CreatorEconomyHubProps> = ({
             <Card className="text-center">
               <CardContent className="p-4">
                 <Star className="w-6 h-6 mx-auto mb-2 text-purple-500" />
-                <p className="text-sm text-muted-foreground">SoftPoints</p>
+                <p className="text-sm text-muted-foreground">Eloity Points</p>
                 <p className="font-bold">12M+ Issued</p>
               </CardContent>
             </Card>
@@ -226,7 +226,7 @@ const CreatorEconomyHub: React.FC<CreatorEconomyHubProps> = ({
         <div className="text-center space-y-4 py-8">
           <h2 className="text-2xl font-bold">Ready to Start Earning?</h2>
           <p className="text-muted-foreground">
-            Join thousands of creators already earning on Softchat
+            Join thousands of creators already earning on Eloity
           </p>
           <div className="flex gap-4 justify-center">
             <Button

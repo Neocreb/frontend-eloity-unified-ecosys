@@ -4,6 +4,9 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
+// Debug: ensure single React instance
+// eslint-disable-next-line no-console
+console.log("React version:", (React as any).version);
 
 // Error boundary component
 class ErrorBoundary extends React.Component<

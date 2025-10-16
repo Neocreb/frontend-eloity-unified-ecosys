@@ -86,9 +86,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
             aiContext: {
               confidence: welcomeResponse.confidence,
               sources: welcomeResponse.sources,
-              suggestedActions: welcomeResponse.suggestedActions,
-              followUpQuestions: welcomeResponse.followUpQuestions,
-              relatedTopics: welcomeResponse.relatedTopics,
+              suggestedActions: (welcomeResponse.suggestedActions as unknown as AIAction[]) || [],
+              followUpQuestions: welcomeResponse.followUpQuestions || [],
+              relatedTopics: welcomeResponse.relatedTopics || [],
             },
           };
           setMessages([welcomeMessage]);
@@ -101,7 +101,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
             senderId: "ai_assistant",
             content: cleanAIResponse(
               aiPersonalityService.generatePersonalizedGreeting(user) +
-              "\n\nI can help with real-time data like crypto prices, weather, news, calculations, and SoftChat features! Plus, I'm here for friendly conversation and emotional support! 💙"
+              "\n\nI can help with real-time data like crypto prices, weather, news, calculations, and Eloity features! Plus, I'm here for friendly conversation and emotional support! 💙"
             ),
             timestamp: new Date().toISOString(),
             readBy: [],
@@ -213,7 +213,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
           messageType: "text",
           aiContext: {
             confidence: smartResponse.confidence || 85,
-            suggestedActions: smartResponse.suggestedActions?.slice(0, 3) || [],
+            suggestedActions: (smartResponse.suggestedActions?.slice(0, 3) as unknown as AIAction[]) || [],
             followUpQuestions:
               smartResponse.followUpQuestions?.slice(0, 3) || [],
             relatedTopics: smartResponse.relatedTopics?.slice(0, 4) || [],

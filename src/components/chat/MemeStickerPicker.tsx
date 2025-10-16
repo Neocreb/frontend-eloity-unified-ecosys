@@ -62,9 +62,12 @@ import {
   UserStickerLibrary,
   EMOJI_STICKER_PACKS
 } from "@/types/sticker";
-import { SAMPLE_MEMES, SAMPLE_GIFS, COMMUNITY_MEME_GIF_PACKS } from "@/data/sampleMemesGifsData";
 import { EnhancedMediaCreationPanel } from "./EnhancedMediaCreationPanel";
 import { useUserCollections } from "@/contexts/UserCollectionsContext";
+
+// Placeholder for community content - will be fetched from Supabase
+const SAMPLE_MEMES: any[] = [];
+const SAMPLE_GIFS: any[] = [];
 
 interface MemeStickerPickerProps {
   onStickerSelect: (sticker: StickerData) => void;
@@ -77,7 +80,7 @@ interface MemeStickerPickerProps {
 const STICKER_TABS: StickerPickerTab[] = [
   { id: "memes", name: "Memes", icon: <Zap className="w-4 h-4" /> },
   { id: "gifs", name: "GIFs", icon: <Camera className="w-4 h-4" /> },
-  { id: "create", name: "Create", icon: <Plus className="w-4 h-4" /> },
+  { id: "add_new", name: "Create", icon: <Plus className="w-4 h-4" /> },
 ];
 
 export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
@@ -110,12 +113,9 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
     isPublic: true,
     isPremium: false,
     isOfficial: false,
-    isCustom: false,
     tags: ["memes", "community", "unified"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    thumbnailUrl: collections.memes[0]?.thumbnailUrl || SAMPLE_MEMES[0]?.thumbnailUrl || "",
-    price: 0,
   };
 
   const unifiedGifPack: StickerPackData = {
@@ -133,12 +133,9 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
     isPublic: true,
     isPremium: false,
     isOfficial: false,
-    isCustom: false,
     tags: ["gifs", "animated", "community", "unified"],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    thumbnailUrl: collections.gifs[0]?.thumbnailUrl || SAMPLE_GIFS[0]?.thumbnailUrl || "",
-    price: 0,
   };
 
   const userCollectionPacks: StickerPackData[] = [unifiedMemePack, unifiedGifPack];
@@ -170,12 +167,9 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       isPublic: true,
       isPremium: false,
       isOfficial: false,
-      isCustom: false,
       tags: ["memes", "community", "unified"],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      thumbnailUrl: collections.memes[0]?.thumbnailUrl || SAMPLE_MEMES[0]?.thumbnailUrl || "",
-      price: 0,
     };
 
     const updatedUnifiedGifPack: StickerPackData = {
@@ -193,12 +187,9 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       isPublic: true,
       isPremium: false,
       isOfficial: false,
-      isCustom: false,
       tags: ["gifs", "animated", "community", "unified"],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      thumbnailUrl: collections.gifs[0]?.thumbnailUrl || SAMPLE_GIFS[0]?.thumbnailUrl || "",
-      price: 0,
     };
 
     const updatedPacks = [updatedUnifiedMemePack, updatedUnifiedGifPack];
@@ -410,7 +401,7 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
         <div className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <ScrollArea orientation="horizontal" className="w-full">
+          <ScrollArea className="w-full">
             <TabsList className={cn(
               "inline-flex h-auto bg-transparent w-full",
               isMobile ? "p-0.5 justify-start" : "p-1 justify-start"
@@ -467,8 +458,6 @@ export const MemeStickerPicker: React.FC<MemeStickerPickerProps> = ({
               <TabsContent value="create" className="mt-0">
                 <EnhancedMediaCreationPanel
                   isMobile={isMobile}
-                  isPremium={true} // TODO: Get from user context
-                  userCredits={10} // TODO: Get from user context
                   saveToCollectionFirst={true}
                   onMediaSaved={(mediaId, collection) => {
                     toast({
@@ -899,12 +888,11 @@ const StickerPackCreationDialog: React.FC<StickerPackCreationDialogProps> = ({
         rating: 5,
         isOfficial: false,
         isPremium: false,
-        isCustom: true,
+        isPublic: true,
         tags: ["custom", "user-generated"],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        thumbnailUrl: stickers[0]?.fileUrl || "",
-        price: 0,
+        ratingCount: 0,
       };
 
       onPackCreated(newPack);
@@ -960,7 +948,7 @@ const StickerPackCreationDialog: React.FC<StickerPackCreationDialogProps> = ({
           </Button>
           <Button
             variant="outline"
-            onClick={() => setCreationMethod("photo")}
+            onClick={() => setCreationMethod("camera")}
             className="justify-start h-auto p-3"
           >
             <Camera className="w-4 h-4 mr-2" />
@@ -971,7 +959,7 @@ const StickerPackCreationDialog: React.FC<StickerPackCreationDialogProps> = ({
           </Button>
           <Button
             variant="outline"
-            onClick={() => setCreationMethod("gif")}
+            onClick={() => setCreationMethod("upload")}
             className="justify-start h-auto p-3"
           >
             <Sparkles className="w-4 h-4 mr-2" />

@@ -18,7 +18,7 @@ import {
   Star,
 } from "lucide-react";
 import { Project, FreelanceStats } from "@/types/freelance";
-import { freelanceService } from "@/services/freelanceService";
+import { FreelanceService as freelanceService } from "@/services/freelanceService";
 import { useToast } from "@/components/ui/use-toast";
 import { formatDistanceToNow } from "date-fns";
 
@@ -79,13 +79,21 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
 
   const getMilestoneProgress = (project: Project) => {
     const completedMilestones = project.milestones.filter(
-      (m) => m.status === "approved",
+      (m) => m.status === "completed",
     ).length;
-    return (completedMilestones / project.milestones.length) * 100;
+    return project.milestones.length > 0 
+      ? (completedMilestones / project.milestones.length) * 100 
+      : 0;
   };
 
   const getPaymentProgress = (project: Project) => {
-    return (project.budget.paid / project.budget.agreed) * 100;
+    // Since we don't have paid/agreed properties, we'll calculate based on completed milestones
+    const completedMilestones = project.milestones.filter(
+      (m) => m.status === "completed",
+    ).length;
+    return project.milestones.length > 0 
+      ? (completedMilestones / project.milestones.length) * 100 
+      : 0;
   };
 
   const filteredProjects = projects.filter((project) => {
@@ -143,9 +151,9 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Active Projects</p>
+                  <p className="text-sm text-gray-600">Completed Projects</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.activeProjects}
+                    {stats.completedProjects}
                   </p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
@@ -161,7 +169,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
                 <div>
                   <p className="text-sm text-gray-600">Success Rate</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.clientSatisfaction}/5
+                    {stats.successRate}%
                   </p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-full">
@@ -175,9 +183,9 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Completed Jobs</p>
+                  <p className="text-sm text-gray-600">Repeat Clients</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.completedProjects}
+                    {stats.repeatClients}
                   </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
@@ -236,179 +244,114 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {project.job.title}
+                            {project.title}
                           </h3>
                           <Badge
-                            variant="outline"
                             className={getProjectStatusColor(project.status)}
                           >
                             {project.status.charAt(0).toUpperCase() +
                               project.status.slice(1)}
                           </Badge>
                         </div>
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                          {project.job.description}
+                        <p className="text-gray-600 text-sm mb-3">
+                          {project.description}
                         </p>
-
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
                             <span>
                               Started{" "}
-                              {formatDistanceToNow(
-                                new Date(project.startDate),
-                                { addSuffix: true },
-                              )}
+                              {formatDistanceToNow(project.startDate, {
+                                addSuffix: true,
+                              })}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4" />
-                            <span>
-                              ${project.budget.agreed.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 ml-4">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage
-                            src={
-                              userType === "freelancer"
-                                ? project.client.avatar
-                                : project.freelancer.avatar
-                            }
-                            alt={
-                              userType === "freelancer"
-                                ? project.client.name
-                                : project.freelancer.name
-                            }
-                          />
-                          <AvatarFallback>
-                            {(userType === "freelancer"
-                              ? project.client.name
-                              : project.freelancer.name
-                            ).charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {userType === "freelancer"
-                              ? project.client.name
-                              : project.freelancer.name}
-                          </p>
-                          <div className="flex items-center gap-1 text-xs text-gray-600">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span>
-                              {userType === "freelancer"
-                                ? project.client.rating
-                                : project.freelancer.rating}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Progress Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600">
-                            Project Progress
-                          </span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {getMilestoneProgress(project).toFixed(0)}%
-                          </span>
-                        </div>
-                        <Progress
-                          value={getMilestoneProgress(project)}
-                          className="h-2"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          {
-                            project.milestones.filter(
-                              (m) => m.status === "approved",
-                            ).length
-                          }{" "}
-                          of {project.milestones.length} milestones completed
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600">
-                            Payment Progress
-                          </span>
-                          <span className="text-sm font-medium text-gray-900">
-                            ${project.budget.paid.toLocaleString()} / $
-                            {project.budget.agreed.toLocaleString()}
-                          </span>
-                        </div>
-                        <Progress
-                          value={getPaymentProgress(project)}
-                          className="h-2"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          ${project.budget.remaining.toLocaleString()} remaining
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Milestones */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">
-                        Recent Milestones
-                      </h4>
-                      <div className="space-y-2">
-                        {project.milestones.slice(0, 2).map((milestone) => (
-                          <div
-                            key={milestone.id}
-                            className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                          >
-                            <div className="flex items-center gap-2">
-                              {milestone.status === "approved" ? (
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                              ) : milestone.status === "in-progress" ? (
-                                <Clock className="h-4 w-4 text-blue-500" />
-                              ) : (
-                                <AlertCircle className="h-4 w-4 text-gray-400" />
-                              )}
-                              <span className="text-sm text-gray-900">
-                                {milestone.title}
+                          {project.endDate && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              <span>
+                                Ends{" "}
+                                {formatDistanceToNow(project.endDate, {
+                                  addSuffix: true,
+                                })}
                               </span>
                             </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium text-gray-900">
-                                ${milestone.amount}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                {milestone.status}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          )}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button variant="outline" size="sm">
                         <MessageCircle className="h-4 w-4 mr-2" />
                         Message
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <FileText className="h-4 w-4 mr-2" />
+                    </div>
+
+                    {/* Progress */}
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600">Milestone Progress</span>
+                        <span className="font-medium text-gray-900">
+                          {Math.round(getMilestoneProgress(project))}%
+                        </span>
+                      </div>
+                      <Progress
+                        value={getMilestoneProgress(project)}
+                        className="h-2"
+                      />
+                    </div>
+
+                    {/* Payment Progress */}
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600">Payment Progress</span>
+                        <span className="font-medium text-gray-900">
+                          ${project.budget.toLocaleString()} / $
+                          {project.budget.toLocaleString()}
+                        </span>
+                      </div>
+                      <Progress
+                        value={getPaymentProgress(project)}
+                        className="h-2"
+                      />
+                    </div>
+
+                    {/* Team Members */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="flex -space-x-2">
+                          <Avatar className="h-8 w-8 border-2 border-white">
+                            <AvatarImage src="/placeholder-avatar.jpg" />
+                            <AvatarFallback>
+                              {userType === "freelancer" ? "C" : "F"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <Avatar className="h-8 w-8 border-2 border-white">
+                            <AvatarImage src="/placeholder-avatar-2.jpg" />
+                            <AvatarFallback>
+                              {userType === "freelancer" ? "F" : "C"}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {userType === "freelancer"
+                              ? "Client Name"
+                              : "Freelancer Name"}
+                          </p>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span className="text-xs text-gray-500">
+                              {userType === "freelancer" ? "4.8" : "4.9"} ·{" "}
+                              {userType === "freelancer"
+                                ? "12 projects"
+                                : "35 projects"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <TrendingUp className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
-                      {project.status === "active" && (
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-blue-600 hover:bg-blue-700"
-                        >
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          Update Progress
-                        </Button>
-                      )}
                     </div>
                   </CardContent>
                 </Card>

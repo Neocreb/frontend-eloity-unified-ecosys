@@ -522,7 +522,7 @@ export const GroupVideoRoom: React.FC<GroupVideoRoomProps> = ({
               <div className="w-80 border-l border-gray-700 bg-gray-900 flex flex-col">
                 <Tabs
                   value={activeTab}
-                  onValueChange={setActiveTab}
+                  onValueChange={(value) => setActiveTab(value as "chat" | "participants" | "settings")}
                   className="flex-1 flex flex-col"
                 >
                   <TabsList className="grid w-full grid-cols-3 bg-gray-800">

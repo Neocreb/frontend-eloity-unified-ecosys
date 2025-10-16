@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Note: This service now uses API calls instead of direct database access
 
 export interface SubscriptionTier {

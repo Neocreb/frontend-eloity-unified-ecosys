@@ -78,7 +78,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
     }
   };
 
-  const getLastMessageStatus = () => {
+  const getLastMessageStatus = (): 'sent' | 'delivered' | 'read' | 'received' => {
     // This would typically come from the last message sender
     // For now, we'll assume if it's not from current user, it's received
     return chat.lastMessage && chat.lastMessage.includes(currentUserId) ? 'sent' : 'received';
@@ -88,9 +88,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
     const status = getLastMessageStatus();
     if (status === 'sent') {
       return <Check className="h-3 w-3 text-muted-foreground" />;
-    } else if (status === 'delivered') {
-      return <CheckCheck className="h-3 w-3 text-muted-foreground" />;
-    } else if (status === 'read') {
+    } else if (status === 'delivered' || status === 'read') {
       return <CheckCheck className="h-3 w-3 text-blue-500" />;
     }
     return null;
@@ -98,7 +96,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
 
   const renderChatContent = () => {
     if (chat.isGroup) {
-      const groupChat = chat as GroupChatThread;
+      const groupChat = chat as unknown as GroupChatThread;
       const activeMembers = groupChat.participants?.filter(p => p.isActive) || [];
       const onlineMembers = activeMembers.filter(p => p.isOnline);
       const isCurrentUserAdmin = groupChat.participants?.find(p => p.id === currentUserId)?.role === 'admin';

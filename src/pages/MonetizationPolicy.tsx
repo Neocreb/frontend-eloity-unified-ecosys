@@ -74,7 +74,7 @@ const MonetizationPolicy = () => {
                   <li>Marketplace selling capabilities</li>
                   <li>Crypto P2P trading</li>
                   <li>Unified chat & video monetization</li>
-                  <li>SoftPoints earning and rewards</li>
+                  <li>Eloity Points earning and rewards</li>
                   <li>Basic analytics and insights</li>
                   <li>Community support</li>
                 </ul>
@@ -105,7 +105,7 @@ const MonetizationPolicy = () => {
                   <li>Custom thumbnails for better engagement</li>
                   <li>Advanced analytics dashboard</li>
                   <li>100 AI credits monthly for content optimization</li>
-                  <li>SoftPoints bonus and cashback rewards</li>
+                  <li>Eloity Points bonus and cashback rewards</li>
                   <li>Scheduled posts/products/videos/gigs</li>
                   <li>Co-host & stitched video tools</li>
                   <li>Priority customer support</li>
@@ -177,7 +177,7 @@ const MonetizationPolicy = () => {
               <div>
                 <h4 className="font-semibold mb-2 flex items-center gap-2">
                   <Award className="w-4 h-4" />
-                  SoftPoints & Rewards
+                  Eloity Points & Rewards
                 </h4>
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Earn points through platform engagement</li>
@@ -229,9 +229,9 @@ const MonetizationPolicy = () => {
               </div>
 
               <div>
-                <h4 className="font-semibold mb-2">SoftPoints & Crypto</h4>
+                <h4 className="font-semibold mb-2">Eloity Points & Crypto</h4>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>SoftPoints transactions: No fees</li>
+                  <li>Eloity Points transactions: No fees</li>
                   <li>Crypto P2P: 1% transaction fee</li>
                   <li>Wallet operations: Standard network fees</li>
                   <li>Premium users: 50% fee reduction</li>

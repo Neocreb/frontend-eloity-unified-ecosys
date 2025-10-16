@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -82,6 +82,7 @@ import WalletAnalytics from "./pages/wallet/WalletAnalytics";
 import WalletTransactions from "./pages/wallet/WalletTransactions";
 import WalletIntegrations from "./pages/wallet/WalletIntegrations";
 import WalletCards from "./pages/wallet/WalletCards";
+import GiftCards from "./pages/wallet/GiftCards";
 import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -111,6 +112,7 @@ import CryptoTrading from "./pages/CryptoTrading";
 import CryptoP2P from "./pages/CryptoP2P";
 import CryptoPortfolio from "./pages/CryptoPortfolio";
 import CryptoLearn from "./pages/CryptoLearn";
+import DeFi from "./pages/DeFi";
 import CourseDetail from "./pages/CourseDetail";
 import LessonViewer from "./pages/LessonViewer";
 import ArticleViewer from "./pages/ArticleViewer";
@@ -126,6 +128,10 @@ import PlatformSettings from "./pages/admin/PlatformSettings";
 import ContentModeration from "./pages/admin/ContentModeration";
 import AdminMarketplace from "./pages/admin/AdminMarketplace";
 import AdminCrypto from "./pages/admin/AdminCrypto";
+import AdminDeFi from "./pages/admin/AdminDeFi";
+import AdminGiftCards from "./pages/admin/AdminGiftCards";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminCourses from "./pages/admin/AdminCourses";
 import AdminFreelance from "./pages/admin/AdminFreelance";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminLogs from "./pages/admin/AdminLogs";
@@ -387,7 +393,7 @@ const AppRoutes = () => {
         >
           <Route index element={<Navigate to="feed" replace />} />
           <Route path="feed" element={<EnhancedFeedWithTabs />} />
-          {/* <Route path="feed-demo" element={<FeedWithFollowDemo />} /> */}
+          {/* <Route path="feed-demo" element={<FeedWithFollowDemo />} */}
           <Route path="create" element={<EnhancedFreelance />} />
           <Route path="freelance" element={<FreelanceJobs />} />
           <Route
@@ -458,6 +464,7 @@ const AppRoutes = () => {
           <Route path="wallet/transactions" element={<WalletTransactions />} />
           <Route path="wallet/integrations" element={<WalletIntegrations />} />
           <Route path="wallet/cards" element={<WalletCards />} />
+          <Route path="wallet/gift-cards" element={<GiftCards />} />
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
@@ -506,6 +513,7 @@ const AppRoutes = () => {
           <Route path="crypto-p2p" element={<CryptoP2P />} />
           <Route path="crypto-portfolio" element={<CryptoPortfolio />} />
           <Route path="crypto-learn" element={<CryptoLearn />} />
+          <Route path="defi" element={<DeFi />} />
           <Route path="course/:courseId" element={<CourseDetail />} />
           <Route path="course/:courseId/lesson/:lessonId" element={<LessonViewer />} />
           <Route path="article/:articleId" element={<ArticleViewer />} />
@@ -615,6 +623,10 @@ const AppRoutes = () => {
         <Route path="delivery" element={<DeliveryProvidersAdmin />} />
         <Route path="delivery/tracking" element={<DeliveryTrackingAdmin />} />
         <Route path="crypto" element={<AdminCrypto />} />
+        <Route path="defi" element={<AdminDeFi />} />
+        <Route path="gift-cards" element={<AdminGiftCards />} />
+        <Route path="blog" element={<AdminBlog />} />
+        <Route path="courses" element={<AdminCourses />} />
         <Route path="freelance" element={<AdminFreelance />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="logs" element={<AdminLogs />} />
@@ -695,12 +707,12 @@ const App = () => {
   console.log("App rendering");
 
   // Setup global error handlers for fetch aborts
-  React.useEffect(() => {
+  useEffect(() => {
     setupGlobalErrorHandlers();
   }, []);
 
   // Register service worker for PWA
-  React.useEffect(() => {
+  useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")

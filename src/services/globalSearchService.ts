@@ -1,3 +1,5 @@
+import { apiClient } from '@/lib/api';
+
 interface SearchResult {
   id: string;
   type: "user" | "product" | "service" | "post" | "video" | "crypto" | "job";
@@ -311,6 +313,25 @@ class GlobalSearchService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  private transformApiResults(apiResults: any[]): SearchResult[] {
+    // Transform API response to SearchResult format
+    return apiResults.map((item: any) => ({
+      id: item.id || '',
+      type: item.type || 'post',
+      title: item.title || '',
+      description: item.description || '',
+      image: item.image,
+      price: item.price,
+      rating: item.rating,
+      location: item.location,
+      category: item.category,
+      tags: item.tags || [],
+      timestamp: item.timestamp ? new Date(item.timestamp) : undefined,
+      author: item.author,
+      stats: item.stats
+    }));
+  }
+
   async search(params: SearchParams): Promise<SearchResponse> {
     try {
       // Use only real API calls - no mock data fallback
@@ -326,9 +347,10 @@ class GlobalSearchService {
         suggestions: [],
         relatedSearches: [],
         facets: {
-          category: [],
-          price: [],
-          location: []
+          categories: [],
+          priceRanges: [],
+          ratings: [],
+          locations: []
         }
       };
     }

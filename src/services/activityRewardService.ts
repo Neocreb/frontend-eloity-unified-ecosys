@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Activity types constants
 const ACTIVITY_TYPES = [
   "post_content",

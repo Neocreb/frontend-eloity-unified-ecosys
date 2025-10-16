@@ -289,7 +289,7 @@ const ArticleViewer = () => {
   return (
     <>
       <Helmet>
-        <title>{article.title} | Softchat</title>
+        <title>{article.title} | Eloity</title>
         <meta name="description" content={article.excerpt} />
       </Helmet>
 

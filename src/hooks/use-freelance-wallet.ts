@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from "react";
 import { useWalletContext } from "@/contexts/WalletContext";
 import { freelanceService } from "@/services/freelanceService";

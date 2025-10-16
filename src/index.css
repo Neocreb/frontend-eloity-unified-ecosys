@@ -47,11 +47,11 @@
   --eloity-400: 190 100% 55%;
   --eloity-500: 190 100% 45%;
   
-  /* Legacy Softchat colors for compatibility - using same values as primary */
-  --softchat-primary: 221.2 83.2% 53.3%;
-  --softchat-accent: 221.2 83.2% 53.3%;
-  --softchat-600: 221.2 83.2% 43.3%;
-  --softchat-700: 221.2 83.2% 33.3%;
+  /* Legacy Eloity colors for compatibility - using same values as primary */
+  --eloity-primary: 221.2 83.2% 53.3%;
+  --eloity-accent: 221.2 83.2% 53.3%;
+  --eloity-600: 221.2 83.2% 43.3%;
+  --eloity-700: 221.2 83.2% 33.3%;
   
   /* Sidebar */
   --sidebar-background: 0 0% 98%;

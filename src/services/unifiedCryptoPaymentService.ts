@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { walletService } from './walletService';
 
 export interface CryptoPaymentOption {

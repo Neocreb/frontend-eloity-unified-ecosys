@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Bookmark, Building, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { trendingTopics as mockTrendingTopics, suggestedUsers as mockSuggestedUsers, groups as mockGroups, pages as mockPages } from "@/data/mockExploreData";
-import { mockUsers } from "@/data/mockUsers";
 import SavedContentService from "@/services/savedContentService";
 import { useLiveContentContextSafe } from "@/contexts/LiveContentContext";
+import { exploreService } from "@/services/exploreService";
 
 export type QuickLinkItem = {
   name: string;
@@ -27,12 +26,30 @@ export function useQuickLinksStats(): QuickLinkItem[] {
   // Saved posts from SavedContentService
   const savedCount = SavedContentService.getSavedPosts().length;
 
-  // Groups/Pages from mock datasets (can be swapped to API later)
-  const groupsCount = mockGroups.length;
-  const pagesCount = mockPages.length;
+  // Groups/Pages from real database (using exploreService)
+  const { data: groupsData } = useQuery({
+    queryKey: ["sidebar-groups"],
+    queryFn: () => exploreService.getSuggestedGroups(10),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  // Friends count placeholder using mockUsers length; ready for API swap
-  const friendsCount = Object.keys(mockUsers).length;
+  const { data: pagesData } = useQuery({
+    queryKey: ["sidebar-pages"],
+    queryFn: () => exploreService.getSuggestedPages(10),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const groupsCount = groupsData?.length || 0;
+  const pagesCount = pagesData?.length || 0;
+
+  // Friends count from real database (using exploreService)
+  const { data: usersData } = useQuery({
+    queryKey: ["sidebar-users"],
+    queryFn: () => exploreService.getSuggestedUsers(50),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const friendsCount = usersData?.length || 0;
 
   // Memories are not modeled yet; expose as 0 while keeping key for future
   const memoriesCount = Number(localStorage.getItem("eloity_memories_count") || 0);
@@ -56,16 +73,14 @@ export function useTrendingTopicsData() {
     queryKey: ["trending-topics"],
     queryFn: async () => {
       try {
-        const res = await fetch("/api/trending/topics");
-        if (!res.ok) throw new Error("Failed to load trending topics");
-        const data = await res.json();
-        return Array.isArray(data) ? data : mockTrendingTopics;
-      } catch {
-        return mockTrendingTopics;
+        const data = await exploreService.getTrendingHashtags(10);
+        return data;
+      } catch (error) {
+        console.error("Failed to load trending topics:", error);
+        return [];
       }
     },
     staleTime: 60_000,
-    initialData: mockTrendingTopics,
   });
 }
 
@@ -75,16 +90,31 @@ export function useSuggestedUsersData(max: number = 6) {
     queryKey: ["suggested-users", max],
     queryFn: async () => {
       try {
-        const res = await fetch(`/api/users/suggested?limit=${max}`);
-        if (!res.ok) throw new Error("Failed to load suggested users");
-        const data = await res.json();
-        return Array.isArray(data) ? data.slice(0, max) : mockSuggestedUsers.slice(0, max);
-      } catch {
-        return mockSuggestedUsers.slice(0, max);
+        const data = await exploreService.getSuggestedUsers(max);
+        return data.slice(0, max);
+      } catch (error: any) {
+        // Log errors safely without attempting to re-read response bodies
+        const safeLog = (err: any) => {
+          if (!err) return String(err);
+          if (err instanceof Error) return `${err.message}\n${err.stack}`;
+          try {
+            return JSON.stringify(err);
+          } catch (_) {
+            // Fallback for non-serializable objects (e.g., Response with consumed body)
+            try {
+              return String(err);
+            } catch (__)
+            {
+              return "[unserializable error]";
+            }
+          }
+        };
+
+        console.error("Failed to load suggested users:", safeLog(error));
+        return [];
       }
     },
     staleTime: 60_000,
-    initialData: mockSuggestedUsers.slice(0, max),
   });
 }
 

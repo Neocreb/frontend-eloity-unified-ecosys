@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 interface CryptoDepositModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   onKYCSubmit?: (data: any) => Promise<{success: boolean, error?: any}>;
 }
 
@@ -145,6 +146,7 @@ const supportedCryptos: CryptoCurrency[] = [
 export default function CryptoDepositModal({
   isOpen,
   onClose,
+  onSuccess,
   onKYCSubmit,
 }: CryptoDepositModalProps) {
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoCurrency | null>(
@@ -206,6 +208,7 @@ export default function CryptoDepositModal({
         description: `Your ${selectedCrypto?.name} deposit address is ready. Funds will appear after ${selectedCrypto?.confirmations} confirmations.`,
       });
       setIsLoading(false);
+      onSuccess?.();
       onClose();
     }, 1000);
   };

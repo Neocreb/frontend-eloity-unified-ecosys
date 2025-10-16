@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Mail, Lock, User, EyeOff, Eye, Github } from "lucide-react";
-import SoftchatLogo from "@/components/ui/logo";
+import EloityLogo from "@/components/ui/logo";
 
 type AuthMode = "signin" | "signup";
 
@@ -38,7 +38,7 @@ const AuthForm = () => {
   return (
     <div className="mx-auto w-full max-w-md space-y-6 p-6 md:p-8">
       <div className="flex flex-col items-center space-y-2 text-center">
-        <SoftchatLogo className="h-12 w-12" />
+        <EloityLogo className="h-12 w-12" />
         <p className="text-sm text-muted-foreground">
           {mode === "signin"
             ? "Sign in to your account to continue"

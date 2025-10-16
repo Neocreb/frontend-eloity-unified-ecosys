@@ -121,7 +121,7 @@ const SimpleChatRoom = () => {
   return (
     <>
       <Helmet>
-        <title>Simple Chat with {displayName} | Softchat</title>
+        <title>Simple Chat with {displayName} | Eloity</title>
       </Helmet>
 
       <div className="h-screen bg-background flex flex-col">

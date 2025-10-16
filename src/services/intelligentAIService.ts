@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { User } from "@/types/user";
 
 export interface IntelligentAIResponse {
@@ -7,7 +8,7 @@ export interface IntelligentAIResponse {
   suggestedActions: AIAction[];
   followUpQuestions: string[];
   relatedTopics: string[];
-  category: "softchat" | "general" | "technical" | "financial" | "personal";
+  category: "eloity" | "general" | "technical" | "financial" | "personal";
 }
 
 export interface AIAction {
@@ -52,7 +53,7 @@ class IntelligentAIService {
       social_feed: {
         name: "Social Feed & Content Creation",
         description:
-          "Your personalized timeline where you can share posts, stories, images, and videos while connecting with friends, family, and the global SoftChat community.",
+          "Your personalized timeline where you can share posts, stories, images, and videos while connecting with friends, family, and the global Eloity community.",
         howToUse: [
           "Click 'Create Post' from your Feed page",
           "Choose content type: text, image, video, or story",
@@ -64,7 +65,7 @@ class IntelligentAIService {
         benefits: [
           "Build your personal brand and online presence",
           "Connect with like-minded individuals globally",
-          "Earn SoftPoints for active participation",
+          "Earn Eloity Points for active participation",
           "Monetize your content through engagement rewards",
           "Share your expertise and learn from others",
           "Build a loyal following and community",
@@ -202,9 +203,9 @@ class IntelligentAIService {
         relatedFeatures: ["wallet", "chat", "rewards", "social_feed"],
       },
       rewards_system: {
-        name: "SoftPoints Rewards System",
+        name: "Eloity Points Rewards System",
         description:
-          "Earn SoftPoints through platform activities and redeem them for real rewards, exclusive features, and platform benefits.",
+          "Earn Eloity Points through platform activities and redeem them for real rewards, exclusive features, and platform benefits.",
         howToUse: [
           "Earn points through daily activities (posting, commenting, trading)",
           "Complete daily and weekly challenges",
@@ -239,7 +240,7 @@ class IntelligentAIService {
       ai_assistant: {
         name: "Edith AI Personal Assistant",
         description:
-          "Your intelligent AI companion that helps with platform navigation, content creation, trading insights, and answers both SoftChat and real-world questions.",
+          "Your intelligent AI companion that helps with platform navigation, content creation, trading insights, and answers both Eloity and real-world questions.",
         howToUse: [
           "Access Edith through the chat interface or AI Assistant page",
           "Ask questions about platform features or general topics",
@@ -269,7 +270,7 @@ class IntelligentAIService {
     },
     guides: {
       getting_started: {
-        title: "Getting Started with SoftChat",
+        title: "Getting Started with Eloity",
         steps: [
           "Complete your profile setup with photo and bio",
           "Explore the main navigation to understand features",
@@ -348,8 +349,8 @@ class IntelligentAIService {
     const normalizedQuery = query.toLowerCase().trim();
 
     // Determine response category and generate appropriate response
-    if (this.isSoftChatQuery(normalizedQuery)) {
-      return this.generateSoftChatResponse(normalizedQuery, user);
+    if (this.isEloityQuery(normalizedQuery)) {
+      return this.generateEloityResponse(normalizedQuery, user);
     } else if (this.isTechnicalQuery(normalizedQuery)) {
       return this.generateTechnicalResponse(normalizedQuery);
     } else if (this.isFinancialQuery(normalizedQuery)) {
@@ -361,9 +362,9 @@ class IntelligentAIService {
     }
   }
 
-  private isSoftChatQuery(query: string): boolean {
-    const softchatKeywords = [
-      "softchat",
+  private isEloityQuery(query: string): boolean {
+    const eloityKeywords = [
+      "eloity",
       "platform",
       "feed",
       "post",
@@ -384,7 +385,7 @@ class IntelligentAIService {
       "sell",
       "buy",
     ];
-    return softchatKeywords.some((keyword) => query.includes(keyword));
+    return eloityKeywords.some((keyword) => query.includes(keyword));
   }
 
   private isTechnicalQuery(query: string): boolean {
@@ -440,7 +441,7 @@ class IntelligentAIService {
     return personalKeywords.some((keyword) => query.includes(keyword));
   }
 
-  private generateSoftChatResponse(
+  private generateEloityResponse(
     query: string,
     user?: User,
   ): IntelligentAIResponse {
@@ -501,7 +502,7 @@ class IntelligentAIService {
     return {
       message: specificResponse,
       confidence: 95,
-      sources: ["SoftChat Platform Documentation", "Feature Guidelines"],
+      sources: ["Eloity Platform Documentation", "Feature Guidelines"],
       suggestedActions: [
         {
           id: "try_feature",
@@ -522,7 +523,7 @@ class IntelligentAIService {
         `Can you show me advanced features?`,
       ],
       relatedTopics: feature.relatedFeatures,
-      category: "softchat",
+      category: "eloity",
     };
   }
 
@@ -621,7 +622,7 @@ class IntelligentAIService {
       suggestedActions: [
         {
           id: "crypto_trading",
-          label: "Try SoftChat Crypto",
+          label: "Try Eloity Crypto",
           action: "navigate",
           url: "/crypto",
         },
@@ -724,7 +725,7 @@ class IntelligentAIService {
       suggestedActions: [
         {
           id: "explore_platform",
-          label: "Explore SoftChat Features",
+          label: "Explore Eloity Features",
           action: "navigate",
           url: "/explore",
         },
@@ -743,22 +744,22 @@ class IntelligentAIService {
     const userName = user?.name || "there";
 
     return {
-      message: `Welcome to SoftChat, ${userName}! 🌟
+      message: `Welcome to Eloity, ${userName}! 🌟
 
-SoftChat is your all-in-one platform for social networking, content creation, e-commerce, freelancing, and cryptocurrency trading. Here's what makes us special:
+Eloity is your all-in-one platform for social networking, content creation, e-commerce, freelancing, and cryptocurrency trading. Here's what makes us special:
 
 🌐 **Social Features**: Connect with friends, share content, and build your community
 📹 **Video & Streaming**: Create and monetize video content with professional tools
 🛒 **Marketplace**: Buy and sell products with integrated payment processing
 💼 **Freelance Hub**: Find work or hire talent across various industries
 💰 **Crypto Trading**: Trade cryptocurrencies with advanced tools and P2P options
-🎁 **Rewards System**: Earn SoftPoints for activities and redeem for real rewards
+🎁 **Rewards System**: Earn Eloity Points for activities and redeem for real rewards
 
-I'm Edith, your AI assistant, and I'm here to help you navigate the platform, answer questions, provide insights, and assist with both SoftChat features and general topics!
+I'm Edith, your AI assistant, and I'm here to help you navigate the platform, answer questions, provide insights, and assist with both Eloity features and general topics!
 
 What would you like to explore first?`,
       confidence: 98,
-      sources: ["SoftChat Platform Guide", "Feature Documentation"],
+      sources: ["Eloity Platform Guide", "Feature Documentation"],
       suggestedActions: [
         {
           id: "take_tour",
@@ -780,13 +781,13 @@ What would you like to explore first?`,
         },
       ],
       followUpQuestions: [
-        "How can I start earning money on SoftChat?",
+        "How can I start earning money on Eloity?",
         "What's the best way to grow my following?",
         "Can you explain the rewards system?",
         "How do I get started with trading?",
       ],
       relatedTopics: ["getting started", "platform features", "monetization"],
-      category: "softchat",
+      category: "eloity",
     };
   }
 

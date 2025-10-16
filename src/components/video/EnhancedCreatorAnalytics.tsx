@@ -258,7 +258,7 @@ const EnhancedCreatorAnalytics: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Creator Analytics</h2>
-          <p className="text-muted-foreground">Track your content performance and audience insights</p>
+          <p className="text-muted-foreground hidden sm:block">Track your content performance and audience insights</p>
         </div>
         <div className="flex gap-2">
           <Button

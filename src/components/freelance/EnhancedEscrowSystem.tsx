@@ -52,7 +52,7 @@ interface EscrowContract {
   clientId: string;
   freelancerId: string;
   amount: number;
-  currency: "USDT" | "BTC" | "ETH" | "SoftPoints";
+  currency: "USDT" | "BTC" | "ETH" | "Eloity Points";
   status: "pending" | "funded" | "released" | "disputed" | "cancelled";
   autoReleaseDate: Date;
   autoReleaseEnabled: boolean;
@@ -255,7 +255,7 @@ const EnhancedEscrowSystem: React.FC = () => {
         return "₿";
       case "ETH":
         return "Ξ";
-      case "SoftPoints":
+      case "Eloity Points":
         return "SP";
       default:
         return "$";
@@ -362,7 +362,7 @@ const EnhancedEscrowSystem: React.FC = () => {
                 <SelectItem value="USDT">USDT</SelectItem>
                 <SelectItem value="BTC">Bitcoin</SelectItem>
                 <SelectItem value="ETH">Ethereum</SelectItem>
-                <SelectItem value="SoftPoints">SoftPoints</SelectItem>
+                <SelectItem value="Eloity Points">Eloity Points</SelectItem>
               </SelectContent>
             </Select>
           </div>

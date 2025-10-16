@@ -313,14 +313,14 @@ const CryptoDetailModal: React.FC<CryptoDetailModalProps> = ({
                     <div
                       className={`text-lg font-bold ${
                         isPositive(
-                          crypto.price_change_percentage_7d_in_currency,
+                          crypto.price_change_percentage_7d,
                         )
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
                     >
                       {formatPercentage(
-                        crypto.price_change_percentage_7d_in_currency,
+                        crypto.price_change_percentage_7d,
                       )}
                     </div>
                   </div>
@@ -330,14 +330,14 @@ const CryptoDetailModal: React.FC<CryptoDetailModalProps> = ({
                     <div
                       className={`text-lg font-bold ${
                         isPositive(
-                          crypto.price_change_percentage_30d_in_currency,
+                          crypto.price_change_percentage_30d,
                         )
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
                     >
                       {formatPercentage(
-                        crypto.price_change_percentage_30d_in_currency,
+                        crypto.price_change_percentage_30d,
                       )}
                     </div>
                   </div>

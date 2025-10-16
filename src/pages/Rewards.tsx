@@ -22,7 +22,7 @@ interface CreatorRevenueData {
     boosts: number;
     services: number;
   };
-  softPointsEarned: number;
+  eloityPointsEarned: number;
   availableToWithdraw: number;
 }
 
@@ -59,7 +59,7 @@ const CreatorEconomy = () => {
             boosts: 0,
             services: 1300,
           },
-          softPointsEarned: 630,
+          eloityPointsEarned: 630,
           availableToWithdraw: 9700,
         });
       }
@@ -75,7 +75,7 @@ const CreatorEconomy = () => {
           boosts: 0,
           services: 1300,
         },
-        softPointsEarned: 630,
+        eloityPointsEarned: 630,
         availableToWithdraw: 9700,
       });
     } finally {

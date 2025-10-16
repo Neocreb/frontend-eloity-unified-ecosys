@@ -1,7 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 
+// Load environment variables
+import dotenv from 'dotenv';
 dotenv.config();
+
+// Simple test to check if environment variables are set
+console.log('Checking Supabase environment variables...');
+console.log('VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL);
+console.log('VITE_SUPABASE_PUBLISHABLE_KEY:', process.env.VITE_SUPABASE_PUBLISHABLE_KEY ? 'SET' : 'NOT SET');
+
+if (process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+  console.log('✅ Environment variables are set');
+} else {
+  console.log('❌ Environment variables are missing');
+  console.log('Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file');
+}
 
 async function testSupabaseConnection() {
   try {

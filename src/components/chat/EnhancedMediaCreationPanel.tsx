@@ -55,6 +55,7 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
   const [aiPrompt, setAiPrompt] = useState("");
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+  const [userCredits, setUserCredits] = useState(10); // AI generation credits
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -189,6 +190,9 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
               width: canvasRef.current?.width || 400,
               height: canvasRef.current?.height || 400,
               tags: ["meme", "custom", "user-generated"],
+              packId: "custom-memes",
+              packName: "My Memes",
+              usageCount: 0,
               metadata: {
                 topText: memeText.top,
                 bottomText: memeText.bottom,
@@ -269,6 +273,9 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
         height: canvas.height,
         tags: ["gif", "animated", "custom", "user-generated"],
         animated: true,
+        packId: "custom-gifs",
+        packName: "My GIFs",
+        usageCount: 0,
         metadata: {
           originalFile: videoFile.name,
           duration: Math.min(video.duration * 1000, 5000),
@@ -363,6 +370,9 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
           width: canvas.width,
           height: canvas.height,
           tags: ["photo", "camera", "custom", "user-generated"],
+          packId: "custom-photos",
+          packName: "My Photos",
+          usageCount: 0,
           metadata: {
             capturedAt: new Date().toISOString(),
             camera: true,
@@ -505,6 +515,9 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
             width: canvas.width,
             height: canvas.height,
             tags: ["ai-generated", "custom", "user-generated"],
+            packId: "ai-stickers",
+            packName: "AI Generated",
+            usageCount: 0,
             metadata: {
               aiGenerated: true,
               prompt: aiPrompt,
@@ -560,6 +573,9 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
         width: 512,
         height: 512,
         tags: ["photo", "custom", "user-generated"],
+        packId: "custom-photos",
+        packName: "My Photos",
+        usageCount: 0,
         metadata: {
           capturedAt: new Date().toISOString(),
           originalFile: file.name,

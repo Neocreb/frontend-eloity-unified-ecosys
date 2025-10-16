@@ -40,7 +40,7 @@ const ExploreGroups = ({ groups }: ExploreGroupsProps) => {
   const { toast } = useToast();
 
   // Mock user groups data
-  const mockJoinedGroups: Group[] = [
+  const mockJoinedGroups: any[] = [
     {
       id: 'joined-1',
       name: 'Tech Enthusiasts',
@@ -48,7 +48,8 @@ const ExploreGroups = ({ groups }: ExploreGroupsProps) => {
       category: 'Technology',
       cover: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400',
       isJoined: true,
-      description: 'Discussion about latest tech trends'
+      description: 'Discussion about latest tech trends',
+      privacy: 'public'
     },
     {
       id: 'joined-2',
@@ -57,11 +58,12 @@ const ExploreGroups = ({ groups }: ExploreGroupsProps) => {
       category: 'Finance',
       cover: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400',
       isJoined: true,
-      description: 'Cryptocurrency trading strategies and tips'
+      description: 'Cryptocurrency trading strategies and tips',
+      privacy: 'public'
     }
   ];
 
-  const mockMyGroups: Group[] = [
+  const mockMyGroups: any[] = [
     {
       id: 'my-1',
       name: 'Web3 Developers',
@@ -69,7 +71,8 @@ const ExploreGroups = ({ groups }: ExploreGroupsProps) => {
       category: 'Technology',
       cover: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400',
       isOwner: true,
-      description: 'Building the future of web3'
+      description: 'Building decentralized applications',
+      privacy: 'public'
     }
   ];
 

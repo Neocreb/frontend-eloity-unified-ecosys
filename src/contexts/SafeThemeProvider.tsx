@@ -1,33 +1,10 @@
-import * as React from "react";
+import { Component, useEffect, ReactNode } from "react";
 import { ThemeProvider } from "./ThemeContext";
 
-// Create a safe version of useLayoutEffect that works on both client and server
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined" &&
-  React && React.useLayoutEffect
-    ? React.useLayoutEffect
-    : React && React.useEffect || function useEffect(fn, deps) { if (typeof window !== "undefined") { fn(); } };
-
-// Fallback theme context that applies light theme without hooks
-const FallbackThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  // Apply fallback theme to DOM immediately on render
-  if (useIsomorphicLayoutEffect) {
-    useIsomorphicLayoutEffect(() => {
-      if (typeof window !== "undefined" && typeof document !== "undefined") {
-        try {
-          const root = document.documentElement;
-          root.classList.add("light");
-          root.classList.remove("dark");
-        } catch (error) {
-          console.warn("Failed to apply fallback theme:", error);
-        }
-      }
-    }, []);
-  } else {
-    // Direct DOM manipulation if hooks are not available
-    if (typeof window !== "undefined" && typeof document !== "undefined") {
+// Fallback theme provider that applies light theme
+function FallbackThemeProvider({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    if (typeof document !== "undefined") {
       try {
         const root = document.documentElement;
         root.classList.add("light");
@@ -36,10 +13,10 @@ const FallbackThemeProvider = ({ children }: { children: React.ReactNode }) => {
         console.warn("Failed to apply fallback theme:", error);
       }
     }
-  }
+  }, []);
 
   return <>{children}</>;
-};
+}
 
 interface SafeThemeProviderState {
   hasError: boolean;
@@ -47,10 +24,10 @@ interface SafeThemeProviderState {
 }
 
 interface SafeThemeProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-class SafeThemeProvider extends React.Component<
+class SafeThemeProvider extends Component<
   SafeThemeProviderProps,
   SafeThemeProviderState
 > {
@@ -64,7 +41,7 @@ class SafeThemeProvider extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: any) {
     console.error("ThemeProvider Error:", error, errorInfo);
 
     // Apply fallback light theme immediately
@@ -83,12 +60,6 @@ class SafeThemeProvider extends React.Component<
   }
 
   render() {
-    // Safety check for React availability
-    if (!React) {
-      console.warn("React not available, using direct render");
-      return <>{this.props.children}</>;
-    }
-
     if (this.state.hasError) {
       console.warn(
         "Using fallback theme provider due to error:",

@@ -22,13 +22,13 @@ export const demoEdithCapabilities = async () => {
     { query: "How's the weather?", category: "🌤️ Weather" },
     { query: "Calculate 25 * 47", category: "🧮 Calculations" },
 
-    // SoftChat platform queries
-    { query: "How do I create a post?", category: "📱 SoftChat Features" },
+    // Eloity platform queries
+    { query: "How do I create a post?", category: "📱 Eloity Features" },
     {
       query: "Tell me about crypto trading",
       category: "💱 Platform Knowledge",
     },
-    { query: "How can I earn money on SoftChat?", category: "💸 Monetization" },
+    { query: "How can I earn money on Eloity?", category: "💸 Monetization" },
     { query: "What is the marketplace?", category: "🛒 Marketplace" },
 
     // Personal/friendly queries
@@ -75,7 +75,7 @@ export const demoEdithCapabilities = async () => {
   }
 
   console.log("✨ Demo Complete! Edith is now:");
-  console.log("• 🧠 Knowledgeable about all SoftChat features");
+  console.log("• 🧠 Knowledgeable about all Eloity features");
   console.log("• 🕐 Providing real-time information");
   console.log("• 💝 Emotionally supportive and friendly");
   console.log("• 💬 Great at casual conversation");
@@ -86,7 +86,7 @@ export const demoEdithCapabilities = async () => {
 // Sample conversation starters for users
 export const conversationStarters = [
   // Platform help
-  "How do I get started on SoftChat?",
+  "How do I get started on Eloity?",
   "What's the best way to earn money here?",
   "Can you explain the crypto features?",
   "How does the marketplace work?",

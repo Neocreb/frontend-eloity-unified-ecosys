@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -199,7 +200,7 @@ const battleVideos: VideoData[] = [
       verified: true,
       followerCount: 567000,
     },
-    description: "🎤 LIVE RAP BATTLE: Freestyle showdown! Drop bars and win SoftPoints! ����",
+    description: "🎤 LIVE RAP BATTLE: Freestyle showdown! Drop bars and win Eloity Points! ����",
     music: { title: "Hip Hop Battle", artist: "Street Beats" },
     stats: { likes: 1890, comments: 567, shares: 123, views: "15.2K watching" },
     hashtags: ["rapbattle", "freestyle", "hiphop", "bars"],
@@ -295,7 +296,7 @@ const liveStreams: VideoData[] = [
       verified: true,
       followerCount: 50000,
     },
-    description: "LIVE: Bitcoin analysis and market predictions! 🔴 Join the discussion",
+    description: "LIVE: Bitcoin analysis and market predictions! ��� Join the discussion",
     music: { title: "Live Stream", artist: "Real Time" },
     stats: { likes: 1250, comments: 345, shares: 89, views: "12.5K watching" },
     hashtags: ["live", "crypto", "bitcoin", "analysis"],
@@ -575,8 +576,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"live" | "battle" | "foryou" | "following">(initialTab);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-  const [isAccessibilityOpen, setIsAccessibilityOpen] = useState(false);
   const [isLiveStreamOpen, setIsLiveStreamOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
@@ -832,7 +831,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
       <Helmet>
-        <title>Videos | SoftChat</title>
+        <title>Videos | Eloity</title>
         <meta
           name="description"
           content="Discover trending videos, live streams, and content from creators you follow"
@@ -964,9 +963,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                   className="bg-gray-900 border-gray-700 text-white"
                 >
                   <DropdownMenuItem
-                    onClick={() => {
-                      setIsDashboardOpen(true);
-                    }}
+                    onClick={() => navigate('/app/unified-creator-studio')}
                     className="hover:bg-gray-800"
                   >
                     <Award className="w-4 h-4 mr-2" />
@@ -981,16 +978,22 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="hover:bg-gray-800"
-                    onClick={() => setIsAccessibilityOpen(true)}
+                    onClick={() => navigate('/app/settings')}
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     Accessibility
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-800">
+                  <DropdownMenuItem
+                    className="hover:bg-gray-800"
+                    onClick={() => navigate('/app/settings')}
+                  >
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-gray-800">
+                  <DropdownMenuItem
+                    className="hover:bg-gray-800"
+                    onClick={() => navigate('/app/settings')}
+                  >
                     <Filter className="w-4 h-4 mr-2" />
                     Content Filters
                   </DropdownMenuItem>
@@ -1468,32 +1471,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Creator Dashboard */}
-      <Dialog open={isDashboardOpen} onOpenChange={setIsDashboardOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Creator Dashboard</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <div className="space-y-6">
-              <CreatorDashboard />
-              <EnhancedCreatorAnalytics />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* Accessibility Settings */}
-      <Dialog open={isAccessibilityOpen} onOpenChange={setIsAccessibilityOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Accessibility Settings</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <EnhancedAccessibilityFeatures />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

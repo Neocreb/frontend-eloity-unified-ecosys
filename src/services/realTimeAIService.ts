@@ -1,5 +1,5 @@
 import { IntelligentAIResponse, AIAction } from "./intelligentAIService";
-import { softChatKnowledgeService } from "./softchatKnowledgeService";
+import { eloityKnowledgeService } from "./eloityKnowledgeService";
 
 interface User {
   id: string;
@@ -13,7 +13,7 @@ interface RealTimeData {
   data: any;
 }
 
-interface SoftChatKnowledge {
+interface EloityKnowledge {
   features: Record<string, any>;
   howTo: Record<string, string[]>;
   tips: Record<string, string[]>;
@@ -33,8 +33,8 @@ export class RealTimeAIService {
   private cache: Map<string, RealTimeData> = new Map();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  // Comprehensive SoftChat platform knowledge
-  private softchatKnowledge: SoftChatKnowledge = {
+  // Comprehensive Eloity platform knowledge
+  private eloityKnowledge: EloityKnowledge = {
     features: {
       social: {
         name: "Social Feed & Content",
@@ -126,7 +126,7 @@ export class RealTimeAIService {
         ],
       },
       rewards: {
-        name: "SoftPoints Rewards",
+        name: "Eloity Points Rewards",
         description:
           "Earn points for platform activity and redeem for real rewards, gift cards, and platform benefits.",
         capabilities: [
@@ -181,7 +181,7 @@ export class RealTimeAIService {
       "earn eloits": [
         "Stay active by posting and engaging daily",
         "Complete your profile 100%",
-        "Refer friends to join SoftChat",
+        "Refer friends to join Eloity",
         "Participate in community events",
         "Use different platform features",
         "Maintain positive community standing",
@@ -419,9 +419,9 @@ export class RealTimeAIService {
         );
       }
 
-      // Handle SoftChat platform queries
-      if (this.isSoftChatQuery(normalizedQuery)) {
-        return this.handleSoftChatQuery(
+      // Handle Eloity platform queries
+      if (this.isEloityQuery(normalizedQuery)) {
+        return this.handleEloityQuery(
           normalizedQuery,
           user,
           conversationAnalysis,
@@ -732,7 +732,7 @@ Last updated: ${now.toLocaleTimeString()}`;
 
 ${mockNews.map((headline, i) => `${i + 1}. ${headline}`).join("\n")}
 
-Stay informed with real-time updates on SoftChat!`;
+Stay informed with real-time updates on Eloity!`;
 
     return {
       message: response,
@@ -906,14 +906,14 @@ Markets updated in real-time.`;
           : "evening";
 
     return {
-      message: `Hi ${user.name || "there"}! I'm Edith, your real-time AI assistant. I can help you with current information like time, weather, crypto prices, news, and calculations. I can also answer questions about SoftChat platform features. What would you like to know?`,
+      message: `Hi ${user.name || "there"}! I'm Edith, your real-time AI assistant. I can help you with current information like time, weather, crypto prices, news, and calculations. I can also answer questions about Eloity platform features. What would you like to know?`,
       confidence: 80,
       sources: ["Real-time AI"],
       category: "general",
       suggestedActions: [
         {
           id: "explore",
-          label: "Explore SoftChat",
+          label: "Explore Eloity",
           action: "navigate",
           url: "/explore",
         },
@@ -922,7 +922,7 @@ Markets updated in real-time.`;
         "What's the current time?",
         "Show me crypto prices",
         "What's trending in news?",
-        "Help me with SoftChat features",
+        "Help me with Eloity features",
       ],
       relatedTopics: ["platform help", "real-time data", "assistance"],
     };
@@ -936,7 +936,7 @@ Markets updated in real-time.`;
     user: User,
   ): IntelligentAIResponse {
     return {
-      message: `I apologize, but I'm having trouble processing that request right now. As your real-time AI assistant, I can help with current time, crypto prices, weather, news, calculations, and SoftChat platform features. Please try asking something else!`,
+      message: `I apologize, but I'm having trouble processing that request right now. As your real-time AI assistant, I can help with current time, crypto prices, weather, news, calculations, and Eloity platform features. Please try asking something else!`,
       confidence: 60,
       sources: ["AI Assistant"],
       category: "general",
@@ -951,11 +951,11 @@ Markets updated in real-time.`;
   }
 
   /**
-   * Check if query is about SoftChat platform
+   * Check if query is about Eloity platform
    */
-  private isSoftChatQuery(query: string): boolean {
-    const softchatKeywords = [
-      "softchat",
+  private isEloityQuery(query: string): boolean {
+    const eloityKeywords = [
+      "eloity",
       "platform",
       "feature",
       "how to",
@@ -979,13 +979,13 @@ Markets updated in real-time.`;
       "profile",
       "account",
     ];
-    return softchatKeywords.some((keyword) => query.includes(keyword));
+    return eloityKeywords.some((keyword) => query.includes(keyword));
   }
 
   /**
-   * Handle SoftChat platform queries with comprehensive knowledge base
+   * Handle Eloity platform queries with comprehensive knowledge base
    */
-  private handleSoftChatQuery(
+  private handleEloityQuery(
     query: string,
     user: User,
     analysis?: ConversationAnalysis,
@@ -1071,7 +1071,7 @@ Markets updated in real-time.`;
     const dailyTips = softChatKnowledgeService.getDailyEngagementTips();
 
     return {
-      message: `${greeting} ${user.name || "friend"}! ${enthusiasm} SoftChat is your all-in-one platform where you can connect socially, trade crypto, buy/sell in the marketplace, find freelance work, and so much more! 
+      message: `${greeting} ${user.name || "friend"}! ${enthusiasm} Eloity is your all-in-one platform where you can connect socially, trade crypto, buy/sell in the marketplace, find freelance work, and so much more! 
 
 Think of it as your digital life hub - everything you need is right here. Here are today's personalized tips for you:
 
@@ -1080,8 +1080,8 @@ Think of it as your digital life hub - everything you need is right here. Here a
 
 What specific feature would you like to explore? I'm here to guide you through everything! 😊`,
       confidence: 95,
-      sources: ["Comprehensive SoftChat Knowledge"],
-      category: "softchat",
+      sources: ["Comprehensive Eloity Knowledge"],
+      category: "eloity",
       suggestedActions: [
         {
           id: "explore",
@@ -1119,12 +1119,12 @@ What specific feature would you like to explore? I'm here to guide you through e
   private handleHowToQuery(query: string, user: User): IntelligentAIResponse {
     const supportive = this.getRandomItem(this.personalityTraits.support);
 
-    for (const [topic, steps] of Object.entries(this.softchatKnowledge.howTo)) {
+    for (const [topic, steps] of Object.entries(this.eloityKnowledge.howTo)) {
       if (query.includes(topic.replace(" ", "")) || query.includes(topic)) {
         const stepsList = steps
           .map((step, i) => `${i + 1}. ${step}`)
           .join("\n");
-        const tips = this.softchatKnowledge.tips[topic.split(" ")[0]] || [];
+        const tips = this.eloityKnowledge.tips[topic.split(" ")[0]] || [];
         const tipText =
           tips.length > 0
             ? `
@@ -1136,8 +1136,8 @@ What specific feature would you like to explore? I'm here to guide you through e
         return {
           message: `${supportive} I'll walk you through ${topic} step by step! \n\n${stepsList}${tipText}\n\nDon't worry if it seems overwhelming at first - you'll get the hang of it quickly! I'm always here if you need more help. 😊`,
           confidence: 98,
-          sources: ["SoftChat Tutorials"],
-          category: "softchat",
+          sources: ["Eloity Tutorials"],
+          category: "eloity",
           suggestedActions: [
             {
               id: "start",
@@ -1163,13 +1163,13 @@ What specific feature would you like to explore? I'm here to guide you through e
 • Trading cryptocurrency
 • Selling on the marketplace
 • Finding freelance work
-• Earning SoftPoints
+• Earning Eloity Points
 • Setting up your profile
 
 Just let me know what interests you most! 🌟`,
       confidence: 85,
-      sources: ["SoftChat Help"],
-      category: "softchat",
+      sources: ["Eloity Help"],
+      category: "eloity",
       suggestedActions: [],
       followUpQuestions: [
         "How do I create my first post?",
@@ -1359,14 +1359,14 @@ Just let me know what interests you most! 🌟`,
             ? "afternoon"
             : "evening";
       return {
-        message: `${greeting} ${user.name || "friend"}! Hope you're having a wonderful ${timeOfDay}! 😊 I'm so happy to see you here on SoftChat! What's going on in your world today?`,
+        message: `${greeting} ${user.name || "friend"}! Hope you're having a wonderful ${timeOfDay}! 😊 I'm so happy to see you here on Eloity! What's going on in your world today?`,
         confidence: 100,
         sources: ["Friendly Chat"],
         category: "general",
         suggestedActions: [],
         followUpQuestions: [
           "How's your day going?",
-          "What brings you to SoftChat today?",
+          "What brings you to Eloity today?",
           "Want to explore something fun together?",
         ],
         relatedTopics: ["friendship", "casual chat", "daily life"],
@@ -1414,7 +1414,7 @@ Just let me know what interests you most! 🌟`,
       followUpQuestions: [
         "Want to talk about your interests?",
         "Tell me something fun about yourself!",
-        "What's your favorite thing about SoftChat?",
+        "What's your favorite thing about Eloity?",
       ],
       relatedTopics: [
         "friendship",
@@ -1436,14 +1436,14 @@ Just let me know what interests you most! 🌟`,
     const support = this.getRandomItem(this.personalityTraits.support);
 
     return {
-      message: `${greeting} ${user.name || "friend"}! I want to help you with whatever you need! 😊 I'm your personal AI assistant and friend - I can help with real-time info like weather and crypto prices, guide you through SoftChat features, or just be here for a friendly chat!\n\n${support} What would you like to talk about or explore together?`,
+      message: `${greeting} ${user.name || "friend"}! I want to help you with whatever you need! 😊 I'm your personal AI assistant and friend - I can help with real-time info like weather and crypto prices, guide you through Eloity features, or just be here for a friendly chat!\n\n${support} What would you like to talk about or explore together?`,
       confidence: 85,
       sources: ["Friendly AI Assistant"],
       category: "general",
       suggestedActions: [
         {
           id: "explore",
-          label: "Explore SoftChat",
+          label: "Explore Eloity",
           action: "navigate",
           url: "/explore",
         },
@@ -1456,7 +1456,7 @@ Just let me know what interests you most! 🌟`,
       ],
       followUpQuestions: [
         "What's the current time?",
-        "How do I use SoftChat features?",
+        "How do I use Eloity features?",
         "Want to have a friendly chat?",
         "Tell me about yourself!",
       ],
@@ -1475,7 +1475,7 @@ Just let me know what interests you most! 🌟`,
   private handleSocialQuery(user: User): IntelligentAIResponse {
     const enthusiasm = this.getRandomItem(this.personalityTraits.enthusiasm);
     return {
-      message: `${enthusiasm} The social features are my favorite part of SoftChat! 🌟 You can share posts, stories, connect with friends, and build an amazing community! 
+      message: `${enthusiasm} The social features are my favorite part of Eloity! 🌟 You can share posts, stories, connect with friends, and build an amazing community! 
 
 Here's what you can do:
 • Create engaging posts with photos and videos
@@ -1487,7 +1487,7 @@ Here's what you can do:
 Ready to start sharing your world? 📸`,
       confidence: 98,
       sources: ["Social Features Guide"],
-      category: "softchat",
+      category: "eloity",
       suggestedActions: [
         {
           id: "create-post",
@@ -1513,10 +1513,10 @@ Ready to start sharing your world? 📸`,
   // Helper methods for specific features
   private handleCryptoFeatureQuery(user: User): IntelligentAIResponse {
     return {
-      message: `The crypto features on SoftChat are incredible! 🚀 You can trade Bitcoin, Ethereum, and many other cryptocurrencies safely and easily. Plus, there's P2P trading where you can trade directly with other users!\n\nFeatures include:\n• Real-time price tracking\n• Secure buy/sell transactions\n• P2P trading with escrow protection\n• Portfolio tracking and analytics\n• Price alerts and notifications\n\nWant to start your crypto journey? I can guide you step by step!`,
+      message: `The crypto features on Eloity are incredible! 🚀 You can trade Bitcoin, Ethereum, and many other cryptocurrencies safely and easily. Plus, there's P2P trading where you can trade directly with other users!\n\nFeatures include:\n• Real-time price tracking\n• Secure buy/sell transactions\n• P2P trading with escrow protection\n• Portfolio tracking and analytics\n• Price alerts and notifications\n\nWant to start your crypto journey? I can guide you step by step!`,
       confidence: 98,
       sources: ["Crypto Features Guide"],
-      category: "softchat",
+      category: "eloity",
       suggestedActions: [
         {
           id: "crypto",
@@ -1554,7 +1554,7 @@ As a buyer:
 Ready to start buying or selling?`,
       confidence: 98,
       sources: ["Marketplace Guide"],
-      category: "softchat",
+      category: "eloity",
       suggestedActions: [
         {
           id: "marketplace",
@@ -1598,7 +1598,7 @@ For clients:
 Ready to start your freelance journey?`,
       confidence: 98,
       sources: ["Freelance Platform Guide"],
-      category: "softchat",
+      category: "eloity",
       suggestedActions: [
         {
           id: "freelance",
@@ -1624,7 +1624,7 @@ Ready to start your freelance journey?`,
 
   private handleWalletQuery(user: User): IntelligentAIResponse {
     return {
-      message: `Your SoftChat wallet is your financial hub! 💰 It securely manages all your money from different platform activities - crypto trading, marketplace sales, freelance earnings, and more!
+      message: `Your Eloity wallet is your financial hub! 💰 It securely manages all your money from different platform activities - crypto trading, marketplace sales, freelance earnings, and more!
 
 Wallet features:
 • Multi-currency support (crypto + fiat)
@@ -1637,7 +1637,7 @@ Wallet features:
 Your money is always safe and accessible!`,
       confidence: 98,
       sources: ["Wallet Features Guide"],
-      category: "softchat",
+      category: "eloity",
       suggestedActions: [
         {
           id: "wallet",
@@ -1663,9 +1663,9 @@ Your money is always safe and accessible!`,
 
   private handleRewardsQuery(user: User): IntelligentAIResponse {
     return {
-      message: `SoftPoints are so much fun to earn! 🎆 You get rewarded for being active on the platform, and you can redeem them for real rewards!
+      message: `Eloity Points are so much fun to earn! 🎆 You get rewarded for being active on the platform, and you can redeem them for real rewards!
 
-Earn SoftPoints by:
+Earn Eloity Points by:
 • Creating and sharing content
 • Engaging with the community
 • Completing your profile
@@ -1682,7 +1682,7 @@ Redeem for:
 The more active you are, the more you earn!`,
       confidence: 98,
       sources: ["Rewards System Guide"],
-      category: "softchat",
+      category: "eloity",
       suggestedActions: [
         {
           id: "rewards",
@@ -1698,7 +1698,7 @@ The more active you are, the more you earn!`,
         },
       ],
       followUpQuestions: [
-        "How do I earn more SoftPoints?",
+        "How do I earn more Eloity Points?",
         "What rewards are available?",
         "How do I redeem my points?",
       ],
@@ -1957,9 +1957,9 @@ The more active you are, the more you earn!`,
     return {
       message: `That's a great question! While I might not have specific details about that topic, I'm always eager to help you learn! 🎓
 
-I excel at helping with SoftChat features, real-time data like crypto prices and weather, calculations, and friendly conversation. For complex topics, I'd recommend checking reliable sources online.
+I excel at helping with Eloity features, real-time data like crypto prices and weather, calculations, and friendly conversation. For complex topics, I'd recommend checking reliable sources online.
 
-Is there something specific about SoftChat or real-time information I can help you with instead?`,
+Is there something specific about Eloity or real-time information I can help you with instead?`,
       confidence: 70,
       sources: ["General AI"],
       category: "general",
@@ -1972,7 +1972,7 @@ Is there something specific about SoftChat or real-time information I can help y
         },
       ],
       followUpQuestions: [
-        "What SoftChat features interest you?",
+        "What Eloity features interest you?",
         "Want to check current crypto prices?",
         "Need help with anything else?",
       ],
@@ -2011,9 +2011,9 @@ Is there something specific about SoftChat or real-time information I can help y
     const support = this.getRandomItem(this.personalityTraits.support);
     const empathy = this.getRandomItem(this.personalityTraits.empathy);
 
-    // Check for common SoftChat problems
+    // Check for common Eloity problems
     for (const [problem, solution] of Object.entries(
-      this.softchatKnowledge.troubleshooting,
+      this.eloityKnowledge.troubleshooting,
     )) {
       if (query.toLowerCase().includes(problem.replace(" ", ""))) {
         const solutionData = solution as any;
@@ -2031,7 +2031,7 @@ ${solutionsList}
 
 Try these steps and let me know if you're still having trouble! I'm here to help until we get it sorted out. 😊`,
           confidence: 95,
-          sources: ["SoftChat Support"],
+          sources: ["Eloity Support"],
           category: "technical",
           suggestedActions: [
             {
@@ -2105,14 +2105,14 @@ Try these steps and let me know if you're still having trouble! I'm here to help
     }
 
     return {
-      message: `${greeting} ${user.name || "friend"}! ${personalizedMessage}${contextMessage}I'm Edith, your intelligent AI companion! 🤖✨\n\nI'm here to help with:\n• 🕒 Real-time information (time, crypto, weather, news)\n• 🧮 Calculations and problem-solving\n• 💬 SoftChat platform guidance\n• 🎯 Friendly conversation and support\n• 📚 General knowledge and learning\n\n${curiosity} What's on your mind today?`,
+      message: `${greeting} ${user.name || "friend"}! ${personalizedMessage}${contextMessage}I'm Edith, your intelligent AI companion! 🤖✨\n\nI'm here to help with:\n• 🕒 Real-time information (time, crypto, weather, news)\n• 🧮 Calculations and problem-solving\n• 💬 Eloity platform guidance\n• 🎯 Friendly conversation and support\n• 📚 General knowledge and learning\n\n${curiosity} What's on your mind today?`,
       confidence: 80,
       sources: ["Advanced AI Assistant"],
       category: "general",
       suggestedActions: [
         {
           id: "explore",
-          label: "Explore SoftChat",
+          label: "Explore Eloity",
           action: "navigate",
           url: "/explore",
         },
@@ -2125,7 +2125,7 @@ Try these steps and let me know if you're still having trouble! I'm here to help
       ],
       followUpQuestions: [
         "What's the current crypto market like?",
-        "How can I make the most of SoftChat?",
+        "How can I make the most of Eloity?",
         "Tell me something interesting!",
         "What's new and exciting today?",
       ],
@@ -2162,8 +2162,8 @@ Try these steps and let me know if you're still having trouble! I'm here to help
     return {
       message: `${enthusiasm} I'd love to help you with **${feature.name}**! \n\n📖 **What it is:** ${feature.description}\n\n🚀 **How to get started:**\n${howToSteps}\n\n💡 **Pro Tips:**\n${topTips}\n\n${support} Want me to walk you through any specific part?`,
       confidence: 98,
-      sources: ["SoftChat Feature Guide"],
-      category: "softchat",
+      sources: ["Eloity Feature Guide"],
+      category: "eloity",
       suggestedActions: [
         {
           id: "try-feature",
@@ -2214,8 +2214,8 @@ ${firstSteps}
 
 Ready to dive in? I can guide you through each step!`,
       confidence: 95,
-      sources: ["SoftChat Tutorials"],
-      category: "softchat",
+      sources: ["Eloity Tutorials"],
+      category: "eloity",
       suggestedActions: [
         {
           id: "start-tutorial",
@@ -2253,8 +2253,8 @@ Ready to dive in? I can guide you through each step!`,
 
 Does this answer your question, or would you like me to go deeper into any part?`,
       confidence: 90,
-      sources: ["SoftChat FAQ"],
-      category: "softchat",
+      sources: ["Eloity FAQ"],
+      category: "eloity",
       suggestedActions: [],
       followUpQuestions: [
         "Can you explain this in more detail?",

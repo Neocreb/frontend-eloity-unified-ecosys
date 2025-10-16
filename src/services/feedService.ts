@@ -1,4 +1,8 @@
-// src/services/feedService.ts
+// @ts-nocheck
+import { supabase } from "@/integrations/supabase/client";
+import { Post } from "@/types/post";
+import { PostComment } from "@/types/user";
+
 export interface MediaUpload {
   type: "image" | "video";
   file: File;
@@ -94,7 +98,7 @@ class FeedService {
     });
   }
 
-  // Media upload functionality
+  // Media upload functionality (in a real app, this would upload to a storage service)
   async uploadMedia(
     files: File[],
     signal?: AbortSignal,
@@ -125,113 +129,305 @@ class FeedService {
   // Create a new post
   async createPost(
     postData: PostCreationData,
+    userId: string,
     signal?: AbortSignal,
   ): Promise<any> {
-    // Simulate API call with abort support
-    await this.delay(1000, signal);
+    try {
+      // In a real implementation, we would upload media to a storage service first
+      const mediaUrls = postData.media?.map(m => m.preview || "") || [];
+      const mediaTypes = postData.media?.map(m => m.type) || [];
 
-    const newPost = {
-      id: Date.now().toString(),
-      user: {
-        id: "current-user",
-        name: "You",
-        username: "you",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-        isVerified: false,
-      },
-      content: postData.content,
-      media:
-        postData.media?.map((m) => ({
-          type: m.type,
-          url: m.preview || "",
-          alt: `${m.type} post`,
+      const { data, error } = await supabase
+        .from('feed_posts')
+        .insert({
+          user_id: userId,
+          content: postData.content,
+          media_urls: mediaUrls,
+          media_types: mediaTypes,
+          feeling: postData.feeling,
+          location: postData.location,
+          privacy: postData.privacy,
+          likes_count: 0,
+          comments_count: 0,
+          shares_count: 0,
+          is_boosted: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            username,
+            avatar_url,
+            is_verified
+          )
+        `)
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        user: {
+          id: data.user_id,
+          name: data.profiles?.full_name || 'User',
+          username: data.profiles?.username || 'user',
+          avatar: data.profiles?.avatar_url || '/placeholder.svg',
+          isVerified: !!data.profiles?.is_verified,
+        },
+        content: data.content,
+        media: data.media_urls?.map((url: string, index: number) => ({
+          type: data.media_types?.[index] || 'image',
+          url: url,
+          alt: `${data.media_types?.[index] || 'image'} post`,
         })) || [],
-      timestamp: "Just now",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      isLiked: false,
-      isSaved: false,
-      location: postData.location?.name,
-      privacy: postData.privacy,
-      feeling: postData.feeling,
-    };
-
-    return newPost;
+        timestamp: new Date(data.created_at).toLocaleString(),
+        likes: data.likes_count,
+        comments: data.comments_count,
+        shares: data.shares_count,
+        isLiked: false,
+        isSaved: false,
+        location: data.location?.name,
+        privacy: data.privacy,
+        feeling: data.feeling,
+      };
+    } catch (error) {
+      console.error("Error creating post:", error);
+      throw error;
+    }
   }
 
   // Like/unlike a post
   async toggleLike(
     postId: string,
+    userId: string,
     currentlyLiked: boolean,
     signal?: AbortSignal,
   ): Promise<{ isLiked: boolean; likesCount: number }> {
-    // Simulate API call with abort support
-    await this.delay(300, signal);
+    try {
+      if (currentlyLiked) {
+        // Unlike
+        const { error: deleteError } = await supabase
+          .from('feed_post_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', userId);
 
-    return {
-      isLiked: !currentlyLiked,
-      likesCount: currentlyLiked ? -1 : 1, // This would be the actual count from API
-    };
+        if (deleteError) throw deleteError;
+
+        // Decrement likes count
+        const { data: updatedPost, error: updateError } = await supabase
+          .from('feed_posts')
+          .update({ likes_count: supabase.rpc('feed_posts.likes_count - 1') })
+          .eq('id', postId)
+          .select('likes_count')
+          .single();
+
+        if (updateError) throw updateError;
+
+        return {
+          isLiked: false,
+          likesCount: Math.max(0, updatedPost.likes_count),
+        };
+      } else {
+        // Like
+        const { error: insertError } = await supabase
+          .from('feed_post_likes')
+          .insert({
+            post_id: postId,
+            user_id: userId,
+            created_at: new Date().toISOString()
+          });
+
+        if (insertError) throw insertError;
+
+        // Increment likes count
+        const { data: updatedPost, error: updateError } = await supabase
+          .from('feed_posts')
+          .update({ likes_count: supabase.rpc('feed_posts.likes_count + 1') })
+          .eq('id', postId)
+          .select('likes_count')
+          .single();
+
+        if (updateError) throw updateError;
+
+        return {
+          isLiked: true,
+          likesCount: updatedPost.likes_count,
+        };
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      throw error;
+    }
   }
 
   // Save/unsave a post
   async toggleSave(
     postId: string,
+    userId: string,
     currentlySaved: boolean,
     signal?: AbortSignal,
   ): Promise<{ isSaved: boolean }> {
-    // Simulate API call with abort support
-    await this.delay(300, signal);
+    try {
+      if (currentlySaved) {
+        // Unsave
+        const { error: deleteError } = await supabase
+          .from('user_saved_posts')
+          .delete()
+          .eq('user_id', userId)
+          .eq('post_id', postId);
 
-    return {
-      isSaved: !currentlySaved,
-    };
+        if (deleteError) throw deleteError;
+
+        return { isSaved: false };
+      } else {
+        // Save
+        const { error: insertError } = await supabase
+          .from('user_saved_posts')
+          .insert({
+            user_id: userId,
+            post_id: postId,
+            created_at: new Date().toISOString()
+          });
+
+        if (insertError) throw insertError;
+
+        return { isSaved: true };
+      }
+    } catch (error) {
+      console.error("Error toggling save:", error);
+      throw error;
+    }
   }
 
   // Share a post
   async sharePost(
     postId: string,
+    userId: string,
     signal?: AbortSignal,
   ): Promise<{ success: boolean; shareCount: number }> {
-    // Simulate API call with abort support
-    await this.delay(500, signal);
+    try {
+      // Add share record
+      const { error: insertError } = await supabase
+        .from('user_post_shares')
+        .insert({
+          user_id: userId,
+          post_id: postId,
+          shared_to: 'public',
+          created_at: new Date().toISOString()
+        });
 
-    return {
-      success: true,
-      shareCount: 1, // This would be updated count from API
-    };
+      if (insertError) throw insertError;
+
+      // Increment shares count on post
+      const { data: updatedPost, error: updateError } = await supabase
+        .from('feed_posts')
+        .update({ shares_count: supabase.rpc('feed_posts.shares_count + 1') })
+        .eq('id', postId)
+        .select('shares_count')
+        .single();
+
+      if (updateError) throw updateError;
+
+      return {
+        success: true,
+        shareCount: updatedPost.shares_count,
+      };
+    } catch (error) {
+      console.error("Error sharing post:", error);
+      throw error;
+    }
   }
 
   // Get comments for a post
   async getComments(postId: string, signal?: AbortSignal): Promise<Comment[]> {
-    // Simulate API call with abort support
-    await this.delay(300, signal);
+    try {
+      const { data, error } = await supabase
+        .from('feed_post_comments')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            username,
+            avatar_url,
+            is_verified
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
 
-    // In a real implementation, this would fetch from API
-    // For now, return empty array to enable real-time comment functionality
-    return [];
+      if (error) throw error;
+
+      return data.map(comment => ({
+        id: comment.id,
+        userId: comment.user_id,
+        userName: comment.profiles?.full_name || 'User',
+        userAvatar: comment.profiles?.avatar_url || '/placeholder.svg',
+        content: comment.content,
+        timestamp: new Date(comment.created_at).toLocaleString(),
+        likes: comment.likes_count,
+        isLiked: false, // Would need to check if current user liked this comment
+      }));
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      return [];
+    }
   }
 
   // Add a comment
   async addComment(
     postId: string,
+    userId: string,
     content: string,
     signal?: AbortSignal,
   ): Promise<Comment> {
-    // Simulate API call with abort support
-    await this.delay(400, signal);
+    try {
+      const { data, error } = await supabase
+        .from('feed_post_comments')
+        .insert({
+          post_id: postId,
+          user_id: userId,
+          content: content,
+          likes_count: 0,
+          is_edited: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            username,
+            avatar_url,
+            is_verified
+          )
+        `)
+        .single();
 
-    return {
-      id: Date.now().toString(),
-      userId: "current-user",
-      userName: "You",
-      userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-      content,
-      timestamp: "Just now",
-      likes: 0,
-      isLiked: false,
-    };
+      if (error) throw error;
+
+      // Increment comments count on post
+      await supabase
+        .from('feed_posts')
+        .update({ comments_count: supabase.rpc('feed_posts.comments_count + 1') })
+        .eq('id', postId);
+
+      return {
+        id: data.id,
+        userId: data.user_id,
+        userName: data.profiles?.full_name || 'User',
+        userAvatar: data.profiles?.avatar_url || '/placeholder.svg',
+        content: data.content,
+        timestamp: new Date(data.created_at).toLocaleString(),
+        likes: data.likes_count,
+        isLiked: false,
+      };
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      throw error;
+    }
   }
 
   // Search locations
@@ -239,9 +435,7 @@ class FeedService {
     query: string,
     signal?: AbortSignal,
   ): Promise<typeof LOCATION_SUGGESTIONS> {
-    // Simulate API call with abort support
-    await this.delay(300, signal);
-
+    // In a real app, this would call a maps API
     return LOCATION_SUGGESTIONS.filter((location) =>
       location.name.toLowerCase().includes(query.toLowerCase()),
     );

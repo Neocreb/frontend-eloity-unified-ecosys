@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, FC, ReactNode } from "react";
 import {
   i18nService,
   type Language,
@@ -50,7 +50,7 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({
+export const I18nProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -79,9 +79,9 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       // Load saved preferences or detect automatically
-      const savedLanguage = localStorage.getItem("softchat_language");
-      const savedCurrency = localStorage.getItem("softchat_currency");
-      const savedRegion = localStorage.getItem("softchat_region");
+      const savedLanguage = localStorage.getItem("eloity_language");
+      const savedCurrency = localStorage.getItem("eloity_currency");
+      const savedRegion = localStorage.getItem("eloity_region");
 
       if (savedLanguage) {
         i18nService.setLanguage(savedLanguage);

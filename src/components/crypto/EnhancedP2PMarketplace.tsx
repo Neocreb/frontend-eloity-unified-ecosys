@@ -139,65 +139,18 @@ export default function EnhancedP2PMarketplace({
         type: marketplaceTab.toUpperCase(),
       });
       setOffers(offersData || []);
-      // In a real app, load user's trades
+      
+      // Load user's own trades
+      // TODO: Implement trades table and fetch user's trades
       setMyTrades([]);
     } catch (error) {
       console.error("Failed to load P2P data:", error);
-      // Use mock data for testing filters
-      const mockOffers = [
-        {
-          id: "offer-1",
-          type: "SELL",
-          asset: selectedAsset,
-          fiatCurrency: selectedFiat,
-          price: 45000,
-          minAmount: 100,
-          maxAmount: 5000,
-          availableAmount: 10000,
-          paymentMethods: [
-            { id: "bank", name: "Bank Transfer" },
-            { id: "mobile", name: "Mobile Money" }
-          ],
-          terms: "Payment within 15 minutes",
-          user: {
-            username: "CryptoTrader01",
-            avatar: "",
-            rating: 4.8,
-            totalTrades: 125,
-            completionRate: 98.5,
-            avgReleaseTime: 12,
-            isVerified: true,
-            kycLevel: "2"
-          }
-        },
-        {
-          id: "offer-2",
-          type: "BUY",
-          asset: selectedAsset,
-          fiatCurrency: selectedFiat,
-          price: 44800,
-          minAmount: 50,
-          maxAmount: 3000,
-          availableAmount: 8000,
-          paymentMethods: [
-            { id: "paypal", name: "PayPal" },
-            { id: "wise", name: "Wise" }
-          ],
-          terms: "Quick release guaranteed",
-          user: {
-            username: "FastTrader",
-            avatar: "",
-            rating: 4.9,
-            totalTrades: 89,
-            completionRate: 99.1,
-            avgReleaseTime: 8,
-            isVerified: true,
-            kycLevel: "3"
-          }
-        }
-      ];
-      setOffers(mockOffers);
-      console.warn("P2P marketplace: Using fallback mock data");
+      setOffers([]);
+      toast({
+        title: "Error loading offers",
+        description: "Could not load P2P offers. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -206,23 +159,13 @@ export default function EnhancedP2PMarketplace({
   const handleCreateOffer = async () => {
     try {
       const offerData = {
-        type: newOffer.type,
-        asset: newOffer.asset,
-        fiatCurrency: newOffer.fiatCurrency,
-        price: parseFloat(newOffer.price),
-        minAmount: parseFloat(newOffer.minAmount),
-        maxAmount: parseFloat(newOffer.maxAmount),
-        totalAmount: parseFloat(newOffer.totalAmount),
-        availableAmount: parseFloat(newOffer.totalAmount),
-        paymentMethods: paymentMethods.filter((pm) =>
-          newOffer.paymentMethods.includes(pm.id),
-        ),
-        terms: newOffer.terms,
-        autoReply: newOffer.autoReply,
-        status: "ACTIVE" as const,
-        completionRate: 0,
-        avgReleaseTime: 0,
-        totalTrades: 0,
+        crypto_type: newOffer.asset,
+        offer_type: newOffer.type.toLowerCase(),
+        amount: parseFloat(newOffer.totalAmount),
+        price_per_unit: parseFloat(newOffer.price),
+        payment_method: newOffer.paymentMethods.join(','),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        notes: newOffer.terms || undefined,
       };
 
       const createdOffer = await cryptoService.createP2POffer(offerData);

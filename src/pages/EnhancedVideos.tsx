@@ -511,7 +511,7 @@ const EnhancedVideos: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
       <Helmet>
-        <title>Videos | Softchat</title>
+        <title>Videos | Eloity</title>
       </Helmet>
 
       {/* Full-screen video container */}

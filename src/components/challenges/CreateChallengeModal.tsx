@@ -140,7 +140,7 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
     if (getTotalPrizePool() > userBalance) {
       toast({
         title: 'Insufficient Balance',
-        description: 'You don\'t have enough SoftPoints for this prize pool',
+        description: 'You don\'t have enough Eloity Points for this prize pool',
         variant: 'destructive',
       });
       return;

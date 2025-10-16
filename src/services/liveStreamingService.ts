@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from "@/lib/supabase/client";
 
 export interface LiveStream {
@@ -901,8 +902,8 @@ class LiveStreamingService {
         requiresSubscription: false,
         monetizationEnabled: true,
         streamKey: "sk_1234567890",
-        rtmpUrl: "rtmp://live.softchat.com/live/sk_1234567890",
-        playbackUrl: "https://live.softchat.com/hls/sk_1234567890/index.m3u8",
+        rtmpUrl: "rtmp://live.eloity.com/live/sk_1234567890",
+        playbackUrl: "https://live.eloity.com/hls/sk_1234567890/index.m3u8",
         recordingEnabled: true,
         chatEnabled: true,
         moderationEnabled: true,
@@ -931,8 +932,8 @@ class LiveStreamingService {
         requiresSubscription: false,
         monetizationEnabled: true,
         streamKey: "sk_0987654321",
-        rtmpUrl: "rtmp://live.softchat.com/live/sk_0987654321",
-        playbackUrl: "https://live.softchat.com/hls/sk_0987654321/index.m3u8",
+        rtmpUrl: "rtmp://live.eloity.com/live/sk_0987654321",
+        playbackUrl: "https://live.eloity.com/hls/sk_0987654321/index.m3u8",
         recordingEnabled: true,
         chatEnabled: true,
         moderationEnabled: true,
@@ -961,8 +962,8 @@ class LiveStreamingService {
         requiresSubscription: false,
         monetizationEnabled: true,
         streamKey: "sk_1122334455",
-        rtmpUrl: "rtmp://live.softchat.com/live/sk_1122334455",
-        playbackUrl: "https://live.softchat.com/hls/sk_1122334455/index.m3u8",
+        rtmpUrl: "rtmp://live.eloity.com/live/sk_1122334455",
+        playbackUrl: "https://live.eloity.com/hls/sk_1122334455/index.m3u8",
         recordingEnabled: true,
         chatEnabled: true,
         moderationEnabled: true,

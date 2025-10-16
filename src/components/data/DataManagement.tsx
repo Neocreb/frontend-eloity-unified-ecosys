@@ -48,6 +48,7 @@ import {
   MessageSquare,
   Image,
   Video,
+  CheckCircle,
   Music,
   FileImage,
   FileVideo,
@@ -230,7 +231,7 @@ export const DataManagement: React.FC = () => {
       const blob = createExportBlob(exportData, exportOptions.format);
       downloadBlob(
         blob,
-        `softchat-export-${new Date().toISOString().split("T")[0]}.${exportOptions.format}`,
+        `eloity-export-${new Date().toISOString().split("T")[0]}.${exportOptions.format}`,
       );
 
       toast({
@@ -508,7 +509,8 @@ export const DataManagement: React.FC = () => {
         return node.textContent;
       }
 
-      for (const child of node.children) {
+      for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
         const key = child.tagName;
         const value = xmlToObject(child);
 

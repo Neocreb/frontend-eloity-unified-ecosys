@@ -44,6 +44,7 @@ import {
   Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -204,7 +205,7 @@ const forYouVideos: VideoData[] = [
       isFollowing: false,
     },
     description:
-      "Mind-blowing AI tools you NEED to try! 🤯 This changes everything! Link in bio #ai #tech #tools",
+      "Mind-blowing AI tools you NEED to try! ��� This changes everything! Link in bio #ai #tech #tools",
     music: {
       title: "Future Tech",
       artist: "Synthwave Studios",
@@ -720,8 +721,8 @@ const TikTokStyleVideos: React.FC = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
-  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -923,7 +924,7 @@ const TikTokStyleVideos: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsDashboardOpen(true)}
+          onClick={() => navigate('/app/unified-creator-studio')}
           className="w-11 h-11 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30 backdrop-blur-sm"
           title="Creator Studio"
         >
@@ -1053,18 +1054,7 @@ const TikTokStyleVideos: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Creator Dashboard */}
-      <Dialog open={isDashboardOpen} onOpenChange={setIsDashboardOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] bg-gray-900 border-gray-700 p-0">
-          <VisuallyHidden>
-            <DialogTitle>Creator Dashboard</DialogTitle>
-          </VisuallyHidden>
-          <div className="h-full overflow-auto p-6">
-            <CreatorDashboard />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
   );
 };
 

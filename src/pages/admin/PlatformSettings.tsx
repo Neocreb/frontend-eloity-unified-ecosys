@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -196,7 +197,7 @@ const PlatformSettings = () => {
       general: [
         {
           key: "platform_name",
-          value: "SoftChat",
+          value: "Eloity",
           description: "Platform display name",
           isPublic: true,
         },

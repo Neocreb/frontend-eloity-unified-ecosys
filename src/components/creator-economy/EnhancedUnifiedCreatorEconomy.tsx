@@ -68,8 +68,8 @@ import { cn } from "@/lib/utils";
 
 interface EnhancedEconomyData {
   // Core Metrics
-  currentSoftPoints: number;
-  totalSoftPointsEarned: number;
+  currentEloity Points: number;
+  totalEloity PointsEarned: number;
   totalEarnings: number;
   availableToWithdraw: number;
   
@@ -106,7 +106,7 @@ interface EnhancedEconomyData {
     id: string;
     type: string;
     description: string;
-    softPoints: number;
+    eloityPoints: number;
     walletBonus: number;
     qualityMultiplier?: number;
     timestamp: string;
@@ -157,8 +157,8 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
 
       // Enhanced demo data reflecting new reward system
       setEconomyData({
-        currentSoftPoints: 3420,
-        totalSoftPointsEarned: 18560,
+        currentEloity Points: 3420,
+        totalEloity PointsEarned: 18560,
         totalEarnings: 18240,
         availableToWithdraw: 12150,
         
@@ -192,7 +192,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
             id: "1",
             type: "post_content",
             description: "High-quality post with media and engagement",
-            softPoints: 7.2,
+            eloityPoints: 7.2,
             walletBonus: 0,
             qualityMultiplier: 2.4,
             timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
@@ -202,7 +202,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
             id: "2", 
             type: "marketplace_sale",
             description: "Product sale - payment completed",
-            softPoints: 15.0,
+            eloityPoints: 15.0,
             walletBonus: 25.50,
             timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
             status: "confirmed",
@@ -211,7 +211,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
             id: "3",
             type: "freelance_milestone",
             description: "Milestone completed - client approved",
-            softPoints: 20.0,
+            eloityPoints: 20.0,
             walletBonus: 85.00,
             timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
             status: "confirmed",
@@ -220,7 +220,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
             id: "4",
             type: "p2p_trade",
             description: "P2P trade confirmed",
-            softPoints: 8.0,
+            eloityPoints: 8.0,
             walletBonus: 2.50,
             timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
             status: "confirmed",
@@ -229,7 +229,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
             id: "5",
             type: "quality_referral",
             description: "Quality referral completed 3+ actions",
-            softPoints: 25.0,
+            eloityPoints: 25.0,
             walletBonus: 5.00,
             timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
             status: "confirmed",
@@ -416,19 +416,19 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* SoftPoints */}
+        {/* Eloity Points */}
         <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
           <CardContent className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm font-medium text-purple-700">
-                  SoftPoints
+                  Eloity Points
                 </p>
                 <p className="text-lg sm:text-2xl font-bold text-purple-900">
-                  {formatNumber(economyData?.currentSoftPoints || 0)}
+                  {formatNumber(economyData?.currentEloity Points || 0)}
                 </p>
                 <p className="text-xs text-purple-600">
-                  +{formatNumber(economyData?.totalSoftPointsEarned || 0)} earned
+                  +{formatNumber(economyData?.totalEloity PointsEarned || 0)} earned
                 </p>
               </div>
               <div className="p-2 sm:p-3 bg-purple-200 rounded-full">
@@ -642,9 +642,9 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
-                          {activity.softPoints > 0 && (
+                          {activity.eloityPoints > 0 && (
                             <Badge variant="secondary" className="text-xs">
-                              +{formatNumber(activity.softPoints)} SP
+                              +{formatNumber(activity.eloityPoints)} SP
                             </Badge>
                           )}
                           {activity.walletBonus > 0 && (
@@ -786,10 +786,10 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
                   <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Star className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-                      <span className="font-medium text-xs sm:text-sm">SoftPoints</span>
+                      <span className="font-medium text-xs sm:text-sm">Eloity Points</span>
                     </div>
                     <span className="font-bold text-purple-600 text-sm sm:text-base">
-                      {formatNumber(economyData?.currentSoftPoints || 0)}
+                      {formatNumber(economyData?.currentEloity Points || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">

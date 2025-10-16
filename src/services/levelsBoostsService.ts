@@ -31,7 +31,7 @@ export interface Achievement {
   progress: number;
   target: number;
   reward: {
-    softPoints: number;
+    eloityPoints: number;
     badge?: string;
     multiplier?: number;
   };
@@ -50,7 +50,7 @@ export interface BoostItem {
     special?: string;
   };
   cost: {
-    softPoints: number;
+    eloityPoints: number;
     walletCost?: number;
     currency?: string;
   };
@@ -342,7 +342,7 @@ export class LevelsBoostsService {
         type: "reach",
         category: "content",
         effect: { reach: 2, duration: 24 },
-        cost: { softPoints: 50 },
+        cost: { eloityPoints: 50 },
         rarity: "common",
         requiredLevel: 1,
         maxUses: 5,
@@ -356,7 +356,7 @@ export class LevelsBoostsService {
         type: "multiplier",
         category: "earnings",
         effect: { multiplier: 1.5, duration: 12 },
-        cost: { softPoints: 100 },
+        cost: { eloityPoints: 100 },
         rarity: "rare",
         requiredLevel: 2,
         cooldown: 24,
@@ -370,7 +370,7 @@ export class LevelsBoostsService {
         type: "visibility",
         category: "profile",
         effect: { duration: 24, special: "featured_profile" },
-        cost: { softPoints: 200 },
+        cost: { eloityPoints: 200 },
         rarity: "epic",
         requiredLevel: 3,
         cooldown: 72,
@@ -384,7 +384,7 @@ export class LevelsBoostsService {
         type: "speed",
         category: "social",
         effect: { multiplier: 0.5, duration: 6, special: "cooldown_reduction" },
-        cost: { softPoints: 75 },
+        cost: { eloityPoints: 75 },
         rarity: "rare",
         requiredLevel: 2,
         icon: "⚡",
@@ -397,7 +397,7 @@ export class LevelsBoostsService {
         type: "multiplier",
         category: "earnings",
         effect: { multiplier: 3.0, special: "activity_limited" },
-        cost: { softPoints: 500, walletCost: 5, currency: "USDT" },
+        cost: { eloityPoints: 500, walletCost: 5, currency: "USDT" },
         rarity: "legendary",
         requiredLevel: 4,
         maxUses: 10,
@@ -417,7 +417,7 @@ export class LevelsBoostsService {
         icon: "📝",
         progress: 1,
         target: 1,
-        reward: { softPoints: 10, badge: "first_post" },
+        reward: { eloityPoints: 10, badge: "first_post" },
       },
       {
         id: "social_butterfly",
@@ -426,7 +426,7 @@ export class LevelsBoostsService {
         icon: "🦋",
         progress: 0,
         target: 100,
-        reward: { softPoints: 50, multiplier: 1.1 },
+        reward: { eloityPoints: 50, multiplier: 1.1 },
       },
       {
         id: "content_creator",
@@ -435,7 +435,7 @@ export class LevelsBoostsService {
         icon: "🎨",
         progress: 0,
         target: 50,
-        reward: { softPoints: 200, badge: "creator" },
+        reward: { eloityPoints: 200, badge: "creator" },
       },
       {
         id: "earning_master",
@@ -444,7 +444,7 @@ export class LevelsBoostsService {
         icon: "💎",
         progress: 0,
         target: 100,
-        reward: { softPoints: 500, badge: "earning_master" },
+        reward: { eloityPoints: 500, badge: "earning_master" },
       },
       {
         id: "referral_champion",
@@ -453,7 +453,7 @@ export class LevelsBoostsService {
         icon: "👥",
         progress: 0,
         target: 25,
-        reward: { softPoints: 1000, multiplier: 1.2 },
+        reward: { eloityPoints: 1000, multiplier: 1.2 },
       },
     ];
   }
@@ -507,7 +507,7 @@ export class LevelsBoostsService {
     userLevel: number,
   ): boolean {
     return (
-      userPoints >= boost.cost.softPoints && userLevel >= boost.requiredLevel
+      userPoints >= boost.cost.eloityPoints && userLevel >= boost.requiredLevel
     );
   }
 }

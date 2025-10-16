@@ -30,6 +30,7 @@ import {
   Zap,
   Crown,
   Flame,
+  Activity,
 } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/utils/formatters";
 import { useAuth } from "@/contexts/AuthContext";

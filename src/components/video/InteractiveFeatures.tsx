@@ -241,7 +241,7 @@ const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
       name: "Share to Telegram",
       icon: <Send className="w-4 h-4" />,
       action: () => {
-        window.open(`https://t.me/share/url?url=https://softchat.com/video/${videoId}&text=Check out this video!`, '_blank');
+        window.open(`https://t.me/share/url?url=https://eloity.com/video/${videoId}&text=Check out this video!`, '_blank');
       },
     },
     {
@@ -249,7 +249,7 @@ const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
       name: "Share to Twitter",
       icon: <Share2 className="w-4 h-4" />,
       action: () => {
-        window.open(`https://twitter.com/intent/tweet?url=https://softchat.com/video/${videoId}&text=Check out this amazing video!`, '_blank');
+        window.open(`https://twitter.com/intent/tweet?url=https://eloity.com/video/${videoId}&text=Check out this amazing video!`, '_blank');
       },
     },
     {
@@ -257,7 +257,7 @@ const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
       name: "Share to Facebook",
       icon: <Users className="w-4 h-4" />,
       action: () => {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=https://softchat.com/video/${videoId}`, '_blank');
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=https://eloity.com/video/${videoId}`, '_blank');
       },
     },
     {
@@ -273,7 +273,7 @@ const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
       name: "Embed Code",
       icon: <ExternalLink className="w-4 h-4" />,
       action: () => {
-        const embedCode = `<iframe src="https://softchat.com/embed/${videoId}" width="560" height="315" frameborder="0"></iframe>`;
+        const embedCode = `<iframe src="https://eloity.com/embed/${videoId}" width="560" height="315" frameborder="0"></iframe>`;
         navigator.clipboard.writeText(embedCode);
         toast({ title: "Embed code copied!" });
       },

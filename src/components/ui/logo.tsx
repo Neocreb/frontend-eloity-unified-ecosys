@@ -65,4 +65,4 @@ const EloityLogo = ({
 export default EloityLogo;
 
 // Legacy export for existing imports
-export { EloityLogo as SoftchatLogo };
+export { EloityLogo as EloityLogo };
