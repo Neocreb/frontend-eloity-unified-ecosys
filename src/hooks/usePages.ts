@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Page, PageFollower, pagesService } from '@/services/pagesService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const usePages = () => {
   const [pages, setPages] = useState<Page[]>([]);
