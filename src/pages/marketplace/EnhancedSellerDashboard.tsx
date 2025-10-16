@@ -41,6 +41,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { PageLoading } from "@/components/ui/loading-states";
 
 export default function EnhancedSellerDashboard() {
   // Inline Badge component to avoid import issues
@@ -411,6 +412,14 @@ export default function EnhancedSellerDashboard() {
     }
   }
   
+  if (!sellerAnalytics) {
+    return (
+      <div className="container py-6">
+        <PageLoading message="Loading seller dashboard..." />
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6 space-y-6">
       {/* Header */}
