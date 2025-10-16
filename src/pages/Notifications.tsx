@@ -1,36 +1,30 @@
 import { Helmet } from "react-helmet-async";
-import { Bell, Heart, MessageCircle, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Heart, MessageCircle, UserPlus, Check, Trash2, Settings } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { formatDistanceToNow } from "date-fns";
 
 const Notifications = () => {
-  const mockNotifications = [
-    {
-      id: "1",
-      type: "like",
-      user: { name: "Alice Johnson", avatar: "/placeholder.svg" },
-      content: "liked your post",
-      time: "2 minutes ago",
-      read: false,
-    },
-    {
-      id: "2",
-      type: "comment",
-      user: { name: "Bob Smith", avatar: "/placeholder.svg" },
-      content: "commented on your post: Great content!",
-      time: "1 hour ago",
-      read: false,
-    },
-    {
-      id: "3",
-      type: "follow",
-      user: { name: "Charlie Wilson", avatar: "/placeholder.svg" },
-      content: "started following you",
-      time: "3 hours ago",
-      read: true,
-    },
-  ];
+  const { user } = useAuth();
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useRealtimeNotifications();
+
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  // Filter notifications based on selected filter
+  const filteredNotifications = filter === "unread" 
+    ? notifications.filter(n => !n.read)
+    : notifications;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -45,6 +39,19 @@ const Notifications = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto p-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Helmet>
@@ -52,52 +59,114 @@ const Notifications = () => {
       </Helmet>
 
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Notifications</h1>
-
-        <div className="space-y-4">
-          {mockNotifications.map((notification) => (
-            <Card
-              key={notification.id}
-              className={
-                !notification.read ? "border-l-4 border-l-primary" : ""
-              }
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Notifications</h1>
+            {unreadCount > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {unreadCount} unread {unreadCount === 1 ? 'notification' : 'notifications'}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilter(filter === "all" ? "unread" : "all")}
             >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={notification.user.avatar} />
-                    <AvatarFallback>
-                      {notification.user.name.substring(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+              {filter === "all" ? "Show Unread" : "Show All"}
+            </Button>
+            
+            {unreadCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={markAllAsRead}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Mark All Read
+              </Button>
+            )}
+          </div>
+        </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      {getIcon(notification.type)}
-                      <p className="text-sm">
-                        <span className="font-medium">
-                          {notification.user.name}
-                        </span>{" "}
-                        {notification.content}
+        {filteredNotifications.length === 0 ? (
+          <Card className="p-8 text-center">
+            <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No notifications</h3>
+            <p className="text-muted-foreground">
+              {filter === "unread" 
+                ? "You're all caught up! No unread notifications." 
+                : "You don't have any notifications yet."}
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {filteredNotifications.map((notification) => (
+              <Card
+                key={notification.id}
+                className={
+                  !notification.read 
+                    ? "border-l-4 border-l-primary bg-muted/30" 
+                    : ""
+                }
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-10 w-10">
+                      {notification.avatar ? (
+                        <AvatarImage src={notification.avatar} />
+                      ) : (
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {notification.title?.charAt(0) || "N"}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {getIcon(notification.type)}
+                        <div>
+                          <p className="text-sm font-medium">
+                            {notification.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {notification.content}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                       </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {notification.time}
-                    </p>
+
+                    <div className="flex items-center gap-1">
+                      {!notification.read && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => deleteNotification(notification.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-
-                  {!notification.read && (
-                    <div className="h-2 w-2 bg-primary rounded-full"></div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="text-center mt-8">
-          <Button variant="outline">Load More</Button>
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

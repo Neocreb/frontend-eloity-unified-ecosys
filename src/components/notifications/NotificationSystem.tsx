@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,27 +54,8 @@ import {
   BellOff,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-
-interface Notification {
-  id: string;
-  type:
-    | "social"
-    | "trading"
-    | "marketplace"
-    | "system"
-    | "rewards"
-    | "freelance";
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-  priority: "low" | "medium" | "high" | "urgent";
-  actionUrl?: string;
-  actionLabel?: string;
-  avatar?: string;
-  icon?: React.ReactNode;
-  data?: any;
-}
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { formatDistanceToNow } from "date-fns";
 
 interface NotificationSettings {
   enabled: boolean;
@@ -96,70 +77,6 @@ interface NotificationSettings {
   };
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "social",
-    title: "New follower",
-    message: "Sarah Johnson started following you",
-    timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    read: false,
-    priority: "low",
-    avatar: "/api/placeholder/32/32",
-    icon: <Users className="w-4 h-4" />,
-    actionUrl: "/profile/sarah-johnson",
-    actionLabel: "View Profile",
-  },
-  {
-    id: "2",
-    type: "trading",
-    title: "Price Alert",
-    message: "Bitcoin reached your target price of $45,000",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000),
-    read: false,
-    priority: "high",
-    icon: <TrendingUp className="w-4 h-4" />,
-    actionUrl: "/crypto/btc",
-    actionLabel: "View Chart",
-  },
-  {
-    id: "3",
-    type: "marketplace",
-    title: "Order shipped",
-    message: "Your order #12345 has been shipped and is on its way",
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    read: true,
-    priority: "medium",
-    icon: <ShoppingCart className="w-4 h-4" />,
-    actionUrl: "/orders/12345",
-    actionLabel: "Track Order",
-  },
-  {
-    id: "4",
-    type: "rewards",
-    title: "Streak bonus!",
-    message: "You've earned 100 bonus points for your 7-day streak",
-    timestamp: new Date(Date.now() - 60 * 60 * 1000),
-    read: false,
-    priority: "medium",
-    icon: <Gift className="w-4 h-4" />,
-    actionUrl: "/rewards",
-    actionLabel: "Claim Reward",
-  },
-  {
-    id: "5",
-    type: "freelance",
-    title: "New job match",
-    message: "A new project matches your skills: React Developer needed",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    read: true,
-    priority: "high",
-    icon: <Zap className="w-4 h-4" />,
-    actionUrl: "/freelance/jobs",
-    actionLabel: "View Job",
-  },
-];
-
 interface NotificationSystemProps {
   className?: string;
 }
@@ -169,9 +86,15 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [notifications, setNotifications] =
-    useState<Notification[]>(mockNotifications);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useRealtimeNotifications();
+
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<string>("all");
   const [settings, setSettings] = useState<NotificationSettings>({
@@ -196,8 +119,6 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
   });
   const [permission, setPermission] =
     useState<NotificationPermission>("default");
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     // Check notification permission
@@ -210,240 +131,12 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
     if (savedSettings) {
       setSettings(JSON.parse(savedSettings));
     }
-
-    // Load notifications from localStorage
-    const savedNotifications = localStorage.getItem("user-notifications");
-    if (savedNotifications) {
-      const parsed = JSON.parse(savedNotifications);
-      setNotifications(
-        parsed.map((n: any) => ({
-          ...n,
-          timestamp: new Date(n.timestamp),
-        })),
-      );
-    }
-
-    // Initialize WebSocket for real-time notifications
-    initializeWebSocket();
-
-    // Listen for rewards notifications
-    const handleRewardsNotification = (event: CustomEvent) => {
-      const notification = event.detail;
-      setNotifications((prev) => [{
-        ...notification,
-        timestamp: new Date(notification.timestamp),
-        icon: <Gift className="w-4 h-4" />
-      }, ...prev.slice(0, 99)]);
-
-      // Play sound and show desktop notification if enabled
-      if (settings.sound && settings.enabled) {
-        playNotificationSound();
-      }
-      if (settings.desktop && settings.enabled && permission === "granted") {
-        showDesktopNotification({
-          ...notification,
-          timestamp: new Date(notification.timestamp)
-        });
-      }
-    };
-
-    // Listen for toast notifications from rewards system
-    const handleToastNotification = (event: CustomEvent) => {
-      if (settings.enabled) {
-        toast(event.detail);
-      }
-    };
-
-    window.addEventListener('rewardsNotificationAdded', handleRewardsNotification as EventListener);
-    window.addEventListener('showToast', handleToastNotification as EventListener);
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-      window.removeEventListener('rewardsNotificationAdded', handleRewardsNotification as EventListener);
-      window.removeEventListener('showToast', handleToastNotification as EventListener);
-    };
   }, []);
-
-  // Listen for crypto notifications
-  useEffect(() => {
-    const handleCryptoNotification = (event: CustomEvent) => {
-      const newNotification = event.detail;
-      setNotifications(prev => [newNotification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-
-      // Play notification sound if enabled
-      if (settings.sound && audioRef.current) {
-        audioRef.current.play().catch(() => {});
-      }
-    };
-
-    const handleChatNotification = (event: CustomEvent) => {
-      const { type, title, message, fromUserId, chatId, chatType } = event.detail;
-
-      // Create chat notification
-      const chatNotification: Notification = {
-        id: Date.now().toString(),
-        type: chatType || 'social',
-        title: title,
-        message: message,
-        timestamp: new Date(),
-        read: false,
-        priority: 'medium',
-        actionUrl: `/app/chat?type=${chatType}&thread=${chatId}`,
-        actionLabel: 'View Chat',
-        data: {
-          fromUserId,
-          chatId,
-          chatType,
-        }
-      };
-
-      setNotifications(prev => [chatNotification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-
-      // Play notification sound if enabled
-      if (settings.sound && audioRef.current) {
-        audioRef.current.play().catch(() => {});
-      }
-    };
-
-    window.addEventListener('crypto-notification', handleCryptoNotification as EventListener);
-    window.addEventListener('chat-notification', handleChatNotification as EventListener);
-
-    return () => {
-      window.removeEventListener('crypto-notification', handleCryptoNotification as EventListener);
-      window.removeEventListener('chat-notification', handleChatNotification as EventListener);
-    };
-  }, [settings.sound]);
-
-  useEffect(() => {
-    // Update unread count
-    const unread = notifications.filter((n) => !n.read).length;
-    setUnreadCount(unread);
-
-    // Update document title with unread count
-    if (unread > 0) {
-      document.title = `(${unread}) Eloity`;
-    } else {
-      document.title = "Eloity";
-    }
-
-    // Save to localStorage
-    localStorage.setItem("user-notifications", JSON.stringify(notifications));
-  }, [notifications]);
 
   useEffect(() => {
     // Save settings to localStorage
     localStorage.setItem("notification-settings", JSON.stringify(settings));
   }, [settings]);
-
-  const initializeWebSocket = () => {
-    if (!user) return;
-
-    // In a real app, this would connect to your WebSocket server
-    // wsRef.current = new WebSocket('ws://localhost:8080/notifications');
-
-    // Simulate real-time notifications
-    const interval = setInterval(() => {
-      if (Math.random() < 0.1) {
-        // 10% chance every 30 seconds
-        simulateNewNotification();
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  };
-
-  const simulateNewNotification = () => {
-    const types: Notification["type"][] = [
-      "social",
-      "trading",
-      "marketplace",
-      "rewards",
-      "freelance",
-    ];
-    const randomType = types[Math.floor(Math.random() * types.length)];
-
-    let newNotification: Notification;
-
-    if (randomType === "rewards") {
-      // Enhanced rewards notifications
-      const rewardsNotifications = [
-        {
-          title: "Battle Vote Won! 🎯",
-          message: "Your vote on Alex Dance vs Music Mike was successful! Earned $87.50",
-          priority: "high" as const,
-          actionUrl: "/app/rewards?tab=battles",
-          actionLabel: "View Details"
-        },
-        {
-          title: "Achievement Unlocked! 🏆",
-          message: "Battle Master - Win 5 battle votes in a row",
-          priority: "medium" as const,
-          actionUrl: "/app/rewards?tab=dashboard",
-          actionLabel: "View Achievement"
-        },
-        {
-          title: "Gift Received! 🎁",
-          message: "Received Crown gift during live stream - $25.00",
-          priority: "medium" as const,
-          actionUrl: "/app/rewards?tab=activities",
-          actionLabel: "View Activity"
-        },
-        {
-          title: "Challenge Completed! ⭐",
-          message: "Daily streak challenge - 7 days completed - $12.50",
-          priority: "low" as const,
-          actionUrl: "/app/rewards?tab=challenges",
-          actionLabel: "View Challenges"
-        },
-        {
-          title: "Goal Progress! 📈",
-          message: "You've reached 75% of your weekly earning goal",
-          priority: "low" as const,
-          actionUrl: "/app/rewards?tab=dashboard",
-          actionLabel: "View Goals"
-        },
-        {
-          title: "Seasonal Event! ❄️",
-          message: "Winter Rewards Festival is now active - 2x rewards!",
-          priority: "high" as const,
-          actionUrl: "/app/rewards?tab=dashboard",
-          actionLabel: "Join Event"
-        }
-      ];
-
-      const randomReward = rewardsNotifications[Math.floor(Math.random() * rewardsNotifications.length)];
-
-      newNotification = {
-        id: Date.now().toString(),
-        type: "rewards",
-        title: randomReward.title,
-        message: randomReward.message,
-        timestamp: new Date(),
-        read: false,
-        priority: randomReward.priority,
-        icon: <Gift className="w-4 h-4" />,
-        actionUrl: randomReward.actionUrl,
-        actionLabel: randomReward.actionLabel
-      };
-    } else {
-      newNotification = {
-        id: Date.now().toString(),
-        type: randomType,
-        title: "New notification",
-        message: "You have a new update",
-        timestamp: new Date(),
-        read: false,
-        priority: "medium",
-        icon: <Bell className="w-4 h-4" />,
-      };
-    }
-
-    addNotification(newNotification);
-  };
 
   const requestPermission = async () => {
     if ("Notification" in window && Notification.permission === "default") {
@@ -456,33 +149,6 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
           description: "You'll now receive desktop notifications",
         });
       }
-    }
-  };
-
-  const addNotification = (notification: Notification) => {
-    setNotifications((prev) => [notification, ...prev.slice(0, 99)]); // Keep last 100
-
-    // Play sound if enabled
-    if (settings.sound && settings.enabled && isInQuietHours() === false) {
-      playNotificationSound();
-    }
-
-    // Show desktop notification if enabled
-    if (
-      settings.desktop &&
-      settings.enabled &&
-      permission === "granted" &&
-      isInQuietHours() === false
-    ) {
-      showDesktopNotification(notification);
-    }
-
-    // Show toast notification
-    if (settings.enabled) {
-      toast({
-        title: notification.title,
-        description: notification.message,
-      });
     }
   };
 
@@ -506,12 +172,11 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
   };
 
   const playNotificationSound = () => {
-    if (audioRef.current) {
-      audioRef.current.play().catch(console.error);
-    }
+    // In a real implementation, you would play an actual sound
+    console.log("Playing notification sound");
   };
 
-  const showDesktopNotification = (notification: Notification) => {
+  const showDesktopNotification = (notification: any) => {
     if ("Notification" in window && Notification.permission === "granted") {
       const desktopNotification = new Notification(notification.title, {
         body: notification.message,
@@ -536,31 +201,13 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
     }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-  };
-
   const getFilteredNotifications = () => {
     if (filter === "all") return notifications;
     if (filter === "unread") return notifications.filter((n) => !n.read);
     return notifications.filter((n) => n.type === filter);
   };
 
-  const getPriorityColor = (priority: Notification["priority"]) => {
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
         return "text-red-600";
@@ -575,7 +222,7 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
     }
   };
 
-  const getTypeIcon = (type: Notification["type"]) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
       case "social":
         return <Users className="w-4 h-4" />;
@@ -594,27 +241,12 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
     }
   };
 
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return timestamp.toLocaleDateString();
+  const formatTimestamp = (timestamp: string) => {
+    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
   };
 
   return (
     <>
-      {/* Notification Sound */}
-      <audio ref={audioRef} preload="auto">
-        <source src="/notification-sound.mp3" type="audio/mpeg" />
-      </audio>
-
       {/* Notification Bell */}
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
@@ -684,7 +316,14 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
 
           {/* Notifications List */}
           <div className="max-h-96 overflow-y-auto">
-            {getFilteredNotifications().length === 0 ? (
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                </div>
+              </div>
+            ) : getFilteredNotifications().length === 0 ? (
               <div className="p-8 text-center">
                 <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
@@ -701,9 +340,9 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
                 >
                   <div className="flex gap-3">
                     <div
-                      className={`mt-1 ${getPriorityColor(notification.priority)}`}
+                      className={`mt-1 ${getPriorityColor(notification.priority || 'medium')}`}
                     >
-                      {notification.icon || getTypeIcon(notification.type)}
+                      {getTypeIcon(notification.type)}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -713,10 +352,10 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
                             {notification.title}
                           </p>
                           <p className="text-xs text-muted-foreground line-clamp-2">
-                            {notification.message}
+                            {notification.content}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatTimestamp(notification.timestamp)}
+                            {formatTimestamp(notification.created_at)}
                           </p>
                         </div>
 
@@ -774,7 +413,7 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({
                 >
                   Mark all read
                 </Button>
-                <Button variant="ghost" size="sm" onClick={clearAll}>
+                <Button variant="ghost" size="sm" onClick={() => {}}>
                   Clear all
                 </Button>
               </div>
