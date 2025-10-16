@@ -69,6 +69,20 @@ interface UnifiedNotificationContextType {
 
 const UnifiedNotificationContext = createContext<UnifiedNotificationContextType | undefined>(undefined);
 
+export function createCryptoNotification(payload: CryptoNotificationPayload): UnifiedNotification {
+  return {
+    id: Date.now().toString(),
+    type: 'crypto',
+    category: 'crypto',
+    title: payload.title,
+    message: payload.message,
+    timestamp: new Date(),
+    read: false,
+    priority: payload.priority || 'medium',
+    actionUrl: payload.actionUrl,
+  };
+}
+
 const defaultSettings: NotificationSettings = {
   enabled: true,
   sound: true,
