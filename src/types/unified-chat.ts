@@ -128,7 +128,7 @@ export const AI_ASSISTANT_CONFIG = {
   avatar: "/placeholder.svg",
   personality: "helpful",
   welcomeMessage:
-    "Hi! I'm Edith, your personal SoftChat assistant. I'm here to help you with content creation, trading insights, marketplace guidance, freelancing tips, and much more. What can I help you with today?",
+    "Hi! I'm Edith, your personal Eloity assistant. I'm here to help you with content creation, trading insights, marketplace guidance, freelancing tips, and much more. What can I help you with today?",
   capabilities: [
     "Content creation assistance",
     "Trading and crypto insights",

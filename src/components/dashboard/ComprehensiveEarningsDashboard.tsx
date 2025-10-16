@@ -51,7 +51,7 @@ import { formatCurrency, formatNumber } from "@/utils/formatters";
 interface EarningsData {
   // Total earnings overview
   totalEarnings: number;
-  totalSoftPoints: number;
+  totalEloity Points: number;
   availableToWithdraw: number;
   lifetimeEarnings: number;
 
@@ -185,7 +185,7 @@ const ComprehensiveEarningsDashboard: React.FC = () => {
       // In production, this would be multiple API calls combined
       const mockData: EarningsData = {
         totalEarnings: 1247.83,
-        totalSoftPoints: 3450,
+        totalEloity Points: 3450,
         availableToWithdraw: 892.5,
         lifetimeEarnings: 5689.42,
 
@@ -295,7 +295,7 @@ const ComprehensiveEarningsDashboard: React.FC = () => {
       {
         id: "1",
         title: "Create a Post",
-        description: "Share your thoughts and earn SoftPoints",
+        description: "Share your thoughts and earn Eloity Points",
         icon: MessageCircle,
         action: "create_post",
         earnings: 3.0,
@@ -519,10 +519,10 @@ const ComprehensiveEarningsDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-purple-700">
-                  SoftPoints
+                  Eloity Points
                 </p>
                 <p className="text-2xl font-bold text-purple-900">
-                  {formatNumber(earningsData?.totalSoftPoints || 0)}
+                  {formatNumber(earningsData?.totalEloity Points || 0)}
                 </p>
                 <p className="text-xs text-purple-600">
                   {userProgress?.streakDays || 0} day streak 🔥
@@ -957,7 +957,7 @@ const ComprehensiveEarningsDashboard: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-sm text-green-600">
-                            +{formatNumber(activity.softPoints)} SP
+                            +{formatNumber(activity.eloityPoints)} SP
                           </p>
                           {activity.walletBonus > 0 && (
                             <p className="text-xs text-green-500">

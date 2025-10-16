@@ -231,7 +231,7 @@ export const DataManagement: React.FC = () => {
       const blob = createExportBlob(exportData, exportOptions.format);
       downloadBlob(
         blob,
-        `softchat-export-${new Date().toISOString().split("T")[0]}.${exportOptions.format}`,
+        `eloity-export-${new Date().toISOString().split("T")[0]}.${exportOptions.format}`,
       );
 
       toast({

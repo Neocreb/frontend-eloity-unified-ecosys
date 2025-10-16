@@ -298,7 +298,7 @@ const ProfessionalCrypto = () => {
   return (
     <>
       <Helmet>
-        <title>Crypto - Professional Trading Platform | Softchat</title>
+        <title>Crypto - Professional Trading Platform | Eloity</title>
       </Helmet>
 
       <div className="min-h-screen bg-platform">

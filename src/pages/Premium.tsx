@@ -136,8 +136,8 @@ const Premium: React.FC = () => {
     { feature: "Priority support", included: true },
     { feature: "Custom thumbnails", included: true },
     { feature: "AI Credits", included: true, limit: "100/month" },
-    { feature: "SoftPoints bonus", included: true, highlight: true },
-    { feature: "SoftPoints cashback", included: true, highlight: true },
+    { feature: "Eloity Points bonus", included: true, highlight: true },
+    { feature: "Eloity Points cashback", included: true, highlight: true },
     { feature: "Scheduled content", included: true },
     { feature: "Advanced analytics", included: true },
     { feature: "Verified Spotlight", included: true },
@@ -552,9 +552,9 @@ const Premium: React.FC = () => {
               <div className="mx-auto mb-4 p-3 bg-indigo-100 rounded-full w-fit">
                 <Gift className="h-8 w-8 text-indigo-600" />
               </div>
-              <h3 className="font-semibold mb-2">SoftPoints Rewards</h3>
+              <h3 className="font-semibold mb-2">Eloity Points Rewards</h3>
               <p className="text-gray-600 text-sm">
-                Bonus SoftPoints on upgrade plus cashback on every renewal
+                Bonus Eloity Points on upgrade plus cashback on every renewal
               </p>
             </CardContent>
           </Card>

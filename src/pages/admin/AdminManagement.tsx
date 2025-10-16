@@ -559,7 +559,7 @@ const CreateAdminForm = ({
         <Input
           id="email"
           type="email"
-          placeholder="admin@softchat.com"
+          placeholder="admin@eloity.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

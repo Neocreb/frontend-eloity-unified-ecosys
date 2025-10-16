@@ -281,7 +281,7 @@ const liveStreams: VideoData[] = [
       verified: true,
       followerCount: 567000,
     },
-    description: "🎤 LIVE RAP BATTLE: Freestyle showdown! Drop bars and win SoftPoints! 💰",
+    description: "🎤 LIVE RAP BATTLE: Freestyle showdown! Drop bars and win Eloity Points! 💰",
     music: { title: "Hip Hop Battle", artist: "Street Beats" },
     stats: { likes: 1890, comments: 567, shares: 123, views: "15.2K watching" },
     hashtags: ["rapbattle", "freestyle", "hiphop", "bars"],
@@ -786,7 +786,7 @@ const EnhancedTikTokVideos: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
       <Helmet>
-        <title>Videos | SoftChat</title>
+        <title>Videos | Eloity</title>
         <meta
           name="description"
           content="Discover trending videos, live streams, and content from creators you follow"

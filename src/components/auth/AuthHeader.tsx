@@ -1,5 +1,5 @@
 import { CardTitle, CardDescription } from "@/components/ui/card";
-import SoftchatLogo from "@/components/ui/logo";
+import EloityLogo from "@/components/ui/logo";
 
 interface AuthHeaderProps {
   isLogin: boolean;
@@ -9,7 +9,7 @@ const AuthHeader = ({ isLogin }: AuthHeaderProps) => {
   return (
     <>
       <div className="flex justify-center mb-2">
-        <SoftchatLogo className="h-10 w-10" />
+        <EloityLogo className="h-10 w-10" />
       </div>
       <CardTitle className="text-2xl">Welcome to Eloity</CardTitle>
       <CardDescription>

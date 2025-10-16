@@ -37,7 +37,7 @@ const DeFi = () => {
   return (
     <>
       <Helmet>
-        <title>DeFi Dashboard - Decentralized Finance | Softchat</title>
+        <title>DeFi Dashboard - Decentralized Finance | Eloity</title>
         <meta name="description" content="Access decentralized finance protocols, stake your assets, and earn passive income through our comprehensive DeFi dashboard." />
       </Helmet>
 

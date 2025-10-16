@@ -606,7 +606,7 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
                 onClick={() => {
                   toast({
                     title: "Recharge Wallet 💰",
-                    description: "Add SoftPoints to your wallet",
+                    description: "Add Eloity Points to your wallet",
                   });
                 }}
                 variant="ghost"

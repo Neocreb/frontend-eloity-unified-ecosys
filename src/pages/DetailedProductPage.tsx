@@ -251,7 +251,7 @@ const DetailedProductPage: React.FC = () => {
       
       // Note: Purchase rewards will be awarded upon payment completion
       notification.success('Proceeding to checkout...', {
-        description: 'Complete payment to earn SoftPoints rewards'
+        description: 'Complete payment to earn Eloity Points rewards'
       });
 
       // Navigate to checkout with product data

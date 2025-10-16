@@ -215,7 +215,7 @@ const LiveCommunityEvents = () => {
       type: "challenge",
       host: {
         id: "5",
-        name: "SoftChat Team",
+        name: "Eloity Team",
         avatar:
           "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
         verified: true,

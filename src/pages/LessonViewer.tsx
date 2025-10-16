@@ -311,7 +311,7 @@ const LessonViewer = () => {
   return (
     <>
       <Helmet>
-        <title>{lesson.title} - {course.title} | Softchat</title>
+        <title>{lesson.title} - {course.title} | Eloity</title>
         <meta name="description" content={lesson.description} />
       </Helmet>
 

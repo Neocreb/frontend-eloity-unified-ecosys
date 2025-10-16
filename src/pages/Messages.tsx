@@ -33,7 +33,7 @@ const Messages = () => {
         isAI: true,
       },
       lastMessage:
-        "Hi! I'm here to help you with anything on SoftChat. Ask me about trading, content creation, earning tips, or anything else!",
+        "Hi! I'm here to help you with anything on Eloity. Ask me about trading, content creation, earning tips, or anything else!",
       time: "now",
       unread: 0,
       online: true,
@@ -72,7 +72,7 @@ const Messages = () => {
         {
           id: "welcome",
           type: "assistant",
-          content: `Hey ${user?.username || user?.email || "there"}! 👋 I'm Edith, your personal SoftChat assistant. I'm here to help you succeed on the platform - whether you want to create amazing content, trade crypto, sell products, or earn through freelancing. Just ask me anything and I'll guide you step by step!`,
+          content: `Hey ${user?.username || user?.email || "there"}! 👋 I'm Edith, your personal Eloity assistant. I'm here to help you succeed on the platform - whether you want to create amazing content, trade crypto, sell products, or earn through freelancing. Just ask me anything and I'll guide you step by step!`,
           timestamp: new Date(),
         },
       ]);
@@ -127,7 +127,7 @@ const Messages = () => {
     return (
       <>
         <Helmet>
-          <title>Chat with Edith - AI Assistant | Softchat</title>
+          <title>Chat with Edith - AI Assistant | Eloity</title>
         </Helmet>
 
         <div className="max-w-4xl mx-auto h-screen flex flex-col">
@@ -263,7 +263,7 @@ const Messages = () => {
               <Input
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask Edith anything about SoftChat..."
+                placeholder="Ask Edith anything about Eloity..."
                 className="flex-1"
                 disabled={isTyping}
               />
@@ -280,7 +280,7 @@ const Messages = () => {
   return (
     <>
       <Helmet>
-        <title>Messages | Softchat</title>
+        <title>Messages | Eloity</title>
       </Helmet>
 
       <div className="max-w-4xl mx-auto">

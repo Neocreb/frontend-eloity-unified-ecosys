@@ -642,7 +642,7 @@ const SmartBoostSuggestions: React.FC<SmartBoostSuggestionsProps> = ({
                 <div className="p-3 border rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Zap className="h-4 w-4" />
-                    <span>SoftPoints Wallet</span>
+                    <span>Eloity Points Wallet</span>
                   </div>
                   <span className="text-green-600 font-medium">
                     Balance: 1,250 SP

@@ -12,7 +12,7 @@ export interface FeedPost {
   video_url?: string;
   tags?: string[];
   filter?: string;
-  softpoints?: number;
+  eloityPoints?: number;
   created_at: string;
   updated_at: string;
   author?: {

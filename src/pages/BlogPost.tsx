@@ -159,10 +159,10 @@ export default function BlogPostPage() {
             <div className="flex items-center gap-6">
               <Link
                 to="/"
-                className="flex items-center gap-2 text-lg font-bold text-softchat-700 hover:text-softchat-600 transition-colors"
+                className="flex items-center gap-2 text-lg font-bold text-eloity-700 hover:text-eloity-600 transition-colors"
               >
                 <Home className="h-5 w-5" />
-                Softchat
+                Eloity
               </Link>
               <span className="text-gray-300">|</span>
               <Link

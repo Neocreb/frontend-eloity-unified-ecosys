@@ -546,7 +546,7 @@ class AIPersonalAssistantService {
         priority: "high",
         title: "High-Impact Trending Opportunity",
         description:
-          "React 18 is trending with 95% momentum in developer communities. Creating content now could reach 4,500+ users and earn significant SoftPoints.",
+          "React 18 is trending with 95% momentum in developer communities. Creating content now could reach 4,500+ users and earn significant Eloity Points.",
         actionable: true,
         actionLabel: "Capitalize Now",
         actionUrl: "/create?topic=react18",

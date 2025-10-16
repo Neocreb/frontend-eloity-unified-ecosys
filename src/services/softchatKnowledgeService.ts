@@ -1,6 +1,6 @@
 // @ts-nocheck
 /**
- * Comprehensive SoftChat Platform Knowledge Base
+ * Comprehensive Eloity Platform Knowledge Base
  * Contains detailed information about all platform features, tutorials, tips, and troubleshooting
  */
 
@@ -31,7 +31,7 @@ interface Tutorial {
   nextSteps?: string[];
 }
 
-export class SoftChatKnowledgeService {
+export class EloityKnowledgeService {
   private readonly featureGuides: Record<string, FeatureGuide> = {
     "social-feed": {
       name: "Social Feed & Content Creation",
@@ -60,7 +60,7 @@ export class SoftChatKnowledgeService {
         "Connect with like-minded people worldwide",
         "Share your passions and expertise",
         "Discover new ideas and perspectives",
-        "Earn SoftPoints for active participation",
+        "Earn Eloity Points for active participation",
         "Get featured on trending pages",
       ],
       commonIssues: [
@@ -96,7 +96,7 @@ export class SoftChatKnowledgeService {
         "Do thorough research before buying any cryptocurrency",
         "Use dollar-cost averaging for long-term investing",
         "Set price alerts for cryptocurrencies you're watching",
-        "Keep your crypto secure in the SoftChat wallet",
+        "Keep your crypto secure in the Eloity wallet",
         "Follow market news and trends for informed decisions",
         "Use the P2P feature for direct trading with other users",
       ],
@@ -211,14 +211,14 @@ export class SoftChatKnowledgeService {
     },
 
     "wallet-system": {
-      name: "SoftChat Digital Wallet",
+      name: "Eloity Digital Wallet",
       description:
         "Unified financial hub managing crypto, fiat currencies, and earnings from all platform activities. Bank-level security with instant transactions.",
       howToUse: [
         "Access your wallet from any page using the wallet icon",
         "View your balance across all currencies (crypto and fiat)",
         "Add funds using bank transfer, debit card, or crypto transfer",
-        "Send money to other SoftChat users instantly and free",
+        "Send money to other Eloity users instantly and free",
         "Withdraw earnings to your bank account or crypto wallet",
         "Track all transactions with detailed history",
         "Set up automatic savings and investment features",
@@ -233,7 +233,7 @@ export class SoftChatKnowledgeService {
       ],
       benefits: [
         "Multi-currency support (50+ cryptocurrencies and major fiat)",
-        "Instant, free transfers between SoftChat users",
+        "Instant, free transfers between Eloity users",
         "Integration with all platform earning opportunities",
         "Advanced security with insurance protection",
         "Real-time balance tracking and notifications",
@@ -248,7 +248,7 @@ export class SoftChatKnowledgeService {
     },
 
     "rewards-system": {
-      name: "SoftPoints Rewards Program",
+      name: "Eloity Points Rewards Program",
       description:
         "Earn points for platform activity and redeem for real rewards! The more active you are, the more you earn.",
       howToUse: [
@@ -296,7 +296,7 @@ export class SoftChatKnowledgeService {
         "Your intelligent AI companion providing real-time information, platform guidance, emotional support, and friendly conversation 24/7.",
       howToUse: [
         "Access Edith from the chat section or AI Assistant page",
-        "Ask questions about any SoftChat feature or general topics",
+        "Ask questions about any Eloity feature or general topics",
         "Request real-time information like crypto prices or weather",
         "Get step-by-step guidance for platform features",
         "Have casual conversations for emotional support",
@@ -326,7 +326,7 @@ export class SoftChatKnowledgeService {
 
   private readonly tutorials: Record<string, Tutorial> = {
     "getting-started": {
-      title: "Getting Started with SoftChat",
+      title: "Getting Started with Eloity",
       description:
         "Complete beginner guide to set up your account and start using all platform features",
       difficulty: "beginner",
@@ -369,14 +369,14 @@ export class SoftChatKnowledgeService {
             "Share an introduction post to connect with the community",
           tips: [
             "Introduce yourself and your interests",
-            "Use relevant hashtags like #NewToSoftChat",
+            "Use relevant hashtags like #NewToEloity",
           ],
         },
         {
           step: 5,
           title: "Start Earning",
           description:
-            "Begin earning SoftPoints through daily activities and engagement",
+            "Begin earning Eloity Points through daily activities and engagement",
           tips: [
             "Check the Rewards section daily",
             "Engage genuinely with other users",
@@ -533,7 +533,7 @@ export class SoftChatKnowledgeService {
           "Contact support if the issue persists after 24 hours",
         ],
         prevention:
-          "Add noreply@softchat.com to your contacts to avoid spam filtering",
+          "Add noreply@eloity.com to your contacts to avoid spam filtering",
       },
     },
     "technical-issues": {
@@ -591,24 +591,24 @@ export class SoftChatKnowledgeService {
   private readonly faqCategories = {
     general: [
       {
-        question: "What is SoftChat?",
+        question: "What is Eloity?",
         answer:
-          "SoftChat is an all-in-one social platform combining social media, cryptocurrency trading, digital marketplace, freelancing, and rewards - all in one place. It's designed to help you connect, create, trade, and earn.",
+          "Eloity is an all-in-one social platform combining social media, cryptocurrency trading, digital marketplace, freelancing, and rewards - all in one place. It's designed to help you connect, create, trade, and earn.",
       },
       {
-        question: "Is SoftChat free to use?",
+        question: "Is Eloity free to use?",
         answer:
-          "Yes! SoftChat is free to join and use. We make money through small transaction fees on trades and sales, but the core platform features are completely free.",
+          "Yes! Eloity is free to join and use. We make money through small transaction fees on trades and sales, but the core platform features are completely free.",
       },
       {
-        question: "How do I earn money on SoftChat?",
+        question: "How do I earn money on Eloity?",
         answer:
-          "There are many ways: sell products in the marketplace, offer freelance services, trade cryptocurrency, earn SoftPoints through activities, or monetize your content through tips and sponsorships.",
+          "There are many ways: sell products in the marketplace, offer freelance services, trade cryptocurrency, earn Eloity Points through activities, or monetize your content through tips and sponsorships.",
       },
     ],
     security: [
       {
-        question: "How secure is my money on SoftChat?",
+        question: "How secure is my money on Eloity?",
         answer:
           "We use bank-level security with 256-bit encryption, cold storage for crypto assets, insurance protection, and multi-factor authentication. Your funds are safer here than in many traditional banks.",
       },
@@ -757,7 +757,7 @@ export class SoftChatKnowledgeService {
       );
     }
 
-    recommendations.push("Complete daily activities to earn more SoftPoints!");
+    recommendations.push("Complete daily activities to earn more Eloity Points!");
 
     return recommendations;
   }
@@ -805,7 +805,7 @@ export class SoftChatKnowledgeService {
       "Engage with 5-10 posts in your feed to build community connections",
       "Check for new freelance projects that match your skills",
       "Update your marketplace listings or add new products",
-      "Complete daily reward activities for bonus SoftPoints",
+      "Complete daily reward activities for bonus Eloity Points",
       "Share something that brings you joy today",
       "Support other creators by commenting and sharing their content",
       "Set a small financial goal and track your progress",
@@ -818,4 +818,4 @@ export class SoftChatKnowledgeService {
   }
 }
 
-export const softChatKnowledgeService = new SoftChatKnowledgeService();
+export const softChatKnowledgeService = new EloityKnowledgeService();

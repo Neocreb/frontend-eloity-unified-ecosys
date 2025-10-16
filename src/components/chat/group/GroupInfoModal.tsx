@@ -500,7 +500,7 @@ export const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
                   try {
                     const shareData = {
                       title: `Join ${group.groupName}`,
-                      text: `You're invited to join ${group.groupName} on Softchat`,
+                      text: `You're invited to join ${group.groupName} on Eloity`,
                       url: inviteLink || window.location.href,
                     };
 
@@ -508,7 +508,7 @@ export const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
                       await navigator.share(shareData);
                     } else {
                       // Fallback: copy to clipboard
-                      const shareText = `Join ${group.groupName} on Softchat: ${inviteLink || window.location.href}`;
+                      const shareText = `Join ${group.groupName} on Eloity: ${inviteLink || window.location.href}`;
                       await navigator.clipboard.writeText(shareText);
                       toast({
                         title: "Share link copied",

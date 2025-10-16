@@ -31,7 +31,7 @@ export class EnhancedAIService {
       benefits: [
         "Build your personal brand",
         "Engage with like-minded people",
-        "Earn SoftPoints for content creation",
+        "Earn Eloity Points for content creation",
         "Monetize through engagement",
       ],
       howToUse: [
@@ -79,7 +79,7 @@ export class EnhancedAIService {
         "Generate income from product sales",
         "Find unique products from community",
         "Build seller reputation",
-        "Earn SoftPoints for transactions",
+        "Earn Eloity Points for transactions",
       ],
       howToUse: [
         "Visit Marketplace section",
@@ -142,7 +142,7 @@ export class EnhancedAIService {
       ],
     },
     rewards_system: {
-      name: "SoftPoints Rewards",
+      name: "Eloity Points Rewards",
       description:
         "Earn points for platform activities and redeem for benefits",
       benefits: [
@@ -232,7 +232,7 @@ export class EnhancedAIService {
     // Add confidence and sources
     response.confidence = confidence;
     response.sources = [
-      "SoftChat Platform Knowledge",
+      "Eloity Platform Knowledge",
       "AI Assistant Training",
       "User Guidelines",
     ];
@@ -395,7 +395,7 @@ export class EnhancedAIService {
     const userName = userContext?.username || userContext?.email || "there";
 
     return {
-      message: `Hey ${userName}! 👋 I'm Edith, your personal SoftChat assistant. I'm here to help you succeed on the platform - whether you want to create amazing content, trade crypto, sell products, or earn through freelancing. Just ask me anything and I'll guide you step by step!`,
+      message: `Hey ${userName}! 👋 I'm Edith, your personal Eloity assistant. I'm here to help you succeed on the platform - whether you want to create amazing content, trade crypto, sell products, or earn through freelancing. Just ask me anything and I'll guide you step by step!`,
       suggestedActions: [
         { label: "Show me around", action: "show_features" },
         { label: "Help me get started", action: "show_guide" },
@@ -469,7 +469,7 @@ Want me to show you around or answer any specific questions about it?`,
 
     // General features overview
     return {
-      message: `SoftChat has everything you need to succeed online! Here's what you can do:\n\n🌟 Social Feed - Share posts, build your following, and connect with others\n💰 Crypto Trading - Buy and sell 50+ cryptocurrencies with real-time data\n🛒 Marketplace - Sell your products or buy from other users\n💼 Freelance Hub - Offer your skills or hire talented people\n🎥 Video Studio - Create videos and live stream to your audience\n🏆 Rewards System - Earn SoftPoints for every activity you do\n��� Digital Wallet - Keep track of all your earnings in one place\n\nWhat sounds most interesting to you? I can help you get started with any of these!`,
+      message: `Eloity has everything you need to succeed online! Here's what you can do:\n\n🌟 Social Feed - Share posts, build your following, and connect with others\n💰 Crypto Trading - Buy and sell 50+ cryptocurrencies with real-time data\n🛒 Marketplace - Sell your products or buy from other users\n💼 Freelance Hub - Offer your skills or hire talented people\n🎥 Video Studio - Create videos and live stream to your audience\n🏆 Rewards System - Earn Eloity Points for every activity you do\n��� Digital Wallet - Keep track of all your earnings in one place\n\nWhat sounds most interesting to you? I can help you get started with any of these!`,
       suggestedActions: [
         { label: "Create my first post", action: "create", url: "/create" },
         {
@@ -560,7 +560,7 @@ Pro Tips: Use trending hashtags, post consistently, and always create value for 
 
     // General how-to response
     return {
-      message: `I'd love to help you learn anything on SoftChat! Here are the most popular things people ask about:\n\n📱 Content Creation - How to post amazing content that gets noticed\n💰 Crypto Trading - Step-by-step guide to start trading safely\n🛒 Selling Products - List and sell your stuff in the marketplace\n💼 Freelancing - Turn your skills into money\n🎥 Video Creation - Make videos and live streams that people love\n🏆 Earning Points - All the ways to rack up SoftPoints\n\nWhat would you like to dive into? I'll walk you through it!`,
+      message: `I'd love to help you learn anything on Eloity! Here are the most popular things people ask about:\n\n📱 Content Creation - How to post amazing content that gets noticed\n💰 Crypto Trading - Step-by-step guide to start trading safely\n🛒 Selling Products - List and sell your stuff in the marketplace\n💼 Freelancing - Turn your skills into money\n🎥 Video Creation - Make videos and live streams that people love\n🏆 Earning Points - All the ways to rack up Eloity Points\n\nWhat would you like to dive into? I'll walk you through it!`,
       suggestedActions: [
         { label: "Pick a topic for me", action: "tutorials" },
         { label: "Show me the basics", action: "quick_start" },
@@ -577,7 +577,7 @@ Pro Tips: Use trending hashtags, post consistently, and always create value for 
 
   private generateOptimizationResponse(input: string): SmartResponse {
     return {
-      message: `Great question! Here's how to level up your SoftChat game:\n\n🎯 For better content engagement:\n• Post between 7-9 PM when most people are online\n• Use 3-5 hashtags that actually relate to your content\n• Try making more videos - they get 34% more engagement!\n• Reply to comments quickly, like within 2 hours\n\n📈 To earn more money:\n• Do your daily activities for easy SoftPoints\n• Use multiple features - cross-promote your content\n• Focus on the big earners like crypto trading and marketplace sales\n• Stay consistent - show up regularly\n\n💡 Make your profile shine:\n• Fill out every section completely\n• Use professional photos that actually look like you\n• Show off your best work in your portfolio\n• Get that verified checkmark if you can\n\nWhat area would you like me to dive deeper into?`,
+      message: `Great question! Here's how to level up your Eloity game:\n\n🎯 For better content engagement:\n• Post between 7-9 PM when most people are online\n• Use 3-5 hashtags that actually relate to your content\n• Try making more videos - they get 34% more engagement!\n• Reply to comments quickly, like within 2 hours\n\n📈 To earn more money:\n• Do your daily activities for easy Eloity Points\n• Use multiple features - cross-promote your content\n• Focus on the big earners like crypto trading and marketplace sales\n• Stay consistent - show up regularly\n\n💡 Make your profile shine:\n• Fill out every section completely\n• Use professional photos that actually look like you\n• Show off your best work in your portfolio\n• Get that verified checkmark if you can\n\nWhat area would you like me to dive deeper into?`,
       suggestedActions: [
         {
           label: "Check my current stats",
@@ -861,7 +861,7 @@ What specific aspect interests you most? I'd love to explore it together!`,
 
   private generateGeneralKnowledgeResponse(input: string): SmartResponse {
     return {
-      message: `I'd love to help you learn about that! While I'm primarily designed to help with SoftChat, I also enjoy exploring general knowledge topics with curious minds like yours.
+      message: `I'd love to help you learn about that! While I'm primarily designed to help with Eloity, I also enjoy exploring general knowledge topics with curious minds like yours.
 
 I can chat about science, philosophy, history, how things work, and many other fascinating topics. My responses come from my training, so while I aim to be helpful and accurate, I always encourage you to explore topics further through reliable sources too.
 
@@ -906,15 +906,15 @@ What would you like to know more about? Whether it's something scientific, philo
 
     const responses = {
       earning: {
-        message: `Multiple Ways to Earn on SoftChat:
+        message: `Multiple Ways to Earn on Eloity:
 
 💰 High-Earning Activities:
 • Crypto trading (potential high returns)
-• Marketplace sales (500 SoftPoints per sale)
+• Marketplace sales (500 Eloity Points per sale)
 • Freelance services (direct payments)
 • Video monetization (views + tips)
 
-🏆 SoftPoints Earning:
+🏆 Eloity Points Earning:
 • Daily login: 25 points
 • Create content: 100 points
 • Trading activity: 200 points
@@ -924,7 +924,7 @@ My advice: Focus on 2-3 areas consistently for the best results!`,
         suggestedActions: [
           { label: "Check Earning Opportunities", action: "earnings" },
           {
-            label: "View SoftPoints Balance",
+            label: "View Eloity Points Balance",
             action: "wallet",
             url: "/wallet",
           },
@@ -975,7 +975,7 @@ Remember: Only trade what you can afford to lose!`,
         ],
       },
       general: {
-        message: `Welcome to SoftChat! 🌟
+        message: `Welcome to Eloity! 🌟
 
 I'm Edith, your AI assistant. I can help you with:
 
@@ -986,7 +986,7 @@ I'm Edith, your AI assistant. I can help you with:
 📚 Learning Resources - Tutorials and guides
 🤔 General Questions - Life, science, philosophy, and more!
 
-I love chatting about all kinds of topics - from SoftChat features to life's big questions! Just ask me anything and let's explore together.`,
+I love chatting about all kinds of topics - from Eloity features to life's big questions! Just ask me anything and let's explore together.`,
         suggestedActions: [
           { label: "Platform Tour", action: "tour" },
           { label: "Ask me anything", action: "general_chat" },
@@ -1035,7 +1035,7 @@ I love chatting about all kinds of topics - from SoftChat features to life's big
       "What products sell best in the marketplace?",
       "How can I optimize my freelance profile?",
       "What are the most effective hashtags to use?",
-      "How do I earn more SoftPoints?",
+      "How do I earn more Eloity Points?",
       "What video content performs best?",
       "How can I build a stronger community?",
       "What are the latest market trends?",
@@ -1051,7 +1051,7 @@ I love chatting about all kinds of topics - from SoftChat features to life's big
       "Your video content gets 34% more engagement - create more videos!",
       "Tuesday 7 PM is your optimal posting time",
       "Crypto analysis posts generate 2x more revenue for you",
-      "You're close to the next SoftPoints reward tier",
+      "You're close to the next Eloity Points reward tier",
       "Your marketplace listing photos could be improved for better sales",
     ];
   }

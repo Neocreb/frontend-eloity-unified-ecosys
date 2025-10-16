@@ -68,8 +68,8 @@ import { cn } from "@/lib/utils";
 
 interface UnifiedEconomyData {
   // Activity Economy Data
-  currentSoftPoints: number;
-  totalSoftPointsEarned: number;
+  currentEloity Points: number;
+  totalEloity PointsEarned: number;
   totalActivities: number;
   trustScore: {
     current: number;
@@ -95,7 +95,7 @@ interface UnifiedEconomyData {
     usdt: number;
     eth: number;
     btc: number;
-    softPoints: number;
+    eloityPoints: number;
   };
 
   // Performance Data
@@ -119,7 +119,7 @@ interface ActivityItem {
   id: string;
   type: string;
   description: string;
-  softPoints: number;
+  eloityPoints: number;
   walletBonus: number;
   timestamp: string;
   status: string;
@@ -134,7 +134,7 @@ interface ContentItem {
   views: number;
   earnings: number;
   tips: number;
-  softPoints: number;
+  eloityPoints: number;
   createdAt: string;
 }
 
@@ -187,8 +187,8 @@ const UnifiedCreatorEconomy: React.FC = () => {
       // In production, this would combine multiple API calls
       // For now, using comprehensive demo data
       setEconomyData({
-        currentSoftPoints: 2450,
-        totalSoftPointsEarned: 15680,
+        currentEloity Points: 2450,
+        totalEloity PointsEarned: 15680,
         totalActivities: 1247,
         trustScore: {
           current: 78.5,
@@ -210,7 +210,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           usdt: 9700,
           eth: 0.08,
           btc: 0.002,
-          softPoints: 2450,
+          eloityPoints: 2450,
         },
         contentMetrics: {
           totalContent: 127,
@@ -232,7 +232,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           id: "1",
           type: "post_content",
           description: "Created new post",
-          softPoints: 3.0,
+          eloityPoints: 3.0,
           walletBonus: 0,
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
           status: "confirmed",
@@ -242,7 +242,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           id: "2",
           type: "tip_received",
           description: "Received tip from Alice",
-          softPoints: 1.0,
+          eloityPoints: 1.0,
           walletBonus: 25.0,
           timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
           status: "confirmed",
@@ -252,7 +252,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           id: "3",
           type: "like_post",
           description: "Liked 5 posts",
-          softPoints: 2.5,
+          eloityPoints: 2.5,
           walletBonus: 0,
           timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
           status: "confirmed",
@@ -262,7 +262,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           id: "4",
           type: "subscription_earned",
           description: "New subscriber: Bob",
-          softPoints: 10.0,
+          eloityPoints: 10.0,
           walletBonus: 9.99,
           timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
           status: "confirmed",
@@ -281,7 +281,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           views: 12450,
           earnings: 240.5,
           tips: 8,
-          softPoints: 45,
+          eloityPoints: 45,
           createdAt: new Date(
             Date.now() - 2 * 24 * 60 * 60 * 1000,
           ).toISOString(),
@@ -293,7 +293,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           views: 5678,
           earnings: 89.25,
           tips: 3,
-          softPoints: 23,
+          eloityPoints: 23,
           createdAt: new Date(
             Date.now() - 1 * 24 * 60 * 60 * 1000,
           ).toISOString(),
@@ -305,7 +305,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           views: 23456,
           earnings: 456.75,
           tips: 12,
-          softPoints: 78,
+          eloityPoints: 78,
           createdAt: new Date(
             Date.now() - 3 * 24 * 60 * 60 * 1000,
           ).toISOString(),
@@ -507,19 +507,19 @@ const UnifiedCreatorEconomy: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* SoftPoints */}
+        {/* Eloity Points */}
         <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-purple-700">
-                  SoftPoints
+                  Eloity Points
                 </p>
                 <p className="text-2xl font-bold text-purple-900">
-                  {formatNumber(economyData?.currentSoftPoints || 0)}
+                  {formatNumber(economyData?.currentEloity Points || 0)}
                 </p>
                 <p className="text-xs text-purple-600">
-                  +{formatNumber(economyData?.totalSoftPointsEarned || 0)}{" "}
+                  +{formatNumber(economyData?.totalEloity PointsEarned || 0)}{" "}
                   earned
                 </p>
               </div>
@@ -738,9 +738,9 @@ const UnifiedCreatorEconomy: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-2">
-                        {activity.softPoints > 0 && (
+                        {activity.eloityPoints > 0 && (
                           <Badge variant="secondary" className="text-xs">
-                            +{formatNumber(activity.softPoints)} SP
+                            +{formatNumber(activity.eloityPoints)} SP
                           </Badge>
                         )}
                         {activity.walletBonus > 0 && (
@@ -808,9 +808,9 @@ const UnifiedCreatorEconomy: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="flex items-center gap-2">
-                          {activity.softPoints > 0 && (
+                          {activity.eloityPoints > 0 && (
                             <Badge variant="secondary" className="text-xs">
-                              +{formatNumber(activity.softPoints)} SP
+                              +{formatNumber(activity.eloityPoints)} SP
                             </Badge>
                           )}
                           {activity.walletBonus > 0 && (
@@ -888,10 +888,10 @@ const UnifiedCreatorEconomy: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-lg font-bold text-purple-600">
-                          {content.softPoints}
+                          {content.eloityPoints}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          SoftPoints
+                          Eloity Points
                         </p>
                       </div>
                     </div>
@@ -1187,7 +1187,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Input
-                    value="https://softchat.app/join?ref=CREATOR123"
+                    value="https://eloity.app/join?ref=CREATOR123"
                     readOnly
                     className="flex-1"
                   />
@@ -1306,10 +1306,10 @@ const UnifiedCreatorEconomy: React.FC = () => {
                   <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Star className="w-5 h-5 text-purple-600" />
-                      <span className="font-medium">SoftPoints</span>
+                      <span className="font-medium">Eloity Points</span>
                     </div>
                     <span className="font-bold text-purple-600">
-                      {formatNumber(economyData?.walletBalance.softPoints || 0)}
+                      {formatNumber(economyData?.walletBalance.eloityPoints || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">

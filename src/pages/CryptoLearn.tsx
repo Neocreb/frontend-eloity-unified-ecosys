@@ -135,7 +135,7 @@ const CryptoLearn = () => {
   return (
     <>
       <Helmet>
-        <title>Crypto Education Center - Learn Trading & Blockchain | Softchat</title>
+        <title>Crypto Education Center - Learn Trading & Blockchain | Eloity</title>
         <meta name="description" content="Comprehensive cryptocurrency education with courses, tutorials, and expert insights on trading, blockchain, and DeFi." />
       </Helmet>
 

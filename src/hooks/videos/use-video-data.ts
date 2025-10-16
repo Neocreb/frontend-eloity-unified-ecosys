@@ -168,7 +168,7 @@ export const useVideoData = () => {
       
       if (navigator.share) {
         await navigator.share({
-          title: 'Check out this video on Softchat',
+          title: 'Check out this video on Eloity',
           url: shareUrl
         });
       } else if (navigator.clipboard) {

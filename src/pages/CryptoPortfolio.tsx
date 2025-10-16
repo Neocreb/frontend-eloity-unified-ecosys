@@ -37,7 +37,7 @@ const CryptoPortfolio = () => {
   return (
     <>
       <Helmet>
-        <title>Crypto Portfolio - Asset Management | Softchat</title>
+        <title>Crypto Portfolio - Asset Management | Eloity</title>
         <meta name="description" content="Track your cryptocurrency investments, analyze performance, and manage your digital asset portfolio." />
       </Helmet>
 

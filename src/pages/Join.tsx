@@ -37,7 +37,7 @@ const Join: React.FC = () => {
       <div className="text-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
         <h2 className="text-xl font-semibold mb-2">Redirecting...</h2>
-        <p className="text-muted-foreground">Taking you to Softchat registration</p>
+        <p className="text-muted-foreground">Taking you to Eloity registration</p>
       </div>
     </div>
   );

@@ -474,7 +474,7 @@ const EnhancedVideosV2: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
       <Helmet>
-        <title>Enhanced Videos | Softchat</title>
+        <title>Enhanced Videos | Eloity</title>
         <meta
           name="description"
           content="Discover, create, and share amazing videos with advanced tools"

@@ -154,7 +154,7 @@ const mockOrders: Order[] = [
     taxAmount: 2.4,
     discountAmount: 10.0,
     totalAmount: 22.39,
-    paymentMethod: "soft_points",
+    paymentMethod: "eloity_points",
     paymentCurrency: "SOFT_POINTS",
     paymentStatus: "paid",
     downloadUrls: ["https://example.com/download/ebook-collection"],

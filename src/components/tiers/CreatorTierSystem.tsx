@@ -44,7 +44,7 @@ export interface CreatorTier {
   };
   perks: string[];
   rewards: {
-    softPointsBonus: number;
+    eloityPointsBonus: number;
     monthlyBonus: number;
     specialFeatures: string[];
   };
@@ -90,7 +90,7 @@ const tiers: CreatorTier[] = [
       'Standard support',
     ],
     rewards: {
-      softPointsBonus: 10,
+      eloityPointsBonus: 10,
       monthlyBonus: 50,
       specialFeatures: ['Basic Analytics'],
     },
@@ -116,7 +116,7 @@ const tiers: CreatorTier[] = [
       'Custom badges',
     ],
     rewards: {
-      softPointsBonus: 25,
+      eloityPointsBonus: 25,
       monthlyBonus: 200,
       specialFeatures: ['Featured Feed', 'Advanced Analytics', 'Custom Badges'],
     },
@@ -145,7 +145,7 @@ const tiers: CreatorTier[] = [
       'Revenue sharing',
     ],
     rewards: {
-      softPointsBonus: 50,
+      eloityPointsBonus: 50,
       monthlyBonus: 1000,
       specialFeatures: [
         'VIP Access',
@@ -253,7 +253,7 @@ const CreatorTierSystem: React.FC<CreatorTierSystemProps> = ({ userProgress, onU
             
             <div className="text-right">
               <div className="text-2xl font-bold text-white">
-                +{currentTier.rewards.softPointsBonus} SP
+                +{currentTier.rewards.eloityPointsBonus} SP
               </div>
               <div className="text-sm text-gray-400">per video</div>
             </div>
@@ -339,7 +339,7 @@ const CreatorTierSystem: React.FC<CreatorTierSystemProps> = ({ userProgress, onU
                         </div>
                         
                         <div className="text-sm text-gray-400 mb-2">
-                          +{tier.rewards.softPointsBonus} SP bonus • Monthly: {tier.rewards.monthlyBonus} SP
+                          +{tier.rewards.eloityPointsBonus} SP bonus • Monthly: {tier.rewards.monthlyBonus} SP
                         </div>
                         
                         <div className="flex flex-wrap gap-1">

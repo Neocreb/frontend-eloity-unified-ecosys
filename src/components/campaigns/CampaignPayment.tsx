@@ -77,7 +77,7 @@ const CampaignPayment: React.FC<CampaignPaymentProps> = ({
   const [paymentStep, setPaymentStep] = useState<"select" | "confirm" | "processing" | "success">("select");
   const [depositAmount, setDepositAmount] = useState<number>(0);
   const [walletBalances, setWalletBalances] = useState({
-    softpoints: 0,
+    eloityPoints: 0,
     usdt: 0,
     btc: 0,
     eth: 0,
@@ -96,7 +96,7 @@ const CampaignPayment: React.FC<CampaignPaymentProps> = ({
       try {
         const { data, error } = await supabase
           .from('wallets')
-          .select('softpoints_balance, usdt_balance, btc_balance, eth_balance, sol_balance')
+          .select('eloity_points_balance, usdt_balance, btc_balance, eth_balance, sol_balance')
           .eq('user_id', user.id)
           .maybeSingle() as any; // Type assertion due to stale type cache
 
@@ -109,7 +109,7 @@ const CampaignPayment: React.FC<CampaignPaymentProps> = ({
           });
         } else if (data) {
           setWalletBalances({
-            softpoints: data.softpoints_balance || 0,
+            eloityPoints: data.eloity_points_balance || 0,
             usdt: Number(data.usdt_balance) || 0,
             btc: Number(data.btc_balance) || 0,
             eth: Number(data.eth_balance) || 0,
@@ -130,12 +130,12 @@ const CampaignPayment: React.FC<CampaignPaymentProps> = ({
   const PAYMENT_METHODS = [
     {
       id: "eloits",
-      name: "Eloits (Softpoints)",
+      name: "Eloits (Eloity Points)",
       icon: Zap,
-      description: "Use your Softpoints balance",
+      description: "Use your Eloity Points balance",
       available: true,
-      balance: walletBalances.softpoints,
-      currency: "SP",
+      balance: walletBalances.eloityPoints,
+      currency: "EP",
       bonuses: [
         { type: "reach", multiplier: 1.1, description: "10% extra reach" },
         { type: "cashback", percentage: 5, description: "5% cashback on completed campaigns" }

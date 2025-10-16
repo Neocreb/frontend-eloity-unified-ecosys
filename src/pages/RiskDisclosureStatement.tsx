@@ -63,7 +63,7 @@ export default function RiskDisclosureStatement() {
           </div>
           <p className="text-gray-600 text-lg max-w-4xl mx-auto">
             Important information about risks associated with cryptocurrency trading, financial services, 
-            creator economy participation, and cross-border transactions on SoftChat's platform.
+            creator economy participation, and cross-border transactions on Eloity's platform.
           </p>
           <div className="flex flex-wrap justify-center gap-2 mt-4">
             <Badge variant="outline" className="bg-red-50 text-red-700">Financial Risk Warning</Badge>
@@ -75,7 +75,7 @@ export default function RiskDisclosureStatement() {
         <Alert className="mb-6 border-red-200 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-700">
-            <strong>IMPORTANT:</strong> All financial services on SoftChat involve significant risks including 
+            <strong>IMPORTANT:</strong> All financial services on Eloity involve significant risks including 
             potential loss of funds. Read this disclosure carefully and only proceed if you understand and 
             accept these risks. This is not financial advice.
           </AlertDescription>
@@ -635,7 +635,7 @@ export default function RiskDisclosureStatement() {
                 <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                   <h4 className="font-semibold text-yellow-800 mb-2">NO FINANCIAL ADVICE</h4>
                   <p className="text-sm text-yellow-700">
-                    SoftChat does not provide investment, financial, trading, or legal advice. All information 
+                    Eloity does not provide investment, financial, trading, or legal advice. All information 
                     is for educational purposes only. Consult qualified professionals before making financial decisions.
                   </p>
                 </div>
@@ -740,7 +740,7 @@ export default function RiskDisclosureStatement() {
                     <li>• Understand that past performance does not guarantee future results</li>
                     <li>• Acknowledge that cryptocurrency and digital assets are highly speculative</li>
                     <li>• Are aware of the potential for total loss of invested funds</li>
-                    <li>• Will not hold SoftChat liable for market losses or service interruptions</li>
+                    <li>• Will not hold Eloity liable for market losses or service interruptions</li>
                     <li>• Agree to comply with all applicable laws and regulations</li>
                     <li>• Will seek professional advice for significant financial decisions</li>
                   </ul>
@@ -783,7 +783,7 @@ export default function RiskDisclosureStatement() {
                     </p>
                     <p className="mt-2">
                       For questions about this Risk Disclosure Statement, contact: 
-                      <span className="text-blue-600"> risk@softchat.com</span>
+                      <span className="text-blue-600"> risk@eloity.com</span>
                     </p>
                   </div>
                 </div>

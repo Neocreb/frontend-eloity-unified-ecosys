@@ -79,9 +79,9 @@ export const I18nProvider: FC<{ children: ReactNode }> = ({
 
     try {
       // Load saved preferences or detect automatically
-      const savedLanguage = localStorage.getItem("softchat_language");
-      const savedCurrency = localStorage.getItem("softchat_currency");
-      const savedRegion = localStorage.getItem("softchat_region");
+      const savedLanguage = localStorage.getItem("eloity_language");
+      const savedCurrency = localStorage.getItem("eloity_currency");
+      const savedRegion = localStorage.getItem("eloity_region");
 
       if (savedLanguage) {
         i18nService.setLanguage(savedLanguage);

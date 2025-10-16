@@ -381,7 +381,7 @@ const LevelsBoostsDashboard: React.FC = () => {
                             </p>
                           </div>
                           <Badge variant="outline" className="text-xs">
-                            +{achievement.reward.softPoints} SP
+                            +{achievement.reward.eloityPoints} SP
                           </Badge>
                         </div>
                       ))}
@@ -570,7 +570,7 @@ const LevelsBoostsDashboard: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="text-sm">
                           <span className="font-medium">
-                            {boost.cost.softPoints} SP
+                            {boost.cost.eloityPoints} SP
                           </span>
                           {boost.cost.walletCost && (
                             <span className="text-muted-foreground">
@@ -606,7 +606,7 @@ const LevelsBoostsDashboard: React.FC = () => {
                           {userProgress &&
                           userProgress.currentLevel.level < boost.requiredLevel
                             ? `Requires level ${boost.requiredLevel}`
-                            : "Insufficient SoftPoints"}
+                            : "Insufficient Eloity Points"}
                         </p>
                       )}
                     </div>
@@ -676,7 +676,7 @@ const LevelsBoostsDashboard: React.FC = () => {
                     <div className="flex items-center justify-between mt-3 pt-3 border-t">
                       <div className="text-sm">
                         <span className="text-green-600 font-medium">
-                          +{achievement.reward.softPoints} SP
+                          +{achievement.reward.eloityPoints} SP
                         </span>
                         {achievement.reward.badge && (
                           <span className="text-purple-600 ml-2">+Badge</span>

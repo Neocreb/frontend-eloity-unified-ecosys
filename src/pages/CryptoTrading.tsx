@@ -47,7 +47,7 @@ const CryptoTrading = () => {
   return (
     <>
       <Helmet>
-        <title>Crypto Trading - Professional Trading Platform | Softchat</title>
+        <title>Crypto Trading - Professional Trading Platform | Eloity</title>
         <meta name="description" content="Professional cryptocurrency trading with advanced charts, real-time data, and comprehensive trading tools." />
       </Helmet>
 

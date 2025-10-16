@@ -149,10 +149,10 @@ const CommunityEvents = () => {
   return (
     <>
       <Helmet>
-        <title>Live Community Events | SoftChat</title>
+        <title>Live Community Events | Eloity</title>
         <meta
           name="description"
-          content="Join real-time collaborative experiences with the SoftChat community"
+          content="Join real-time collaborative experiences with the Eloity community"
         />
       </Helmet>
 
@@ -698,7 +698,7 @@ const CommunityEvents = () => {
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg mb-2">#DanceChallenge</h3>
                   <p className="text-muted-foreground text-sm mb-3">
-                    Show off your best dance moves! Winner gets 500 SoftPoints.
+                    Show off your best dance moves! Winner gets 500 Eloity Points.
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">2 days left</span>

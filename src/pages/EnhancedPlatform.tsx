@@ -123,7 +123,7 @@ const EnhancedPlatform: React.FC = () => {
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
-                <span className="text-xl font-bold">SoftChat</span>
+                <span className="text-xl font-bold">Eloity</span>
               </div>
               
               <nav className="hidden md:flex gap-1">

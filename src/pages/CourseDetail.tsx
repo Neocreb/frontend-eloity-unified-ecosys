@@ -189,7 +189,7 @@ const CourseDetail = () => {
   return (
     <>
       <Helmet>
-        <title>{course.title} - Crypto Education | Softchat</title>
+        <title>{course.title} - Crypto Education | Eloity</title>
         <meta name="description" content={course.description} />
       </Helmet>
 

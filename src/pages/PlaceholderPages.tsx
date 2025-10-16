@@ -62,7 +62,7 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({
 export const FriendsPage = () => (
   <PlaceholderPage
     title="Friends"
-    description="Connect and manage your friendships on SoftChat. See friend requests, suggestions, and manage your social connections."
+    description="Connect and manage your friendships on Eloity. See friend requests, suggestions, and manage your social connections."
   />
 );
 
@@ -76,14 +76,14 @@ export const GroupsPage = () => (
 export const AdsPage = () => (
   <PlaceholderPage
     title="Ad Center"
-    description="Manage your advertising campaigns and view ad performance metrics for your business on SoftChat."
+    description="Manage your advertising campaigns and view ad performance metrics for your business on Eloity."
   />
 );
 
 export const MemoriesPage = () => (
   <PlaceholderPage
     title="Memories"
-    description="Look back at your favorite moments and memories shared on SoftChat. Relive your best posts and interactions."
+    description="Look back at your favorite moments and memories shared on Eloity. Relive your best posts and interactions."
   />
 );
 
@@ -97,7 +97,7 @@ export const SavedPage = () => (
 export const SupportPage = () => (
   <PlaceholderPage
     title="Support"
-    description="Get help with SoftChat. Find answers to common questions, report issues, and contact our support team."
+    description="Get help with Eloity. Find answers to common questions, report issues, and contact our support team."
     comingSoon={false}
   />
 );
@@ -105,14 +105,14 @@ export const SupportPage = () => (
 export const PagesPage = () => (
   <PlaceholderPage
     title="Pages"
-    description="Manage your business pages and professional presence on SoftChat. Create and customize pages for your brand."
+    description="Manage your business pages and professional presence on Eloity. Create and customize pages for your brand."
   />
 );
 
 export const PrivacyPage = () => (
   <PlaceholderPage
     title="Privacy Policy"
-    description="Learn about how SoftChat protects your privacy and handles your personal information."
+    description="Learn about how Eloity protects your privacy and handles your personal information."
     comingSoon={false}
   />
 );
@@ -120,7 +120,7 @@ export const PrivacyPage = () => (
 export const TermsPage = () => (
   <PlaceholderPage
     title="Terms of Service"
-    description="Read the terms and conditions for using SoftChat platform and services."
+    description="Read the terms and conditions for using Eloity platform and services."
     comingSoon={false}
   />
 );
@@ -128,14 +128,14 @@ export const TermsPage = () => (
 export const AdvertisingPage = () => (
   <PlaceholderPage
     title="Advertising"
-    description="Learn about advertising opportunities on SoftChat and how to reach your target audience."
+    description="Learn about advertising opportunities on Eloity and how to reach your target audience."
   />
 );
 
 export const AdChoicesPage = () => (
   <PlaceholderPage
     title="Ad Choices"
-    description="Manage your advertising preferences and control the types of ads you see on SoftChat."
+    description="Manage your advertising preferences and control the types of ads you see on Eloity."
     comingSoon={false}
   />
 );
@@ -143,7 +143,7 @@ export const AdChoicesPage = () => (
 export const CookiesPage = () => (
   <PlaceholderPage
     title="Cookie Policy"
-    description="Learn about how SoftChat uses cookies and similar technologies to improve your experience."
+    description="Learn about how Eloity uses cookies and similar technologies to improve your experience."
     comingSoon={false}
   />
 );
@@ -151,7 +151,7 @@ export const CookiesPage = () => (
 export const HelpPage = () => (
   <PlaceholderPage
     title="Help Center"
-    description="Find help and support resources for using SoftChat. Browse our knowledge base and tutorials."
+    description="Find help and support resources for using Eloity. Browse our knowledge base and tutorials."
     comingSoon={false}
   />
 );

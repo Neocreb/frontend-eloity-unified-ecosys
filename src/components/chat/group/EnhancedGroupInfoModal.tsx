@@ -401,12 +401,12 @@ export const EnhancedGroupInfoModal: React.FC<EnhancedGroupInfoModalProps> = ({
               if (navigator.share) {
                 await navigator.share({
                   title: `Join ${group.groupName}`,
-                  text: `You're invited to join ${group.groupName} on Softchat`,
+                  text: `You're invited to join ${group.groupName} on Eloity`,
                   url: inviteLink || window.location.href,
                 });
               } else {
                 // Fallback: copy to clipboard
-                const shareText = `Join ${group.groupName} on Softchat: ${inviteLink || window.location.href}`;
+                const shareText = `Join ${group.groupName} on Eloity: ${inviteLink || window.location.href}`;
                 await navigator.clipboard.writeText(shareText);
                 toast({
                   title: "Share link copied",

@@ -60,7 +60,7 @@ interface EscrowWalletTransaction {
   projectTitle: string;
   type: "deposit" | "release" | "refund" | "dispute_hold";
   amount: number;
-  currency: "BTC" | "ETH" | "USDT" | "SoftPoints";
+  currency: "BTC" | "ETH" | "USDT" | "Eloity Points";
   status: "pending" | "confirmed" | "completed" | "failed";
   fromAddress?: string;
   toAddress?: string;
@@ -118,7 +118,7 @@ export const EscrowWalletIntegration: React.FC<
     BTC: 43250.0,
     ETH: 2680.5,
     USDT: 1.0,
-    SoftPoints: 0.1,
+    Eloity Points: 0.1,
   };
 
   // Initialize mock data
@@ -171,12 +171,12 @@ export const EscrowWalletIntegration: React.FC<
           transactions: [],
         },
         {
-          currency: "SoftPoints",
+          currency: "Eloity Points",
           available: 15420,
           escrow: 2500,
           pending: 0,
           total: 17920,
-          usdValue: 17920 * exchangeRates.SoftPoints,
+          usdValue: 17920 * exchangeRates.Eloity Points,
           transactions: [],
         },
       ];
@@ -252,7 +252,7 @@ export const EscrowWalletIntegration: React.FC<
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    if (currency === "SoftPoints") {
+    if (currency === "Eloity Points") {
       return `${amount.toLocaleString()} SP`;
     }
 
@@ -268,7 +268,7 @@ export const EscrowWalletIntegration: React.FC<
         return <Coins className="w-4 h-4 text-blue-500" />;
       case "USDT":
         return <DollarSign className="w-4 h-4 text-green-500" />;
-      case "SoftPoints":
+      case "Eloity Points":
         return <Zap className="w-4 h-4 text-purple-500" />;
       default:
         return <DollarSign className="w-4 h-4" />;
@@ -431,7 +431,7 @@ export const EscrowWalletIntegration: React.FC<
                 <SelectItem value="USDT">USDT (Tether)</SelectItem>
                 <SelectItem value="BTC">Bitcoin</SelectItem>
                 <SelectItem value="ETH">Ethereum</SelectItem>
-                <SelectItem value="SoftPoints">SoftPoints</SelectItem>
+                <SelectItem value="Eloity Points">Eloity Points</SelectItem>
               </SelectContent>
             </Select>
           </div>

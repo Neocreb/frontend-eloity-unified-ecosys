@@ -1282,7 +1282,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Helmet>
-        <title>Unified Creator Studio - Analytics Dashboard | SoftChat</title>
+        <title>Unified Creator Studio - Analytics Dashboard | Eloity</title>
         <meta
           name="description"
           content="Comprehensive analytics dashboard for all platform features - social media, videos, marketplace, freelance, crypto, and more"

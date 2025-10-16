@@ -22,7 +22,7 @@ const RealtimeMessaging = () => {
   return (
     <>
       <Helmet>
-        <title>Messages | Softchat</title>
+        <title>Messages | Eloity</title>
       </Helmet>
 
       <div className="max-w-6xl mx-auto">

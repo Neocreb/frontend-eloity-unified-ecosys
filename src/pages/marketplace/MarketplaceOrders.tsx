@@ -381,7 +381,7 @@ const MarketplaceOrders: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>My Orders | SoftChat Marketplace</title>
+        <title>My Orders | Eloity Marketplace</title>
       </Helmet>
 
       <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">

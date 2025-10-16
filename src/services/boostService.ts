@@ -22,7 +22,7 @@ export interface BoostRequest {
   referenceId: string;
   boostType: "featured" | "top_listing" | "premium_placement" | "highlight";
   duration: number; // in hours
-  paymentMethod: "USDT" | "soft_points";
+  paymentMethod: "USDT" | "eloity_points";
 }
 
 class BoostServiceClass {

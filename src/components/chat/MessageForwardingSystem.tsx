@@ -203,7 +203,7 @@ export const MessageForwardingSystem: React.FC<MessageForwardingSystemProps> = (
 
   const shareToSocialMedia = (platform: string) => {
     const shareText = `Check out this message: "${message.content}"`;
-    const shareUrl = `https://softchat.app/message/${message.id}`;
+    const shareUrl = `https://eloity.app/message/${message.id}`;
     
     let url = "";
     switch (platform) {
@@ -231,7 +231,7 @@ export const MessageForwardingSystem: React.FC<MessageForwardingSystemProps> = (
   };
 
   const copyMessageLink = async () => {
-    const messageLink = `https://softchat.app/message/${message.id}`;
+    const messageLink = `https://eloity.app/message/${message.id}`;
     try {
       await navigator.clipboard.writeText(messageLink);
       toast({

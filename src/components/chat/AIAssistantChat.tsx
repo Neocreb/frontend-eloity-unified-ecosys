@@ -101,7 +101,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
             senderId: "ai_assistant",
             content: cleanAIResponse(
               aiPersonalityService.generatePersonalizedGreeting(user) +
-              "\n\nI can help with real-time data like crypto prices, weather, news, calculations, and SoftChat features! Plus, I'm here for friendly conversation and emotional support! 💙"
+              "\n\nI can help with real-time data like crypto prices, weather, news, calculations, and Eloity features! Plus, I'm here for friendly conversation and emotional support! 💙"
             ),
             timestamp: new Date().toISOString(),
             readBy: [],

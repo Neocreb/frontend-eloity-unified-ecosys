@@ -369,7 +369,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             const { toast } = await import('@/hooks/use-toast');
             toast({
               title: "Welcome Bonus!",
-              description: "You've received bonus SoftPoints for joining through a referral!",
+              description: "You've received bonus Eloity Points for joining through a referral!",
             });
           } catch (activityError) {
             console.error('Error logging welcome bonus:', activityError);

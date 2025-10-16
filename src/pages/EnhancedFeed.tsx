@@ -283,7 +283,7 @@ const initialMockPosts = [
       isVerified: true,
     },
     content:
-      "New product launch is finally here! 🎉 After months of hard work, we're excited to share this with the SoftChat community. Check it out in our marketplace!",
+      "New product launch is finally here! 🎉 After months of hard work, we're excited to share this with the Eloity community. Check it out in our marketplace!",
     media: [
       {
         type: "video" as const,

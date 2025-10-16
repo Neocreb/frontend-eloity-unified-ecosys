@@ -240,7 +240,7 @@ const CryptoMarket = () => {
   return (
     <>
       <Helmet>
-        <title>Crypto Market | Softchat</title>
+        <title>Crypto Market | Eloity</title>
       </Helmet>
 
       <div className="max-w-7xl mx-auto crypto-page-container">

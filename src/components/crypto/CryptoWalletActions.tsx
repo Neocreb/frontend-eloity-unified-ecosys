@@ -81,7 +81,7 @@ const CryptoWalletActions = ({ onKYCSubmit }: WalletProps) => {
         icon: "◎",
       },
       {
-        currency: "SoftPoints",
+        currency: "Eloity Points",
         symbol: "SP",
         balance: 5000,
         usdValue: 5000 * 0.01,
@@ -142,7 +142,7 @@ const CryptoWalletActions = ({ onKYCSubmit }: WalletProps) => {
           <CardHeader className="pb-3 md:pb-6">
             <CardTitle className="text-lg md:text-xl crypto-text-premium">Your Wallet</CardTitle>
             <CardDescription className="text-sm crypto-text-secondary-premium">
-              Manage your crypto assets and SoftPoints
+              Manage your crypto assets and Eloity Points
             </CardDescription>
           </CardHeader>
           <CardContent className="p-3 md:p-6">
@@ -252,7 +252,7 @@ const CryptoWalletActions = ({ onKYCSubmit }: WalletProps) => {
                 className="w-full justify-start text-sm h-9"
                 onClick={() => navigate("/wallet")}
               >
-                <ArrowRight className="mr-2 h-3 w-3 md:h-4 md:w-4" /> SoftPoints
+                <ArrowRight className="mr-2 h-3 w-3 md:h-4 md:w-4" /> Eloity Points
               </Button>
               <Button 
                 variant="outline" 
