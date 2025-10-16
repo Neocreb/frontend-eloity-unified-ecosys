@@ -20,7 +20,7 @@ import { formatNumber } from "@/utils/formatters";
 import { useToast } from "@/hooks/use-toast";
 import { QuickMessageButton } from "@/components/chat/QuickMessageButton";
 import { usePage } from "@/hooks/usePages";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft,
   Users,
