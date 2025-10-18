@@ -157,7 +157,7 @@ const CommunityEvents = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-6">
+        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
