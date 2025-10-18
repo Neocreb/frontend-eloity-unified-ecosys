@@ -20,7 +20,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
     "migrate": "npx drizzle-kit generate:pg",
-    "migrate:apply": "npx tsx apply-migrations-supabase.js",
+    "migrate:apply": "node scripts/apply-migrations-supabase.js",
     "db:studio": "npx drizzle-kit studio",
     "db:push": "npx drizzle-kit push:pg"
   },
