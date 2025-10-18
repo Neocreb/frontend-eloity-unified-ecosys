@@ -80,7 +80,7 @@ const DashboardInner = () => {
               <Repeat className="h-4 w-4"/>
               Convert
             </Button>
-            <Button variant="outline" onClick={()=>navigate('/app/wallet/transactions')} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+            <Button variant="outline" onClick={()=>setShowTransferModal(true)} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
               <Send className="h-4 w-4"/>
               Transfer
             </Button>
