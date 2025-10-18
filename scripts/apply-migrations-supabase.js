@@ -23,7 +23,8 @@ function isBenignError(err) {
   return (
     code === '42P07' || // duplicate_table / relation exists
     code === '42710' || // duplicate_object (index, constraint)
-    /already exists/i.test(msg)
+    /already exists/i.test(msg) ||
+    (code === '42703' && /foreign key constraint/i.test(msg))
   );
 }
 
