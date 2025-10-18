@@ -23,6 +23,7 @@ const DashboardInner = () => {
   const [portfolio, setPortfolio] = useState<'total'|'ecommerce'|'crypto'|'rewards'|'freelance'>('total');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
 
   const viewBalance = useMemo(()=>{
     if (!walletBalance) return 0;
