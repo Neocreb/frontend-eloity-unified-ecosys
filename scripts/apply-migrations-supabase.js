@@ -10,9 +10,9 @@ import postgres from 'postgres';
 const MIGRATIONS_DIR = path.join(process.cwd(), 'migrations');
 
 async function main() {
-  const dbUrl = process.env.SUPABASE_DB_URL;
+  const dbUrl = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
   if (!dbUrl) {
-    console.error('SUPABASE_DB_URL not set. Set to your Supabase Postgres connection string.');
+    console.error('No database URL set. Set SUPABASE_DB_URL (preferred) or DATABASE_URL to your Supabase Postgres connection string.');
     process.exit(1);
   }
 
