@@ -52,13 +52,13 @@ async function main() {
           await sql.unsafe(stmt);
           succeeded++;
         } catch (e) {
+          const msg = String(e.message || e).split('\n')[0];
           if (isBenignError(e)) {
-            console.log(`  Skipped benign error on statement ${i + 1}/${statements.length}: ${String(e.message || e).split('\n')[0]}`);
-            continue;
+            console.log(`  Skipped benign error on statement ${i + 1}/${statements.length}: ${msg}`);
+          } else {
+            console.warn(`  Statement ${i + 1}/${statements.length} failed in ${file}: ${msg}`);
           }
-          console.error(`  Statement ${i + 1}/${statements.length} failed in ${file}`);
-          console.error(e);
-          throw e;
+          continue;
         }
       }
       console.log(`  Completed ${file}: ${succeeded}/${statements.length} statements applied`);
