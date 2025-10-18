@@ -12,6 +12,7 @@ import SmartRecommendations from "@/components/wallet/SmartRecommendations";
 import QuickActionsWidget from "@/components/wallet/QuickActionsWidget";
 import WithdrawModal from "@/components/wallet/WithdrawModal";
 import DepositModal from "@/components/wallet/DepositModal";
+import { TransferModal } from "@/components/wallet/QuickActionModals";
 
 const DashboardInner = () => {
   const { walletBalance, refreshWallet } = useWalletContext();
