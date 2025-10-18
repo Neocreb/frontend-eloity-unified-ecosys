@@ -2042,7 +2042,7 @@ const EnhancedSettings = () => {
                     </div>
                   </div>
                   <Button
-                    onClick={() => window.open("/app/kyc", "_blank")}
+                    onClick={() => setShowKYCModal(true)}
                     variant="outline"
                     className="border-green-600 text-green-600 hover:bg-green-50 px-6 py-3"
                   >

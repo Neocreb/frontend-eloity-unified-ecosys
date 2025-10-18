@@ -1068,7 +1068,7 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
 
             <div>
               <p className="text-xs text-gray-600 mb-2">Standard Amounts (USD)</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {amounts.slice(0, 5).map((amt) => (
                   <Button
                     key={amt.value}
@@ -1076,6 +1076,7 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
                     variant={formData.amount === amt.value ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFormData(prev => ({ ...prev, amount: amt.value }))}
+                    className="w-full"
                   >
                     {amt.label}
                   </Button>
@@ -1085,7 +1086,7 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
 
             <div>
               <p className="text-xs text-gray-600 mb-2">African Local Currency Equivalents</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
                 {amounts.slice(5).map((amt, index) => (
                   <Button
                     key={`african_${index}_${amt.value}`}
@@ -1093,7 +1094,7 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
                     variant={formData.amount === amt.value ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFormData(prev => ({ ...prev, amount: amt.value }))}
-                    className="text-xs"
+                    className="w-full text-xs"
                   >
                     {amt.label}
                   </Button>
