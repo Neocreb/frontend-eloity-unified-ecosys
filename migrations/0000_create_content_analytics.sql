@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS public.content_analytics (
 );
 
 -- Optional: create index for faster queries
+-- Ensure publish_date exists to avoid index creation failure on legacy tables
+ALTER TABLE public.content_analytics ADD COLUMN IF NOT EXISTS publish_date timestamptz DEFAULT now();
 CREATE INDEX IF NOT EXISTS idx_content_analytics_publish_date ON public.content_analytics(publish_date DESC);
 CREATE INDEX IF NOT EXISTS idx_content_analytics_type ON public.content_analytics(type);
 
