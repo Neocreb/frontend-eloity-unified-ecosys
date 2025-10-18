@@ -12,6 +12,7 @@ import SmartRecommendations from "@/components/wallet/SmartRecommendations";
 import QuickActionsWidget from "@/components/wallet/QuickActionsWidget";
 import WithdrawModal from "@/components/wallet/WithdrawModal";
 import DepositModal from "@/components/wallet/DepositModal";
+import { TransferModal } from "@/components/wallet/QuickActionModals";
 
 const DashboardInner = () => {
   const { walletBalance, refreshWallet } = useWalletContext();
@@ -22,6 +23,7 @@ const DashboardInner = () => {
   const [portfolio, setPortfolio] = useState<'total'|'ecommerce'|'crypto'|'rewards'|'freelance'>('total');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
 
   const viewBalance = useMemo(()=>{
     if (!walletBalance) return 0;
@@ -78,7 +80,7 @@ const DashboardInner = () => {
               <Repeat className="h-4 w-4"/>
               Convert
             </Button>
-            <Button variant="outline" onClick={()=>navigate('/app/wallet/transactions')} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+            <Button variant="outline" onClick={()=>setShowTransferModal(true)} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
               <Send className="h-4 w-4"/>
               Transfer
             </Button>
@@ -120,6 +122,7 @@ const DashboardInner = () => {
 
       <WithdrawModal isOpen={showWithdrawModal} onClose={()=>setShowWithdrawModal(false)} walletBalance={walletBalance} onSuccess={refreshWallet} />
       <DepositModal isOpen={showDepositModal} onClose={()=>setShowDepositModal(false)} onSuccess={refreshWallet} />
+      <TransferModal isOpen={showTransferModal} onClose={()=>setShowTransferModal(false)} />
     </div>
   );
 };

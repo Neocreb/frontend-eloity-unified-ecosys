@@ -63,7 +63,7 @@ class ApiClient {
   }
 
   async getProfileByUsername(username: string) {
-    return this.request(`/profiles/username/${username}`);
+    return this.request(`/profiles/${username}`);
   }
 
   async updateProfile(userId: string, updates: any) {
