@@ -18,6 +18,18 @@ import {
   getRiskAssessment
 } from '../services/cryptoService.js';
 import { logger } from '../utils/logger.js';
+import {
+  getDetailedPriceData,
+  getEstimatedMatches,
+  getP2POrders,
+  getUserP2POrders,
+  getP2POrderById,
+  initiatePeerToPeerTrade,
+  getEscrowTransaction,
+  confirmEscrowPayment,
+  getUserTradingHistory,
+  getTradingStatistics
+} from '../services/cryptoDbService.js';
 
 const router = express.Router();
 
@@ -800,8 +812,9 @@ function calculateDisputePriority(escrow: any, reason: string) {
   return 'low';
 }
 
+// Update the getAllowedEscrowActions function to fix TypeScript error
 function getAllowedEscrowActions(escrow: any, userId: string) {
-  const actions = [];
+  const actions: string[] = [];
   
   if (escrow.status === 'pending_payment' && escrow.buyerId === userId) {
     actions.push('confirm_payment');
@@ -818,112 +831,6 @@ function getAllowedEscrowActions(escrow: any, userId: string) {
   return actions;
 }
 
-// Mock database functions - replace with actual database implementation
-async function getDetailedPriceData(symbol: string, vsCurrency: string, timeframe: string) {
-  // Mock price data
-  return {
-    current_price: 45000,
-    price_change_24h: 1250.50,
-    price_change_percentage_24h: 2.85,
-    market_cap: 850000000000,
-    volume_24h: 25000000000,
-    high_24h: 46000,
-    low_24h: 43500
-  };
-}
-
-async function getEstimatedMatches(orderData: any) {
-  // Mock estimated matches
-  return {
-    potentialMatches: 5,
-    averagePrice: orderData.price * 0.98,
-    estimatedTime: '5-15 minutes'
-  };
-}
-
-async function getP2POrders(filters: any, page: number, limit: number) {
-  // Mock P2P orders
-  return {
-    orders: [],
-    total: 0
-  };
-}
-
-async function getUserP2POrders(userId: string, options: any) {
-  // Mock user orders
-  return {
-    orders: [],
-    total: 0
-  };
-}
-
-async function getP2POrderById(orderId: string) {
-  // Mock order
-  return {
-    id: orderId,
-    userId: 'seller123',
-    status: 'active',
-    minOrderAmount: 100,
-    maxOrderAmount: 5000,
-    price: 45000,
-    cryptocurrency: 'BTC',
-    fiatCurrency: 'USD',
-    paymentMethods: ['bank_transfer'],
-    timeLimit: 30
-  };
-}
-
-async function initiatePeerToPeerTrade(tradeData: any) {
-  // Mock trade initiation
-  const tradeId = 'trade_' + Date.now();
-  const escrowId = 'escrow_' + Date.now();
-  
-  return {
-    success: true,
-    tradeId,
-    escrowId,
-    trade: { id: tradeId, ...tradeData },
-    instructions: 'Please complete payment within 30 minutes'
-  };
-}
-
-async function getEscrowTransaction(escrowId: string) {
-  // Mock escrow
-  return {
-    id: escrowId,
-    buyerId: 'buyer123',
-    sellerId: 'seller456',
-    status: 'pending_payment',
-    amount: 1.5,
-    cryptocurrency: 'BTC'
-  };
-}
-
-async function confirmEscrowPayment(escrowId: string, data: any) {
-  return { success: true };
-}
-
-async function getUserTradingHistory(userId: string, filters: any, page: number, limit: number) {
-  return {
-    trades: [],
-    summary: {},
-    total: 0
-  };
-}
-
-async function getTradingStatistics(userId: string, timeframe: string) {
-  return {
-    totalTrades: 25,
-    successfulTrades: 23,
-    successRate: 92,
-    totalVolume: 150000,
-    averageTradeSize: 6000,
-    tradingPairs: ['BTC/USD', 'ETH/USD'],
-    profitLoss: 2500,
-    reputation: 4.8,
-    averageResponseTime: 5,
-    averageCompletionTime: 15
-  };
-}
+// Mock database functions have been moved to cryptoDbService.ts
 
 export default router;
