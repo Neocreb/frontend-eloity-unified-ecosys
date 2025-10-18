@@ -26,15 +26,71 @@ async function retrieveSecrets() {
   try {
     // List of secrets we expect to find
     const secretKeys = [
+      // Payment Processing
       'FLUTTERWAVE_SECRET_KEY',
       'PAYSTACK_SECRET_KEY',
+      'PAYSTACK_PUBLIC_API',
+      'PAYSTACK_API_KEY',
+      'STRIPE_SECRET_KEY',
+      'STRIPE_PUBLISHABLE_KEY',
+      'STRIPE_WEBHOOK_SECRET',
+      
+      // SMS & Notifications
       'TWILIO_ACCOUNT_SID',
       'TWILIO_AUTH_TOKEN',
       'TWILIO_PHONE_NUMBER',
-      'COINGECKO_API_KEY',
+      'TWILIO_API_SECRET_KEY',
+      'TWILIO_SID_KEY',
       'AFRICAS_TALKING_API_KEY',
       'AFRICAS_TALKING_USERNAME',
-      'TERMII_API_KEY'
+      'TERMII_API_KEY',
+      'RESEND_API',
+      
+      // Crypto Services
+      'COINGECKO_API_KEY',
+      'COINGECKO_API',
+      // Bybit API - Required permissions:
+      // - Contracts - Orders & Positions
+      // - USDC Contracts - Trade
+      // - Unified Trading - Trade
+      // - SPOT - Trade
+      // - Wallet - Account Transfer & Subaccount Transfer
+      // - Exchange - Convert & Exchange History
+      'BYBIT_PUBLIC_API',
+      'BYBIT_SECRET_API',
+      
+      // AI Services
+      'OPENAI_API_KEY',
+      
+      // Email Services
+      'SMTP_USER',
+      'SMTP_PASS',
+      
+      // File Storage
+      'AWS_ACCESS_KEY_ID',
+      'AWS_SECRET_ACCESS_KEY',
+      
+      // Authentication
+      'GOOGLE_CLIENT_ID',
+      'GOOGLE_CLIENT_SECRET',
+      'FACEBOOK_APP_ID',
+      'FACEBOOK_APP_SECRET',
+      'TWITTER_API_KEY',
+      'TWITTER_API_SECRET',
+      
+      // Firebase
+      'FIREBASE_PROJECT_ID',
+      'FIREBASE_PRIVATE_KEY',
+      'FIREBASE_CLIENT_EMAIL',
+      
+      // Analytics
+      'GA_TRACKING_ID',
+      'MIXPANEL_TOKEN',
+      'SENTRY_DSN',
+      
+      // Security
+      'JWT_SECRET',
+      'SESSION_SECRET'
     ];
 
     console.log('🔍 Looking for the following secrets:');
@@ -46,19 +102,24 @@ async function retrieveSecrets() {
     
     for (const key of secretKeys) {
       try {
-        // In a real implementation, you would call the Supabase Edge Function
-        // that retrieves the secret. For now, we'll simulate this.
         console.log(`🔄 Retrieving ${key}...`);
         
-        // This is a placeholder - in practice, you would call your Edge Function
-        // For example:
-        // const { data, error } = await supabase.functions.invoke('get-secret', {
-        //   body: { key: key }
-        // });
+        // Call the Supabase Edge Function to retrieve the secret
+        const { data, error } = await supabase.functions.invoke('get-secret', {
+          body: { key: key }
+        });
         
-        // For demonstration, we'll use placeholder values
-        retrievedSecrets[key] = `your_actual_${key.toLowerCase()}_from_supabase`;
+        if (error) {
+          console.log(`❌ Failed to retrieve ${key}: ${error.message}`);
+          continue;
+        }
         
+        if (!data || !data.value) {
+          console.log(`❌ No value returned for ${key}`);
+          continue;
+        }
+        
+        retrievedSecrets[key] = data.value;
         console.log(`✅ Retrieved ${key}`);
       } catch (error) {
         console.log(`❌ Failed to retrieve ${key}: ${error.message}`);
@@ -76,8 +137,7 @@ async function retrieveSecrets() {
     await updateEnvFile(retrievedSecrets);
     
     console.log('\n✅ Secret retrieval complete!');
-    console.log('📝 The .env file has been updated with placeholder values.');
-    console.log('🔄 Please replace the placeholder values with your actual secret keys from Supabase.');
+    console.log('📝 The .env file has been updated with actual secret values.');
 
   } catch (error) {
     console.error('Error retrieving secrets:', error);
@@ -103,19 +163,70 @@ PORT=5000
 # Payment Processing
 FLUTTERWAVE_SECRET_KEY=your_actual_flutterwave_secret_key
 PAYSTACK_SECRET_KEY=your_actual_paystack_secret_key
+PAYSTACK_PUBLIC_API=your_actual_paystack_public_api
+PAYSTACK_API_KEY=your_actual_paystack_api_key
+STRIPE_SECRET_KEY=your_actual_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=your_actual_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_actual_stripe_webhook_secret
 
 # SMS & Notifications
 TWILIO_ACCOUNT_SID=your_actual_twilio_account_sid
 TWILIO_AUTH_TOKEN=your_actual_twilio_auth_token
 TWILIO_PHONE_NUMBER=your_actual_twilio_phone_number
-
-# Crypto Services
-COINGECKO_API_KEY=your_actual_coingecko_api_key
+TWILIO_API_SECRET_KEY=your_actual_twilio_api_secret_key
+TWILIO_SID_KEY=your_actual_twilio_sid_key
+RESEND_API=your_actual_resend_api
 
 # African Payment Providers
 AFRICAS_TALKING_API_KEY=your_actual_africas_talking_api_key
 AFRICAS_TALKING_USERNAME=your_actual_africas_talking_username
 TERMII_API_KEY=your_actual_termii_api_key
+
+# Crypto Services
+COINGECKO_API_KEY=your_actual_coingecko_api_key
+COINGECKO_API=your_actual_coingecko_api
+# Bybit API - Required permissions:
+# - Contracts - Orders & Positions
+# - USDC Contracts - Trade
+# - Unified Trading - Trade
+# - SPOT - Trade
+# - Wallet - Account Transfer & Subaccount Transfer
+# - Exchange - Convert & Exchange History
+BYBIT_PUBLIC_API=your_actual_bybit_public_api
+BYBIT_SECRET_API=your_actual_bybit_secret_api
+
+# AI Services
+OPENAI_API_KEY=your_actual_openai_api_key
+
+# Email Services
+SMTP_USER=your_actual_smtp_user
+SMTP_PASS=your_actual_smtp_pass
+
+# File Storage (AWS S3)
+AWS_ACCESS_KEY_ID=your_actual_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_actual_aws_secret_access_key
+
+# Authentication
+GOOGLE_CLIENT_ID=your_actual_google_client_id
+GOOGLE_CLIENT_SECRET=your_actual_google_client_secret
+FACEBOOK_APP_ID=your_actual_facebook_app_id
+FACEBOOK_APP_SECRET=your_actual_facebook_app_secret
+TWITTER_API_KEY=your_actual_twitter_api_key
+TWITTER_API_SECRET=your_actual_twitter_api_secret
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your_actual_firebase_project_id
+FIREBASE_PRIVATE_KEY=your_actual_firebase_private_key
+FIREBASE_CLIENT_EMAIL=your_actual_firebase_client_email
+
+# Analytics & Monitoring
+GA_TRACKING_ID=your_actual_ga_tracking_id
+MIXPANEL_TOKEN=your_actual_mixpanel_token
+SENTRY_DSN=your_actual_sentry_dsn
+
+# Security
+JWT_SECRET=your_actual_jwt_secret
+SESSION_SECRET=your_actual_session_secret
 `;
       fs.writeFileSync(envPath, basicEnvContent);
     }

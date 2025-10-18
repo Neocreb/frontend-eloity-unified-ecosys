@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { apiClient } from "@/lib/api";
 import {
   UserProfile,
@@ -175,9 +174,34 @@ export class ProfileService {
   ): Promise<void> {
     try {
       if (currentlyFollowing) {
-        await apiClient.unfollowUser(followerId, followingId);
+        // Try API first
+        try {
+          await apiClient.unfollowUser(followerId, followingId);
+        } catch (apiError) {
+          // Fallback to direct database query
+          const { error } = await supabase
+            .from("followers")
+            .delete()
+            .eq("follower_id", followerId)
+            .eq("following_id", followingId);
+
+          if (error) throw error;
+        }
       } else {
-        await apiClient.followUser(followerId, followingId);
+        // Try API first
+        try {
+          await apiClient.followUser(followerId, followingId);
+        } catch (apiError) {
+          // Fallback to direct database query
+          const { error } = await supabase
+            .from("followers")
+            .insert([{
+              follower_id: followerId,
+              following_id: followingId,
+            }]);
+
+          if (error) throw error;
+        }
       }
     } catch (error: any) {
       console.error("Error toggling follow status:", error?.message || error);
@@ -313,22 +337,31 @@ export class ProfileService {
     updates: Partial<UserProfile>,
   ): Promise<UserProfile> {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("user_id", userId)
-        .select(
-          `
-          *,
-          marketplace_profiles(*),
-          freelance_profiles(*),
-          crypto_profiles(*)
-        `,
-        )
-        .single();
+      // Try API first
+      try {
+        const response = await apiClient.updateProfile(userId, updates) as any;
+        if (response?.profile) {
+          return this.formatUserProfile(response.profile);
+        }
+      } catch (apiError) {
+        // Fallback to direct database query
+        const { data, error } = await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("user_id", userId)
+          .select(
+            `
+            *,
+            marketplace_profiles(*),
+            freelance_profiles(*),
+            crypto_profiles(*)
+          `,
+          )
+          .single();
 
-      if (error) throw error;
-      return this.formatUserProfile(data);
+        if (error) throw error;
+        return this.formatUserProfile(data);
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       throw error;

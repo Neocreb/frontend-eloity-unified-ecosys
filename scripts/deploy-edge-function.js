@@ -15,7 +15,7 @@ console.log('🚀 Deploying Supabase Edge Function: get-secret\n');
 
 // Check if Supabase CLI is installed
 try {
-  execSync('supabase --version', { stdio: 'pipe' });
+  execSync('npx supabase --version', { stdio: 'pipe' });
   console.log('✅ Supabase CLI is installed');
 } catch (error) {
   console.log('❌ Supabase CLI is not installed');
@@ -46,11 +46,11 @@ try {
   
   // Link the project if not already linked
   console.log('🔗 Linking project...');
-  execSync('supabase link', { stdio: 'inherit' });
+  execSync('npx supabase link', { stdio: 'inherit' });
   
   // Deploy the Edge Function
   console.log('📤 Deploying get-secret function...');
-  execSync('supabase functions deploy get-secret', { stdio: 'inherit' });
+  execSync('npx supabase functions deploy get-secret', { stdio: 'inherit' });
   
   console.log('\n✅ Edge Function deployed successfully!');
   console.log('\n📋 Next Steps:');

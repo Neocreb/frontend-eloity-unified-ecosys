@@ -412,7 +412,37 @@ export class UserService {
         return [];
       }
 
-      // For now, return empty array since we don't have the full profile data
+      // Get full profile data for followers
+      if (response.data && response.data.length > 0) {
+        const followerIds = response.data.map((item: any) => item.follower_id);
+        const profilesResponse = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .in('user_id', followerIds);
+
+        if (profilesResponse.error) {
+          console.error("Error fetching follower profiles:", profilesResponse.error);
+          return [];
+        }
+
+        return profilesResponse.data.map((profile: any) => ({
+          id: profile.user_id,
+          username: profile.username || null,
+          full_name: profile.full_name || null,
+          name: profile.name || null,
+          avatar: profile.avatar || null,
+          avatar_url: profile.avatar_url || null,
+          bio: profile.bio || null,
+          is_verified: profile.is_verified || false,
+          points: profile.points || 0,
+          level: profile.level || null,
+          role: profile.role || null,
+          created_at: profile.created_at || null,
+          updated_at: profile.updated_at || null,
+          profile: profile
+        }));
+      }
+
       return [];
     } catch (error) {
       console.error("Error in getUserFollowers:", error);
@@ -434,7 +464,37 @@ export class UserService {
         return [];
       }
 
-      // For now, return empty array since we don't have the full profile data
+      // Get full profile data for following
+      if (response.data && response.data.length > 0) {
+        const followingIds = response.data.map((item: any) => item.following_id);
+        const profilesResponse = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .in('user_id', followingIds);
+
+        if (profilesResponse.error) {
+          console.error("Error fetching following profiles:", profilesResponse.error);
+          return [];
+        }
+
+        return profilesResponse.data.map((profile: any) => ({
+          id: profile.user_id,
+          username: profile.username || null,
+          full_name: profile.full_name || null,
+          name: profile.name || null,
+          avatar: profile.avatar || null,
+          avatar_url: profile.avatar_url || null,
+          bio: profile.bio || null,
+          is_verified: profile.is_verified || false,
+          points: profile.points || 0,
+          level: profile.level || null,
+          role: profile.role || null,
+          created_at: profile.created_at || null,
+          updated_at: profile.updated_at || null,
+          profile: profile
+        }));
+      }
+
       return [];
     } catch (error) {
       console.error("Error in getUserFollowing:", error);

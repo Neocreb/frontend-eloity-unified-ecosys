@@ -35,15 +35,71 @@ serve(async (req) => {
 
     // List of allowed secret keys (for security)
     const allowedKeys = [
+      // Payment Processing
       'FLUTTERWAVE_SECRET_KEY',
       'PAYSTACK_SECRET_KEY',
+      'PAYSTACK_PUBLIC_API',
+      'PAYSTACK_API_KEY',
+      'STRIPE_SECRET_KEY',
+      'STRIPE_PUBLISHABLE_KEY',
+      'STRIPE_WEBHOOK_SECRET',
+      
+      // SMS & Notifications
       'TWILIO_ACCOUNT_SID',
       'TWILIO_AUTH_TOKEN',
       'TWILIO_PHONE_NUMBER',
-      'COINGECKO_API_KEY',
+      'TWILIO_API_SECRET_KEY',
+      'TWILIO_SID_KEY',
       'AFRICAS_TALKING_API_KEY',
       'AFRICAS_TALKING_USERNAME',
-      'TERMII_API_KEY'
+      'TERMII_API_KEY',
+      'RESEND_API',
+      
+      // Crypto Services
+      'COINGECKO_API_KEY',
+      'COINGECKO_API',
+      // Bybit API - Required permissions:
+      // - Contracts - Orders & Positions
+      // - USDC Contracts - Trade
+      // - Unified Trading - Trade
+      // - SPOT - Trade
+      // - Wallet - Account Transfer & Subaccount Transfer
+      // - Exchange - Convert & Exchange History
+      'BYBIT_PUBLIC_API',
+      'BYBIT_SECRET_API',
+      
+      // AI Services
+      'OPENAI_API_KEY',
+      
+      // Email Services
+      'SMTP_USER',
+      'SMTP_PASS',
+      
+      // File Storage
+      'AWS_ACCESS_KEY_ID',
+      'AWS_SECRET_ACCESS_KEY',
+      
+      // Authentication
+      'GOOGLE_CLIENT_ID',
+      'GOOGLE_CLIENT_SECRET',
+      'FACEBOOK_APP_ID',
+      'FACEBOOK_APP_SECRET',
+      'TWITTER_API_KEY',
+      'TWITTER_API_SECRET',
+      
+      // Firebase
+      'FIREBASE_PROJECT_ID',
+      'FIREBASE_PRIVATE_KEY',
+      'FIREBASE_CLIENT_EMAIL',
+      
+      // Analytics
+      'GA_TRACKING_ID',
+      'MIXPANEL_TOKEN',
+      'SENTRY_DSN',
+      
+      // Security
+      'JWT_SECRET',
+      'SESSION_SECRET'
     ];
 
     // Check if the requested key is allowed

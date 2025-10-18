@@ -17,12 +17,14 @@
     "start": "node dist/server/enhanced-index.js",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:supabase": "node test-supabase-integration.js",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
     "migrate": "npx drizzle-kit generate:pg",
     "migrate:apply": "node scripts/apply-migrations-supabase.js",
     "db:studio": "npx drizzle-kit studio",
-    "db:push": "npx drizzle-kit push:pg"
+    "db:push": "npx drizzle-kit push:pg",
+    "setup:supabase": "node scripts/setup-supabase-integration.js"
   },
   "//": "Enhanced package.json with comprehensive dependencies and scripts",
   "dependencies": {

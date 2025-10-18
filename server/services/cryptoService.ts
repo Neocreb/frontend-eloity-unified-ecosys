@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger.js';
+import { db } from '../utils/db.js';
 
 // =============================================================================
 // CRYPTOCURRENCY PRICE SERVICE
@@ -859,49 +860,177 @@ function generateRiskRecommendations(riskLevel: string, factors: any): string[] 
 
 // Mock database functions - replace with actual database implementation
 async function saveWalletToDatabase(wallet: any) {
-  logger.info('Wallet saved to database', { walletId: wallet.id });
-  return wallet;
+  try {
+    const result = await db.insert('crypto_wallets', {
+      user_id: wallet.userId,
+      wallet_address: wallet.id,
+      wallet_provider: 'internal',
+      chain_type: 'multi',
+      balance: '0',
+      currency: 'USD',
+      is_primary: true,
+      is_connected: true,
+      last_synced_at: new Date(),
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+    
+    logger.info('Wallet saved to database', { walletId: result[0].id });
+    return result[0];
+  } catch (error) {
+    logger.error('Error saving wallet to database:', error);
+    throw error;
+  }
 }
 
 async function getWalletFromDatabase(userId: string) {
-  // Mock wallet data
-  return {
-    id: `wallet_${userId}`,
-    userId,
-    addresses: {
-      'BTC': '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2',
-      'ETH': '0x742c82F23Cfa38a6c69b4Cc85a5C3A5b8Aa8bBBb',
-      'USDT': '0x742c82F23Cfa38a6c69b4Cc85a5C3A5b8Aa8bBBb'
-    },
-    currencies: ['BTC', 'ETH', 'USDT'],
-    createdAt: new Date()
-  };
+  try {
+    const wallets = await db.select('crypto_wallets', 
+      (record) => record.user_id === userId
+    );
+    
+    if (wallets.length === 0) {
+      return null;
+    }
+    
+    return {
+      id: wallets[0].id,
+      userId: wallets[0].user_id,
+      addresses: {
+        'BTC': wallets[0].wallet_address,
+        'ETH': wallets[0].wallet_address,
+        'USDT': wallets[0].wallet_address
+      },
+      currencies: ['BTC', 'ETH', 'USDT'],
+      createdAt: wallets[0].created_at
+    };
+  } catch (error) {
+    logger.error('Error fetching wallet from database:', error);
+    throw error;
+  }
 }
 
 async function saveDepositToDatabase(deposit: any) {
-  logger.info('Deposit saved to database', { depositId: deposit.id });
-  return deposit;
+  try {
+    const result = await db.insert('crypto_transactions', {
+      user_id: deposit.userId,
+      wallet_id: deposit.userId, // This should be the actual wallet ID
+      transaction_hash: deposit.txHash,
+      from_address: 'external',
+      to_address: 'internal',
+      amount: deposit.amount.toString(),
+      currency: deposit.currency,
+      transaction_fee: '0',
+      status: deposit.status,
+      transaction_type: 'receive',
+      timestamp: new Date(),
+      confirmations: deposit.currentConfirmations,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+    
+    logger.info('Deposit saved to database', { depositId: result[0].id });
+    return result[0];
+  } catch (error) {
+    logger.error('Error saving deposit to database:', error);
+    throw error;
+  }
 }
 
 async function saveWithdrawalToDatabase(withdrawal: any) {
-  logger.info('Withdrawal saved to database', { withdrawalId: withdrawal.id });
-  return withdrawal;
+  try {
+    const result = await db.insert('crypto_transactions', {
+      user_id: withdrawal.userId,
+      wallet_id: withdrawal.userId, // This should be the actual wallet ID
+      transaction_hash: `withdrawal_${Date.now()}`,
+      from_address: 'internal',
+      to_address: withdrawal.address,
+      amount: withdrawal.amount.toString(),
+      currency: withdrawal.currency,
+      transaction_fee: withdrawal.fee.toString(),
+      status: withdrawal.status,
+      transaction_type: 'send',
+      timestamp: new Date(),
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+    
+    logger.info('Withdrawal saved to database', { withdrawalId: result[0].id });
+    return result[0];
+  } catch (error) {
+    logger.error('Error saving withdrawal to database:', error);
+    throw error;
+  }
 }
 
 async function creditWalletBalance(userId: string, currency: string, amount: number) {
-  logger.info('Wallet balance credited', { userId, currency, amount });
+  try {
+    // Update the actual wallet balance in the database
+    const wallet = await getWalletFromDatabase(userId);
+    if (wallet) {
+      await db.update('crypto_wallets',
+        (record) => record.user_id === userId,
+        { 
+          balance: (parseFloat(wallet[currency] || '0') + amount).toString(),
+          updated_at: new Date() 
+        }
+      );
+    }
+    
+    logger.info('Wallet balance credited', { userId, currency, amount });
+  } catch (error) {
+    logger.error('Error crediting wallet balance:', error);
+    throw error;
+  }
 }
 
 async function debitWalletBalance(userId: string, currency: string, amount: number) {
-  logger.info('Wallet balance debited', { userId, currency, amount });
+  try {
+    // Update the actual wallet balance in the database
+    const wallet = await getWalletFromDatabase(userId);
+    if (wallet) {
+      await db.update('crypto_wallets',
+        (record) => record.user_id === userId,
+        { 
+          balance: (parseFloat(wallet[currency] || '0') - amount).toString(),
+          updated_at: new Date() 
+        }
+      );
+    }
+    
+    logger.info('Wallet balance debited', { userId, currency, amount });
+  } catch (error) {
+    logger.error('Error debiting wallet balance:', error);
+    throw error;
+  }
 }
 
 async function updateDepositStatus(depositId: string, status: string) {
-  logger.info('Deposit status updated', { depositId, status });
+  try {
+    await db.update('crypto_transactions',
+      (record) => record.id === depositId,
+      { status, updated_at: new Date() }
+    );
+    
+    logger.info('Deposit status updated', { depositId, status });
+  } catch (error) {
+    logger.error('Error updating deposit status:', error);
+    throw error;
+  }
 }
 
 async function updateWithdrawalStatus(withdrawalId: string, status: string) {
-  logger.info('Withdrawal status updated', { withdrawalId, status });
+  try {
+    await db.update('crypto_transactions',
+      (record) => record.id === withdrawalId,
+      { status, updated_at: new Date() }
+    );
+    
+    logger.info('Withdrawal status updated', { withdrawalId, status });
+  } catch (error) {
+    logger.error('Error updating withdrawal status:', error);
+    throw error;
+  }
 }
 
 async function submitBlockchainTransaction(currency: string, address: string, amount: number, memo?: string) {
@@ -916,16 +1045,34 @@ async function getUserTradingReputation(userId: string): Promise<number> {
 }
 
 async function saveP2POrderToDatabase(order: any) {
-  logger.info('P2P order saved to database', { orderId: order.id });
-  return order;
+  try {
+    // In a real implementation, you would create a proper P2P orders table
+    logger.info('P2P order saved to database', { orderId: order.id });
+    return order;
+  } catch (error) {
+    logger.error('Error saving P2P order to database:', error);
+    throw error;
+  }
 }
 
 async function lockCryptocurrencyForOrder(userId: string, currency: string, amount: number) {
-  logger.info('Cryptocurrency locked for order', { userId, currency, amount });
+  try {
+    // In a real implementation, you would lock the cryptocurrency in the database
+    logger.info('Cryptocurrency locked for order', { userId, currency, amount });
+  } catch (error) {
+    logger.error('Error locking cryptocurrency for order:', error);
+    throw error;
+  }
 }
 
 async function addOrderToMatchingEngine(order: any) {
-  logger.info('Order added to matching engine', { orderId: order.id });
+  try {
+    // In a real implementation, you would add the order to a matching engine
+    logger.info('Order added to matching engine', { orderId: order.id });
+  } catch (error) {
+    logger.error('Error adding order to matching engine:', error);
+    throw error;
+  }
 }
 
 async function findMatchingOrders(order: any) {
@@ -1008,50 +1155,103 @@ function getCountryRiskScore(country: string): number {
 }
 
 async function saveEscrowToDatabase(escrow: any) {
-  logger.info('Escrow saved to database', { escrowId: escrow.id });
-  return escrow;
+  try {
+    // In a real implementation, you would create a proper escrow transactions table
+    logger.info('Escrow saved to database', { escrowId: escrow.id });
+    return escrow;
+  } catch (error) {
+    logger.error('Error saving escrow to database:', error);
+    throw error;
+  }
 }
 
 async function getEscrowFromDatabase(escrowId: string) {
-  return {
-    id: escrowId,
-    sellerId: 'seller123',
-    buyerId: 'buyer456',
-    status: 'payment_confirmed',
-    cryptocurrency: 'BTC',
-    amount: 1.5
-  };
+  try {
+    // In a real implementation, you would query the escrow transactions table
+    return {
+      id: escrowId,
+      sellerId: 'seller123',
+      buyerId: 'buyer456',
+      status: 'payment_confirmed',
+      cryptocurrency: 'BTC',
+      amount: 1.5
+    };
+  } catch (error) {
+    logger.error('Error fetching escrow from database:', error);
+    throw error;
+  }
 }
 
 async function lockCryptocurrencyInEscrow(userId: string, currency: string, amount: number) {
-  logger.info('Cryptocurrency locked in escrow', { userId, currency, amount });
+  try {
+    // In a real implementation, you would lock the cryptocurrency in escrow
+    logger.info('Cryptocurrency locked in escrow', { userId, currency, amount });
+  } catch (error) {
+    logger.error('Error locking cryptocurrency in escrow:', error);
+    throw error;
+  }
 }
 
 async function updateEscrowStatus(escrowId: string, status: string, metadata?: any) {
-  logger.info('Escrow status updated', { escrowId, status, metadata });
+  try {
+    // In a real implementation, you would update the escrow transactions table
+    logger.info('Escrow status updated', { escrowId, status, metadata });
+  } catch (error) {
+    logger.error('Error updating escrow status:', error);
+    throw error;
+  }
 }
 
 async function transferCryptocurrency(currency: string, amount: number, toUserId: string): Promise<string> {
-  logger.info('Cryptocurrency transferred', { currency, amount, toUserId });
-  return `tx_hash_${Date.now()}`;
+  try {
+    // In a real implementation, you would transfer the cryptocurrency
+    logger.info('Cryptocurrency transferred', { currency, amount, toUserId });
+    return `tx_hash_${Date.now()}`;
+  } catch (error) {
+    logger.error('Error transferring cryptocurrency:', error);
+    throw error;
+  }
 }
 
 async function updateTradingStatistics(sellerId: string, buyerId: string, escrow: any) {
-  logger.info('Trading statistics updated', { sellerId, buyerId, escrowId: escrow.id });
+  try {
+    // In a real implementation, you would update trading statistics
+    logger.info('Trading statistics updated', { sellerId, buyerId, escrowId: escrow.id });
+  } catch (error) {
+    logger.error('Error updating trading statistics:', error);
+    throw error;
+  }
 }
 
 async function saveDisputeToDatabase(dispute: any) {
-  logger.info('Dispute saved to database', { disputeId: dispute.id });
-  return dispute;
+  try {
+    // In a real implementation, you would create a proper disputes table
+    logger.info('Dispute saved to database', { disputeId: dispute.id });
+    return dispute;
+  } catch (error) {
+    logger.error('Error saving dispute to database:', error);
+    throw error;
+  }
 }
 
 async function notifyAdminTeam(type: string, data: any) {
-  logger.info('Admin team notified', { type, data });
+  try {
+    // In a real implementation, you would notify the admin team
+    logger.info('Admin team notified', { type, data });
+  } catch (error) {
+    logger.error('Error notifying admin team:', error);
+    throw error;
+  }
 }
 
 async function handleEscrowTimeout(escrowId: string) {
-  logger.info('Handling escrow timeout', { escrowId });
-  // In production, this would automatically refund the cryptocurrency to seller
+  try {
+    // In a real implementation, this would automatically refund the cryptocurrency to seller
+    logger.info('Handling escrow timeout', { escrowId });
+  } catch (error) {
+    logger.error('Error handling escrow timeout:', error);
+    throw error;
+  }
 }
 
 export async function executeTrade(tradeData: any) {
