@@ -470,6 +470,7 @@ app.use('/api/pioneer', pioneerBadgeRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/explore', exploreRouter);
 app.use('/api/wallet', walletRouter);
+app.use('/api/ledger', ledgerRouter);
 
 // =============================================================================
 // CORE AUTHENTICATION ENDPOINTS
