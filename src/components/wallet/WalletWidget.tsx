@@ -9,11 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  walletService,
-  WalletService,
-  type Wallet,
-} from "@/services/walletService";
+import { useWalletContext } from "@/contexts/WalletContext";
 import { Wallet as WalletIcon, Send, History, CreditCard } from "lucide-react";
 
 export function WalletWidget() {
