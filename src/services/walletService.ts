@@ -60,68 +60,26 @@ class WalletServiceClass {
         };
       }
 
-      // Get crypto balance from wallet
-      const cryptoBalance = await CryptoService.getWalletBalance(user.id);
-      const cryptoTotal = cryptoBalance?.totalValueUSD || 0;
+      // Call unified wallet API endpoint instead of making multiple Supabase queries
+      const response = await apiCall(`/api/wallet/balance?userId=${user.id}`);
 
-      // Get ecommerce balance (from marketplace earnings)
-      let ecommerceTotal = 0;
-      try {
-        const { data: ecommerceData, error: ecommerceError } = await supabase
-          .from('marketplace_orders')
-          .select('total_amount')
-          .eq('seller_id', user.id)
-          .eq('status', 'completed');
-        if (ecommerceError) {
-          console.warn('Supabase marketplace_orders query failed, falling back to zero:', ecommerceError);
-        }
-        ecommerceTotal = ecommerceData?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
-      } catch (err) {
-        console.warn('Error querying marketplace_orders via Supabase:', err);
-        ecommerceTotal = 0;
+      if (response?.data?.balances) {
+        return {
+          total: response.data.balances.total || 0,
+          crypto: response.data.balances.crypto || 0,
+          ecommerce: response.data.balances.marketplace || 0,
+          rewards: response.data.balances.rewards || 0,
+          freelance: response.data.balances.freelance || 0,
+        };
       }
 
-      // Get rewards balance (from activity rewards)
-      let rewardsTotal = 0;
-      try {
-        const { data: rewardsData, error: rewardsError } = await supabase
-          .from('user_rewards')
-          .select('amount')
-          .eq('user_id', user.id);
-        if (rewardsError) {
-          console.warn('Supabase user_rewards query failed, falling back to zero:', rewardsError);
-        }
-        rewardsTotal = rewardsData?.reduce((sum, reward) => sum + parseFloat(reward.amount), 0) || 0;
-      } catch (err) {
-        console.warn('Error querying user_rewards via Supabase:', err);
-        rewardsTotal = 0;
-      }
-
-      // Get freelance balance (from freelance projects)
-      let freelanceTotal = 0;
-      try {
-        const { data: freelanceData, error: freelanceError } = await supabase
-          .from('freelance_projects')
-          .select('budget')
-          .eq('freelancer_id', user.id)
-          .eq('status', 'completed');
-        if (freelanceError) {
-          console.warn('Supabase freelance_projects query failed, falling back to zero:', freelanceError);
-        }
-        freelanceTotal = freelanceData?.reduce((sum, project) => sum + parseFloat(project.budget), 0) || 0;
-      } catch (err) {
-        console.warn('Error querying freelance_projects via Supabase:', err);
-        freelanceTotal = 0;
-      }
-
-      const total = cryptoTotal + ecommerceTotal + rewardsTotal + freelanceTotal;
-
+      // Fallback to zero balances if API fails
       return {
-        total,
-        crypto: cryptoTotal,
-        ecommerce: ecommerceTotal,
-        rewards: rewardsTotal,
-        freelance: freelanceTotal,
+        total: 0,
+        crypto: 0,
+        ecommerce: 0,
+        rewards: 0,
+        freelance: 0,
       };
     } catch (error) {
       console.error('Error fetching wallet balance:', error);
