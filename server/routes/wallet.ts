@@ -706,6 +706,18 @@ router.post('/update-crypto-balance', async (req: Request, res: Response) => {
 
     logger.info('Crypto balance updated', { userId, currency, delta, next });
 
+    // Record ledger entry for this balance adjustment
+    try {
+      const base = `http://localhost:${process.env.PORT || 5002}`;
+      await fetch(`${base}/api/ledger/record-crypto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount: Math.abs(delta), currency, type: delta >= 0 ? 'credit' : 'debit', status: 'completed' })
+      });
+    } catch (err) {
+      logger.warn('Failed to record crypto balance update in ledger API:', err);
+    }
+
     res.json({ success: true, userId, currency, newBalance: next });
   } catch (error) {
     logger.error('Error in POST /api/wallet/update-crypto-balance:', error);
