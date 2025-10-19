@@ -112,7 +112,7 @@ router.post('/place-order', placeOrderLimiter, authenticateToken, async (req, re
 });
 
 // Transfer between platform accounts or withdrawals (platform-custodial transfer). KYC enforced for withdrawals.
-router.post('/transfer', authenticateToken, async (req, res) => {
+router.post('/transfer', transferLimiter, authenticateToken, async (req, res) => {
   try {
     const userId = req.userId as string;
     const { type, amount, currency, destination } = req.body || {};
@@ -130,6 +130,9 @@ router.post('/transfer', authenticateToken, async (req, res) => {
 
     if (r.ok) {
       try {
+        // Atomic debit from user's internal wallet
+        await adjustWalletBalanceAtomic(userId, currency || 'USD', -Math.abs(Number(amount || 0)), { type: 'withdrawal', metadata: { destination, response: jsonResp } });
+
         // Ledger: record debit from user's internal balance
         await fetch(`${BACKEND_BASE.replace(/\/+$/, '')}/api/ledger/record`, {
           method: 'POST',
@@ -146,7 +149,7 @@ router.post('/transfer', authenticateToken, async (req, res) => {
           })
         });
       } catch (ledgerErr) {
-        logger.warn('Failed to record ledger entry for transfer:', ledgerErr);
+        logger.warn('Failed to perform atomic debit or ledger entry for transfer:', ledgerErr);
       }
     }
 
