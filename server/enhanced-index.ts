@@ -138,6 +138,13 @@ try {
   console.error('Failed to start metrics sync:', e);
 }
 
+// Start reconciliation job for platform balances
+try {
+  startReconciliation();
+} catch (e) {
+  console.error('Failed to start reconciliation job:', e);
+}
+
 // Optional: start BullMQ-based queue if REDIS_URL is provided for more robust scheduling
 import { startMetricsQueue } from './queue/metricsQueue.js';
 try {
