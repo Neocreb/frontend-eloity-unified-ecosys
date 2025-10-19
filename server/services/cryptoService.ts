@@ -740,16 +740,56 @@ async function generateCryptoAddress(currency: string): Promise<string> {
 }
 
 async function getCurrencyBalance(address: string, currency: string): Promise<number> {
-  // In production, query blockchain for actual balance
-  // Mock balances for development
-  const mockBalances = {
-    'BTC': Math.random() * 5,
-    'ETH': Math.random() * 20,
-    'USDT': Math.random() * 10000,
-    'BNB': Math.random() * 100
-  };
-  
-  return mockBalances[currency] || 0;
+  try {
+    // First try to interpret address as a userId and read crypto_wallets table
+    if (!address) return 0;
+    // If address looks like a UUID (simple check) treat as user id
+    const isUuid = typeof address === 'string' && /^[0-9a-fA-F\-]{8,36}$/.test(address);
+
+    if (isUuid) {
+      // Query DB for crypto_wallets for this user
+      try {
+        const rows = await db.select({ balance: (await import('../../shared/crypto-schema.js')).crypto_wallets.balance })
+          .from((await import('../../shared/crypto-schema.js')).crypto_wallets)
+          .where((await import('drizzle-orm')).eq((await import('../../shared/crypto-schema.js')).crypto_wallets.user_id, address))
+          .execute();
+        const total = rows.reduce((s: number, r: any) => s + parseFloat(r.balance?.toString() || '0'), 0);
+        return total;
+      } catch (dbErr) {
+        logger.debug('DB crypto_wallets query failed in getCurrencyBalance:', dbErr?.message || dbErr);
+      }
+    }
+
+    // Otherwise, try to find wallet row by wallet_address
+    try {
+      const schema = await import('../../shared/crypto-schema.js');
+      const rows = await db.select({ balance: schema.crypto_wallets.balance })
+        .from(schema.crypto_wallets)
+        .where((await import('drizzle-orm')).eq(schema.crypto_wallets.wallet_address, address))
+        .execute();
+      if (rows && rows.length) return parseFloat(rows[0].balance?.toString() || '0');
+    } catch (dbErr2) {
+      logger.debug('DB wallet_address lookup failed in getCurrencyBalance:', dbErr2?.message || dbErr2);
+    }
+
+    // As last resort, if BYBIT keys present try to query Bybit unified account balance for the currency
+    if (process.env.BYBIT_PUBLIC_API && process.env.BYBIT_SECRET_API) {
+      try {
+        const axios = (await import('axios')).default;
+        // Bybit private endpoints require signing; here we attempt a public wallet balance via unified account (may require proper auth)
+        // For safety, call CoinGecko price as fallback numeric value zero for actual asset amount retrieval
+        logger.debug('BYBIT credentials present but private balance fetch not implemented, falling back to 0');
+      } catch (byErr) {
+        logger.debug('Bybit balance fetch failed:', byErr?.message || byErr);
+      }
+    }
+
+    // Final fallback – return 0 to avoid showing misleading random balances
+    return 0;
+  } catch (error) {
+    logger.error('getCurrencyBalance error:', error);
+    return 0;
+  }
 }
 
 async function getCurrencyPrice(currency: string, vsCurrency: string): Promise<number> {
