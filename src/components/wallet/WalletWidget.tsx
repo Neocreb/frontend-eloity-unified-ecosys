@@ -43,10 +43,10 @@ export function WalletWidget() {
   }
 
   const balances = [
-    { currency: "USDT", amount: wallet.usdtBalance },
-    { currency: "ETH", amount: wallet.ethBalance },
-    { currency: "BTC", amount: wallet.btcBalance },
-    { currency: "ELOITY_POINTS", amount: wallet.eloityPointsBalance },
+    { label: "Crypto", amount: walletBalance.crypto },
+    { label: "Marketplace", amount: walletBalance.ecommerce },
+    { label: "Freelance", amount: walletBalance.freelance },
+    { label: "Rewards", amount: walletBalance.rewards },
   ];
 
   return (
