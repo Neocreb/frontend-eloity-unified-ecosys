@@ -433,8 +433,8 @@ const CampaignCreationWizard: React.FC<CampaignCreationWizardProps> = ({
           ))}
         </div>
 
-        {/* Step Content */}
-        <div className="min-h-[400px]">
+        {/* Step Content: make this area scrollable so footer stays visible */}
+        <div className="flex-1 overflow-y-auto min-h-0">
           {/* Step 1: Campaign Goal */}
           {currentStep === 1 && (
             <div className="space-y-6">
