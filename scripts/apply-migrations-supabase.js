@@ -6,6 +6,21 @@
 import fs from 'fs';
 import path from 'path';
 import postgres from 'postgres';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env and .env.local
+const envPath = path.join(process.cwd(), '.env');
+const envLocalPath = path.join(process.cwd(), '.env.local');
+
+// Load .env first
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
+
+// Load .env.local second (will override .env values)
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath, override: true });
+}
 
 const MIGRATIONS_DIR = path.join(process.cwd(), 'migrations');
 
@@ -32,6 +47,12 @@ async function main() {
   const dbUrl = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
   if (!dbUrl) {
     console.error('No database URL set. Set SUPABASE_DB_URL (preferred) or DATABASE_URL to your Supabase Postgres connection string.');
+    console.error('');
+    console.error('🔧 To fix this issue:');
+    console.error('1. Create a Supabase project at https://supabase.com/');
+    console.error('2. Update .env.local with your actual Supabase credentials');
+    console.error('3. For detailed instructions, see SUPABASE_SETUP_INSTRUCTIONS.md');
+    console.error('');
     process.exit(1);
   }
 

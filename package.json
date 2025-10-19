@@ -24,7 +24,11 @@
     "migrate:apply": "node scripts/apply-migrations-supabase.js",
     "db:studio": "npx drizzle-kit studio",
     "db:push": "npx drizzle-kit push:pg",
-    "setup:supabase": "node scripts/setup-supabase-integration.js"
+    "setup:supabase": "node scripts/setup-supabase-integration.js",
+    "setup:env": "node scripts/setup-supabase-credentials.js",
+    "init:env": "node scripts/init-env.js",
+    "get:supabase-credentials": "node scripts/get-supabase-credentials.js",
+    "verify:setup": "node scripts/verify-secure-setup.js"
   },
   "//": "Enhanced package.json with comprehensive dependencies and scripts",
   "dependencies": {
