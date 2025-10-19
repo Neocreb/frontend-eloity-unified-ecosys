@@ -143,39 +143,40 @@ class WalletServiceClass {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      const limit = params?.limit || 20;
+      const limit = Math.min(params?.limit || 20, 100);
       const offset = params?.offset || 0;
 
-      let query = supabase
-        .from('crypto_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+      // Call unified wallet transactions endpoint
+      const response = await apiCall(
+        `/api/wallet/transactions?userId=${user.id}&limit=${limit}&offset=${offset}`
+      );
 
-      if (params?.type) {
-        query = query.eq('transaction_type', params.type);
+      if (response?.data?.transactions && Array.isArray(response.data.transactions)) {
+        let transactions = response.data.transactions.map((tx: any) => ({
+          id: tx.id,
+          type: tx.type || 'transfer',
+          amount: parseFloat(tx.amount.toString()),
+          currency: tx.currency || 'USD',
+          source: tx.source || 'unknown',
+          description: `${tx.type} - ${tx.source}`,
+          status: tx.status || 'completed',
+          timestamp: tx.created_at,
+          createdAt: tx.created_at,
+        }));
+
+        // Apply client-side filtering if needed
+        if (params?.type) {
+          transactions = transactions.filter(tx => tx.type === params.type);
+        }
+
+        if (params?.currency) {
+          transactions = transactions.filter(tx => tx.currency === params.currency);
+        }
+
+        return transactions;
       }
 
-      if (params?.currency) {
-        query = query.eq('crypto_type', params.currency);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return (data || []).map(tx => ({
-        id: tx.id,
-        type: tx.transaction_type === 'deposit' ? 'earned' : 'withdrawal',
-        amount: tx.amount.toString(),
-        currency: tx.crypto_type,
-        source: 'crypto',
-        description: `${tx.transaction_type} - ${tx.crypto_type}`,
-        status: tx.status,
-        timestamp: tx.created_at,
-        createdAt: tx.created_at,
-      }));
+      return [];
     } catch (error) {
       console.error('Error fetching transaction history:', error);
       return [];
