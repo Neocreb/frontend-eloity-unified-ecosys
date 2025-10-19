@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import fetch from 'node-fetch';
 import { logger } from '../utils/logger.js';
+import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
