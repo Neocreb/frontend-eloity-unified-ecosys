@@ -34,7 +34,7 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   // Development warning for missing DialogTitle
   React.useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
       const childrenArray = React.Children.toArray(children);
       const hasDialogTitle = childrenArray.some(child =>
         React.isValidElement(child) &&
