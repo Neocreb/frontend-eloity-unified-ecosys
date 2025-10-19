@@ -48,8 +48,12 @@ router.get('/balances', authenticateToken, async (req, res) => {
   }
 });
 
+// Rate limiters for trading endpoints
+const placeOrderLimiter = rateLimit({ windowMs: 60 * 1000, max: 15, message: { error: 'Too many order requests, try again later' } });
+const transferLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, message: { error: 'Too many transfer requests, try again later' } });
+
 // Place order on behalf of user (platform-custodial). KYC enforced.
-router.post('/place-order', authenticateToken, async (req, res) => {
+router.post('/place-order', placeOrderLimiter, authenticateToken, async (req, res) => {
   try {
     const userId = req.userId as string;
     const body = req.body || {};
@@ -66,12 +70,17 @@ router.post('/place-order', authenticateToken, async (req, res) => {
     let jsonResp: any = null;
     try { jsonResp = JSON.parse(text); } catch (e) { jsonResp = { raw: text }; }
 
-    // If successful, record ledger entries for audit
+    // If successful, attempt atomic wallet adjustments and ledger entries
     if (r.ok) {
       try {
-        // Determine amounts and currency from request/response (best-effort)
         const { symbol, side, price, qty, amount, currency } = { ...(body || {}), ...(jsonResp || {}) };
-        // Record generic ledger entry
+        const amt = Number(amount || (qty ? parseFloat(qty) * (price || 0) : 0));
+        const ccy = currency || (symbol ? symbol.replace(/USDT|USD/i, 'USD') : 'USD');
+
+        // Debit user's internal wallet by the trade amount
+        await adjustWalletBalanceAtomic(userId, ccy, -Math.abs(amt), { type: 'trade', metadata: { request: body, response: jsonResp } });
+
+        // Also call ledger.record for centralized auditing
         await fetch(`${BACKEND_BASE.replace(/\/+$/, '')}/api/ledger/record`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,15 +88,15 @@ router.post('/place-order', authenticateToken, async (req, res) => {
             userId,
             type: 'crypto_trade',
             source: 'crypto',
-            amount: amount || (qty ? parseFloat(qty) * (price || 0) : 0),
-            currency: currency || (symbol ? symbol.replace(/USDT|USD/i, 'USD') : 'USD'),
+            amount: amt,
+            currency: ccy,
             description: `Trade ${side || ''} ${symbol || ''}`,
             status: 'completed',
             metadata: { request: body, response: jsonResp }
           })
         });
       } catch (ledgerErr) {
-        logger.warn('Failed to record ledger entry for trade:', ledgerErr);
+        logger.warn('Failed to perform atomic wallet adjustment or ledger recording for trade:', ledgerErr);
       }
     }
 
