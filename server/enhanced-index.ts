@@ -472,6 +472,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/explore', exploreRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/ledger', ledgerRouter);
+app.use('/api/bybit', bybitRouter);
 
 // =============================================================================
 // CORE AUTHENTICATION ENDPOINTS
