@@ -79,6 +79,7 @@ import walletRouter from './routes/wallet.js';
 import ledgerRouter from './routes/ledger.js';
 import bybitRouter from './routes/bybit.js';
 import startMetricsSync from './tasks/metricsSync.js';
+import startReconciliation from './tasks/reconcileBalances.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
