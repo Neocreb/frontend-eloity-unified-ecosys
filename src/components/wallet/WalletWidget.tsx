@@ -30,15 +30,12 @@ export function WalletWidget() {
     );
   }
 
-  if (error || !wallet) {
+  if (error || !walletBalance) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center">
-            <p className="text-red-600 mb-2">{error}</p>
-            <Button onClick={loadWallet} variant="outline" size="sm">
-              Try Again
-            </Button>
+            <p className="text-red-600 mb-2">{error || "Wallet unavailable"}</p>
           </div>
         </CardContent>
       </Card>
