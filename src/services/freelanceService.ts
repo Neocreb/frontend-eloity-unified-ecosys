@@ -254,6 +254,25 @@ export class FreelanceService {
     return null;
   }
 
+  // Get freelancer's earnings balance from unified wallet
+  static async getFreelancerBalance(freelancerId: string): Promise<number> {
+    try {
+      const response = await fetch(`/api/wallet/balance?userId=${freelancerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data?.balances?.freelance || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error("Error fetching freelancer balance:", error);
+      return 0;
+    }
+  }
+
   // Categories and skills
   static async getCategories(): Promise<string[]> {
     try {
