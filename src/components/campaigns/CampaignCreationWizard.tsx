@@ -899,7 +899,7 @@ const CampaignCreationWizard: React.FC<CampaignCreationWizardProps> = ({
           )}
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row justify-between gap-3">
+        <DialogFooter className="flex flex-col sm:flex-row justify-between gap-3 sticky bottom-0 z-30 bg-background/80 dark:bg-gray-900/80 backdrop-blur py-3 sm:py-0 px-0 sm:px-0" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="flex gap-2 order-2 sm:order-1">
             {currentStep > 1 && (
               <Button variant="outline" onClick={prevStep} className="flex-1 sm:flex-none">
