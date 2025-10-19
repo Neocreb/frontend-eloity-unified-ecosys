@@ -779,7 +779,7 @@ export class CryptoService {
     }
   }
 
-  // Get wallet balance
+  // Get wallet balance - now using unified wallet endpoint
   static async getWalletBalance(userId: string): Promise<{
     btc: number;
     eth: number;
@@ -789,24 +789,46 @@ export class CryptoService {
     totalValueUSD: number;
   } | null> {
     try {
-      const wallet = await this.getUserWallet(userId);
-      if (!wallet) return null;
+      // Use unified wallet endpoint instead of direct database query
+      const response = await fetch(`/api/wallet/balance?userId=${userId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
 
-      // In a real implementation, you would fetch current prices and calculate total value
-      const totalValueUSD = 
-        wallet.btc_balance * 50000 + // Mock BTC price
-        wallet.eth_balance * 3000 +  // Mock ETH price
-        wallet.usdt_balance * 1 +    // USDT price
-        wallet.eloits_balance * 0.1 + // Mock ELOITS price
-        wallet.sol_balance * 100;    // Mock SOL price
+      if (!response.ok) {
+        console.warn('Failed to fetch wallet balance from unified endpoint');
+        // Fallback to old method
+        const wallet = await this.getUserWallet(userId);
+        if (!wallet) return null;
 
+        const totalValueUSD =
+          wallet.btc_balance * 50000 +
+          wallet.eth_balance * 3000 +
+          wallet.usdt_balance * 1 +
+          wallet.eloits_balance * 0.1 +
+          wallet.sol_balance * 100;
+
+        return {
+          btc: wallet.btc_balance,
+          eth: wallet.eth_balance,
+          usdt: wallet.usdt_balance,
+          eloits: wallet.eloits_balance,
+          sol: wallet.sol_balance,
+          totalValueUSD
+        };
+      }
+
+      const data = await response.json();
+      const balances = data.data?.balances || {};
+
+      // Return consolidated balance with crypto as primary source
       return {
-        btc: wallet.btc_balance,
-        eth: wallet.eth_balance,
-        usdt: wallet.usdt_balance,
-        eloits: wallet.eloits_balance,
-        sol: wallet.sol_balance,
-        totalValueUSD
+        btc: 0, // Crypto balance is aggregated in unified endpoint
+        eth: 0,
+        usdt: 0,
+        eloits: balances.rewards || 0, // Map rewards to eloits
+        sol: 0,
+        totalValueUSD: balances.crypto || 0 // Use unified crypto balance
       };
     } catch (error) {
       console.error("Error in getWalletBalance:", error);

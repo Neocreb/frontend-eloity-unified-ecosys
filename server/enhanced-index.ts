@@ -75,6 +75,8 @@ import rewardSharingRouter from './routes/rewardSharing.js';
 import pioneerBadgeRouter from './routes/pioneerBadge.js';
 import adminRouter from './routes/admin.js';
 import exploreRouter from './routes/explore.js';
+import walletRouter from './routes/wallet.js';
+import ledgerRouter from './routes/ledger.js';
 import startMetricsSync from './tasks/metricsSync.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -467,6 +469,8 @@ app.use('/api/rewards', rewardSharingRouter);
 app.use('/api/pioneer', pioneerBadgeRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/explore', exploreRouter);
+app.use('/api/wallet', walletRouter);
+app.use('/api/ledger', ledgerRouter);
 
 // =============================================================================
 // CORE AUTHENTICATION ENDPOINTS
