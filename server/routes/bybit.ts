@@ -44,12 +44,12 @@ async function proxyToEdge(req: Request, res: Response, action: string) {
   }
 }
 
-router.get('/balances', async (req, res) => proxyToEdge(req, res, 'balances'));
-router.get('/positions', async (req, res) => proxyToEdge(req, res, 'positions'));
-router.get('/orders', async (req, res) => proxyToEdge(req, res, 'orders'));
-router.post('/place-order', async (req, res) => proxyToEdge(req, res, 'place-order'));
-router.get('/order-history', async (req, res) => proxyToEdge(req, res, 'order-history'));
-router.post('/transfer', async (req, res) => proxyToEdge(req, res, 'transfer'));
-router.post('/convert', async (req, res) => proxyToEdge(req, res, 'convert'));
+router.get('/balances', authenticateAdmin, async (req, res) => proxyToEdge(req, res, 'balances'));
+router.get('/positions', authenticateAdmin, async (req, res) => proxyToEdge(req, res, 'positions'));
+router.get('/orders', authenticateAdmin, async (req, res) => proxyToEdge(req, res, 'orders'));
+router.post('/place-order', authenticateAdmin, async (req, res) => proxyToEdge(req, res, 'place-order'));
+router.get('/order-history', authenticateAdmin, async (req, res) => proxyToEdge(req, res, 'order-history'));
+router.post('/transfer', authenticateAdmin, async (req, res) => proxyToEdge(req, res, 'transfer'));
+router.post('/convert', authenticateAdmin, async (req, res) => proxyToEdge(req, res, 'convert'));
 
 export default router;
