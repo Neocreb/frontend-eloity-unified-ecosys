@@ -257,15 +257,6 @@ const Groups: React.FC = () => {
         </div>
 
         {/* Main responsive grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Left sidebar included above in the layout using render logic - but keep placeholder for accessibility */}
-          <div className="md:col-span-4">
-            {/* The content area is rendered inside the render logic above for clarity */}
-          </div>
-
-          {/* Use existing layout rendering by reusing earlier JSX - to keep HMR minimal we render the content directly below */}
-          <div className="md:col-span-1"></div>
-        </div>
 
         {/* Render main Tabs and content below (kept for HMR simplicity) */}
         <div className="mt-4">
