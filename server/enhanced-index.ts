@@ -77,6 +77,7 @@ import adminRouter from './routes/admin.js';
 import exploreRouter from './routes/explore.js';
 import walletRouter from './routes/wallet.js';
 import ledgerRouter from './routes/ledger.js';
+import bybitRouter from './routes/bybit.js';
 import startMetricsSync from './tasks/metricsSync.js';
 
 const __filename = fileURLToPath(import.meta.url);
