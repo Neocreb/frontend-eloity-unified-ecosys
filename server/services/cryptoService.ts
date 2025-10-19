@@ -5,43 +5,69 @@ import { db } from '../utils/db.js';
 // CRYPTOCURRENCY PRICE SERVICE
 // =============================================================================
 
+import axios from 'axios';
+
 export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'usd') {
   try {
-    // Mock prices for development (removed process.env check)
-    const mockPrices = {
-      'bitcoin': {
-        'usd': 45000,
-        'usd_24h_change': 2.5,
-        'usd_market_cap': 850000000000,
-        'usd_24h_vol': 25000000000
-      },
-      'ethereum': {
-        'usd': 3200,
-        'usd_24h_change': 1.8,
-        'usd_market_cap': 380000000000,
-        'usd_24h_vol': 15000000000
-      },
-      'tether': {
-        'usd': 1.0,
-        'usd_24h_change': 0.01,
-        'usd_market_cap': 95000000000,
-        'usd_24h_vol': 45000000000
-      },
-      'binancecoin': {
-        'usd': 320,
-        'usd_24h_change': -0.5,
-        'usd_market_cap': 48000000000,
-        'usd_24h_vol': 2000000000
-      }
+    // Try Bybit public endpoints first (no auth required for market data)
+    const result: any = {};
+    const bybitMap: Record<string, string> = {
+      bitcoin: 'BTCUSDT',
+      ethereum: 'ETHUSDT',
+      tether: 'USDTUSD',
+      binancecoin: 'BNBUSDT'
     };
-    
-    const result = {};
-    symbols.forEach(symbol => {
-      if (mockPrices[symbol]) {
-        result[symbol] = mockPrices[symbol];
+
+    const fetchPromises = symbols.map(async (symbol) => {
+      const lower = symbol.toLowerCase();
+      try {
+        const pair = bybitMap[lower];
+        if (pair) {
+          const url = `https://api.bybit.com/spot/quote/v1/ticker/24hr?symbol=${pair}`;
+          const resp = await axios.get(url, { timeout: 5000 });
+          const data = resp.data?.result || resp.data;
+          const price = data?.last_price || data?.lastPrice || data?.price || data?.close || null;
+          if (price) {
+            result[lower] = {
+              usd: parseFloat(price.toString()),
+              usd_24h_change: parseFloat(data?.price_24h_pcnt?.toString?.() || '0') * 100 || 0,
+              usd_market_cap: null,
+              usd_24h_vol: parseFloat(data?.quote_volume || data?.volume || '0')
+            };
+            return;
+          }
+        }
+      } catch (err) {
+        logger.debug('Bybit price fetch failed for', symbol, err?.message || err);
       }
+
+      // Fallback to CoinGecko public API
+      try {
+        const cgIdMap: Record<string, string> = { bitcoin: 'bitcoin', ethereum: 'ethereum', tether: 'tether', binancecoin: 'binancecoin' };
+        const id = cgIdMap[lower];
+        if (id) {
+          const cgUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=${vsCurrency}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
+          const r = await axios.get(cgUrl, { timeout: 5000 });
+          const payload = r.data[id];
+          if (payload) {
+            result[lower] = {
+              usd: payload[vsCurrency] || null,
+              usd_24h_change: payload[`${vsCurrency}_24h_change`] || 0,
+              usd_market_cap: payload[`${vsCurrency}_market_cap`] || null,
+              usd_24h_vol: payload[`${vsCurrency}_24h_vol`] || null
+            };
+            return;
+          }
+        }
+      } catch (cgErr) {
+        logger.debug('CoinGecko fallback failed for', symbol, cgErr?.message || cgErr);
+      }
+
+      // Final fallback: mock
+      result[lower] = { usd: 0, usd_24h_change: 0, usd_market_cap: 0, usd_24h_vol: 0 };
     });
-    
+
+    await Promise.all(fetchPromises);
     return result;
   } catch (error) {
     logger.error('Price fetch error:', error);
