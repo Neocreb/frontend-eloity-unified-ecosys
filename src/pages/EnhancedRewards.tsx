@@ -24,7 +24,7 @@ import { fetchWithAuth } from "@/lib/fetch-utils";
 import { cn } from "@/lib/utils";
 
 // Test integration (only in development)
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+if (typeof window !== "undefined" && typeof process !== 'undefined' && process.env && process.env.NODE_ENV === "development") {
   import("@/utils/testRewardsIntegration").catch(console.warn);
 }
 
