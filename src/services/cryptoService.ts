@@ -315,7 +315,7 @@ export const mockPortfolio: Portfolio = {
 
 // Simplified service class with real database connections
 export class CryptoService {
-  private readonly COINGECKO_API_KEY = process.env.COINGECKO_API_KEY || 'CG-ZmDHBa3kaPCNF2a2xg2mA5je';
+  private readonly COINGECKO_API_KEY = ((typeof process !== 'undefined' && process.env && process.env.COINGECKO_API_KEY) || (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_COINGECKO_API_KEY || import.meta.env?.COINGECKO_API_KEY)) || 'CG-ZmDHBa3kaPCNF2a2xg2mA5je');
   private readonly COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
 
   // Enhanced method to get cryptocurrencies with real data when available

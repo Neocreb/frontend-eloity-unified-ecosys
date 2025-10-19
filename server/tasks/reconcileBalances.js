@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
-import { db } from '../server/enhanced-index.js';
-import { crypto_wallets } from '../shared/crypto-schema.js';
+import { db } from '../enhanced-index.js';
+import { crypto_wallets } from '../../shared/crypto-schema.js';
 import { sum } from 'drizzle-orm';
-import { logger } from '../server/utils/logger.js';
+import { logger } from '../utils/logger.js';
 
 const SUPABASE_EDGE_BASE = process.env.SUPABASE_EDGE_BASE || process.env.SUPABASE_FUNCTIONS_URL || '';
 const RECONCILE_INTERVAL = parseInt(process.env.RECONCILE_INTERVAL_SECONDS || '300', 10) * 1000; // default 5m

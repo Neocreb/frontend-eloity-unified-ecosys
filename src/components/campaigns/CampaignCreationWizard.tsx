@@ -405,7 +405,7 @@ const CampaignCreationWizard: React.FC<CampaignCreationWizardProps> = ({
 
   return (
     <Dialog open={isOpen || open} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-[95vw] sm:max-w-[800px] max-h-[90vh] overflow-y-auto mx-auto p-4 sm:p-6">
+      <DialogContent className="w-full max-w-[95vw] sm:max-w-[800px] max-h-[90vh] mx-auto p-4 sm:p-6 flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Campaign</DialogTitle>
           <DialogDescription>
@@ -433,8 +433,8 @@ const CampaignCreationWizard: React.FC<CampaignCreationWizardProps> = ({
           ))}
         </div>
 
-        {/* Step Content */}
-        <div className="min-h-[400px]">
+        {/* Step Content: make this area scrollable so footer stays visible */}
+        <div className="flex-1 overflow-y-auto min-h-0">
           {/* Step 1: Campaign Goal */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -899,7 +899,7 @@ const CampaignCreationWizard: React.FC<CampaignCreationWizardProps> = ({
           )}
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row justify-between gap-3">
+        <DialogFooter className="flex flex-col sm:flex-row justify-between gap-3 sticky bottom-0 z-30 bg-background/80 dark:bg-gray-900/80 backdrop-blur py-3 sm:py-0 px-0 sm:px-0" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="flex gap-2 order-2 sm:order-1">
             {currentStep > 1 && (
               <Button variant="outline" onClick={prevStep} className="flex-1 sm:flex-none">

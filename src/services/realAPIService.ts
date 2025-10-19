@@ -188,7 +188,7 @@ export class RealAPIService {
     location: string,
   ): Promise<APIResponse<WeatherData>> {
     // OpenWeatherMap API (requires API key)
-    const apiKey = process.env.OPENWEATHER_API_KEY || "demo_key";
+    const apiKey = ((typeof process !== 'undefined' && process.env && process.env.OPENWEATHER_API_KEY) || import.meta.env?.VITE_OPENWEATHER_API_KEY || "demo_key");
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=imperial`;
 
     try {
@@ -218,7 +218,7 @@ export class RealAPIService {
     category: string,
   ): Promise<APIResponse<NewsItem[]>> {
     // NewsAPI (requires API key)
-    const apiKey = process.env.NEWS_API_KEY || "demo_key";
+    const apiKey = ((typeof process !== 'undefined' && process.env && process.env.NEWS_API_KEY) || import.meta.env?.VITE_NEWS_API_KEY || "demo_key");
     const url = `https://newsapi.org/v2/top-headlines?category=${category}&country=us&apiKey=${apiKey}`;
 
     try {
