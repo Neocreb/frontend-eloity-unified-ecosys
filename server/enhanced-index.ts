@@ -75,6 +75,7 @@ import rewardSharingRouter from './routes/rewardSharing.js';
 import pioneerBadgeRouter from './routes/pioneerBadge.js';
 import adminRouter from './routes/admin.js';
 import exploreRouter from './routes/explore.js';
+import walletRouter from './routes/wallet.js';
 import startMetricsSync from './tasks/metricsSync.js';
 
 const __filename = fileURLToPath(import.meta.url);
