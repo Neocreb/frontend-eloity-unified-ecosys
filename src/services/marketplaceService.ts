@@ -589,17 +589,32 @@ export class MarketplaceService {
         console.error("Error fetching seller ratings:", ratingError);
       }
 
-      const averageRating = products && products.length > 0 
+      const averageRating = products && products.length > 0
         ? products.reduce((sum, product) => sum + (product.rating || 0), 0) / products.length
         : 0;
+
+      // Get seller's marketplace revenue from unified wallet
+      let totalRevenue = 0;
+      try {
+        const response = await fetch(`/api/wallet/sources?userId=${sellerId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          totalRevenue = data.data?.sources?.marketplace?.amount || 0;
+        }
+      } catch (err) {
+        console.warn('Could not fetch marketplace revenue from unified wallet:', err);
+      }
 
       return {
         totalProducts: productsCount || 0,
         totalSales: ordersCount || 0,
-        totalRevenue: 0, // Would need to calculate from orders
+        totalRevenue,
         averageRating: parseFloat(averageRating.toFixed(2)),
-        responseTime: 0, // Would need to calculate from actual data
-        customerSatisfaction: 0 // Would need to calculate from reviews
+        responseTime: 0,
+        customerSatisfaction: 0
       };
     } catch (error) {
       console.error("Error in getSellerStats:", error);
@@ -611,6 +626,25 @@ export class MarketplaceService {
         responseTime: 0,
         customerSatisfaction: 0
       };
+    }
+  }
+
+  // Get seller's marketplace balance from unified wallet
+  static async getSellerBalance(sellerId: string): Promise<number> {
+    try {
+      const response = await fetch(`/api/wallet/balance?userId=${sellerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data?.balances?.marketplace || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error("Error fetching seller balance:", error);
+      return 0;
     }
   }
 }
