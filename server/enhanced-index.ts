@@ -473,6 +473,8 @@ app.use('/api/explore', exploreRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/ledger', ledgerRouter);
 app.use('/api/bybit', bybitRouter);
+import cryptoUserRouter from './routes/crypto_user.js';
+app.use('/api/crypto', cryptoUserRouter);
 
 // =============================================================================
 // CORE AUTHENTICATION ENDPOINTS
