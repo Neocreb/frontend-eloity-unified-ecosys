@@ -60,17 +60,12 @@ export function WalletWidget() {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {balances.map(({ currency, amount }) => (
-            <div key={currency} className="flex items-center justify-between">
+          {balances.map(({ label, amount }) => (
+            <div key={label} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg">
-                  {WalletService.getCurrencyIcon(currency)}
-                </span>
-                <span className="text-sm font-medium">{currency}</span>
+                <span className="text-sm font-medium">{label}</span>
               </div>
-              <span className="font-mono text-sm">
-                {WalletService.formatBalance(amount, currency)}
-              </span>
+              <span className="font-mono text-sm">{amount.toLocaleString()}</span>
             </div>
           ))}
         </div>
