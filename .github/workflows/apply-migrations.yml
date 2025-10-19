@@ -20,4 +20,5 @@ jobs:
       - name: Run migrations
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: node scripts/apply-migrations-supabase.js

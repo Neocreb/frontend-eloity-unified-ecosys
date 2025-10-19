@@ -48,6 +48,16 @@ async function main() {
   if (!dbUrl) {
     console.error('No database URL set. Set SUPABASE_DB_URL (preferred) or DATABASE_URL to your Supabase Postgres connection string.');
     console.error('');
+    
+    // Check if we're running in a CI environment
+    const isCI = process.env.CI || process.env.GITHUB_ACTIONS;
+    if (isCI) {
+      console.error('🔧 CI/CD Environment Detected:');
+      console.error('   You need to set GitHub secrets for SUPABASE_DB_URL and DATABASE_URL');
+      console.error('   See GITHUB_ACTIONS_SETUP.md for detailed instructions');
+      console.error('');
+    }
+    
     console.error('🔧 To fix this issue:');
     console.error('1. Create a Supabase project at https://supabase.com/');
     console.error('2. Update .env.local with your actual Supabase credentials');
