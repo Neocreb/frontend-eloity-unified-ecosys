@@ -632,6 +632,40 @@ router.post('/send', async (req: Request, res: Response) => {
     // Record in application ledger (no direct wallet table mutation here)
     logger.info('Wallet transfer recorded', { transactionId, senderId, recipientId, amount: amt, currency, description });
 
+    try {
+      const base = `http://localhost:${process.env.PORT || 5002}`;
+      // Sender debit
+      await fetch(`${base}/api/ledger/record`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: senderId,
+          type: 'transfer',
+          source: 'crypto',
+          amount: -Math.abs(amt),
+          currency,
+          description: description || `Transfer to ${recipientId}`,
+          status: 'completed'
+        })
+      });
+      // Recipient credit
+      await fetch(`${base}/api/ledger/record`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: recipientId,
+          type: 'transfer',
+          source: 'crypto',
+          amount: Math.abs(amt),
+          currency,
+          description: description || `Transfer from ${senderId}`,
+          status: 'completed'
+        })
+      });
+    } catch (err) {
+      logger.warn('Failed to record transfer in ledger API:', err);
+    }
+
     res.json({ success: true, transactionId });
   } catch (error) {
     logger.error('Error in POST /api/wallet/send:', error);
