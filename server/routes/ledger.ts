@@ -14,8 +14,10 @@ import {
 } from '../../shared/enhanced-schema.js';
 import { users } from '../../shared/schema.js';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { db as globalDb } from '../enhanced-index.js';
 
 const router = express.Router();
+const getDb = (req: Request) => (req.db as PostgresJsDatabase<any>) || (globalDb as PostgresJsDatabase<any>);
 
 declare global {
   namespace Express {
@@ -53,7 +55,7 @@ router.post('/record', async (req: Request, res: Response) => {
       });
     }
 
-    const db = req.db as PostgresJsDatabase<any>;
+    const db = getDb(req);
     if (!db) {
       return res.status(500).json({ error: 'Database connection not available' });
     }
@@ -109,7 +111,7 @@ router.post('/record-crypto', async (req: Request, res: Response) => {
       });
     }
 
-    const db = req.db as PostgresJsDatabase<any>;
+    const db = getDb(req);
     if (!db) {
       return res.status(500).json({ error: 'Database connection not available' });
     }
@@ -174,7 +176,7 @@ router.post('/record-marketplace', async (req: Request, res: Response) => {
       });
     }
 
-    const db = req.db as PostgresJsDatabase<any>;
+    const db = getDb(req);
     if (!db) {
       return res.status(500).json({ error: 'Database connection not available' });
     }
@@ -232,7 +234,7 @@ router.post('/record-freelance', async (req: Request, res: Response) => {
       });
     }
 
-    const db = req.db as PostgresJsDatabase<any>;
+    const db = getDb(req);
     if (!db) {
       return res.status(500).json({ error: 'Database connection not available' });
     }
@@ -295,7 +297,7 @@ router.post('/record-reward', async (req: Request, res: Response) => {
       });
     }
 
-    const db = req.db as PostgresJsDatabase<any>;
+    const db = getDb(req);
     if (!db) {
       return res.status(500).json({ error: 'Database connection not available' });
     }
@@ -357,7 +359,7 @@ router.post('/record-referral', async (req: Request, res: Response) => {
       });
     }
 
-    const db = req.db as PostgresJsDatabase<any>;
+    const db = getDb(req);
     if (!db) {
       return res.status(500).json({ error: 'Database connection not available' });
     }
@@ -418,7 +420,7 @@ router.get('/history/:userId', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    const db = req.db as PostgresJsDatabase<any>;
+    const db = getDb(req);
     if (!db) {
       return res.status(500).json({ error: 'Database connection not available' });
     }

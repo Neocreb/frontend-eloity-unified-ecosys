@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -8,43 +8,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  walletService,
-  WalletService,
-  type Wallet,
-} from "@/services/walletService";
+import { useWalletContext } from "@/contexts/WalletContext";
 import { Wallet as WalletIcon, Send, History, CreditCard } from "lucide-react";
 
 export function WalletWidget() {
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadWallet();
-  }, []);
-
-  const loadWallet = async () => {
-    try {
-      setLoading(true);
-      const walletData = await walletService.getWallet();
-      setWallet(walletData);
-      setError(null);
-    } catch (err) {
-      console.error("Wallet error:", err);
-      // Use demo wallet data when API fails
-      setWallet({
-        usdtBalance: 1247.5,
-        ethBalance: 0.5432,
-        btcBalance: 0.0089,
-        eloityPointsBalance: 8420,
-      });
-      setError("Demo data - API not available");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { walletBalance, isLoading } = useWalletContext();
+  const loading = isLoading;
+  const error: string | null = null;
 
   if (loading) {
     return (
@@ -59,15 +29,12 @@ export function WalletWidget() {
     );
   }
 
-  if (error || !wallet) {
+  if (error || !walletBalance) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center">
-            <p className="text-red-600 mb-2">{error}</p>
-            <Button onClick={loadWallet} variant="outline" size="sm">
-              Try Again
-            </Button>
+            <p className="text-red-600 mb-2">{error || "Wallet unavailable"}</p>
           </div>
         </CardContent>
       </Card>
@@ -75,10 +42,10 @@ export function WalletWidget() {
   }
 
   const balances = [
-    { currency: "USDT", amount: wallet.usdtBalance },
-    { currency: "ETH", amount: wallet.ethBalance },
-    { currency: "BTC", amount: wallet.btcBalance },
-    { currency: "ELOITY_POINTS", amount: wallet.eloityPointsBalance },
+    { label: "Crypto", amount: walletBalance.crypto },
+    { label: "Marketplace", amount: walletBalance.ecommerce },
+    { label: "Freelance", amount: walletBalance.freelance },
+    { label: "Rewards", amount: walletBalance.rewards },
   ];
 
   return (
@@ -92,17 +59,12 @@ export function WalletWidget() {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {balances.map(({ currency, amount }) => (
-            <div key={currency} className="flex items-center justify-between">
+          {balances.map(({ label, amount }) => (
+            <div key={label} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg">
-                  {WalletService.getCurrencyIcon(currency)}
-                </span>
-                <span className="text-sm font-medium">{currency}</span>
+                <span className="text-sm font-medium">{label}</span>
               </div>
-              <span className="font-mono text-sm">
-                {WalletService.formatBalance(amount, currency)}
-              </span>
+              <span className="font-mono text-sm">{amount.toLocaleString()}</span>
             </div>
           ))}
         </div>

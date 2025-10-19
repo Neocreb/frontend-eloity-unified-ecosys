@@ -108,6 +108,17 @@ export async function getKYCStatus(userId: string) {
 }
 
 export async function updateKYCLevel(userId: string, newLevel: number, metadata: any) {
+  // Helper to fetch user email if available
+  async function getUserEmail(id: string) {
+    try {
+      const { db } = await import('../enhanced-index.js');
+      const users = (await import('../../shared/schema.js')).users;
+      const row = await db.select({ email: users.email }).from(users).where((await import('drizzle-orm')).eq(users.id, id)).execute();
+      return row?.[0]?.email || '';
+    } catch (e) {
+      return '';
+    }
+  }
   try {
     const currentKYC = await getKYCInfoFromDatabase(userId);
     const oldLevel = currentKYC ? calculateKYCLevel(currentKYC) : 0;
@@ -120,13 +131,19 @@ export async function updateKYCLevel(userId: string, newLevel: number, metadata:
     });
     
     // Send notification to user about level change
-    await notifyUserKYCUpdate(userId, oldLevel, newLevel, metadata);
-    
-    logger.info('KYC level updated', { 
-      userId, 
-      oldLevel, 
-      newLevel, 
-      updatedBy: metadata.adminId 
+    try {
+      const { sendNotification } = await import('./notificationService.js');
+      const emailRes = await sendNotification({ channel: 'email', to: kycInfo?.email || (await getUserEmail(userId)), subject: 'KYC Level Updated', text: `Your KYC level changed from ${oldLevel} to ${newLevel}.` });
+      logger.info('KYC notification sent', { emailRes });
+    } catch (notifyErr) {
+      logger.warn('Failed to send KYC notification:', notifyErr);
+    }
+
+    logger.info('KYC level updated', {
+      userId,
+      oldLevel,
+      newLevel,
+      updatedBy: metadata.adminId
     });
     
     return {
