@@ -17,7 +17,32 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm ci
+      - name: Create .env.local from repository secrets
+        run: |
+          cat > .env.local <<'EOF'
+          # Supabase credentials - do NOT commit this file
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EOF
+        shell: bash
+      - name: Sanity-check required secrets (masked)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "${SUPABASE_URL:-}" ] && [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "Required Supabase URL secret(s) are missing" >&2
+            exit 1
+          fi
+          if [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "Warning: SUPABASE_SERVICE_ROLE_KEY is not set; ensure migrations don't require admin access"
+          fi
+          echo "Supabase secrets present"
       - name: Run migrations
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/apply-migrations-supabase.js
