@@ -13,34 +13,9 @@ import { useWalletContext } from "@/contexts/WalletContext";
 import { Wallet as WalletIcon, Send, History, CreditCard } from "lucide-react";
 
 export function WalletWidget() {
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadWallet();
-  }, []);
-
-  const loadWallet = async () => {
-    try {
-      setLoading(true);
-      const walletData = await walletService.getWallet();
-      setWallet(walletData);
-      setError(null);
-    } catch (err) {
-      console.error("Wallet error:", err);
-      // Use demo wallet data when API fails
-      setWallet({
-        usdtBalance: 1247.5,
-        ethBalance: 0.5432,
-        btcBalance: 0.0089,
-        eloityPointsBalance: 8420,
-      });
-      setError("Demo data - API not available");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { walletBalance, isLoading } = useWalletContext();
+  const loading = isLoading;
+  const error: string | null = null;
 
   if (loading) {
     return (
