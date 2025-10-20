@@ -221,6 +221,34 @@ const ProfessionalCrypto = () => {
   const handleDeposit = () => setDepositModalOpen(true);
   const handleWithdraw = () => setWithdrawModalOpen(true);
 
+  // Initiate KYC if needed for certain actions. Tries backend, fails gracefully.
+  const handleKYCSubmit = async (data: any): Promise<{ success: boolean; error?: any }> => {
+    try {
+      if (!user?.id) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authToken = localStorage.getItem('access_token');
+      const res = await fetch('/api/kyc/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({ userId: user.id, ...data }),
+      });
+
+      if (res.ok) {
+        return { success: true };
+      }
+
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err?.error || res.statusText };
+    } catch (e) {
+      return { success: false, error: (e as any)?.message || e };
+    }
+  };
+
   const topGainers = useMemo(
     () => cryptos.filter(c => c.price_change_percentage_24h > 0).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5),
     [cryptos]
