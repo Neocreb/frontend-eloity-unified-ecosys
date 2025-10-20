@@ -108,12 +108,12 @@ export const touchGestures = {
 export const zIndex = {
   base: 'z-0',
   dropdown: 'z-10',
-  overlay: 'z-20',
-  modal: 'z-30',
-  tooltip: 'z-40',
-  toast: 'z-50',
-  mobileMenu: 'z-60',
-  loading: 'z-70',
+  overlay: 'z-50',
+  modal: 'z-60',
+  tooltip: 'z-70',
+  toast: 'z-80',
+  mobileMenu: 'z-90',
+  loading: 'z-100',
 } as const;
 
 // Mobile-specific animations
