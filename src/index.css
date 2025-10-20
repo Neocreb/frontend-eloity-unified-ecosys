@@ -322,3 +322,8 @@ body {
 
 /* Ring and outline fallbacks */
 .dark .ring-gray-200 { --tw-ring-color: hsl(var(--ring)) !important; }
+
+/* Safe area utilities for mobile devices */
+.safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+.pb-safe-or-4 { padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); }
+.pt-safe-or-4 { padding-top: calc(env(safe-area-inset-top) + 1rem); }
