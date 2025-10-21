@@ -77,7 +77,7 @@ const Pages: React.FC = () => {
   });
 
   const chips = useMemo(
-    () => ["Create", "Meta Business Suite", "Discover", "Invites", "Liked Pages"],
+    () => ["Create", "Discover", "Invites", "Liked Pages"],
     []
   );
 
