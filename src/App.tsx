@@ -504,7 +504,15 @@ const AppRoutes = () => {
           {/* Delivery routes */}
           <Route path="delivery" element={<DeliveryProviderStatus />} />
           <Route path="delivery/provider/register" element={<DeliveryProviderRegistration />} />
-          <Route path="delivery/provider/dashboard" element={<DeliveryProviderDashboard />} />
+          <Route path="delivery/provider/dashboard" element={<DeliveryProviderDashboard />}>
+            <Route index element={<Overview />} />
+            <Route path="overview" element={<Overview />} />
+            <Route path="active" element={<Active />} />
+            <Route path="earnings" element={<Earnings />} />
+            <Route path="reviews" element={<Reviews />} />
+            <Route path="vehicles" element={<Vehicles />} />
+            <Route path="analytics" element={<Analytics />} />
+          </Route>
           <Route path="delivery/track" element={<DeliveryTracking />} />
           <Route path="delivery/track/:trackingNumber" element={<DeliveryTracking />} />
 
