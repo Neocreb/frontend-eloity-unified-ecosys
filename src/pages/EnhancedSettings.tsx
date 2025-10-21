@@ -1861,7 +1861,7 @@ const EnhancedSettings = () => {
                 </div>
 
                 <Button
-                  onClick={() => setShowKYCModal(true)}
+                  onClick={() => navigate('/app/kyc')}
                   className="w-full"
                 >
                   <Upload className="w-4 h-4 mr-2" />
