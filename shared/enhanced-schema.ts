@@ -388,6 +388,19 @@ export const freelance_jobs = pgTable('freelance_jobs', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// User rewards table
+export const user_rewards = pgTable('user_rewards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull(),
+  type: text('type').notNull(),
+  amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+  currency: text('currency').default('ELOIT'),
+  status: text('status').default('pending'),
+  metadata: jsonb('metadata'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // Relations
 export const productsRelations = relations(products, ({ one, many }) => ({
   seller: one(users, {
