@@ -205,27 +205,16 @@ export default function DeliveryProviderDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-950/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Header with back button and title */}
+        {/* Header with title */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">Delivery Hub</h1>
-              <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                  Online & Available
-                </span>
-              </div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Delivery Hub</h1>
+            <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                Online & Available
+              </span>
             </div>
           </div>
         </div>
