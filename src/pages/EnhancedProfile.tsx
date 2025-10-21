@@ -659,11 +659,11 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                     <div className="relative">
                       <Avatar className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 border-3 sm:border-4 border-white shadow-lg">
                         <AvatarImage
-                          src={mockProfile.avatar}
-                          alt={mockProfile.displayName}
+                          src={profileUser?.avatar_url || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
+                          alt={profileUser?.full_name || "User"}
                         />
                         <AvatarFallback className="text-lg sm:text-xl lg:text-2xl font-bold">
-                          {mockProfile.displayName
+                          {(profileUser?.full_name || "User")
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
