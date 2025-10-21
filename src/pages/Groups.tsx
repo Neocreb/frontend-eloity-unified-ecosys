@@ -99,6 +99,7 @@ const Groups: React.FC = () => {
 
       const enriched = (groups || []).map((g, i) => ({
         ...g,
+        privacy: g.privacy || 'public',
         isJoined: joinedIds.includes(g.id),
         isOwner: g.creator_id === user.id,
         cover_url: g.cover_url || referenceImages[i % referenceImages.length],
