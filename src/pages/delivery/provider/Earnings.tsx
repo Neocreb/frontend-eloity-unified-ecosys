@@ -1,18 +1,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, ArrowLeft, TrendingUp, Gift, Trophy, AlertCircle } from 'lucide-react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { Download, TrendingUp, Gift, Trophy, AlertCircle } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
 
 export default function Earnings() {
   const { stats, earnings } = useOutletContext() as any;
-  const navigate = useNavigate();
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   const getEarningTypeIcon = (type: string) => {
     switch (type) {
