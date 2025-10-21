@@ -1133,7 +1133,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                       variant="secondary"
                       className="ml-1 sm:ml-2 text-xs h-5 px-2 bg-white/20 border-white/30 text-current backdrop-blur-sm group-data-[state=active]:bg-white/25 group-data-[state=active]:text-white transition-all duration-300"
                     >
-                      {mockMedia.length}
+                      {mediaSource.length}
                     </Badge>
                     {activeTab === "media" && (
                       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-400/20 to-purple-600/20 animate-pulse"></div>
