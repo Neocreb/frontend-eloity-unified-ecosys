@@ -634,7 +634,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
               {/* Banner */}
               <div
                 className="h-28 sm:h-40 lg:h-48 bg-gradient-to-r from-blue-500 to-purple-600 relative bg-cover bg-center"
-                style={{ backgroundImage: `url(${mockProfile.banner})` }}
+                style={{ backgroundImage: `url(${profileUser?.banner_url || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"})` }}
               >
                 <div className="absolute inset-0 bg-black/20" />
                 {isOwnProfile && (
