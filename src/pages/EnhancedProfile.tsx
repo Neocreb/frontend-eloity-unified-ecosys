@@ -685,9 +685,9 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                     <div className="flex-1 space-y-1 sm:space-y-2 mt-3 sm:mt-4 lg:mt-0 sm:mb-2">
                       <div className="flex items-center gap-2">
                         <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                          {mockProfile.displayName}
+                          {profileUser?.full_name || "User"}
                         </h1>
-                        {mockProfile.verified && (
+                        {profileUser?.is_verified && (
                           <Verified className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 fill-current flex-shrink-0" />
                         )}
                         {/* Premium Status Indicator */}
