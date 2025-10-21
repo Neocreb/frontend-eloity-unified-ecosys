@@ -229,7 +229,7 @@ const Groups: React.FC = () => {
           <div className="p-4 space-y-1">
             <div className="font-semibold text-base">{g.name}</div>
             <div className="text-sm text-muted-foreground">
-              {g.privacy?.charAt(0).toUpperCase() + g.privacy?.slice(1)} group · {formatNumber(g.member_count)} members
+              {(g.privacy?.charAt(0).toUpperCase() || 'P') + (g.privacy?.slice(1) || 'ublic')} group · {formatNumber(g.member_count)} members
             </div>
             <Button className="mt-3 w-full" onClick={() => join(g.id)} disabled={g.isJoined}>
               {g.isJoined ? "Joined" : "Join"}
