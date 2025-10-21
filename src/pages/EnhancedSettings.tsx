@@ -117,6 +117,7 @@ import {
   Accessibility,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from 'react-router-dom';
 import KYCVerificationModal from "@/components/kyc/KYCVerificationModal";
 import BankAccountSettings from "@/components/wallet/BankAccountSettings";
 import DataManagement from "@/components/data/DataManagement";
