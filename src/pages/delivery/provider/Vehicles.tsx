@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
-import { Truck, ArrowLeft, Plus, MapPin, Fuel, Calendar, AlertCircle, CheckCircle2, Settings, Zap } from 'lucide-react';
+import { Truck, Plus, MapPin, Fuel, Calendar, AlertCircle, CheckCircle2, Settings, Zap } from 'lucide-react';
 
 interface Vehicle {
   id: string;
@@ -67,12 +66,7 @@ const mockVehicles: Vehicle[] = [
 ];
 
 export default function Vehicles() {
-  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
