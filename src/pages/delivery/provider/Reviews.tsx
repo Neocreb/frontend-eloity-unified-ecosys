@@ -2,16 +2,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft, MessageSquare, User, Calendar, ThumbsUp } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Star, MessageSquare, User, Calendar, ThumbsUp } from 'lucide-react';
 
 export default function Reviews() {
   const { ratings, stats } = useOutletContext() as any;
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   const getRatingColor = (rating: number) => {
     if (rating === 5) return 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800';
