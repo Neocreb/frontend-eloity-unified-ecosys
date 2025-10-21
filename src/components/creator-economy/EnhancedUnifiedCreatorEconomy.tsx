@@ -69,7 +69,7 @@ import { cn } from "@/lib/utils";
 interface EnhancedEconomyData {
   // Core Metrics
   currentEloity Points: number;
-  totalEloity PointsEarned: number;
+  totalEloityPointsEarned: number;
   totalEarnings: number;
   availableToWithdraw: number;
   
@@ -158,7 +158,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
       // Enhanced demo data reflecting new reward system
       setEconomyData({
         currentEloity Points: 3420,
-        totalEloity PointsEarned: 18560,
+        totalEloityPointsEarned: 18560,
         totalEarnings: 18240,
         availableToWithdraw: 12150,
         
@@ -428,7 +428,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
                   {formatNumber(economyData?.currentEloity Points || 0)}
                 </p>
                 <p className="text-xs text-purple-600">
-                  +{formatNumber(economyData?.totalEloity PointsEarned || 0)} earned
+                  +{formatNumber(economyData?.totalEloityPointsEarned || 0)} earned
                 </p>
               </div>
               <div className="p-2 sm:p-3 bg-purple-200 rounded-full">
