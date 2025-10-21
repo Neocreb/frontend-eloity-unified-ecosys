@@ -343,12 +343,14 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
 
   const mediaSource: any[] = derivedMedia;
 
-  const filteredMedia = mediaSource.filter((item: any) => {
-    if (mediaFilter === "all") return true;
-    if (mediaFilter === "images") return item.type === "image";
-    if (mediaFilter === "videos") return item.type === "video";
-    return true;
-  });
+  const filteredMedia = mediaSource
+    .filter((item: any) => {
+      if (mediaFilter === "all") return true;
+      if (mediaFilter === "images") return item.type === "image";
+      if (mediaFilter === "videos") return item.type === "video";
+      return true;
+    })
+    .slice(0, 50); // Limit to 50 items for performance
 
   // Mock data for followers, following, and viewers
   const mockFollowers = [
