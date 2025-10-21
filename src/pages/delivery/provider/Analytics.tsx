@@ -1,16 +1,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Timer, Target, Activity, Users, ArrowLeft, TrendingUp, Award } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Timer, Target, Activity, Users, TrendingUp, Award } from 'lucide-react';
 
 export default function Analytics() {
   const { stats } = useOutletContext() as any;
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   return (
     <div className="space-y-6">
