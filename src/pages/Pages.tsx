@@ -48,7 +48,7 @@ interface Page {
 }
 
 const pillButton =
-  "rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-sm px-4 py-2 whitespace-nowrap";
+  "rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 h-9 px-4 text-[15px] whitespace-nowrap";
 
 const referenceImages = [
   "https://cdn.builder.io/api/v1/image/assets%2F231fa8e2838148ce81104a91aeb1b9be%2Fe1f736c1d9194a97864842c1cff41f2b?format=webp&width=800",
@@ -166,7 +166,7 @@ const Pages: React.FC = () => {
           <Button variant="ghost" onClick={() => navigate(-1)} className="h-9 w-9 p-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="font-semibold text-lg">Pages</h1>
+          <h1 className="text-[17px] font-semibold">Pages</h1>
           <div className="w-9" />
         </div>
         <div className="mt-3 overflow-x-auto no-scrollbar">
@@ -203,7 +203,7 @@ const Pages: React.FC = () => {
           </div>
         ) : (
           <>
-            <h2 className="text-2xl font-bold mb-4">Pages you manage</h2>
+            <h2 className="text-[22px] font-semibold mb-4">Pages you manage</h2>
             <div className="space-y-5">
               {myPages.map((p, idx) => {
                 const img = p.avatar_url || referenceImages[idx % referenceImages.length];
@@ -211,13 +211,13 @@ const Pages: React.FC = () => {
                 return (
                   <div key={p.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="h-12 w-12">
+                      <Avatar className="h-[44px] w-[44px]">
                         <AvatarImage src={img} alt={p.name} />
                         <AvatarFallback>{p.name?.slice(0, 2)}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <div className="font-semibold truncate text-base">{p.name}</div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="font-semibold truncate text-[17px]">{p.name}</div>
+                        <div className="flex items-center gap-2 text-[14px] text-muted-foreground">
                           <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
                           {newCount !== undefined ? (
                             <span>{newCount} new</span>
