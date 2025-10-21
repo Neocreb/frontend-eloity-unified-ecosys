@@ -514,7 +514,7 @@ const AppRoutes = () => {
             <Route index element={<Overview />} />
             <Route path="overview" element={<Overview />} />
             <Route path="active" element={<Active />} />
-            <Route path="earnings" element={<Earnings />} />
+            <Route path="earnings" element={<DeliveryEarnings />} />
             <Route path="reviews" element={<Reviews />} />
             <Route path="vehicles" element={<Vehicles />} />
             <Route path="analytics" element={<Analytics />} />
