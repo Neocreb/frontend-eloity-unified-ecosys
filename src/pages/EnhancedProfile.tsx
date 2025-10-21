@@ -743,7 +743,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                       </div>
 
                       <p className="text-sm sm:text-base text-muted-foreground">
-                        @{mockProfile.username}
+                        @{profileUser?.username || "user"}
                       </p>
                       <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
