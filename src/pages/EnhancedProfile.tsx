@@ -890,7 +890,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                         <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 rounded-3xl bg-gradient-to-br from-blue-100 to-blue-200 border-0 flex items-center justify-center group hover:shadow-xl hover:scale-105 transition-all duration-300">
                           <div className="text-center">
                             <div className="text-xl sm:text-2xl font-bold text-blue-600">
-                              {mockProfile.posts}
+                              {(posts || []).length}
                             </div>
                           </div>
                         </div>
