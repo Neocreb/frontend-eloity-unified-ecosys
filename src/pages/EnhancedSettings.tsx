@@ -117,6 +117,7 @@ import {
   Accessibility,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from 'react-router-dom';
 import KYCVerificationModal from "@/components/kyc/KYCVerificationModal";
 import BankAccountSettings from "@/components/wallet/BankAccountSettings";
 import DataManagement from "@/components/data/DataManagement";
@@ -341,6 +342,7 @@ const EnhancedSettings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [showKYCModal, setShowKYCModal] = useState(false);
   const [kycLevel, setKycLevel] = useState(user?.profile?.kyc_level || 0);
+  const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Skills management
@@ -1859,7 +1861,7 @@ const EnhancedSettings = () => {
                 </div>
 
                 <Button
-                  onClick={() => setShowKYCModal(true)}
+                  onClick={() => navigate('/app/kyc')}
                   className="w-full"
                 >
                   <Upload className="w-4 h-4 mr-2" />
@@ -2042,7 +2044,7 @@ const EnhancedSettings = () => {
                     </div>
                   </div>
                   <Button
-                    onClick={() => setShowKYCModal(true)}
+                    onClick={() => navigate('/app/kyc')}
                     variant="outline"
                     className="border-green-600 text-green-600 hover:bg-green-50 px-6 py-3"
                   >

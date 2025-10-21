@@ -98,6 +98,12 @@ import MarketplaceOrders from "./pages/marketplace/MarketplaceOrders";
 import DeliveryHub from "./pages/DeliveryHub";
 import DeliveryProviderRegistration from "./components/delivery/DeliveryProviderRegistration";
 import DeliveryProviderDashboard from "./components/delivery/DeliveryProviderDashboard";
+import Overview from "./pages/delivery/provider/Overview";
+import Active from "./pages/delivery/provider/Active";
+import { default as DeliveryEarnings } from "./pages/delivery/provider/Earnings";
+import Reviews from "./pages/delivery/provider/Reviews";
+import Vehicles from "./pages/delivery/provider/Vehicles";
+import Analytics from "./pages/delivery/provider/Analytics";
 import DeliveryTracking from "./components/delivery/DeliveryTracking";
 import DeliveryProviderStatus from "./components/delivery/DeliveryProviderStatus";
 import DeliveryProvidersAdmin from "./components/admin/DeliveryProvidersAdmin";
@@ -504,7 +510,15 @@ const AppRoutes = () => {
           {/* Delivery routes */}
           <Route path="delivery" element={<DeliveryProviderStatus />} />
           <Route path="delivery/provider/register" element={<DeliveryProviderRegistration />} />
-          <Route path="delivery/provider/dashboard" element={<DeliveryProviderDashboard />} />
+          <Route path="delivery/provider/dashboard" element={<DeliveryProviderDashboard />}>
+            <Route index element={<Overview />} />
+            <Route path="overview" element={<Overview />} />
+            <Route path="active" element={<Active />} />
+            <Route path="earnings" element={<DeliveryEarnings />} />
+            <Route path="reviews" element={<Reviews />} />
+            <Route path="vehicles" element={<Vehicles />} />
+            <Route path="analytics" element={<Analytics />} />
+          </Route>
           <Route path="delivery/track" element={<DeliveryTracking />} />
           <Route path="delivery/track/:trackingNumber" element={<DeliveryTracking />} />
 

@@ -6,6 +6,7 @@ import { db } from '../utils/db.js';
 // =============================================================================
 
 import axios from 'axios';
+import { logger } from '../utils/logger.js';
 
 export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'usd') {
   try {
