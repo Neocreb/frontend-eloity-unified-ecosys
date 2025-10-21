@@ -183,9 +183,8 @@ export default function DeliveryProviderDashboard() {
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
-  // Determine current tab based on route
   const currentPath = location.pathname.split('/').pop() || 'overview';
-  const isOnSubPage = currentPath !== 'dashboard' && currentPath !== '';
+  const isOnOverview = currentPath === 'overview' || currentPath === 'dashboard' || currentPath === '';
 
   const handleTransferToWallet = async () => {
     const amount = parseFloat(transferAmount || "0");
@@ -201,10 +200,6 @@ export default function DeliveryProviderDashboard() {
 
   const handleNavigateTab = (path: string) => {
     navigate(path);
-  };
-
-  const handleBack = () => {
-    navigate(-1);
   };
 
   return (
