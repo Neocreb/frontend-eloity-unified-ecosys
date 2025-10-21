@@ -43,7 +43,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthStore } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Badge {
   children: React.ReactNode;
@@ -85,7 +85,7 @@ interface Group {
 const Groups: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("for-you");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
