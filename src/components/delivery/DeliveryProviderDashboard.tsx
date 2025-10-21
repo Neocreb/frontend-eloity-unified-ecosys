@@ -247,9 +247,9 @@ export default function DeliveryProviderDashboard() {
         </Card>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Left Sidebar - Earnings Card and Stats */}
-          <div className="xl:col-span-1 space-y-4">
+        <div className={`grid gap-6 ${isOnOverview ? 'grid-cols-1 xl:grid-cols-4' : 'grid-cols-1'}`}>
+          {/* Left Sidebar - Earnings Card and Stats (only on overview) */}
+          {isOnOverview && <div className="xl:col-span-1 space-y-4">
             {/* Earnings Card */}
             <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
               <CardHeader className="pb-3">
@@ -359,10 +359,10 @@ export default function DeliveryProviderDashboard() {
                 </Button>
               </CardContent>
             </Card>
-          </div>
+          </div>}
 
           {/* Main Content Area - Outlet for sub-pages */}
-          <div className="xl:col-span-3">
+          <div className={`${isOnOverview ? 'xl:col-span-3' : 'col-span-1'}`}>
             <Outlet context={{ stats: mockStats, assignments: mockAssignments, ratings: mockRatings, earnings: mockEarnings }} />
           </div>
         </div>
