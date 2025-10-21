@@ -589,7 +589,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
     toast({
       title: isFollowing ? "Unfollowed" : "Following",
-      description: `You are ${isFollowing ? "no longer" : "now"} following ${mockProfile.displayName}`,
+      description: `You are ${isFollowing ? "no longer" : "now"} following ${profileUser?.full_name || "this user"}`,
     });
   };
 
