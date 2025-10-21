@@ -136,7 +136,7 @@ class AdRewardService {
       await this.updateUserStats(userId, userStats);
 
       // Add Eloity Points to user account (placeholder)
-      await this.addEloity Points(userId, rewardAmount);
+      await this.addEloityPoints(userId, rewardAmount);
 
       return {
         rewardEarned: rewardAmount,
@@ -152,7 +152,7 @@ class AdRewardService {
     }
   }
 
-  private async addEloity Points(userId: string, amount: number): Promise<void> {
+  private async addEloityPoints(userId: string, amount: number): Promise<void> {
     // Placeholder – Replace with real Eloity Points service integration
     try {
       // In production, this would call your Eloity Points service
