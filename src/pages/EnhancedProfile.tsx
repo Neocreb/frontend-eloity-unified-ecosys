@@ -746,22 +746,26 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                         @{profileUser?.username || "user"}
                       </p>
                       <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="truncate">
-                            {mockProfile.location}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="whitespace-nowrap">
-                            Joined {mockProfile.joinDate}
-                          </span>
-                        </div>
+                        {profileUser?.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">
+                              {profileUser.location}
+                            </span>
+                          </div>
+                        )}
+                        {profileUser?.created_at && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="whitespace-nowrap">
+                              Joined {new Date(profileUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-1">
                           <Eye className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span className="whitespace-nowrap">
-                            {mockProfile.profileViews.toLocaleString()} views
+                            {(profileUser?.profile_views || 0).toLocaleString()} views
                           </span>
                         </div>
                       </div>
