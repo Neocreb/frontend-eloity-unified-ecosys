@@ -68,8 +68,8 @@ import { cn } from "@/lib/utils";
 
 interface UnifiedEconomyData {
   // Activity Economy Data
-  currentEloity Points: number;
-  totalEloity PointsEarned: number;
+  currentEloityPoints: number;
+  totalEloityPointsEarned: number;
   totalActivities: number;
   trustScore: {
     current: number;
@@ -87,7 +87,7 @@ interface UnifiedEconomyData {
     views: number;
     boosts: number;
     services: number;
-    activities: number; // New: from activity economy
+    activities: number;
   };
 
   // Wallet Data
@@ -187,8 +187,8 @@ const UnifiedCreatorEconomy: React.FC = () => {
       // In production, this would combine multiple API calls
       // For now, using comprehensive demo data
       setEconomyData({
-        currentEloity Points: 2450,
-        totalEloity PointsEarned: 15680,
+        currentEloityPoints: 2450,
+        totalEloityPointsEarned: 15680,
         totalActivities: 1247,
         trustScore: {
           current: 78.5,
@@ -204,7 +204,7 @@ const UnifiedCreatorEconomy: React.FC = () => {
           views: 2100,
           boosts: 1340,
           services: 1300,
-          activities: 700, // New activity-based earnings
+          activities: 700,
         },
         walletBalance: {
           usdt: 9700,
@@ -377,7 +377,6 @@ const UnifiedCreatorEconomy: React.FC = () => {
       return;
     }
 
-    // In production, this would call the withdrawal API with unified wallet integration
     toast({
       title: "Withdrawal Requested",
       description: `$${withdrawAmount} withdrawal to ${selectedPaymentMethod === "wallet" ? "Unified Wallet" : "Bank Account"} submitted. Check your wallet rewards tab for transaction history.`,
@@ -516,11 +515,10 @@ const UnifiedCreatorEconomy: React.FC = () => {
                   Eloity Points
                 </p>
                 <p className="text-2xl font-bold text-purple-900">
-                  {formatNumber(economyData?.currentEloity Points || 0)}
+                  {formatNumber(economyData?.currentEloityPoints || 0)}
                 </p>
                 <p className="text-xs text-purple-600">
-                  +{formatNumber(economyData?.totalEloity PointsEarned || 0)}{" "}
-                  earned
+                  +{formatNumber(economyData?.totalEloityPointsEarned || 0)} earned
                 </p>
               </div>
               <div className="p-3 bg-purple-200 rounded-full">
@@ -924,7 +922,6 @@ const UnifiedCreatorEconomy: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Progress */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">Progress</span>
@@ -938,7 +935,6 @@ const UnifiedCreatorEconomy: React.FC = () => {
                       />
                     </div>
 
-                    {/* Reward */}
                     <div className="p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1062,7 +1058,6 @@ const UnifiedCreatorEconomy: React.FC = () => {
         {/* Rewards Tab */}
         <TabsContent value="rewards" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Available Rewards */}
             <Card className="col-span-full mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1096,7 +1091,6 @@ const UnifiedCreatorEconomy: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Reward History */}
             <Card className="col-span-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
