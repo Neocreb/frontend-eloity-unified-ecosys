@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Send } from "lucide-react";
 import {
   Dialog,
@@ -14,10 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import {
   Truck,
-  Package,
   DollarSign,
   Star,
-  MapPin,
   Navigation,
   ExternalLink,
   Timer,
@@ -25,8 +22,6 @@ import {
   Activity,
   Users,
   Award,
-  Eye,
-  ArrowLeft,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
