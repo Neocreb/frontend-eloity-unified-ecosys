@@ -3,34 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, Truck, Timer, Eye, ArrowLeft } from 'lucide-react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 
 export default function Overview() {
   const { stats, assignments } = useOutletContext() as any;
-  const navigate = useNavigate();
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold">Overview</h2>
-        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">Overview</h2>
       </div>
 
       {/* Key Metrics Cards */}
