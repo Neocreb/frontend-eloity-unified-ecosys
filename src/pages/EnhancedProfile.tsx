@@ -512,29 +512,32 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     const loadProfile = async () => {
       setIsLoading(true);
       try {
+        let profileToLoad: UserProfile | null = null;
+
         if (isOwnProfile && user?.profile) {
-          setProfileUser(user.profile);
-          setFollowerCount(Math.floor(Math.random() * 1000) + 100);
-          setFollowingCount(Math.floor(Math.random() * 500) + 50);
-          setPosts(mockPosts);
-          setProducts([]);
-          setServices([]);
+          profileToLoad = user.profile;
         } else if (targetUsername) {
-          const profile =
-            await profileService.getUserByUsername(targetUsername);
-          if (profile) {
-            setProfileUser(profile);
-            const [userPosts, userProducts, userServices] = await Promise.all([
-              profileService.getUserPosts(profile.id),
-              profileService.getUserProducts(profile.id),
-              profileService.getUserServices(profile.id),
-            ]);
-            setPosts(userPosts?.length ? userPosts : mockPosts);
-            setProducts(userProducts?.length ? userProducts : []);
-            setServices(userServices?.length ? userServices : []);
-            setFollowerCount(Math.floor(Math.random() * 1000) + 100);
-            setFollowingCount(Math.floor(Math.random() * 500) + 50);
-          }
+          profileToLoad = await profileService.getUserByUsername(targetUsername);
+        }
+
+        if (profileToLoad) {
+          setProfileUser(profileToLoad);
+
+          // Fetch real content data
+          const [userPosts, userProducts, userServices] = await Promise.all([
+            profileService.getUserPosts(profileToLoad.id).catch(() => []),
+            profileService.getUserProducts(profileToLoad.id).catch(() => []),
+            profileService.getUserServices(profileToLoad.id).catch(() => []),
+          ]);
+
+          // Always set the real data, no mock fallbacks
+          setPosts(userPosts || []);
+          setProducts(userProducts || []);
+          setServices(userServices || []);
+
+          // Set follower counts
+          setFollowerCount(profileToLoad.followers_count || 0);
+          setFollowingCount(profileToLoad.following_count || 0);
         }
       } catch (error) {
         console.error("Error loading profile:", error);
