@@ -6,13 +6,8 @@ import { MapPin, Package, Navigation, Clock } from 'lucide-react';
 
 export default function Active() {
   const { assignments } = useOutletContext() as any;
-  const navigate = useNavigate();
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   const activeDeliveries = assignments.filter((a: any) => ["accepted", "picked_up", "in_transit"].includes(a.status));
 
