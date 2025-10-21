@@ -48,7 +48,7 @@ interface Page {
 }
 
 const pillButton =
-  "rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 h-9 px-4 text-[15px] whitespace-nowrap";
+  "rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 h-9 px-4 text-[15px] font-medium whitespace-nowrap";
 
 const referenceImages = [
   "https://cdn.builder.io/api/v1/image/assets%2F231fa8e2838148ce81104a91aeb1b9be%2Fe1f736c1d9194a97864842c1cff41f2b?format=webp&width=800",
