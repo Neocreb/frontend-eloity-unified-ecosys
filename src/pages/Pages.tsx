@@ -177,7 +177,12 @@ const Pages: React.FC = () => {
                 className={pillButton}
                 onClick={() => label === "Create" && setShowCreateDialog(true)}
               >
-                {label}
+                <span className="relative inline-flex items-center gap-2">
+                  <span>{label}</span>
+                  {label === "Invites" && (
+                    <span className="h-2 w-2 rounded-full bg-blue-600" />
+                  )}
+                </span>
               </button>
             ))}
           </div>
