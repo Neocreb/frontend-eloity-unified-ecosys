@@ -41,6 +41,7 @@ import {
   Eye,
   Loader2,
   Star,
+  Activity,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
