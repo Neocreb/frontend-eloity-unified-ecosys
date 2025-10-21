@@ -49,7 +49,7 @@ const referenceImages = [
 ];
 
 const pillTab = (active: boolean) =>
-  `px-3 h-9 rounded-full text-[15px] ${active ? "bg-blue-100 text-blue-700" : "text-foreground"}`;
+  `px-3 h-9 rounded-full text-[15px] font-medium ${active ? "bg-blue-100 text-blue-700" : "text-foreground"}`;
 
 const Groups: React.FC = () => {
   const navigate = useNavigate();
