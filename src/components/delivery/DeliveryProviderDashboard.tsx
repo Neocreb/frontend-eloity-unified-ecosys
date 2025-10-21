@@ -27,6 +27,7 @@ import {
   Award,
   Eye,
   ArrowLeft,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWalletContext } from "@/contexts/WalletContext";
@@ -370,7 +371,7 @@ export default function DeliveryProviderDashboard() {
                   Optimize Routes
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start">
-                  <Calendar className="h-4 w-4 mr-2" />
+                  <SettingsIcon className="h-4 w-4 mr-2" />
                   Schedule
                 </Button>
                 <Button variant="outline" size="sm" className="w-full justify-start">
