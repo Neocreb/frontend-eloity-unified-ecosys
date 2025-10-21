@@ -320,7 +320,17 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
       if (!viewerCanSee(privacy)) return [] as any[];
       const postId = String(p.id ?? p.post_id ?? p.uuid ?? p.id);
       const arr: any[] = [];
-      if (p.image_url) arr.push({ id: `${postId}-img`, type: "image", url: p.image_url, postId });
+
+      // Get image from image_url or media_urls
+      if (p.image_url) {
+        arr.push({ id: `${postId}-img`, type: "image", url: p.image_url, postId });
+      } else if (p.media_urls && Array.isArray(p.media_urls)) {
+        p.media_urls.forEach((url: string, idx: number) => {
+          arr.push({ id: `${postId}-${idx}`, type: "image", url, postId });
+        });
+      }
+
+      // Add media from content object
       const mediaArr = p.content?.media || [];
       mediaArr.forEach((m: any, idx: number) => {
         if (m?.url && (m.type === "image" || m.type === "video")) {
@@ -331,7 +341,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     })
     .flat();
 
-  const mediaSource: any[] = derivedMedia.length > 0 ? derivedMedia : mockMedia;
+  const mediaSource: any[] = derivedMedia;
 
   const filteredMedia = mediaSource.filter((item: any) => {
     if (mediaFilter === "all") return true;
