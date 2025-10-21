@@ -1637,7 +1637,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                 <TabsContent value="about" className="space-y-6 mt-0 tab-content-animate">
                   <div>
                     <h3 className="text-lg font-semibold">
-                      About {mockProfile.displayName}
+                      About {profileUser?.full_name || "User"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       Personal and professional information
@@ -1651,38 +1651,44 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="text-sm font-medium">Location</div>
-                            <div className="text-sm text-muted-foreground">
-                              {mockProfile.location}
+                        {profileUser?.location && (
+                          <div className="flex items-center gap-3">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="text-sm font-medium">Location</div>
+                              <div className="text-sm text-muted-foreground">
+                                {profileUser.location}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
 
-                        <div className="flex items-center gap-3">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="text-sm font-medium">Website</div>
-                            <a
-                              href={mockProfile.website}
-                              className="text-sm text-blue-600 hover:underline"
-                            >
-                              {mockProfile.website?.replace("https://", "")}
-                            </a>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="text-sm font-medium">Joined</div>
-                            <div className="text-sm text-muted-foreground">
-                              {mockProfile.joinDate}
+                        {profileUser?.website && (
+                          <div className="flex items-center gap-3">
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="text-sm font-medium">Website</div>
+                              <a
+                                href={profileUser.website}
+                                className="text-sm text-blue-600 hover:underline"
+                              >
+                                {profileUser.website?.replace("https://", "")}
+                              </a>
                             </div>
                           </div>
-                        </div>
+                        )}
+
+                        {profileUser?.created_at && (
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="text-sm font-medium">Joined</div>
+                              <div className="text-sm text-muted-foreground">
+                                {new Date(profileUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="flex items-center gap-3">
                           <Eye className="h-4 w-4 text-muted-foreground" />
@@ -1691,7 +1697,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                               Profile Views
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {mockProfile.profileViews.toLocaleString()}
+                              {(profileUser?.profile_views || 0).toLocaleString()}
                             </div>
                           </div>
                         </div>
