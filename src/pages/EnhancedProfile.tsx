@@ -320,7 +320,17 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
       if (!viewerCanSee(privacy)) return [] as any[];
       const postId = String(p.id ?? p.post_id ?? p.uuid ?? p.id);
       const arr: any[] = [];
-      if (p.image_url) arr.push({ id: `${postId}-img`, type: "image", url: p.image_url, postId });
+
+      // Get image from image_url or media_urls
+      if (p.image_url) {
+        arr.push({ id: `${postId}-img`, type: "image", url: p.image_url, postId });
+      } else if (p.media_urls && Array.isArray(p.media_urls)) {
+        p.media_urls.forEach((url: string, idx: number) => {
+          arr.push({ id: `${postId}-${idx}`, type: "image", url, postId });
+        });
+      }
+
+      // Add media from content object
       const mediaArr = p.content?.media || [];
       mediaArr.forEach((m: any, idx: number) => {
         if (m?.url && (m.type === "image" || m.type === "video")) {
@@ -331,14 +341,16 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     })
     .flat();
 
-  const mediaSource: any[] = derivedMedia.length > 0 ? derivedMedia : mockMedia;
+  const mediaSource: any[] = derivedMedia;
 
-  const filteredMedia = mediaSource.filter((item: any) => {
-    if (mediaFilter === "all") return true;
-    if (mediaFilter === "images") return item.type === "image";
-    if (mediaFilter === "videos") return item.type === "video";
-    return true;
-  });
+  const filteredMedia = mediaSource
+    .filter((item: any) => {
+      if (mediaFilter === "all") return true;
+      if (mediaFilter === "images") return item.type === "image";
+      if (mediaFilter === "videos") return item.type === "video";
+      return true;
+    })
+    .slice(0, 50); // Limit to 50 items for performance
 
   // Mock data for followers, following, and viewers
   const mockFollowers = [
@@ -512,29 +524,32 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     const loadProfile = async () => {
       setIsLoading(true);
       try {
+        let profileToLoad: UserProfile | null = null;
+
         if (isOwnProfile && user?.profile) {
-          setProfileUser(user.profile);
-          setFollowerCount(Math.floor(Math.random() * 1000) + 100);
-          setFollowingCount(Math.floor(Math.random() * 500) + 50);
-          setPosts(mockPosts);
-          setProducts([]);
-          setServices([]);
+          profileToLoad = user.profile;
         } else if (targetUsername) {
-          const profile =
-            await profileService.getUserByUsername(targetUsername);
-          if (profile) {
-            setProfileUser(profile);
-            const [userPosts, userProducts, userServices] = await Promise.all([
-              profileService.getUserPosts(profile.id),
-              profileService.getUserProducts(profile.id),
-              profileService.getUserServices(profile.id),
-            ]);
-            setPosts(userPosts?.length ? userPosts : mockPosts);
-            setProducts(userProducts?.length ? userProducts : []);
-            setServices(userServices?.length ? userServices : []);
-            setFollowerCount(Math.floor(Math.random() * 1000) + 100);
-            setFollowingCount(Math.floor(Math.random() * 500) + 50);
-          }
+          profileToLoad = await profileService.getUserByUsername(targetUsername);
+        }
+
+        if (profileToLoad) {
+          setProfileUser(profileToLoad);
+
+          // Fetch real content data
+          const [userPosts, userProducts, userServices] = await Promise.all([
+            profileService.getUserPosts(profileToLoad.id).catch(() => []),
+            profileService.getUserProducts(profileToLoad.id).catch(() => []),
+            profileService.getUserServices(profileToLoad.id).catch(() => []),
+          ]);
+
+          // Always set the real data, no mock fallbacks
+          setPosts(userPosts || []);
+          setProducts(userProducts || []);
+          setServices(userServices || []);
+
+          // Set follower counts
+          setFollowerCount(profileToLoad.followers_count || 0);
+          setFollowingCount(profileToLoad.following_count || 0);
         }
       } catch (error) {
         console.error("Error loading profile:", error);
@@ -574,7 +589,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
     setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
     toast({
       title: isFollowing ? "Unfollowed" : "Following",
-      description: `You are ${isFollowing ? "no longer" : "now"} following ${mockProfile.displayName}`,
+      description: `You are ${isFollowing ? "no longer" : "now"} following ${profileUser?.full_name || "this user"}`,
     });
   };
 
@@ -619,7 +634,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
               {/* Banner */}
               <div
                 className="h-28 sm:h-40 lg:h-48 bg-gradient-to-r from-blue-500 to-purple-600 relative bg-cover bg-center"
-                style={{ backgroundImage: `url(${mockProfile.banner})` }}
+                style={{ backgroundImage: `url(${profileUser?.banner_url || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"})` }}
               >
                 <div className="absolute inset-0 bg-black/20" />
                 {isOwnProfile && (
@@ -644,11 +659,11 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                     <div className="relative">
                       <Avatar className="h-20 w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 border-3 sm:border-4 border-white shadow-lg">
                         <AvatarImage
-                          src={mockProfile.avatar}
-                          alt={mockProfile.displayName}
+                          src={profileUser?.avatar_url || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
+                          alt={profileUser?.full_name || "User"}
                         />
                         <AvatarFallback className="text-lg sm:text-xl lg:text-2xl font-bold">
-                          {mockProfile.displayName
+                          {(profileUser?.full_name || "User")
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
@@ -670,9 +685,9 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                     <div className="flex-1 space-y-1 sm:space-y-2 mt-3 sm:mt-4 lg:mt-0 sm:mb-2">
                       <div className="flex items-center gap-2">
                         <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                          {mockProfile.displayName}
+                          {profileUser?.full_name || "User"}
                         </h1>
-                        {mockProfile.verified && (
+                        {profileUser?.is_verified && (
                           <Verified className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 fill-current flex-shrink-0" />
                         )}
                         {/* Premium Status Indicator */}
@@ -728,25 +743,29 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                       </div>
 
                       <p className="text-sm sm:text-base text-muted-foreground">
-                        @{mockProfile.username}
+                        @{profileUser?.username || "user"}
                       </p>
                       <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="truncate">
-                            {mockProfile.location}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="whitespace-nowrap">
-                            Joined {mockProfile.joinDate}
-                          </span>
-                        </div>
+                        {profileUser?.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">
+                              {profileUser.location}
+                            </span>
+                          </div>
+                        )}
+                        {profileUser?.created_at && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="whitespace-nowrap">
+                              Joined {new Date(profileUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-1">
                           <Eye className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span className="whitespace-nowrap">
-                            {mockProfile.profileViews.toLocaleString()} views
+                            {(profileUser?.profile_views || 0).toLocaleString()} views
                           </span>
                         </div>
                       </div>
@@ -832,18 +851,18 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                 {/* Bio */}
                 <div className="mt-4 sm:mt-6">
                   <p className="text-xs sm:text-sm whitespace-pre-line leading-relaxed">
-                    {mockProfile.bio}
+                    {profileUser?.bio || ""}
                   </p>
-                  {mockProfile.website && (
+                  {profileUser?.website && (
                     <a
-                      href={mockProfile.website}
+                      href={profileUser.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-blue-600 hover:underline mt-2 text-xs sm:text-sm"
                     >
                       <Globe className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       <span className="truncate">
-                        {mockProfile.website.replace("https://", "")}
+                        {profileUser.website.replace("https://", "")}
                       </span>
                     </a>
                   )}
@@ -875,7 +894,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                         <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 rounded-3xl bg-gradient-to-br from-blue-100 to-blue-200 border-0 flex items-center justify-center group hover:shadow-xl hover:scale-105 transition-all duration-300">
                           <div className="text-center">
                             <div className="text-xl sm:text-2xl font-bold text-blue-600">
-                              {mockProfile.posts}
+                              {(posts || []).length}
                             </div>
                           </div>
                         </div>
@@ -1095,7 +1114,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                       variant="secondary"
                       className="ml-1 sm:ml-2 text-xs h-5 px-2 bg-white/20 border-white/30 text-current backdrop-blur-sm group-data-[state=active]:bg-white/25 group-data-[state=active]:text-white transition-all duration-300"
                     >
-                      {mockProfile.posts}
+                      {(posts || []).length}
                     </Badge>
                     {activeTab === "posts" && (
                       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-400/20 to-blue-600/20 animate-pulse"></div>
@@ -1118,7 +1137,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                       variant="secondary"
                       className="ml-1 sm:ml-2 text-xs h-5 px-2 bg-white/20 border-white/30 text-current backdrop-blur-sm group-data-[state=active]:bg-white/25 group-data-[state=active]:text-white transition-all duration-300"
                     >
-                      {mockMedia.length}
+                      {mediaSource.length}
                     </Badge>
                     {activeTab === "media" && (
                       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-400/20 to-purple-600/20 animate-pulse"></div>
@@ -1237,10 +1256,10 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                           privacy: (p.privacy || p.audience || p.content?.audience || "public") as string,
                           author: {
                             id: authorProfile.user_id || profileUser?.id || "",
-                            name: authorProfile.full_name || mockProfile.displayName,
-                            username: authorProfile.username || mockProfile.username,
-                            avatar: authorProfile.avatar_url || mockProfile.avatar,
-                            verified: !!authorProfile.is_verified || !!mockProfile.verified,
+                            name: authorProfile.full_name || profileUser?.full_name || "User",
+                            username: authorProfile.username || profileUser?.username || "user",
+                            avatar: authorProfile.avatar_url || profileUser?.avatar_url || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+                            verified: !!authorProfile.is_verified || !!profileUser?.is_verified,
                           },
                           _liked: !!p._liked,
                           _saved: !!p._saved,
@@ -1618,7 +1637,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                 <TabsContent value="about" className="space-y-6 mt-0 tab-content-animate">
                   <div>
                     <h3 className="text-lg font-semibold">
-                      About {mockProfile.displayName}
+                      About {profileUser?.full_name || "User"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       Personal and professional information
@@ -1632,38 +1651,44 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="text-sm font-medium">Location</div>
-                            <div className="text-sm text-muted-foreground">
-                              {mockProfile.location}
+                        {profileUser?.location && (
+                          <div className="flex items-center gap-3">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="text-sm font-medium">Location</div>
+                              <div className="text-sm text-muted-foreground">
+                                {profileUser.location}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
 
-                        <div className="flex items-center gap-3">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="text-sm font-medium">Website</div>
-                            <a
-                              href={mockProfile.website}
-                              className="text-sm text-blue-600 hover:underline"
-                            >
-                              {mockProfile.website?.replace("https://", "")}
-                            </a>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="text-sm font-medium">Joined</div>
-                            <div className="text-sm text-muted-foreground">
-                              {mockProfile.joinDate}
+                        {profileUser?.website && (
+                          <div className="flex items-center gap-3">
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="text-sm font-medium">Website</div>
+                              <a
+                                href={profileUser.website}
+                                className="text-sm text-blue-600 hover:underline"
+                              >
+                                {profileUser.website?.replace("https://", "")}
+                              </a>
                             </div>
                           </div>
-                        </div>
+                        )}
+
+                        {profileUser?.created_at && (
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="text-sm font-medium">Joined</div>
+                              <div className="text-sm text-muted-foreground">
+                                {new Date(profileUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="flex items-center gap-3">
                           <Eye className="h-4 w-4 text-muted-foreground" />
@@ -1672,7 +1697,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                               Profile Views
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {mockProfile.profileViews.toLocaleString()}
+                              {(profileUser?.profile_views || 0).toLocaleString()}
                             </div>
                           </div>
                         </div>

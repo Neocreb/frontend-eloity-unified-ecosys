@@ -1,9 +1,10 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, numeric, integer, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users, followers } from './schema';
+import { freelance_payments } from './freelance-schema.js';
 
-// Re-export some commonly used tables from shared/schema
-export { followers };
+// Re-export some commonly used tables from shared/schema and other schemas
+export { followers, freelance_payments };
 
 // Profiles table
 export const profiles = pgTable('profiles', {
@@ -387,6 +388,19 @@ export const freelance_jobs = pgTable('freelance_jobs', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// User rewards table
+export const user_rewards = pgTable('user_rewards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull(),
+  type: text('type').notNull(),
+  amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+  currency: text('currency').default('ELOIT'),
+  status: text('status').default('pending'),
+  metadata: jsonb('metadata'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // Relations
 export const productsRelations = relations(products, ({ one, many }) => ({
   seller: one(users, {
@@ -526,6 +540,13 @@ export const pioneerBadgesRelations = relations(pioneer_badges, ({ one }) => ({
 export const userActivitySessionsRelations = relations(user_activity_sessions, ({ one }) => ({
   user: one(users, {
     fields: [user_activity_sessions.user_id],
+    references: [users.id],
+  }),
+}));
+
+export const userRewardsRelations = relations(user_rewards, ({ one }) => ({
+  user: one(users, {
+    fields: [user_rewards.user_id],
     references: [users.id],
   }),
 }));
