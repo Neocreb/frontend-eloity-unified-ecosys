@@ -342,6 +342,7 @@ const EnhancedSettings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [showKYCModal, setShowKYCModal] = useState(false);
   const [kycLevel, setKycLevel] = useState(user?.profile?.kyc_level || 0);
+  const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Skills management
