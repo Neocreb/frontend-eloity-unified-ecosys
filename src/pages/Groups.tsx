@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Search, X } from "lucide-react";
+import { ArrowLeft, Plus, Search, X, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatNumber } from "@/utils/formatters";
@@ -192,6 +192,12 @@ const Groups: React.FC = () => {
             <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-5 h-5" />
             </Button>
+            <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => navigate('/app/profile')}>
+              <User className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" className="h-9 w-9 p-0">
+              <Search className="w-5 h-5" />
+            </Button>
           </div>
         </div>
 
@@ -285,14 +291,20 @@ const Groups: React.FC = () => {
 
             {activeTab === "your" && (
               <>
-                <h2 className="text-xl font-semibold mb-3">Most visited</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-xl font-semibold">Most visited</h2>
+                  <button className="text-sm text-blue-600">Sort</button>
+                </div>
                 {YourGroupsList}
               </>
             )}
 
             {activeTab === "for-you" && (
               <>
-                <h2 className="text-xl font-semibold mb-3">Your groups</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-xl font-semibold">Your groups</h2>
+                  <button className="text-sm text-blue-600" onClick={() => setActiveTab('your')}>See all</button>
+                </div>
                 {YourGroupsList}
               </>
             )}
