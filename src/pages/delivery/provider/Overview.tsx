@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, Truck, Timer, Eye, ArrowLeft } from 'lucide-react';
+import { Package, Truck, Timer, Eye } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 
 export default function Overview() {
