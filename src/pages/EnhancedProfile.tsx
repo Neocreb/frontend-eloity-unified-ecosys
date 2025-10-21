@@ -847,18 +847,18 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                 {/* Bio */}
                 <div className="mt-4 sm:mt-6">
                   <p className="text-xs sm:text-sm whitespace-pre-line leading-relaxed">
-                    {mockProfile.bio}
+                    {profileUser?.bio || ""}
                   </p>
-                  {mockProfile.website && (
+                  {profileUser?.website && (
                     <a
-                      href={mockProfile.website}
+                      href={profileUser.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-blue-600 hover:underline mt-2 text-xs sm:text-sm"
                     >
                       <Globe className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       <span className="truncate">
-                        {mockProfile.website.replace("https://", "")}
+                        {profileUser.website.replace("https://", "")}
                       </span>
                     </a>
                   )}
