@@ -1,9 +1,10 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, numeric, integer, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users, followers } from './schema';
+import { freelance_payments } from './freelance-schema.js';
 
-// Re-export some commonly used tables from shared/schema
-export { followers };
+// Re-export some commonly used tables from shared/schema and other schemas
+export { followers, freelance_payments };
 
 // Profiles table
 export const profiles = pgTable('profiles', {
