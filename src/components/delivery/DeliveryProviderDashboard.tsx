@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Send } from "lucide-react";
 import {
   Dialog,
@@ -14,10 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import {
   Truck,
-  Package,
   DollarSign,
   Star,
-  MapPin,
   Navigation,
   ExternalLink,
   Timer,
@@ -25,8 +22,6 @@ import {
   Activity,
   Users,
   Award,
-  Eye,
-  ArrowLeft,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -188,9 +183,8 @@ export default function DeliveryProviderDashboard() {
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
-  // Determine current tab based on route
   const currentPath = location.pathname.split('/').pop() || 'overview';
-  const isOnSubPage = currentPath !== 'dashboard' && currentPath !== '';
+  const isOnOverview = currentPath === 'overview' || currentPath === 'dashboard' || currentPath === '';
 
   const handleTransferToWallet = async () => {
     const amount = parseFloat(transferAmount || "0");
@@ -208,34 +202,19 @@ export default function DeliveryProviderDashboard() {
     navigate(path);
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-blue-950/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Header with back button and title */}
+        {/* Header with title */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">Delivery Hub</h1>
-              <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                  Online & Available
-                </span>
-              </div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Delivery Hub</h1>
+            <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                Online & Available
+              </span>
             </div>
           </div>
         </div>
@@ -268,9 +247,9 @@ export default function DeliveryProviderDashboard() {
         </Card>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Left Sidebar - Earnings Card and Stats */}
-          <div className="xl:col-span-1 space-y-4">
+        <div className={`grid gap-6 ${isOnOverview ? 'grid-cols-1 xl:grid-cols-4' : 'grid-cols-1'}`}>
+          {/* Left Sidebar - Earnings Card and Stats (only on overview) */}
+          {isOnOverview && <div className="xl:col-span-1 space-y-4">
             {/* Earnings Card */}
             <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
               <CardHeader className="pb-3">
@@ -380,10 +359,10 @@ export default function DeliveryProviderDashboard() {
                 </Button>
               </CardContent>
             </Card>
-          </div>
+          </div>}
 
           {/* Main Content Area - Outlet for sub-pages */}
-          <div className="xl:col-span-3">
+          <div className={`${isOnOverview ? 'xl:col-span-3' : 'col-span-1'}`}>
             <Outlet context={{ stats: mockStats, assignments: mockAssignments, ratings: mockRatings, earnings: mockEarnings }} />
           </div>
         </div>

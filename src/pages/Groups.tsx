@@ -99,6 +99,7 @@ const Groups: React.FC = () => {
 
       const enriched = (groups || []).map((g, i) => ({
         ...g,
+        privacy: g.privacy || 'public',
         isJoined: joinedIds.includes(g.id),
         isOwner: g.creator_id === user.id,
         cover_url: g.cover_url || referenceImages[i % referenceImages.length],
@@ -229,7 +230,7 @@ const Groups: React.FC = () => {
           <div className="p-4 space-y-1">
             <div className="font-semibold text-base">{g.name}</div>
             <div className="text-sm text-muted-foreground">
-              {g.privacy?.charAt(0).toUpperCase() + g.privacy?.slice(1)} group · {formatNumber(g.member_count)} members
+              {g.privacy.charAt(0).toUpperCase() + g.privacy.slice(1)} group · {formatNumber(g.member_count)} members
             </div>
             <Button className="mt-3 w-full" onClick={() => join(g.id)} disabled={g.isJoined}>
               {g.isJoined ? "Joined" : "Join"}

@@ -1,37 +1,21 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { MapPin, Package, Navigation, ArrowLeft, Clock } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { MapPin, Package, Navigation, Clock } from 'lucide-react';
 
 export default function Active() {
   const { assignments } = useOutletContext() as any;
-  const navigate = useNavigate();
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   const activeDeliveries = assignments.filter((a: any) => ["accepted", "picked_up", "in_transit"].includes(a.status));
 
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold">Active Deliveries</h2>
-        </div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Active Deliveries</h2>
         <span className="text-sm font-medium px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
           {activeDeliveries.length} Active
         </span>

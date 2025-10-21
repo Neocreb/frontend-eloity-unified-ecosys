@@ -1,38 +1,23 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Truck,
   Clock,
   CheckCircle,
   AlertCircle,
   User,
-  FileText,
   Shield,
   DollarSign,
-  MapPin,
-  ArrowRight,
-  ExternalLink,
-  Phone,
-  Mail,
-  Calendar,
   Star,
   TrendingUp,
+  ArrowRight,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { useDeliveryProvider } from "@/hooks/use-delivery-provider";
 import { useAuth } from "@/contexts/AuthContext";
-import DeliveryProviderRegistration from "./DeliveryProviderRegistration";
-import DeliveryProviderDashboard from "./DeliveryProviderDashboard";
 
 interface DeliveryProviderStatusProps {
   onClose?: () => void;
@@ -66,30 +51,9 @@ export default function DeliveryProviderStatus({
   onClose,
   open = true,
 }: DeliveryProviderStatusProps) {
-  const [showRegistration, setShowRegistration] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const providerStatus = useDeliveryProvider();
-
-  // Show registration form
-  if (showRegistration) {
-    return (
-      <DeliveryProviderRegistration
-        onClose={() => setShowRegistration(false)}
-        open={true}
-      />
-    );
-  }
-
-  // Show dashboard for verified providers
-  if (showDashboard || (providerStatus.isProvider && providerStatus.status === "verified")) {
-    return (
-      <DeliveryProviderDashboard
-        onClose={() => setShowDashboard(false)}
-        open={true}
-      />
-    );
-  }
 
   const getStatusCard = () => {
     if (!isAuthenticated || !user) {
@@ -105,7 +69,7 @@ export default function DeliveryProviderStatus({
                 <p className="text-sm text-blue-700">Please login to access delivery provider features</p>
               </div>
             </div>
-            <Button className="w-full" onClick={() => window.location.href = "/auth"}>
+            <Button className="w-full" onClick={() => navigate("/auth")}>
               Login to Continue
             </Button>
           </CardContent>
@@ -191,7 +155,7 @@ export default function DeliveryProviderStatus({
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setShowRegistration(true)}
+                      onClick={() => navigate("/app/delivery/provider/register")}
                     >
                       Apply Again
                     </Button>
@@ -251,7 +215,7 @@ export default function DeliveryProviderStatus({
                 </div>
                 <Button 
                   className="w-full bg-green-600 hover:bg-green-700"
-                  onClick={() => setShowDashboard(true)}
+                  onClick={() => navigate("/app/delivery/provider/dashboard")}
                 >
                   Go to Dashboard
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -295,7 +259,7 @@ export default function DeliveryProviderStatus({
           <div className="space-y-3">
             <Button 
               className="w-full bg-blue-600 hover:bg-blue-700"
-              onClick={() => setShowRegistration(true)}
+              onClick={() => navigate("/app/delivery/provider/register")}
             >
               Apply to Become a Provider
               <ArrowRight className="h-4 w-4 ml-2" />
@@ -305,7 +269,6 @@ export default function DeliveryProviderStatus({
               className="w-full"
               onClick={() => window.open("/delivery/apply", "_blank")}
             >
-              <ExternalLink className="h-4 w-4 mr-2" />
               Learn More
             </Button>
           </div>
@@ -327,11 +290,11 @@ export default function DeliveryProviderStatus({
     );
   };
 
-  const content = (
-    <div className="max-w-2xl mx-auto p-6">
+  return (
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold mb-2">Delivery Provider Hub</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold mb-2">Delivery Hub</h1>
+        <p className="text-gray-600 text-lg">
           Manage your delivery provider status and access your dashboard
         </p>
       </div>
@@ -339,43 +302,29 @@ export default function DeliveryProviderStatus({
       {getStatusCard()}
 
       {/* Additional Information */}
-      <div className="mt-8 space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Need Help?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="font-medium">Email Support</p>
-                  <p className="text-sm text-gray-600">drivers@platform.com</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="font-medium">Call Us</p>
-                  <p className="text-sm text-gray-600">1-800-DELIVERY</p>
-                </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Need Help?</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <Mail className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="font-medium">Email Support</p>
+                <p className="text-sm text-gray-600">drivers@platform.com</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center gap-3">
+              <Phone className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="font-medium">Call Us</p>
+                <p className="text-sm text-gray-600">1-800-DELIVERY</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-
-  if (onClose) {
-    return (
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {content}
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  return content;
 }

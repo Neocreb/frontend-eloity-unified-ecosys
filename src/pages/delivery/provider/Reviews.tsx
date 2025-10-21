@@ -2,16 +2,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft, MessageSquare, User, Calendar, ThumbsUp } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Star, MessageSquare, User, Calendar, ThumbsUp } from 'lucide-react';
 
 export default function Reviews() {
   const { ratings, stats } = useOutletContext() as any;
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   const getRatingColor = (rating: number) => {
     if (rating === 5) return 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800';
@@ -29,20 +24,9 @@ export default function Reviews() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold">Customer Reviews</h2>
-        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">Customer Reviews</h2>
       </div>
 
       {/* Overall Rating Summary */}

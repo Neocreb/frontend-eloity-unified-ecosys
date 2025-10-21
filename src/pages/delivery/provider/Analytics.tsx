@@ -1,33 +1,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Timer, Target, Activity, Users, ArrowLeft, TrendingUp, Award } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Timer, Target, Activity, Users, TrendingUp, Award } from 'lucide-react';
 
 export default function Analytics() {
   const { stats } = useOutletContext() as any;
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    navigate('/app/delivery/provider/dashboard');
-  };
 
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold">Analytics & Performance</h2>
-        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">Analytics & Performance</h2>
       </div>
 
       {/* Key Performance Indicators */}
