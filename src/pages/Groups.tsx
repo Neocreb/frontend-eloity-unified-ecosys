@@ -49,7 +49,7 @@ const referenceImages = [
 ];
 
 const pillTab = (active: boolean) =>
-  `px-3 py-2 rounded-full text-sm ${active ? "bg-blue-100 text-blue-700" : "text-foreground"}`;
+  `px-3 h-9 rounded-full text-[15px] ${active ? "bg-blue-100 text-blue-700" : "text-foreground"}`;
 
 const Groups: React.FC = () => {
   const navigate = useNavigate();
@@ -187,7 +187,7 @@ const Groups: React.FC = () => {
           <Button variant="ghost" onClick={() => navigate(-1)} className="h-9 w-9 p-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="font-semibold text-lg">Groups</h1>
+          <h1 className="text-[17px] font-semibold">Groups</h1>
           <div className="flex items-center gap-1">
             <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-5 h-5" />
@@ -219,7 +219,7 @@ const Groups: React.FC = () => {
   const DiscoverGrid = (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {allGroups.map((g, idx) => (
-        <Card key={g.id} className="overflow-hidden">
+        <Card key={g.id} className="overflow-hidden rounded-xl">
           <div className="relative h-36 w-full bg-muted">
             <img src={g.cover_url || referenceImages[idx % referenceImages.length]} alt={g.name} className="h-full w-full object-cover" />
             <button className="absolute right-2 top-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center">
@@ -251,13 +251,13 @@ const Groups: React.FC = () => {
       <div className="space-y-5">
         {filteredJoined.map((g, idx) => (
           <div key={g.id} className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
+            <Avatar className="h-[44px] w-[44px]">
               <AvatarImage src={g.avatar_url || referenceImages[idx % referenceImages.length]} />
               <AvatarFallback>{g.name?.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <div className="font-semibold truncate text-base">{g.name}</div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="font-semibold truncate text-[17px]">{g.name}</div>
+              <div className="flex items-center gap-2 text-[14px] text-muted-foreground">
                 <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
                 <span>new posts</span>
               </div>
@@ -284,7 +284,7 @@ const Groups: React.FC = () => {
           <>
             {activeTab === "discover" && (
               <>
-                <h2 className="text-xl font-semibold mb-3">Suggested for you</h2>
+                <h2 className="text-[20px] font-semibold mb-3">Suggested for you</h2>
                 {DiscoverGrid}
               </>
             )}
@@ -292,7 +292,7 @@ const Groups: React.FC = () => {
             {activeTab === "your" && (
               <>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xl font-semibold">Most visited</h2>
+                  <h2 className="text-[20px] font-semibold">Most visited</h2>
                   <button className="text-sm text-blue-600">Sort</button>
                 </div>
                 {YourGroupsList}
@@ -302,7 +302,7 @@ const Groups: React.FC = () => {
             {activeTab === "for-you" && (
               <>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xl font-semibold">Your groups</h2>
+                  <h2 className="text-[20px] font-semibold">Your groups</h2>
                   <button className="text-sm text-blue-600" onClick={() => setActiveTab('your')}>See all</button>
                 </div>
                 {YourGroupsList}
