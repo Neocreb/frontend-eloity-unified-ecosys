@@ -543,3 +543,10 @@ export const userActivitySessionsRelations = relations(user_activity_sessions, (
     references: [users.id],
   }),
 }));
+
+export const userRewardsRelations = relations(user_rewards, ({ one }) => ({
+  user: one(users, {
+    fields: [user_rewards.user_id],
+    references: [users.id],
+  }),
+}));
