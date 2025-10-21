@@ -100,7 +100,7 @@ import DeliveryProviderRegistration from "./components/delivery/DeliveryProvider
 import DeliveryProviderDashboard from "./components/delivery/DeliveryProviderDashboard";
 import Overview from "./pages/delivery/provider/Overview";
 import Active from "./pages/delivery/provider/Active";
-import Earnings from "./pages/delivery/provider/Earnings";
+import { default as DeliveryEarnings } from "./pages/delivery/provider/Earnings";
 import Reviews from "./pages/delivery/provider/Reviews";
 import Vehicles from "./pages/delivery/provider/Vehicles";
 import Analytics from "./pages/delivery/provider/Analytics";
