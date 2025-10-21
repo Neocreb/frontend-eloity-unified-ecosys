@@ -33,7 +33,7 @@ const PaymentCards = () => {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>My Cards</CardTitle>
         <Button asChild variant="link" className="p-0">
-          <Link to="/app/wallet/cards">See All</Link>
+          <Link to="/app/wallet/cards">Manage</Link>
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
