@@ -82,7 +82,7 @@ router.get('/balances', authenticateToken, async (req, res) => {
 
     // Try Supabase edge function first if configured
     if (SUPABASE_EDGE_BASE) {
-      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/balances${ccy ? `?ccy=${encodeURIComponent(ccy)}` : ''}`;
+      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/balances${ccy ? `?ccy=${encodeURIComponent(ccy)}` : ''}`;
       const r = await fetch(url, { method: 'GET' });
       const text = await r.text();
       try {

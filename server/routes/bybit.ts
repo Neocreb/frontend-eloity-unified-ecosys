@@ -63,7 +63,7 @@ async function proxyToEdge(req: Request, res: Response, action: string) {
   try {
     // If SUPABASE_EDGE_BASE is configured, use it
     if (SUPABASE_EDGE_BASE) {
-      const url = new URL(`${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/${action}`);
+      const url = new URL(`${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/${action}`);
       Object.entries(req.query || {}).forEach(([k, v]) => url.searchParams.set(k, String(v)));
 
       const init: any = {
