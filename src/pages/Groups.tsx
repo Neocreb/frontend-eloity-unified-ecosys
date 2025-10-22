@@ -209,7 +209,7 @@ const Groups: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-2 flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
+        <div className="mt-2 flex items-center gap-3 overflow-x-auto no-scrollbar pb-2 flex-nowrap whitespace-nowrap">
           {tabs.map((t) => (
             <button key={t} className={pillTab(activeTab === t)} onClick={() => setActiveTab(t)}>
               {t === "for-you" && "For you"}
