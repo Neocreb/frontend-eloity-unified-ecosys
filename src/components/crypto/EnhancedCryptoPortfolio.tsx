@@ -193,10 +193,40 @@ const mockTransactions: Transaction[] = [
 ];
 
 function EnhancedCryptoPortfolioContent() {
+  const crypto = useCrypto();
+
   const [portfolioAssets, setPortfolioAssets] =
-    useState<PortfolioAsset[]>(mockPortfolioAssets);
+    useState<PortfolioAsset[]>(() => {
+      // Initialize from central portfolio if available
+      const p = crypto?.portfolio;
+      if (p && p.assets) {
+        return p.assets.map((a: any) => ({
+          id: a.asset.toLowerCase(),
+          symbol: a.asset,
+          name: a.asset,
+          amount: Number(a.total || a.free || 0),
+          value: Number(a.usdValue || a.usd_value || a.usd || 0),
+          avgBuyPrice: Number(a.avgBuyPrice || 0),
+          currentPrice: Number(a.price || 0),
+          pnl: Number((a.usdValue || 0) - ((a.avgBuyPrice || 0) * (a.total || a.free || 0))),
+          pnlPercent: 0,
+          allocation: Number(a.allocation || 0),
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          lastUpdated: new Date().toISOString(),
+        }));
+      }
+
+      return mockPortfolioAssets;
+    });
+
   const [performanceData, setPerformanceData] =
-    useState<PerformanceData[]>(mockPerformanceData);
+    useState<PerformanceData[]>(() => {
+      // If crypto.marketData exists, create a basic performance array
+      if (crypto?.marketData) {
+        return mockPerformanceData; // keep mock for now
+      }
+      return mockPerformanceData;
+    });
   const [transactions, setTransactions] =
     useState<Transaction[]>(mockTransactions);
   const [timeframe, setTimeframe] = useState("30D");
@@ -211,6 +241,28 @@ function EnhancedCryptoPortfolioContent() {
 
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Update when central portfolio changes
+  useEffect(() => {
+    if (crypto?.portfolio && crypto.portfolio.assets) {
+      setPortfolioAssets(
+        crypto.portfolio.assets.map((a: any) => ({
+          id: String(a.asset).toLowerCase(),
+          symbol: String(a.asset).toUpperCase(),
+          name: String(a.asset).toUpperCase(),
+          amount: Number(a.total || a.free || 0),
+          value: Number(a.usdValue || a.usd_value || a.usd || 0),
+          avgBuyPrice: Number(a.avgBuyPrice || 0),
+          currentPrice: Number(a.price || 0),
+          pnl: Number((a.usdValue || 0) - ((a.avgBuyPrice || 0) * (a.total || a.free || 0))),
+          pnlPercent: 0,
+          allocation: Number(a.allocation || 0),
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          lastUpdated: new Date().toISOString(),
+        })),
+      );
+    }
+  }, [crypto?.portfolio]);
 
   const totalValue = portfolioAssets.reduce(
     (sum, asset) => sum + asset.value,
