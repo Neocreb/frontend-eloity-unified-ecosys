@@ -201,15 +201,25 @@ export default function CryptoWithdrawModal({
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const body: any = {
+        coin: selectedCrypto.symbol,
+        chain: selectedCrypto.network,
+        address,
+        amount: withdrawAmount,
+      };
+      const r = await fetch('/api/bybit/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j?.error || 'Withdraw failed');
 
       toast({
         title: "Withdrawal Initiated",
         description: `Your ${selectedCrypto.name} withdrawal has been submitted for processing.`,
       });
 
-      // Send unified notification
       if (user?.id) {
         await cryptoNotificationService.notifyWithdrawal(
           user.id,
