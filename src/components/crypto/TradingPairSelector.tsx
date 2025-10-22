@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronDown, Search, Star, TrendingUp, TrendingDown } from "lucide-react";
-import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import useCrypto from "@/hooks/use-crypto";
 
