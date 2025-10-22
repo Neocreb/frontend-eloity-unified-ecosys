@@ -1,19 +1,64 @@
 import express from 'express';
-import express from 'express';
 import fetch from 'node-fetch';
 import { logger } from '../utils/logger.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { getKYCStatus } from '../services/kycService.js';
 import rateLimit from 'express-rate-limit';
 import { adjustWalletBalanceAtomic } from '../services/walletLedgerService.js';
+import crypto from 'crypto';
 
 const router = express.Router();
 
 const SUPABASE_EDGE_BASE = process.env.SUPABASE_EDGE_BASE || process.env.SUPABASE_FUNCTIONS_URL || '';
+const BYBIT_PUBLIC_API = process.env.BYBIT_PUBLIC_API || '';
+const BYBIT_SECRET_API = process.env.BYBIT_SECRET_API || '';
 const BACKEND_BASE = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5002}`;
 
-if (!SUPABASE_EDGE_BASE) {
-  logger.warn('SUPABASE_EDGE_BASE not configured; crypto user routes will fail until set');
+if (!SUPABASE_EDGE_BASE && (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API)) {
+  logger.warn('SUPABASE_EDGE_BASE or BYBIT API keys not configured; some crypto user routes will have limited functionality');
+}
+
+// Helper: HMAC-SHA256 signature for Bybit API
+async function signBybit(secret: string, timestamp: string, method: string, path: string, body: string = '') {
+  const payload = `${timestamp}${method.toUpperCase()}${path}${body}`;
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+}
+
+async function callBybitDirect(method: string, path: string, query: string = '', body: any = null): Promise<any> {
+  try {
+    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
+      throw new Error('Bybit API keys not configured');
+    }
+
+    const timestamp = Date.now().toString();
+    const bodyString = body ? JSON.stringify(body) : '';
+    const signature = await signBybit(BYBIT_SECRET_API, timestamp, method, path, bodyString);
+
+    const fullUrl = `https://api.bybit.com${path}${query ? `?${query}` : ''}`;
+    const headers: any = {
+      'Content-Type': 'application/json',
+      'X-BAPI-API-KEY': BYBIT_PUBLIC_API,
+      'X-BAPI-SIGN': signature,
+      'X-BAPI-TIMESTAMP': timestamp,
+      'X-BAPI-RECV-WINDOW': '5000'
+    };
+
+    const response = await fetch(fullUrl, {
+      method,
+      headers,
+      body: bodyString || undefined
+    });
+
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { error: text, status: response.status };
+    }
+  } catch (error) {
+    logger.error('Direct Bybit API call error:', error);
+    throw error;
+  }
 }
 
 function userHasKyc(kyc: any) {
