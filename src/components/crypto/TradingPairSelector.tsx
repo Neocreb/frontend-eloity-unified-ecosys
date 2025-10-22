@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronDown, Search, Star, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import useCrypto from "@/hooks/use-crypto";
 
 interface TradingPair {
   symbol: string;
