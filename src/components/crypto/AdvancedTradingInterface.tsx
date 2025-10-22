@@ -95,10 +95,10 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
   const [recentTrades, setRecentTrades] = useState<Trade[]>([]);
   const [openOrders, setOpenOrders] = useState<Order[]>([]);
   const [orderHistory, setOrderHistory] = useState<Order[]>([]);
-  const [currentPrice, setCurrentPrice] = useState(43250.5);
-  const [priceChange, setPriceChange] = useState(2.34);
-  const [priceChangePercent, setPriceChangePercent] = useState(0.054);
-  const [volume24h, setVolume24h] = useState(1234567890);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [priceChange, setPriceChange] = useState(0);
+  const [priceChangePercent, setPriceChangePercent] = useState(0);
+  const [volume24h, setVolume24h] = useState(0);
   const [chartTimeframe, setChartTimeframe] = useState("1h");
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [depositModalOpen, setDepositModalOpen] = useState(false);
@@ -117,96 +117,62 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
   ]);
 
   useEffect(() => {
-    generateMockData();
     initializeChart();
 
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      updateMarketData();
-    }, 1000);
+    const fetchAll = async () => {
+      await Promise.all([fetchMarketPrice(), fetchOrderBook()]);
+    };
 
+    fetchAll();
+    const interval = setInterval(fetchAll, 5000);
     return () => clearInterval(interval);
   }, [selectedPair]);
 
-  const generateMockData = () => {
-    // Generate order book data
-    const basePrice = currentPrice;
-    const asks: OrderBookEntry[] = [];
-    const bids: OrderBookEntry[] = [];
-
-    for (let i = 0; i < 15; i++) {
-      const askPrice = basePrice + (i + 1) * 10;
-      const bidPrice = basePrice - (i + 1) * 10;
-      const askAmount = Math.random() * 2 + 0.1;
-      const bidAmount = Math.random() * 2 + 0.1;
-
-      asks.push({
-        price: askPrice,
-        amount: askAmount,
-        total: askPrice * askAmount,
-      });
-
-      bids.push({
-        price: bidPrice,
-        amount: bidAmount,
-        total: bidPrice * bidAmount,
-      });
+  const fetchMarketPrice = async () => {
+    try {
+      const base = selectedPair.split('/')[0].toUpperCase();
+      const idMap: Record<string, string> = {
+        BTC: 'bitcoin', ETH: 'ethereum', USDT: 'tether', BNB: 'binancecoin', SOL: 'solana', ADA: 'cardano', LINK: 'chainlink', MATIC: 'polygon', AVAX: 'avalanche', DOT: 'polkadot', DOGE: 'dogecoin'
+      };
+      const id = idMap[base] || 'bitcoin';
+      const r = await fetch(`/api/crypto/prices?symbols=${encodeURIComponent(id)}`);
+      const j = await r.json();
+      const p = j?.prices?.[id];
+      if (p) {
+        const prev = Number(p.usd) / (1 + Number(p.usd_24h_change || 0) / 100);
+        setPriceChange(Number(p.usd) - prev);
+        setPriceChangePercent(Number(p.usd_24h_change || 0));
+        setCurrentPrice(Number(p.usd));
+        setVolume24h(Number(p.usd_24h_vol || 0));
+      }
+    } catch (e) {
+      // ignore
     }
-
-    setOrderBook({ asks, bids });
-
-    // Generate recent trades
-    const trades: Trade[] = [];
-    for (let i = 0; i < 20; i++) {
-      const price = basePrice + (Math.random() - 0.5) * 100;
-      const amount = Math.random() * 0.5 + 0.01;
-      const time = new Date(Date.now() - i * 60000).toLocaleTimeString();
-
-      trades.push({
-        id: `trade-${i}`,
-        price,
-        amount,
-        time,
-        type: Math.random() > 0.5 ? "buy" : "sell",
-      });
-    }
-
-    setRecentTrades(trades);
-
-    // Generate sample orders
-    const sampleOrders: Order[] = [
-      {
-        id: "order-1",
-        type: "limit",
-        side: "buy",
-        amount: 0.1,
-        price: 43000,
-        status: "pending",
-        filled: 0,
-        timestamp: new Date().toISOString(),
-      },
-      {
-        id: "order-2",
-        type: "limit",
-        side: "sell",
-        amount: 0.05,
-        price: 43500,
-        status: "filled",
-        filled: 0.05,
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-      },
-    ];
-
-    setOpenOrders(sampleOrders.filter((o) => o.status === "pending"));
-    setOrderHistory(sampleOrders);
   };
 
-  const updateMarketData = () => {
-    const change = (Math.random() - 0.5) * 10;
-    setCurrentPrice((prev) => Math.max(prev + change, 1000));
-    setPriceChange(change);
-    setPriceChangePercent((change / currentPrice) * 100);
+  const fetchOrderBook = async () => {
+    try {
+      const symbol = selectedPair.replace('/', '');
+      const u = `https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${encodeURIComponent(symbol)}&limit=25`;
+      const r = await fetch(u);
+      const j = await r.json();
+      const rows = j?.result?.list || [];
+      const asks: OrderBookEntry[] = [];
+      const bids: OrderBookEntry[] = [];
+      for (const row of rows) {
+        const [priceStr, qtyStr, side] = Array.isArray(row) ? row : [row.price, row.size, row.side];
+        const price = parseFloat(priceStr);
+        const qty = parseFloat(qtyStr);
+        const item = { price, amount: qty, total: price * qty } as OrderBookEntry;
+        if ((row.side || side) === 'Sell') asks.push(item); else bids.push(item);
+      }
+      setOrderBook({ asks, bids });
+    } catch (e) {
+      // ignore if CORS
+    }
   };
+
+  const updateMarketData = () => {};
 
   const initializeChart = () => {
     // In a real implementation, this would initialize TradingView or Chart.js
@@ -223,7 +189,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
     }
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!amount || (orderType !== "market" && !price)) {
       toast({
         title: "Invalid Order",
@@ -233,30 +199,33 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       return;
     }
 
-    const newOrder: Order = {
-      id: `order-${Date.now()}`,
-      type: orderType,
-      side: orderSide,
-      amount: parseFloat(amount),
-      price: orderType !== "market" ? parseFloat(price) : undefined,
-      stopPrice: orderType === "stop-loss" ? parseFloat(stopPrice) : undefined,
-      status: "pending",
-      filled: 0,
-      timestamp: new Date().toISOString(),
-    };
+    try {
+      const symbol = selectedPair.replace('/', '');
+      const body: any = {
+        category: 'spot',
+        symbol,
+        side: orderSide === 'buy' ? 'Buy' : 'Sell',
+        orderType: orderType === 'market' ? 'Market' : 'Limit',
+        qty: amount,
+      };
+      if (orderType !== 'market') body.price = price;
 
-    setOpenOrders((prev) => [...prev, newOrder]);
-    setOrderHistory((prev) => [...prev, newOrder]);
+      const r = await fetch('/api/crypto_user/place-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j?.error || 'Order failed');
 
-    toast({
-      title: "Order Placed",
-      description: `${orderSide.toUpperCase()} ${amount} ${selectedPair.split("/")[0]} at ${orderType === "market" ? "market price" : `$${price}`}`,
-    });
+      toast({ title: 'Order Placed', description: `${orderSide.toUpperCase()} ${amount} ${selectedPair.split('/')[0]} submitted` });
 
-    // Reset form
-    setAmount("");
-    setPrice("");
-    setStopPrice("");
+      setAmount('');
+      setPrice('');
+      setStopPrice('');
+    } catch (e: any) {
+      toast({ title: 'Order Failed', description: e?.message || 'Failed to place order', variant: 'destructive' });
+    }
   };
 
   const handleCancelOrder = (orderId: string) => {

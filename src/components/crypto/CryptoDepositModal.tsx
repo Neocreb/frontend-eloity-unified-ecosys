@@ -43,104 +43,25 @@ interface CryptoCurrency {
   symbol: string;
   name: string;
   network: string;
+  chainType?: string;
   icon: string;
   minDeposit: number;
   confirmations: number;
-  address: string;
+  address?: string;
   memo?: string;
   fees: string;
   color: string;
 }
 
 const supportedCryptos: CryptoCurrency[] = [
-  {
-    symbol: "BTC",
-    name: "Bitcoin",
-    network: "Bitcoin",
-    icon: "₿",
-    minDeposit: 0.0001,
-    confirmations: 3,
-    address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-    fees: "Network fee varies",
-    color: "text-orange-500",
-  },
-  {
-    symbol: "ETH",
-    name: "Ethereum",
-    network: "Ethereum (ERC-20)",
-    icon: "Ξ",
-    minDeposit: 0.001,
-    confirmations: 12,
-    address: "0x742c4B8b6bFd7bE086a7A47d4d7fe39F9aE8c2A3",
-    fees: "Gas fees apply",
-    color: "text-blue-500",
-  },
-  {
-    symbol: "USDT",
-    name: "Tether USD",
-    network: "Ethereum (ERC-20)",
-    icon: "₮",
-    minDeposit: 1,
-    confirmations: 12,
-    address: "0x742c4B8b6bFd7bE086a7A47d4d7fe39F9aE8c2A3",
-    fees: "Gas fees apply",
-    color: "text-green-500",
-  },
-  {
-    symbol: "USDC",
-    name: "USD Coin",
-    network: "Ethereum (ERC-20)",
-    icon: "$",
-    minDeposit: 1,
-    confirmations: 12,
-    address: "0x742c4B8b6bFd7bE086a7A47d4d7fe39F9aE8c2A3",
-    fees: "Gas fees apply",
-    color: "text-blue-600",
-  },
-  {
-    symbol: "SOL",
-    name: "Solana",
-    network: "Solana",
-    icon: "◎",
-    minDeposit: 0.01,
-    confirmations: 1,
-    address: "CuieVDEDJLLHoZvEqBP7HY3oG7KYoNvYVpNgHB34K8r4",
-    fees: "0.000005 SOL",
-    color: "text-purple-500",
-  },
-  {
-    symbol: "ADA",
-    name: "Cardano",
-    network: "Cardano",
-    icon: "₳",
-    minDeposit: 1,
-    confirmations: 15,
-    address: "addr1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh8c3k6h9",
-    fees: "~0.17 ADA",
-    color: "text-indigo-500",
-  },
-  {
-    symbol: "MATIC",
-    name: "Polygon",
-    network: "Polygon",
-    icon: "⬟",
-    minDeposit: 1,
-    confirmations: 128,
-    address: "0x742c4B8b6bFd7bE086a7A47d4d7fe39F9aE8c2A3",
-    fees: "~0.01 MATIC",
-    color: "text-purple-600",
-  },
-  {
-    symbol: "LTC",
-    name: "Litecoin",
-    network: "Litecoin",
-    icon: "Ł",
-    minDeposit: 0.001,
-    confirmations: 6,
-    address: "ltc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-    fees: "~0.001 LTC",
-    color: "text-gray-500",
-  },
+  { symbol: "BTC", name: "Bitcoin", network: "Bitcoin", chainType: "BTC", icon: "₿", minDeposit: 0.0001, confirmations: 3, fees: "Network fee varies", color: "text-orange-500" },
+  { symbol: "ETH", name: "Ethereum", network: "Ethereum (ERC-20)", chainType: "ETH", icon: "Ξ", minDeposit: 0.001, confirmations: 12, fees: "Gas fees apply", color: "text-blue-500" },
+  { symbol: "USDT", name: "Tether USD", network: "Ethereum (ERC-20)", chainType: "ERC20", icon: "₮", minDeposit: 1, confirmations: 12, fees: "Gas fees apply", color: "text-green-500" },
+  { symbol: "USDC", name: "USD Coin", network: "Ethereum (ERC-20)", chainType: "ERC20", icon: "$", minDeposit: 1, confirmations: 12, fees: "Gas fees apply", color: "text-blue-600" },
+  { symbol: "SOL", name: "Solana", network: "Solana", chainType: "SOL", icon: "◎", minDeposit: 0.01, confirmations: 1, fees: "0.000005 SOL", color: "text-purple-500" },
+  { symbol: "ADA", name: "Cardano", network: "Cardano", chainType: "ADA", icon: "₳", minDeposit: 1, confirmations: 15, fees: "~0.17 ADA", color: "text-indigo-500" },
+  { symbol: "MATIC", name: "Polygon", network: "Polygon", chainType: "MATIC", icon: "⬟", minDeposit: 1, confirmations: 128, fees: "~0.01 MATIC", color: "text-purple-600" },
+  { symbol: "LTC", name: "Litecoin", network: "Litecoin", chainType: "LTC", icon: "Ł", minDeposit: 0.001, confirmations: 6, fees: "~0.001 LTC", color: "text-gray-500" },
 ];
 
 export default function CryptoDepositModal({
@@ -158,11 +79,32 @@ export default function CryptoDepositModal({
   const [showQR, setShowQR] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const fetchAddress = async () => {
+      if (!selectedCrypto) return;
+      try {
+        setIsLoading(true);
+        const params = new URLSearchParams({ coin: selectedCrypto.symbol });
+        if (selectedCrypto.chainType) params.set('chainType', selectedCrypto.chainType);
+        const r = await fetch(`/api/bybit/deposit-address?${params.toString()}`);
+        const j = await r.json();
+        const addr = j?.result?.address || j?.result?.chains?.[0]?.address || j?.address;
+        const memo = j?.result?.tag || j?.result?.memo || j?.memo;
+        setSelectedCrypto((prev) => prev ? { ...prev, address: addr || prev.address, memo: memo || prev.memo } : prev);
+      } catch (e) {
+        // keep existing
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAddress();
+  }, [selectedCrypto?.symbol]);
+
   const handleCopyAddress = async () => {
     if (!selectedCrypto) return;
     
     try {
-      await navigator.clipboard.writeText(selectedCrypto.address);
+      await navigator.clipboard.writeText(selectedCrypto.address || "");
       setCopiedAddress(true);
       toast({
         title: "Address Copied",
@@ -200,17 +142,16 @@ export default function CryptoDepositModal({
 
   const handleComplete = () => {
     setIsLoading(true);
-    
-    // Simulate processing time
-    setTimeout(() => {
+    try {
       toast({
-        title: "Deposit Instructions Sent",
-        description: `Your ${selectedCrypto?.name} deposit address is ready. Funds will appear after ${selectedCrypto?.confirmations} confirmations.`,
+        title: "Deposit Address Ready",
+        description: selectedCrypto?.address ? `${selectedCrypto?.symbol} address generated` : `Address unavailable. Try again later.`,
       });
-      setIsLoading(false);
       onSuccess?.();
       onClose();
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

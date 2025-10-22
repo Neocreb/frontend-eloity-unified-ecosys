@@ -42,24 +42,26 @@ serve(async (req) => {
     let targetPath = '/v5/account/wallet-balance';
     let query = '';
 
+    const fullQuery = url.searchParams.toString();
     switch (action) {
-      case 'balances':
-        // optional ccy query param
+      case 'balances': {
         const ccy = url.searchParams.get('ccy');
         query = ccy ? `?ccy=${encodeURIComponent(ccy)}` : '';
         targetPath = `/v5/account/wallet-balance${query}`;
         break;
-      case 'positions':
+      }
+      case 'positions': {
         const symbol = url.searchParams.get('symbol');
         query = symbol ? `?symbol=${encodeURIComponent(symbol)}` : '';
         targetPath = `/v5/position/list${query}`;
         break;
-      case 'orders':
-        // orders list
+      }
+      case 'orders': {
         const s = url.searchParams.get('symbol');
         query = s ? `?symbol=${encodeURIComponent(s)}` : '';
         targetPath = `/v5/order/list${query}`;
         break;
+      }
       case 'place-order':
         targetPath = `/v5/order/create`;
         break;
@@ -68,6 +70,12 @@ serve(async (req) => {
         break;
       case 'transfer':
         targetPath = `/v5/asset/transfer`;
+        break;
+      case 'withdraw':
+        targetPath = `/v5/asset/withdraw`;
+        break;
+      case 'deposit-address':
+        targetPath = `/v5/asset/deposit/query-address${fullQuery ? `?${fullQuery}` : ''}`;
         break;
       case 'convert':
         targetPath = `/v5/asset/convert`;

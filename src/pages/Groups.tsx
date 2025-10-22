@@ -56,7 +56,7 @@ const referenceImages = [
 ];
 
 const pillTab = (active: boolean) =>
-  `px-3 h-9 rounded-full text-[15px] font-medium ${active ? "bg-blue-100 text-blue-700" : "text-foreground"}`;
+  `px-3 h-9 rounded-full text-[15px] font-medium inline-flex items-center justify-center whitespace-nowrap shrink-0 ${active ? "bg-blue-100 text-blue-700" : "text-foreground"}`;
 
 const Groups: React.FC = () => {
   const navigate = useNavigate();
@@ -209,7 +209,7 @@ const Groups: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-2 flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
+        <div className="mt-2 flex items-center gap-3 overflow-x-auto no-scrollbar pb-2 flex-nowrap whitespace-nowrap">
           {tabs.map((t) => (
             <button key={t} className={pillTab(activeTab === t)} onClick={() => setActiveTab(t)}>
               {t === "for-you" && "For you"}
