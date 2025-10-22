@@ -38,68 +38,30 @@ const TradingPairSelector: React.FC<TradingPairSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeQuote, setActiveQuote] = useState("USDT");
 
-  const tradingPairs: TradingPair[] = [
-    {
-      symbol: "ETHUSDT",
-      baseAsset: "ETH",
-      quoteAsset: "USDT",
-      price: 4485.56,
-      change24h: 4.41,
-      volume: 1250000000,
-      isHot: true,
-    },
-    {
-      symbol: "BTCUSDT",
-      baseAsset: "BTC",
-      quoteAsset: "USDT",
-      price: 119697.3,
-      change24h: -0.02,
-      volume: 960490000,
-      isFavorite: true,
-    },
-    {
-      symbol: "SOLUSDT",
-      baseAsset: "SOL",
-      quoteAsset: "USDT",
-      price: 186.13,
-      change24h: 4.06,
-      volume: 261860000,
-      isHot: true,
-    },
-    {
-      symbol: "USDCUSDT",
-      baseAsset: "USDC",
-      quoteAsset: "USDT",
-      price: 0.9998,
-      change24h: -0.02,
-      volume: 205170000,
-    },
-    {
-      symbol: "MNTUSDT",
-      baseAsset: "MNT",
-      quoteAsset: "USDT",
-      price: 1.0295,
-      change24h: 3.57,
-      volume: 168710000,
-      isHot: true,
-    },
-    {
-      symbol: "XRPUSDT",
-      baseAsset: "XRP",
-      quoteAsset: "USDT",
-      price: 3.2418,
-      change24h: 1.02,
-      volume: 165070000,
-    },
-    {
-      symbol: "ADAUSDT",
-      baseAsset: "ADA",
-      quoteAsset: "USDT",
-      price: 1.2345,
-      change24h: -2.15,
-      volume: 123450000,
-    },
-  ];
+  // Prefer real trading pairs from central hook; fall back to local mock if unavailable
+  const crypto = useCrypto();
+  const tradingPairs: TradingPair[] = (crypto?.tradingPairs && crypto.tradingPairs.length > 0)
+    ? crypto.tradingPairs
+    : [
+      {
+        symbol: "ETHUSDT",
+        baseAsset: "ETH",
+        quoteAsset: "USDT",
+        price: 4485.56,
+        change24h: 4.41,
+        volume: 1250000000,
+        isHot: true,
+      },
+      {
+        symbol: "BTCUSDT",
+        baseAsset: "BTC",
+        quoteAsset: "USDT",
+        price: 119697.3,
+        change24h: -0.02,
+        volume: 960490000,
+        isFavorite: true,
+      },
+    ];
 
   const quoteAssets = ["USDT", "USDC", "BTC", "ETH"];
 
