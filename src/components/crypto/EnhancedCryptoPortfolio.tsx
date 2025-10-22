@@ -198,13 +198,13 @@ function EnhancedCryptoPortfolioContent() {
 
   const [portfolioAssets, setPortfolioAssets] =
     useState<PortfolioAsset[]>(() => {
-      // Initialize from central portfolio if available
+        // Initialize from central portfolio if available
       const p = crypto?.portfolio;
       if (p && p.assets) {
         return p.assets.map((a: any) => ({
-          id: a.asset.toLowerCase(),
-          symbol: a.asset,
-          name: a.asset,
+          id: String(a.asset).toLowerCase(),
+          symbol: String(a.asset).toUpperCase(),
+          name: String(a.asset).toUpperCase(),
           amount: Number(a.total || a.free || 0),
           value: Number(a.usdValue || a.usd_value || a.usd || 0),
           avgBuyPrice: Number(a.avgBuyPrice || 0),
@@ -217,7 +217,8 @@ function EnhancedCryptoPortfolioContent() {
         }));
       }
 
-      return mockPortfolioAssets;
+      // If no portfolio available from backend, return empty list (do not use mock data)
+      return [];
     });
 
   const [performanceData, setPerformanceData] =
