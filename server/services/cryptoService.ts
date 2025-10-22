@@ -51,7 +51,7 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
 
       // Fallback to CoinGecko public API
       try {
-        const cgIdMap: Record<string, string> = { bitcoin: 'bitcoin', ethereum: 'ethereum', tether: 'tether', binancecoin: 'binancecoin' };
+        const cgIdMap: Record<string, string> = { bitcoin: 'bitcoin', ethereum: 'ethereum', tether: 'tether', binancecoin: 'binancecoin', solana: 'solana', cardano: 'cardano', chainlink: 'chainlink', polygon: 'matic-network', avalanche: 'avalanche-2', polkadot: 'polkadot', dogecoin: 'dogecoin' };
         const id = cgIdMap[lower];
         if (id) {
           const cgUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=${vsCurrency}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
