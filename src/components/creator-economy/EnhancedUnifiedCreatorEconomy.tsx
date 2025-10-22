@@ -68,8 +68,8 @@ import { cn } from "@/lib/utils";
 
 interface EnhancedEconomyData {
   // Core Metrics
-  currentEloity Points: number;
-  totalEloity PointsEarned: number;
+  currentEloityPoints: number;
+  totalEloityPointsEarned: number;
   totalEarnings: number;
   availableToWithdraw: number;
   
@@ -157,8 +157,8 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
 
       // Enhanced demo data reflecting new reward system
       setEconomyData({
-        currentEloity Points: 3420,
-        totalEloity PointsEarned: 18560,
+        currentEloityPoints: 3420,
+        totalEloityPointsEarned: 18560,
         totalEarnings: 18240,
         availableToWithdraw: 12150,
         
@@ -425,10 +425,10 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
                   Eloity Points
                 </p>
                 <p className="text-lg sm:text-2xl font-bold text-purple-900">
-                  {formatNumber(economyData?.currentEloity Points || 0)}
+                  {formatNumber(economyData?.currentEloityPoints || 0)}
                 </p>
                 <p className="text-xs text-purple-600">
-                  +{formatNumber(economyData?.totalEloity PointsEarned || 0)} earned
+                  +{formatNumber(economyData?.totalEloityPointsEarned || 0)} earned
                 </p>
               </div>
               <div className="p-2 sm:p-3 bg-purple-200 rounded-full">
@@ -789,7 +789,7 @@ const EnhancedUnifiedCreatorEconomy: React.FC = () => {
                       <span className="font-medium text-xs sm:text-sm">Eloity Points</span>
                     </div>
                     <span className="font-bold text-purple-600 text-sm sm:text-base">
-                      {formatNumber(economyData?.currentEloity Points || 0)}
+                      {formatNumber(economyData?.currentEloityPoints || 0)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">

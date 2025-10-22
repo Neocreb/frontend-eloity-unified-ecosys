@@ -51,7 +51,7 @@ import { formatCurrency, formatNumber } from "@/utils/formatters";
 interface EarningsData {
   // Total earnings overview
   totalEarnings: number;
-  totalEloity Points: number;
+  totalEloityPoints: number;
   availableToWithdraw: number;
   lifetimeEarnings: number;
 
@@ -185,7 +185,7 @@ const ComprehensiveEarningsDashboard: React.FC = () => {
       // In production, this would be multiple API calls combined
       const mockData: EarningsData = {
         totalEarnings: 1247.83,
-        totalEloity Points: 3450,
+        totalEloityPoints: 3450,
         availableToWithdraw: 892.5,
         lifetimeEarnings: 5689.42,
 
@@ -522,7 +522,7 @@ const ComprehensiveEarningsDashboard: React.FC = () => {
                   Eloity Points
                 </p>
                 <p className="text-2xl font-bold text-purple-900">
-                  {formatNumber(earningsData?.totalEloity Points || 0)}
+                  {formatNumber(earningsData?.totalEloityPoints || 0)}
                 </p>
                 <p className="text-xs text-purple-600">
                   {userProgress?.streakDays || 0} day streak 🔥
