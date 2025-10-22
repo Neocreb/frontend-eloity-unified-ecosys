@@ -69,7 +69,7 @@ function userHasKyc(kyc: any) {
   return false;
 }
 
-// Get user-visible balances from Bybit (via edge function) — requires KYC
+// Get user-visible balances from Bybit (via edge function or direct API) — requires KYC
 router.get('/balances', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId as string;
@@ -79,18 +79,35 @@ router.get('/balances', authenticateToken, async (req, res) => {
     }
 
     const ccy = String(req.query.ccy || '');
-    const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/balances${ccy ? `?ccy=${encodeURIComponent(ccy)}` : ''}`;
-    const r = await fetch(url, { method: 'GET' });
-    const text = await r.text();
-    try {
-      const json = JSON.parse(text);
-      res.status(r.status).json(json);
-    } catch (e) {
-      res.status(r.status).send(text);
+
+    // Try Supabase edge function first if configured
+    if (SUPABASE_EDGE_BASE) {
+      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/balances${ccy ? `?ccy=${encodeURIComponent(ccy)}` : ''}`;
+      const r = await fetch(url, { method: 'GET' });
+      const text = await r.text();
+      try {
+        const json = JSON.parse(text);
+        return res.status(r.status).json(json);
+      } catch (e) {
+        return res.status(r.status).send(text);
+      }
     }
+
+    // Fallback to direct Bybit API
+    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
+      return res.status(503).json({
+        error: 'Bybit integration not configured',
+        details: 'Please configure SUPABASE_EDGE_BASE or BYBIT API keys'
+      });
+    }
+
+    const path = '/v5/account/wallet-balance';
+    const query = ccy ? `ccy=${encodeURIComponent(ccy)}` : '';
+    const result = await callBybitDirect('GET', path, query);
+    res.status(200).json(result);
   } catch (error) {
     logger.error('Error fetching user balances:', error);
-    res.status(500).json({ error: 'Failed to fetch balances' });
+    res.status(500).json({ error: 'Failed to fetch balances', details: error instanceof Error ? error.message : String(error) });
   }
 });
 
