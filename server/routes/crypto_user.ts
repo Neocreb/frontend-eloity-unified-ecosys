@@ -83,7 +83,17 @@ router.get('/balances', authenticateToken, async (req, res) => {
     // Try Supabase edge function first if configured
     if (SUPABASE_EDGE_BASE) {
       const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/balances${ccy ? `?ccy=${encodeURIComponent(ccy)}` : ''}`;
-      const r = await fetch(url, { method: 'GET' });
+
+      // Get Supabase credentials from environment variables
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+      const headers: any = { 'Content-Type': 'application/json' };
+
+      if (supabaseAnonKey) {
+        headers['Authorization'] = `Bearer ${supabaseAnonKey}`;
+        headers['apikey'] = supabaseAnonKey;
+      }
+
+      const r = await fetch(url, { method: 'GET', headers });
       const text = await r.text();
       try {
         const json = JSON.parse(text);

@@ -66,10 +66,22 @@ async function proxyToEdge(req: Request, res: Response, action: string) {
       const url = new URL(`${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/${action}`);
       Object.entries(req.query || {}).forEach(([k, v]) => url.searchParams.set(k, String(v)));
 
+      // Get Supabase credentials from environment variables
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+      const supabaseUrl = process.env.SUPABASE_URL || '';
+
       const init: any = {
         method: req.method,
         headers: { 'Content-Type': 'application/json' }
       };
+
+      // Add Supabase authentication headers if available
+      if (supabaseAnonKey) {
+        init.headers['Authorization'] = `Bearer ${supabaseAnonKey}`;
+      }
+      if (supabaseUrl) {
+        init.headers['apikey'] = supabaseAnonKey;
+      }
 
       if (req.method !== 'GET') {
         init.body = JSON.stringify(req.body || {});
