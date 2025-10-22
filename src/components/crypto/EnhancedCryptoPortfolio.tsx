@@ -56,6 +56,7 @@ import { useWalletContext, WalletProvider } from "@/contexts/WalletContext";
 import CryptoDepositModal from "@/components/crypto/CryptoDepositModal";
 import CryptoWithdrawModal from "@/components/crypto/CryptoWithdrawModal";
 import { cn } from "@/lib/utils";
+import useCrypto from "@/hooks/use-crypto";
 
 interface PortfolioAsset {
   id: string;
