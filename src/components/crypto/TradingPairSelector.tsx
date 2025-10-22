@@ -41,28 +41,7 @@ const TradingPairSelector: React.FC<TradingPairSelectorProps> = ({
 
   // Prefer real trading pairs from central hook; fall back to local mock if unavailable
   const crypto = useCrypto();
-  const tradingPairs: TradingPair[] = (crypto?.tradingPairs && crypto.tradingPairs.length > 0)
-    ? crypto.tradingPairs
-    : [
-      {
-        symbol: "ETHUSDT",
-        baseAsset: "ETH",
-        quoteAsset: "USDT",
-        price: 4485.56,
-        change24h: 4.41,
-        volume: 1250000000,
-        isHot: true,
-      },
-      {
-        symbol: "BTCUSDT",
-        baseAsset: "BTC",
-        quoteAsset: "USDT",
-        price: 119697.3,
-        change24h: -0.02,
-        volume: 960490000,
-        isFavorite: true,
-      },
-    ];
+  const tradingPairs: TradingPair[] = crypto?.tradingPairs || [];
 
   const quoteAssets = ["USDT", "USDC", "BTC", "ETH"];
 
