@@ -369,8 +369,9 @@ export class CryptoService {
         sparkline_in_7d: coin.sparkline_in_7d?.price || []
       }));
     } catch (error) {
-      console.error("Error fetching cryptocurrency data from CoinGecko, using mock data:", error);
-      return mockCryptocurrencies;
+      console.error("Error fetching cryptocurrency data from CoinGecko:", error);
+      // Do not fall back to mock data; surface the error to callers
+      throw error;
     }
   }
 
