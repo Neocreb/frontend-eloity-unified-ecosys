@@ -15,8 +15,15 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
     const bybitMap: Record<string, string> = {
       bitcoin: 'BTCUSDT',
       ethereum: 'ETHUSDT',
-      tether: 'USDTUSD',
-      binancecoin: 'BNBUSDT'
+      tether: 'USDTUSDC',
+      binancecoin: 'BNBUSDT',
+      solana: 'SOLUSDT',
+      cardano: 'ADAUSDT',
+      chainlink: 'LINKUSDT',
+      polygon: 'MATICUSDT',
+      avalanche: 'AVAXUSDT',
+      polkadot: 'DOTUSDT',
+      dogecoin: 'DOGEUSDT'
     };
 
     const fetchPromises = symbols.map(async (symbol) => {
