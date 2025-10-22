@@ -68,7 +68,6 @@ async function proxyToEdge(req: Request, res: Response, action: string) {
 
       // Get Supabase credentials from environment variables
       const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
-      const supabaseUrl = process.env.SUPABASE_URL || '';
 
       const init: any = {
         method: req.method,
@@ -78,8 +77,6 @@ async function proxyToEdge(req: Request, res: Response, action: string) {
       // Add Supabase authentication headers if available
       if (supabaseAnonKey) {
         init.headers['Authorization'] = `Bearer ${supabaseAnonKey}`;
-      }
-      if (supabaseUrl) {
         init.headers['apikey'] = supabaseAnonKey;
       }
 
@@ -89,13 +86,20 @@ async function proxyToEdge(req: Request, res: Response, action: string) {
 
       const r = await fetch(url.toString(), init as any);
       const text = await r.text();
-      try {
-        const json = JSON.parse(text);
-        res.status(r.status).json(json);
-      } catch (e) {
-        res.status(r.status).send(text);
+
+      // If we get 401 and don't have auth key, fall back to direct Bybit API
+      if (r.status === 401 && !supabaseAnonKey) {
+        logger.info('Supabase Edge Function requires auth; falling back to direct Bybit API');
+        // Continue to direct Bybit API fallback below
+      } else {
+        try {
+          const json = JSON.parse(text);
+          res.status(r.status).json(json);
+        } catch (e) {
+          res.status(r.status).send(text);
+        }
+        return;
       }
-      return;
     }
 
     // Fallback to direct Bybit API if SUPABASE_EDGE_BASE is not configured
