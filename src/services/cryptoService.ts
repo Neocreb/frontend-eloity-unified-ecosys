@@ -369,8 +369,9 @@ export class CryptoService {
         sparkline_in_7d: coin.sparkline_in_7d?.price || []
       }));
     } catch (error) {
-      console.error("Error fetching cryptocurrency data from CoinGecko, using mock data:", error);
-      return mockCryptocurrencies;
+      console.error("Error fetching cryptocurrency data from CoinGecko:", error);
+      // Do not fall back to mock data; surface the error to callers
+      throw error;
     }
   }
 
@@ -460,13 +461,56 @@ export class CryptoService {
   }
 
   async getTradingPairs(): Promise<TradingPair[]> {
-    // In a real implementation, this would fetch from database or external API
-    return mockTradingPairs;
+    // Fetch trading pairs/prices from backend API. Do not fall back to client-side mock data.
+    try {
+      const res = await (await import("@/lib/api")).apiClient.getCryptoPrices();
+      // apiClient.getCryptoPrices returns an object like { prices: { bitcoin: 43250, ... }, timestamp }
+      const prices = (res && (res as any).prices) || {};
+      const pairs: TradingPair[] = Object.keys(prices).map((id) => {
+        const base = (id === 'tether' ? 'USDT' : id).toUpperCase();
+        const symbol = `${base}USDT`;
+        const price = Number(prices[id]) || 0;
+        return {
+          symbol,
+          baseAsset: base,
+          quoteAsset: 'USDT',
+          price,
+          change24h: 0,
+          volume: 0,
+        } as TradingPair;
+      });
+      return pairs;
+    } catch (error) {
+      console.error('Failed to fetch trading pairs from backend:', error);
+      // Surface error to caller instead of returning mock data
+      throw error;
+    }
   }
 
   async getPortfolio(): Promise<Portfolio> {
-    // In a real implementation, this would fetch user's actual portfolio
-    return mockPortfolio;
+    // Fetch user's portfolio from backend. Do not fallback to mock data.
+    try {
+      const { apiCall } = await import('@/lib/api');
+      const data = await apiCall('/crypto/wallet/balance');
+      // Expecting shape { balances, totalValueUSD, lastUpdated }
+      const assets = (data?.balances && Object.keys(data.balances).map((k) => ({
+        asset: k,
+        total: data.balances[k],
+        usdValue: (data.balances[k] || 0) * (0), // price unknown here
+        price: 0,
+      }))) || [];
+
+      return {
+        totalValue: Number(data?.totalValueUSD) || 0,
+        totalChange24h: 0,
+        totalChangePercent24h: 0,
+        assets,
+        allocation: [],
+      } as Portfolio;
+    } catch (error) {
+      console.error('Failed to fetch portfolio from backend:', error);
+      throw error;
+    }
   }
 
   async getStakingProducts(): Promise<StakingProduct[]> {
