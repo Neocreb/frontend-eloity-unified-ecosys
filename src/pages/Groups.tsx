@@ -283,7 +283,7 @@ const Groups: React.FC = () => {
     <div className="min-h-screen bg-background text-foreground">
       {Header}
 
-      <div className="container mx-auto px-4 py-4">
+      <div className="w-full max-w-none mx-auto px-2 sm:px-4 py-4">
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
