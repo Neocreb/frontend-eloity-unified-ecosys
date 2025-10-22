@@ -338,11 +338,21 @@ class GroupService {
         return false;
       }
 
-      // Update member count
-      await supabase
-        .from("groups")
-        .update({ member_count: supabase.rpc('groups.member_count + 1') })
-        .eq("id", groupId);
+      // Safely increment member_count using read-modify-write to avoid relying on unsupported rpc expression
+      try {
+        const { data: grp, error: grpErr } = await supabase
+          .from("groups")
+          .select("member_count")
+          .eq("id", groupId)
+          .single();
+
+        if (!grpErr && grp) {
+          const newCount = (Number(grp.member_count) || 0) + 1;
+          await supabase.from("groups").update({ member_count: newCount }).eq("id", groupId);
+        }
+      } catch (updateErr) {
+        console.error("Failed to update member_count after join:", updateErr);
+      }
 
       return true;
     } catch (error) {
