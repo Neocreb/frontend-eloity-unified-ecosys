@@ -210,7 +210,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       };
       if (orderType !== 'market') body.price = price;
 
-      const r = await fetch('/api/crypto_user/place-order', {
+      const r = await fetch('/api/crypto/user/place-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
