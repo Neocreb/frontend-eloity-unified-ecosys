@@ -95,11 +95,18 @@ router.get('/balances', authenticateToken, async (req, res) => {
 
       const r = await fetch(url, { method: 'GET', headers });
       const text = await r.text();
-      try {
-        const json = JSON.parse(text);
-        return res.status(r.status).json(json);
-      } catch (e) {
-        return res.status(r.status).send(text);
+
+      // If we get 401 and don't have auth key, fall back to direct Bybit API
+      if (r.status === 401 && !supabaseAnonKey) {
+        logger.info('Supabase Edge Function requires auth; falling back to direct Bybit API for balances');
+        // Continue to direct Bybit API fallback below
+      } else {
+        try {
+          const json = JSON.parse(text);
+          return res.status(r.status).json(json);
+        } catch (e) {
+          return res.status(r.status).send(text);
+        }
       }
     }
 
