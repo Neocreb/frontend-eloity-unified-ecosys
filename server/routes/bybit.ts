@@ -118,8 +118,12 @@ async function proxyToEdge(req: Request, res: Response, action: string) {
     switch (action) {
       case 'deposit-address': {
         path = '/v5/asset/deposit/query-address';
-        query = new URLSearchParams(req.query as any).toString();
-        const result = await callBybitDirect('GET', path, query);
+        // For Bybit v5 API, we need to properly format the query parameters
+        const params = new URLSearchParams();
+        if (req.query.coin) params.append('coin', String(req.query.coin));
+        if (req.query.chainType) params.append('chainType', String(req.query.chainType));
+        
+        const result = await callBybitDirect('GET', path, params.toString());
         return res.status(200).json(result);
       }
       case 'withdraw': {

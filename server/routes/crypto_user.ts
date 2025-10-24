@@ -69,6 +69,71 @@ function userHasKyc(kyc: any) {
   return false;
 }
 
+// Generate deposit address for user
+router.get('/deposit-address', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId as string;
+    const { coin, chainType } = req.query;
+
+    // Validate required parameters
+    if (!coin) {
+      return res.status(400).json({ error: 'Coin parameter is required' });
+    }
+
+    // Try Supabase edge function first if configured
+    if (SUPABASE_EDGE_BASE) {
+      const url = new URL(`${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/deposit-address`);
+      url.searchParams.set('coin', String(coin));
+      if (chainType) url.searchParams.set('chainType', String(chainType));
+
+      // Get Supabase credentials from environment variables
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+      const headers: any = { 'Content-Type': 'application/json' };
+
+      if (supabaseAnonKey) {
+        headers['Authorization'] = `Bearer ${supabaseAnonKey}`;
+        headers['apikey'] = supabaseAnonKey;
+      }
+
+      const r = await fetch(url.toString(), { method: 'GET', headers });
+      const text = await r.text();
+
+      // If we get 401 and don't have auth key, fall back to direct Bybit API
+      if (r.status === 401 && !supabaseAnonKey) {
+        logger.info('Supabase Edge Function requires auth; falling back to direct Bybit API for deposit address');
+        // Continue to direct Bybit API fallback below
+      } else {
+        try {
+          const json = JSON.parse(text);
+          return res.status(r.status).json(json);
+        } catch (e) {
+          return res.status(r.status).send(text);
+        }
+      }
+    }
+
+    // Fallback to direct Bybit API
+    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
+      return res.status(503).json({
+        error: 'Bybit integration not configured',
+        details: 'Please configure SUPABASE_EDGE_BASE or BYBIT API keys'
+      });
+    }
+
+    // Call Bybit API to generate deposit address
+    const path = '/v5/asset/deposit/query-address';
+    const params = new URLSearchParams();
+    params.append('coin', String(coin));
+    if (chainType) params.append('chainType', String(chainType));
+    
+    const result = await callBybitDirect('GET', path, params.toString());
+    res.status(200).json(result);
+  } catch (error) {
+    logger.error('Error generating deposit address:', error);
+    res.status(500).json({ error: 'Failed to generate deposit address', details: error instanceof Error ? error.message : String(error) });
+  }
+});
+
 // Get user-visible balances from Bybit (via edge function or direct API) — requires KYC
 router.get('/balances', authenticateToken, async (req, res) => {
   try {
@@ -240,6 +305,117 @@ router.post('/transfer', transferLimiter, authenticateToken, async (req, res) =>
   } catch (error) {
     logger.error('Error performing transfer:', error);
     res.status(500).json({ error: 'Failed to perform transfer' });
+  }
+});
+
+// Dedicated withdrawal route
+router.post('/withdraw', transferLimiter, authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId as string;
+    const { coin, chain, address, amount, tag } = req.body || {};
+
+    // Validate required parameters
+    if (!coin || !address || !amount) {
+      return res.status(400).json({ error: 'Coin, address, and amount are required' });
+    }
+
+    const kyc = await getKYCStatus(userId);
+    if (!userHasKyc(kyc)) {
+      return res.status(403).json({ error: 'KYC required to perform withdrawals' });
+    }
+
+    // Try Supabase edge function first if configured
+    if (SUPABASE_EDGE_BASE) {
+      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/withdraw`;
+      const r = await fetch(url, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(req.body || {}) 
+      });
+      const text = await r.text();
+      let jsonResp: any = null;
+      try { jsonResp = JSON.parse(text); } catch (e) { jsonResp = { raw: text }; }
+
+      if (r.ok) {
+        try {
+          // Atomic debit from user's internal wallet
+          await adjustWalletBalanceAtomic(userId, coin, -Math.abs(Number(amount || 0)), { type: 'withdrawal', metadata: { address, response: jsonResp } });
+
+          // Ledger: record debit from user's internal balance
+          await fetch(`${BACKEND_BASE.replace(/\/+$/, '')}/api/ledger/record`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              type: 'withdrawal',
+              source: 'crypto',
+              amount: -Math.abs(Number(amount || 0)),
+              currency: coin,
+              description: `Withdrawal to ${address}`,
+              status: 'pending',
+              metadata: { response: jsonResp }
+            })
+          });
+        } catch (ledgerErr) {
+          logger.warn('Failed to perform atomic debit or ledger entry for withdrawal:', ledgerErr);
+        }
+      }
+
+      if (r.headers.get('content-type')?.includes('application/json')) {
+        return res.status(r.status).json(jsonResp);
+      }
+      return res.status(r.status).send(text);
+    }
+
+    // Fallback to direct Bybit API
+    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
+      return res.status(503).json({
+        error: 'Bybit integration not configured',
+        details: 'Please configure SUPABASE_EDGE_BASE or BYBIT API keys'
+      });
+    }
+
+    // Call Bybit API to initiate withdrawal
+    const path = '/v5/asset/withdraw';
+    const body = {
+      coin,
+      chain,
+      address,
+      amount,
+      tag
+    };
+    
+    const result = await callBybitDirect('POST', path, '', body);
+    
+    if (result.retCode === 0) {
+      try {
+        // Atomic debit from user's internal wallet
+        await adjustWalletBalanceAtomic(userId, coin, -Math.abs(Number(amount || 0)), { type: 'withdrawal', metadata: { address, response: result } });
+
+        // Ledger: record debit from user's internal balance
+        await fetch(`${BACKEND_BASE.replace(/\/+$/, '')}/api/ledger/record`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            type: 'withdrawal',
+            source: 'crypto',
+            amount: -Math.abs(Number(amount || 0)),
+            currency: coin,
+            description: `Withdrawal to ${address}`,
+            status: 'pending',
+            metadata: { response: result }
+          })
+        });
+      } catch (ledgerErr) {
+        logger.warn('Failed to perform atomic debit or ledger entry for withdrawal:', ledgerErr);
+      }
+    }
+    
+    res.status(200).json(result);
+  } catch (error) {
+    logger.error('Error processing withdrawal:', error);
+    res.status(500).json({ error: 'Failed to process withdrawal', details: error instanceof Error ? error.message : String(error) });
   }
 });
 

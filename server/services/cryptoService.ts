@@ -6,7 +6,6 @@ import { db } from '../utils/db.js';
 // =============================================================================
 
 import axios from 'axios';
-import { logger } from '../utils/logger.js';
 
 export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'usd') {
   try {
@@ -31,18 +30,24 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
       try {
         const pair = bybitMap[lower];
         if (pair) {
-          const url = `https://api.bybit.com/spot/quote/v1/ticker/24hr?symbol=${pair}`;
+          // Use the newer Bybit v5 API for better reliability
+          const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${pair}`;
           const resp = await axios.get(url, { timeout: 5000 });
-          const data = resp.data?.result || resp.data;
-          const price = data?.last_price || data?.lastPrice || data?.price || data?.close || null;
-          if (price) {
-            result[lower] = {
-              usd: parseFloat(price.toString()),
-              usd_24h_change: parseFloat(data?.price_24h_pcnt?.toString?.() || '0') * 100 || 0,
-              usd_market_cap: null,
-              usd_24h_vol: parseFloat(data?.quote_volume || data?.volume || '0')
-            };
-            return;
+          
+          if (resp.data.retCode === 0 && resp.data.result.list.length > 0) {
+            const data = resp.data.result.list[0];
+            const price = data.lastPrice || data.markPrice || null;
+            if (price) {
+              result[lower] = {
+                usd: parseFloat(price),
+                usd_24h_change: parseFloat(data.price24hPcnt || '0') * 100 || 0,
+                usd_market_cap: null,
+                usd_24h_vol: parseFloat(data.turnover24h || data.volume24h || '0')
+              };
+              return;
+            }
+          } else {
+            logger.warn('Bybit price fetch returned no data for', pair, resp.data.retMsg);
           }
         }
       } catch (err) {
@@ -51,7 +56,19 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
 
       // Fallback to CoinGecko public API
       try {
-        const cgIdMap: Record<string, string> = { bitcoin: 'bitcoin', ethereum: 'ethereum', tether: 'tether', binancecoin: 'binancecoin', solana: 'solana', cardano: 'cardano', chainlink: 'chainlink', polygon: 'matic-network', avalanche: 'avalanche-2', polkadot: 'polkadot', dogecoin: 'dogecoin' };
+        const cgIdMap: Record<string, string> = { 
+          bitcoin: 'bitcoin', 
+          ethereum: 'ethereum', 
+          tether: 'tether', 
+          binancecoin: 'binancecoin', 
+          solana: 'solana', 
+          cardano: 'cardano', 
+          chainlink: 'chainlink', 
+          polygon: 'matic-network', 
+          avalanche: 'avalanche-2', 
+          polkadot: 'polkadot', 
+          dogecoin: 'dogecoin' 
+        };
         const id = cgIdMap[lower];
         if (id) {
           const cgUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=${vsCurrency}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
@@ -85,7 +102,44 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
 
 export async function getOrderBook(pair: string, depth: number = 20) {
   try {
-    // Mock orderbook for development (removed process.env check)
+    // Try Bybit public endpoints first (no auth required for market data)
+    try {
+      // Convert pair to Bybit format (e.g., BTCUSDT)
+      const bybitPair = pair.toUpperCase();
+      
+      // Get order book from Bybit
+      const url = `https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${bybitPair}&limit=${depth}`;
+      const resp = await axios.get(url, { timeout: 5000 });
+      
+      if (resp.data.retCode === 0) {
+        const data = resp.data.result;
+        
+        // Format bids and asks
+        const bids = data.b.map(([price, quantity]: [string, string]) => ({
+          price: parseFloat(price),
+          quantity: parseFloat(quantity),
+          total: parseFloat(price) * parseFloat(quantity)
+        }));
+        
+        const asks = data.a.map(([price, quantity]: [string, string]) => ({
+          price: parseFloat(price),
+          quantity: parseFloat(quantity),
+          total: parseFloat(price) * parseFloat(quantity)
+        }));
+        
+        return {
+          bids: bids,
+          asks: asks,
+          timestamp: data.ts
+        };
+      } else {
+        logger.warn('Bybit orderbook fetch failed:', resp.data.retMsg);
+      }
+    } catch (err) {
+      logger.debug('Bybit orderbook fetch failed:', err?.message || err);
+    }
+
+    // Fallback to mock orderbook for development
     const basePrice = 45000; // Mock BTC price
     const spread = 50; // $50 spread
     
@@ -757,10 +811,7 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
     if (isUuid) {
       // Query DB for crypto_wallets for this user
       try {
-        const rows = await db.select({ balance: (await import('../../shared/crypto-schema.js')).crypto_wallets.balance })
-          .from((await import('../../shared/crypto-schema.js')).crypto_wallets)
-          .where((await import('drizzle-orm')).eq((await import('../../shared/crypto-schema.js')).crypto_wallets.user_id, address))
-          .execute();
+        const rows = await db.select('crypto_wallets', (record: any) => record.user_id === address);
         const total = rows.reduce((s: number, r: any) => s + parseFloat(r.balance?.toString() || '0'), 0);
         return total;
       } catch (dbErr) {
@@ -770,11 +821,7 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
 
     // Otherwise, try to find wallet row by wallet_address
     try {
-      const schema = await import('../../shared/crypto-schema.js');
-      const rows = await db.select({ balance: schema.crypto_wallets.balance })
-        .from(schema.crypto_wallets)
-        .where((await import('drizzle-orm')).eq(schema.crypto_wallets.wallet_address, address))
-        .execute();
+      const rows = await db.select('crypto_wallets', (record: any) => record.wallet_address === address);
       if (rows && rows.length) return parseFloat(rows[0].balance?.toString() || '0');
     } catch (dbErr2) {
       logger.debug('DB wallet_address lookup failed in getCurrencyBalance:', dbErr2?.message || dbErr2);
