@@ -9,7 +9,6 @@ import axios from 'axios';
 
 export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'usd') {
   try {
-    // Try Bybit public endpoints first (no auth required for market data)
     const result: any = {};
     const bybitMap: Record<string, string> = {
       bitcoin: 'BTCUSDT',
@@ -25,6 +24,60 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
       dogecoin: 'DOGEUSDT'
     };
 
+    // First, try CoinGecko as primary source since Bybit seems to have connectivity issues
+    try {
+      logger.info('Attempting to fetch data from CoinGecko as primary source');
+      const cgIdMap: Record<string, string> = { 
+        bitcoin: 'bitcoin', 
+        ethereum: 'ethereum', 
+        tether: 'tether', 
+        binancecoin: 'binancecoin', 
+        solana: 'solana', 
+        cardano: 'cardano', 
+        chainlink: 'chainlink', 
+        polygon: 'matic-network', 
+        avalanche: 'avalanche-2', 
+        polkadot: 'polkadot', 
+        dogecoin: 'dogecoin' 
+      };
+
+      // Build query for all symbols at once
+      const ids = symbols.map(s => cgIdMap[s.toLowerCase()]).filter(id => id);
+      if (ids.length > 0) {
+        const cgUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=${vsCurrency}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
+        logger.info(`Fetching CoinGecko data from ${cgUrl}`);
+        const r = await axios.get(cgUrl, { timeout: 10000 });
+        
+        // Process CoinGecko response
+        for (const symbol of symbols) {
+          const lower = symbol.toLowerCase();
+          const id = cgIdMap[lower];
+          if (id && r.data[id]) {
+            const payload = r.data[id];
+            result[lower] = {
+              usd: payload[vsCurrency] || null,
+              usd_24h_change: payload[`${vsCurrency}_24h_change`] || 0,
+              usd_market_cap: payload[`${vsCurrency}_market_cap`] || null,
+              usd_24h_vol: payload[`${vsCurrency}_24h_vol`] || null
+            };
+            logger.info(`Successfully fetched CoinGecko data for ${id}: $${payload[vsCurrency]}`);
+          } else {
+            logger.warn(`No CoinGecko data found for ${lower}`);
+          }
+        }
+      }
+    } catch (cgErr) {
+      logger.error('CoinGecko primary fetch failed:', cgErr?.message || cgErr);
+    }
+
+    // If we got data from CoinGecko, return it
+    if (Object.keys(result).length > 0) {
+      logger.info('Returning data from CoinGecko');
+      return result;
+    }
+
+    // Fallback to Bybit if CoinGecko didn't work
+    logger.info('Falling back to Bybit API');
     const fetchPromises = symbols.map(async (symbol) => {
       const lower = symbol.toLowerCase();
       try {
@@ -32,7 +85,13 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
         if (pair) {
           // Use the newer Bybit v5 API for better reliability
           const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${pair}`;
-          const resp = await axios.get(url, { timeout: 5000 });
+          logger.info(`Fetching Bybit data for ${pair} from ${url}`);
+          const resp = await axios.get(url, { timeout: 10000 });
+          
+          logger.info(`Bybit response for ${pair}:`, {
+            status: resp.status,
+            data: resp.data
+          });
           
           if (resp.data.retCode === 0 && resp.data.result.list.length > 0) {
             const data = resp.data.result.list[0];
@@ -44,55 +103,28 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
                 usd_market_cap: null,
                 usd_24h_vol: parseFloat(data.turnover24h || data.volume24h || '0')
               };
+              logger.info(`Successfully fetched Bybit data for ${pair}: ${price}`);
               return;
+            } else {
+              logger.warn(`Bybit price data missing for ${pair}`, data);
             }
           } else {
             logger.warn('Bybit price fetch returned no data for', pair, resp.data.retMsg);
           }
+        } else {
+          logger.warn(`No Bybit pair mapping found for ${lower}`);
         }
       } catch (err) {
-        logger.debug('Bybit price fetch failed for', symbol, err?.message || err);
-      }
-
-      // Fallback to CoinGecko public API
-      try {
-        const cgIdMap: Record<string, string> = { 
-          bitcoin: 'bitcoin', 
-          ethereum: 'ethereum', 
-          tether: 'tether', 
-          binancecoin: 'binancecoin', 
-          solana: 'solana', 
-          cardano: 'cardano', 
-          chainlink: 'chainlink', 
-          polygon: 'matic-network', 
-          avalanche: 'avalanche-2', 
-          polkadot: 'polkadot', 
-          dogecoin: 'dogecoin' 
-        };
-        const id = cgIdMap[lower];
-        if (id) {
-          const cgUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=${vsCurrency}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
-          const r = await axios.get(cgUrl, { timeout: 5000 });
-          const payload = r.data[id];
-          if (payload) {
-            result[lower] = {
-              usd: payload[vsCurrency] || null,
-              usd_24h_change: payload[`${vsCurrency}_24h_change`] || 0,
-              usd_market_cap: payload[`${vsCurrency}_market_cap`] || null,
-              usd_24h_vol: payload[`${vsCurrency}_24h_vol`] || null
-            };
-            return;
-          }
-        }
-      } catch (cgErr) {
-        logger.debug('CoinGecko fallback failed for', symbol, cgErr?.message || cgErr);
+        logger.error('Bybit price fetch failed for', symbol, err?.message || err);
       }
 
       // Final fallback: mock
+      logger.warn(`Using mock data for ${lower}`);
       result[lower] = { usd: 0, usd_24h_change: 0, usd_market_cap: 0, usd_24h_vol: 0 };
     });
 
     await Promise.all(fetchPromises);
+    logger.info('Final crypto prices result:', result);
     return result;
   } catch (error) {
     logger.error('Price fetch error:', error);

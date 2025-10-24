@@ -8,8 +8,22 @@ import {
   StakingPosition,
 } from "@/types/crypto";
 import { realAPIService } from "@/services/realAPIService";
-import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+
+// Only import supabase when needed and available (frontend only)
+let supabase: any = null;
+if (typeof window !== 'undefined') {
+  try {
+    // Dynamically import supabase client only on the client side
+    import("@/integrations/supabase/client").then((module) => {
+      supabase = module.supabase;
+    }).catch((error) => {
+      console.warn("Failed to import Supabase client:", error);
+    });
+  } catch (error) {
+    console.warn("Failed to import Supabase client:", error);
+  }
+}
 
 type Wallet = Database["public"]["Tables"]["wallets"]["Row"];
 type CryptoTransaction = Database["public"]["Tables"]["crypto_transactions"]["Row"];
