@@ -1,50 +1,36 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
+import { PostService } from '../../src/services/postService.js';
+import { supabase } from '../../src/integrations/supabase/client.js';
 
 const router = express.Router();
 
 // Get all posts (with pagination, filtering)
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, userId, category, sort = 'recent' } = req.query;
+    const { page = 1, limit = 10, userId } = req.query;
     const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    // TODO: Replace with real database query
-    // This is a placeholder structure for now
-    const posts = {
-      data: [
-        {
-          id: 'post_1',
-          author: {
-            id: 'user_1',
-            username: 'john_doe',
-            displayName: 'John Doe',
-            avatar: '/placeholder.svg',
-            verified: false
-          },
-          content: 'Sample post content from backend API',
-          type: 'text',
-          media: [],
-          likes_count: 15,
-          comments_count: 3,
-          shares_count: 2,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_liked: false,
-          is_shared: false
-        }
-      ],
+    let posts;
+    if (userId) {
+      posts = await PostService.getUserPosts(userId as string, parseInt(limit as string), offset);
+    } else {
+      // For feed posts, we would need the current user's ID, but since this endpoint is not authenticated
+      // we'll return an empty array or handle it differently based on your needs
+      posts = [];
+    }
+
+    logger.info('Posts fetched', { page, limit, count: posts.length });
+    res.json({
+      data: posts,
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: 1,
+        total: posts.length,
         totalPages: 1
       }
-    };
-
-    logger.info('Posts fetched', { page, limit, count: posts.data.length });
-    res.json(posts);
+    });
   } catch (error) {
     logger.error('Error fetching posts:', error);
     res.status(500).json({ error: 'Failed to fetch posts' });
@@ -56,27 +42,11 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // TODO: Replace with real database query
-    const post = {
-      id,
-      author: {
-        id: 'user_1',
-        username: 'john_doe',
-        displayName: 'John Doe',
-        avatar: '/placeholder.svg',
-        verified: false
-      },
-      content: `Post content for ${id}`,
-      type: 'text',
-      media: [],
-      likes_count: 15,
-      comments_count: 3,
-      shares_count: 2,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_liked: false,
-      is_shared: false
-    };
+    const post = await PostService.getPostById(id);
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
 
     logger.info('Post fetched', { postId: id });
     res.json(post);
@@ -89,35 +59,26 @@ router.get('/:id', async (req, res) => {
 // Create new post
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { content, type = 'text', media = [], visibility = 'public' } = req.body;
+    const { content, type = 'text', media_urls = [], privacy = 'public' } = req.body;
     const userId = req.userId;
 
-    if (!content && (!media || media.length === 0)) {
+    if (!content && (!media_urls || media_urls.length === 0)) {
       return res.status(400).json({ error: 'Content or media is required' });
     }
 
-    // TODO: Replace with real database insertion
-    const newPost = {
-      id: `post_${Date.now()}`,
-      author: {
-        id: userId,
-        username: 'current_user',
-        displayName: 'Current User',
-        avatar: '/placeholder.svg',
-        verified: false
-      },
+    const postData = {
+      user_id: userId,
       content,
       type,
-      media,
-      visibility,
-      likes_count: 0,
-      comments_count: 0,
-      shares_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_liked: false,
-      is_shared: false
+      media_urls,
+      privacy
     };
+
+    const newPost = await PostService.createPost(postData);
+
+    if (!newPost) {
+      return res.status(500).json({ error: 'Failed to create post' });
+    }
 
     logger.info('Post created', { postId: newPost.id, userId });
     res.status(201).json(newPost);
@@ -131,22 +92,40 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { content, media, visibility } = req.body;
+    const { content, media_urls, privacy } = req.body;
     const userId = req.userId;
 
-    // TODO: Check if user owns the post
-    // TODO: Update in database
+    // First, check if the post exists and belongs to the user
+    const existingPost = await PostService.getPostById(id);
+    
+    if (!existingPost) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    if (existingPost.user_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to update this post' });
+    }
 
-    const updatedPost = {
-      id,
-      content,
-      media,
-      visibility,
-      updated_at: new Date().toISOString()
-    };
+    const { data, error } = await supabase
+      .from('posts')
+      .update({
+        content,
+        media_urls,
+        privacy,
+        updated_at: new Date()
+      })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Error updating post:', error);
+      return res.status(500).json({ error: 'Failed to update post' });
+    }
 
     logger.info('Post updated', { postId: id, userId });
-    res.json(updatedPost);
+    res.json(data);
   } catch (error) {
     logger.error('Error updating post:', error);
     res.status(500).json({ error: 'Failed to update post' });
@@ -159,8 +138,11 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const userId = req.userId;
 
-    // TODO: Check if user owns the post
-    // TODO: Delete from database
+    const success = await PostService.deletePost(id, userId);
+
+    if (!success) {
+      return res.status(404).json({ error: 'Post not found or not authorized' });
+    }
 
     logger.info('Post deleted', { postId: id, userId });
     res.json({ message: 'Post deleted successfully' });
@@ -176,43 +158,35 @@ router.post('/:id/like', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const userId = req.userId;
 
-    // TODO: Toggle like in database
+    // Check if already liked
+    const isLiked = await PostService.isPostLikedByUser(id, userId);
     
-    const result = {
-      postId: id,
-      liked: true,
-      likes_count: 16
-    };
+    let result;
+    if (isLiked) {
+      // Unlike
+      const success = await PostService.unlikePost(id, userId);
+      result = {
+        postId: id,
+        liked: false
+      };
+    } else {
+      // Like
+      const success = await PostService.likePost(id, userId);
+      result = {
+        postId: id,
+        liked: true
+      };
+    }
 
-    logger.info('Post liked', { postId: id, userId });
+    // Get updated likes count
+    const likesCount = await PostService.getPostLikesCount(id);
+    result.likes_count = likesCount;
+
+    logger.info('Post like toggled', { postId: id, userId, liked: result.liked });
     res.json(result);
   } catch (error) {
     logger.error('Error liking post:', error);
     res.status(500).json({ error: 'Failed to like post' });
-  }
-});
-
-// Share post
-router.post('/:id/share', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { message } = req.body;
-    const userId = req.userId;
-
-    // TODO: Create share record in database
-    
-    const result = {
-      postId: id,
-      shared: true,
-      shares_count: 3,
-      shareId: `share_${Date.now()}`
-    };
-
-    logger.info('Post shared', { postId: id, userId });
-    res.json(result);
-  } catch (error) {
-    logger.error('Error sharing post:', error);
-    res.status(500).json({ error: 'Failed to share post' });
   }
 });
 
@@ -221,36 +195,20 @@ router.get('/:id/comments', async (req, res) => {
   try {
     const { id } = req.params;
     const { page = 1, limit = 10 } = req.query;
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    // TODO: Replace with real database query
-    const comments = {
-      data: [
-        {
-          id: 'comment_1',
-          post_id: id,
-          author: {
-            id: 'user_2',
-            username: 'jane_doe',
-            displayName: 'Jane Doe',
-            avatar: '/placeholder.svg'
-          },
-          content: 'Great post!',
-          likes_count: 2,
-          replies_count: 0,
-          created_at: new Date().toISOString(),
-          is_liked: false
-        }
-      ],
+    const comments = await PostService.getPostComments(id, parseInt(limit as string), offset);
+
+    logger.info('Comments fetched', { postId: id, count: comments.length });
+    res.json({
+      data: comments,
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        total: 1,
+        total: comments.length,
         totalPages: 1
       }
-    };
-
-    logger.info('Comments fetched', { postId: id, count: comments.data.length });
-    res.json(comments);
+    });
   } catch (error) {
     logger.error('Error fetching comments:', error);
     res.status(500).json({ error: 'Failed to fetch comments' });
@@ -268,23 +226,11 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Comment content is required' });
     }
 
-    // TODO: Insert comment into database
-    const newComment = {
-      id: `comment_${Date.now()}`,
-      post_id: id,
-      parent_id,
-      author: {
-        id: userId,
-        username: 'current_user',
-        displayName: 'Current User',
-        avatar: '/placeholder.svg'
-      },
-      content,
-      likes_count: 0,
-      replies_count: 0,
-      created_at: new Date().toISOString(),
-      is_liked: false
-    };
+    const newComment = await PostService.addComment(id, userId, content);
+
+    if (!newComment) {
+      return res.status(500).json({ error: 'Failed to add comment' });
+    }
 
     logger.info('Comment added', { postId: id, commentId: newComment.id, userId });
     res.status(201).json(newComment);

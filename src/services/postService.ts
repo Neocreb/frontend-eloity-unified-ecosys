@@ -314,13 +314,7 @@ export class PostService {
           user_id: userId,
           content: content
         })
-        .select(`
-          *,
-          users (
-            *,
-            profiles (*)
-          )
-        `)
+        .select()
         .single();
 
       if (error) {
@@ -350,13 +344,7 @@ export class PostService {
     try {
       const { data, error } = await supabase
         .from("post_comments")
-        .select(`
-          *,
-          users (
-            *,
-            profiles (*)
-          )
-        `)
+        .select()
         .eq("post_id", postId)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
