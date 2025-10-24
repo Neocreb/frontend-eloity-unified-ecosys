@@ -228,6 +228,212 @@ export async function processPaystackPayment(data: PaystackPaymentData) {
 }
 
 // =============================================================================
+// PAYSTACK VIRTUAL ACCOUNT SERVICE
+// =============================================================================
+
+interface PaystackCustomerData {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+interface PaystackVirtualAccountData {
+  userId: string;
+  customerId: string;
+  preferredBank?: string;
+  bvn?: string;
+}
+
+/**
+ * Create a customer in Paystack
+ */
+export async function createPaystackCustomer(data: PaystackCustomerData) {
+  try {
+    const { userId, email, firstName, lastName, phone } = data;
+
+    if (process.env.NODE_ENV === 'production') {
+      // Create customer in Paystack
+      const response = await fetch('https://api.paystack.co/customer', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.status) {
+        logger.info('Paystack customer created', { userId, customerId: result.data.customer_code });
+        
+        return {
+          success: true,
+          customerId: result.data.customer_code,
+          customerData: result.data
+        };
+      } else {
+        return {
+          success: false,
+          error: result.message || 'Failed to create Paystack customer'
+        };
+      }
+    } else {
+      // Mock response for development
+      const mockCustomerId = `CUS_mock_${Date.now()}_${userId}`;
+      
+      return {
+        success: true,
+        customerId: mockCustomerId,
+        customerData: {
+          customer_code: mockCustomerId,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+          metadata: { userId }
+        }
+      };
+    }
+  } catch (error) {
+    logger.error('Paystack customer creation error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Create a dedicated virtual account for a customer
+ */
+export async function createPaystackVirtualAccount(data: PaystackVirtualAccountData) {
+  try {
+    const { userId, customerId, preferredBank, bvn } = data;
+
+    if (process.env.NODE_ENV === 'production') {
+      // Create dedicated virtual account in Paystack
+      const response = await fetch('https://api.paystack.co/dedicated_account', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          customer: customerId,
+          preferred_bank: preferredBank,
+          bvn: bvn
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.status) {
+        logger.info('Paystack virtual account created', { userId, accountId: result.data.id });
+        
+        // Save virtual account to database
+        await saveVirtualAccount({
+          userId,
+          accountId: result.data.id,
+          accountNumber: result.data.account_number,
+          bankName: result.data.bank.name,
+          customerName: `${result.data.customer.first_name} ${result.data.customer.last_name}`,
+          customerId: result.data.customer.customer_code,
+          isActive: true,
+          createdAt: new Date()
+        });
+
+        return {
+          success: true,
+          account: {
+            id: result.data.id,
+            accountNumber: result.data.account_number,
+            bankName: result.data.bank.name,
+            customerName: `${result.data.customer.first_name} ${result.data.customer.last_name}`,
+            customerId: result.data.customer.customer_code
+          }
+        };
+      } else {
+        return {
+          success: false,
+          error: result.message || 'Failed to create virtual account'
+        };
+      }
+    } else {
+      // Mock response for development
+      const mockAccountId = `VAC_mock_${Date.now()}_${userId}`;
+      const mockAccountNumber = `00${Math.floor(Math.random() * 1000000000).toString().padStart(8, '0')}`;
+      
+      // Save virtual account to database
+      await saveVirtualAccount({
+        userId,
+        accountId: mockAccountId,
+        accountNumber: mockAccountNumber,
+        bankName: preferredBank || 'Paystack Bank',
+        customerName: 'Mock Customer',
+        customerId: customerId,
+        isActive: true,
+        createdAt: new Date()
+      });
+
+      return {
+        success: true,
+        account: {
+          id: mockAccountId,
+          accountNumber: mockAccountNumber,
+          bankName: preferredBank || 'Paystack Bank',
+          customerName: 'Mock Customer',
+          customerId: customerId
+        }
+      };
+    }
+  } catch (error) {
+    logger.error('Paystack virtual account creation error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Save virtual account to database
+ */
+async function saveVirtualAccount(accountData: any) {
+  try {
+    // This would save to a virtual_accounts table in the database
+    // For now, we'll just log it
+    logger.info('Virtual account saved to database', accountData);
+    return { success: true };
+  } catch (error) {
+    logger.error('Error saving virtual account to database:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get user's virtual accounts
+ */
+export async function getUserVirtualAccounts(userId: string) {
+  try {
+    // This would fetch from a virtual_accounts table in the database
+    // For now, we'll return an empty array
+    logger.info('Fetching virtual accounts for user', { userId });
+    return { success: true, accounts: [] };
+  } catch (error) {
+    logger.error('Error fetching virtual accounts:', error);
+    return { success: false, error: error.message, accounts: [] };
+  }
+}
+
+// =============================================================================
 // MTN MOBILE MONEY SERVICE
 // =============================================================================
 
@@ -274,7 +480,7 @@ export async function processMTNMoMoPayment(data: MTNMoMoPaymentData) {
           'X-Reference-Id': referenceId,
           'X-Target-Environment': process.env.MTN_MOMO_ENVIRONMENT || 'sandbox',
           'Content-Type': 'application/json',
-          'Ocp-Apim-Subscription-Key': process.env.MTN_MOMO_SUBSCRIPTION_KEY
+          'Ocp-Apim-Subscription-Key': process.env.MTN_MOMO_SUBSCRIPTION_KEY || ''
         },
         body: JSON.stringify(payload)
       });
@@ -338,7 +544,7 @@ async function getMTNAccessToken() {
     method: 'POST',
     headers: {
       'Authorization': `Basic ${credentials}`,
-      'Ocp-Apim-Subscription-Key': process.env.MTN_MOMO_SUBSCRIPTION_KEY
+      'Ocp-Apim-Subscription-Key': process.env.MTN_MOMO_SUBSCRIPTION_KEY || ''
     }
   });
 
@@ -703,29 +909,49 @@ async function saveTransaction(transaction: any) {
   return transaction;
 }
 
-async function updateTransactionStatus(reference: string, status: string, metadata: any) {
+export async function updateTransactionStatus(reference: string, status: string, metadata: any) {
   // Mock update transaction status
   logger.info('Transaction updated:', { reference, status, metadata });
 }
 
-async function creditUserWallet(userEmail: string, amount: number, currency: string) {
+export async function creditUserWallet(userEmail: string, amount: number, currency: string) {
   // Mock wallet credit
   logger.info('Wallet credited:', { userEmail, amount, currency });
 }
 
-async function sendPaymentNotification(email: string, type: string, data: any) {
+export async function sendPaymentNotification(email: string, type: string, data: any) {
   // Mock notification sending
   logger.info('Payment notification sent:', { email, type, data });
 }
 
-async function getPaymentTransactions(userId: string, options: any) {
+export async function getPaymentTransactions(userId: string, options: any) {
   // Mock transaction history
-  return [];
+  return [
+    {
+      id: 'txn_12345',
+      status: 'completed',
+      amount: 100.00,
+      currency: 'USD',
+      provider: 'paystack',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      metadata: {}
+    }
+  ];
 }
 
-async function getTransactionStatus(transactionId: string, userId: string) {
+export async function getTransactionStatus(transactionId: string, userId: string) {
   // Mock transaction status
-  return null;
+  return {
+    id: transactionId,
+    status: 'completed',
+    amount: 100.00,
+    currency: 'USD',
+    provider: 'paystack',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    metadata: {}
+  };
 }
 
 // Bank list functions

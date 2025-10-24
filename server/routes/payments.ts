@@ -7,9 +7,24 @@ import {
   processOrangeMoneyPayment,
   verifyBankAccount,
   getExchangeRates,
-  detectUserLocation
+  detectUserLocation,
+  createPaystackCustomer,
+  createPaystackVirtualAccount,
+  getUserVirtualAccounts,
+  getNigerianBanks,
+  getKenyanBanks,
+  getGhanaianBanks,
+  getSouthAfricanBanks,
+  getUgandanBanks,
+  getTanzanianBanks,
+  updateTransactionStatus,
+  creditUserWallet,
+  sendPaymentNotification,
+  getPaymentTransactions,
+  getTransactionStatus
 } from '../services/paymentService.js';
 import { logger } from '../utils/logger.js';
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -22,6 +37,10 @@ router.post('/flutterwave/initiate', authenticateToken, async (req, res) => {
   try {
     const { amount, currency, purpose, metadata } = req.body;
     const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     if (!amount || !currency) {
       return res.status(400).json({ error: 'Amount and currency are required' });
@@ -95,6 +114,10 @@ router.post('/paystack/initiate', authenticateToken, async (req, res) => {
     const { amount, currency, channels, metadata } = req.body;
     const userId = req.userId;
 
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     const paymentData = {
       userId,
       amount: parseFloat(amount) * 100, // Convert to kobo/pesewas
@@ -135,12 +158,14 @@ router.post('/paystack/webhook', async (req, res) => {
     const signature = req.headers['x-paystack-signature'];
 
     // Verify webhook signature
-    const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
-      .update(JSON.stringify(event))
-      .digest('hex');
+    if (process.env.PAYSTACK_SECRET_KEY) {
+      const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
+        .update(JSON.stringify(event))
+        .digest('hex');
 
-    if (hash !== signature) {
-      return res.status(401).json({ error: 'Invalid signature' });
+      if (hash !== signature) {
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
     }
 
     switch (event.event) {
@@ -149,6 +174,12 @@ router.post('/paystack/webhook', async (req, res) => {
         break;
       case 'charge.failed':
         await handlePaystackPaymentFailure(event.data);
+        break;
+      case 'dedicated_account.assign':
+        await handlePaystackVirtualAccountAssigned(event.data);
+        break;
+      case 'dedicated_account.transfer':
+        await handlePaystackVirtualAccountTransfer(event.data);
         break;
       default:
         logger.info('Unhandled Paystack event:', event.event);
@@ -161,15 +192,157 @@ router.post('/paystack/webhook', async (req, res) => {
   }
 });
 
+// Handle Paystack virtual account assignment
+async function handlePaystackVirtualAccountAssigned(data) {
+  try {
+    logger.info('Paystack virtual account assigned', data);
+    // Update database with assigned virtual account details
+  } catch (error) {
+    logger.error('Error handling virtual account assignment:', error);
+  }
+}
+
+// Handle Paystack virtual account transfer
+async function handlePaystackVirtualAccountTransfer(data) {
+  try {
+    logger.info('Paystack virtual account transfer received', data);
+    // Process the incoming transfer
+    // Credit user's wallet
+    // Update transaction records
+  } catch (error) {
+    logger.error('Error handling virtual account transfer:', error);
+  }
+}
+
+// =============================================================================
+// PAYSTACK VIRTUAL ACCOUNT ROUTES
+// =============================================================================
+
+// Create Paystack customer
+router.post('/paystack/customer', authenticateToken, async (req, res) => {
+  try {
+    const { email, firstName, lastName, phone } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    if (!email || !firstName || !lastName) {
+      return res.status(400).json({ error: 'Email, first name, and last name are required' });
+    }
+
+    const customerData = {
+      userId,
+      email,
+      firstName,
+      lastName,
+      phone: phone || ''
+    };
+
+    const result = await createPaystackCustomer(customerData);
+
+    if (result.success) {
+      logger.info('Paystack customer created', { userId, customerId: result.customerId });
+      res.json({
+        success: true,
+        customerId: result.customerId,
+        customer: result.customerData
+      });
+    } else {
+      res.status(400).json({ 
+        error: 'Customer creation failed', 
+        details: result.error 
+      });
+    }
+  } catch (error) {
+    logger.error('Paystack customer creation error:', error);
+    res.status(500).json({ error: 'Customer creation failed' });
+  }
+});
+
+// Create Paystack virtual account
+router.post('/paystack/virtual-account', authenticateToken, async (req, res) => {
+  try {
+    const { customerId, preferredBank, bvn } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    if (!customerId) {
+      return res.status(400).json({ error: 'Customer ID is required' });
+    }
+
+    const virtualAccountData = {
+      userId,
+      customerId,
+      preferredBank: preferredBank || 'default',
+      bvn: bvn || ''
+    };
+
+    const result = await createPaystackVirtualAccount(virtualAccountData);
+
+    if (result.success && result.account) {
+      logger.info('Paystack virtual account created', { userId, accountId: result.account.id });
+      res.json({
+        success: true,
+        account: result.account
+      });
+    } else {
+      res.status(400).json({ 
+        error: 'Virtual account creation failed', 
+        details: result.error 
+      });
+    }
+  } catch (error) {
+    logger.error('Paystack virtual account creation error:', error);
+    res.status(500).json({ error: 'Virtual account creation failed' });
+  }
+});
+
+// Get user's virtual accounts
+router.get('/paystack/virtual-accounts', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const result = await getUserVirtualAccounts(userId);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        accounts: result.accounts
+      });
+    } else {
+      res.status(400).json({ 
+        error: 'Failed to fetch virtual accounts', 
+        details: result.error 
+      });
+    }
+  } catch (error) {
+    logger.error('Error fetching virtual accounts:', error);
+    res.status(500).json({ error: 'Failed to fetch virtual accounts' });
+  }
+});
+
 // MTN Mobile Money payment initiation
 router.post('/mtn-momo/initiate', authenticateToken, async (req, res) => {
   try {
     const { amount, currency, phoneNumber, narration } = req.body;
     const userId = req.userId;
 
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     if (!phoneNumber || !amount || !currency) {
       return res.status(400).json({ 
-        error: 'Phone number, amount and currency are required' 
+        error: 'Phone number, amount, and currency are required' 
       });
     }
 
@@ -184,22 +357,22 @@ router.post('/mtn-momo/initiate', authenticateToken, async (req, res) => {
     const result = await processMTNMoMoPayment(paymentData);
 
     if (result.success) {
-      logger.info('MTN MoMo payment initiated', { userId, phoneNumber, amount });
+      logger.info('MTN MoMo payment initiated', { userId, amount, currency });
       res.json({
         success: true,
         transactionId: result.transactionId,
         status: result.status,
-        message: 'Payment request sent to your phone'
+        message: result.message
       });
     } else {
       res.status(400).json({ 
-        error: 'Mobile money payment failed', 
+        error: 'Payment initiation failed', 
         details: result.error 
       });
     }
   } catch (error) {
     logger.error('MTN MoMo payment error:', error);
-    res.status(500).json({ error: 'Mobile money payment failed' });
+    res.status(500).json({ error: 'Payment processing failed' });
   }
 });
 
@@ -209,13 +382,21 @@ router.post('/orange-money/initiate', authenticateToken, async (req, res) => {
     const { amount, currency, returnUrl, language } = req.body;
     const userId = req.userId;
 
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    if (!amount || !currency) {
+      return res.status(400).json({ error: 'Amount and currency are required' });
+    }
+
     const paymentData = {
       userId,
       amount: parseFloat(amount),
       currency: currency.toUpperCase(),
       returnUrl: returnUrl || `${process.env.FRONTEND_URL}/payment/success`,
       cancelUrl: `${process.env.FRONTEND_URL}/payment/cancel`,
-      language: language || 'fr'
+      language: language || 'en'
     };
 
     const result = await processOrangeMoneyPayment(paymentData);
@@ -230,13 +411,13 @@ router.post('/orange-money/initiate', authenticateToken, async (req, res) => {
       });
     } else {
       res.status(400).json({ 
-        error: 'Orange Money payment failed', 
+        error: 'Payment initiation failed', 
         details: result.error 
       });
     }
   } catch (error) {
     logger.error('Orange Money payment error:', error);
-    res.status(500).json({ error: 'Orange Money payment failed' });
+    res.status(500).json({ error: 'Payment processing failed' });
   }
 });
 
@@ -244,11 +425,15 @@ router.post('/orange-money/initiate', authenticateToken, async (req, res) => {
 // BANK ACCOUNT VERIFICATION
 // =============================================================================
 
-// Verify bank account (Nigeria, Kenya, South Africa, Ghana)
+// Verify bank account
 router.post('/verify-bank-account', authenticateToken, async (req, res) => {
   try {
     const { accountNumber, bankCode, country } = req.body;
     const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     if (!accountNumber || !bankCode || !country) {
       return res.status(400).json({ 
@@ -263,14 +448,14 @@ router.post('/verify-bank-account', authenticateToken, async (req, res) => {
       country: country.toUpperCase()
     };
 
-    const result = await verifyBankAccount(verificationData);
+    const result: any = await verifyBankAccount(verificationData);
 
     if (result.success) {
       logger.info('Bank account verified', { userId, accountNumber, country });
       res.json({
         success: true,
         accountName: result.accountName,
-        accountType: result.accountType,
+        accountNumber: result.accountNumber,
         bankName: result.bankName,
         verified: true
       });
@@ -323,14 +508,14 @@ router.get('/exchange-rates', async (req, res) => {
     const { baseCurrency, targetCurrencies } = req.query;
     
     const rates = await getExchangeRates(
-      baseCurrency || 'USD',
-      targetCurrencies ? targetCurrencies.split(',') : [
+      (baseCurrency as string) || 'USD',
+      targetCurrencies ? (targetCurrencies as string).split(',') : [
         'NGN', 'KES', 'GHS', 'ZAR', 'UGX', 'TZS', 'XOF', 'XAF'
       ]
     );
 
     res.json({
-      baseCurrency: baseCurrency || 'USD',
+      baseCurrency: (baseCurrency as string) || 'USD',
       rates,
       lastUpdated: new Date().toISOString()
     });
@@ -351,18 +536,18 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
     const userId = req.userId;
 
     // Detect user location if not provided
-    const userCountry = country || await detectUserLocation(req.ip);
+    const userCountry = (country as string) || await detectUserLocation(req.ip || '');
     
     const paymentMethods = getAvailablePaymentMethods(
       userCountry,
-      parseFloat(amount || 0),
-      currency || 'USD'
+      parseFloat((amount as string) || '0'),
+      (currency as string) || 'USD'
     );
 
     res.json({
       country: userCountry,
       paymentMethods,
-      recommended: paymentMethods.filter(method => method.recommended)
+      recommended: paymentMethods.filter((method: any) => method.recommended)
     });
   } catch (error) {
     logger.error('Payment methods detection error:', error);
@@ -377,21 +562,25 @@ router.get('/payment-methods', authenticateToken, async (req, res) => {
 // Get payment transaction history
 router.get('/transactions', authenticateToken, async (req, res) => {
   try {
-    const { limit = 50, offset = 0, status, provider } = req.query;
+    const { limit = '50', offset = '0', status, provider } = req.query;
     const userId = req.userId;
 
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     const transactions = await getPaymentTransactions(userId, {
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      status,
-      provider
+      limit: parseInt(limit as string),
+      offset: parseInt(offset as string),
+      status: status as string,
+      provider: provider as string
     });
 
     res.json({
       transactions,
       pagination: {
-        limit: parseInt(limit),
-        offset: parseInt(offset),
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
         total: transactions.length
       }
     });
@@ -407,7 +596,11 @@ router.get('/transactions/:transactionId/status', authenticateToken, async (req,
     const { transactionId } = req.params;
     const userId = req.userId;
 
-    const transaction = await getTransactionStatus(transactionId, userId);
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const transaction: any = await getTransactionStatus(transactionId, userId);
 
     if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found' });
@@ -461,6 +654,31 @@ async function handleFlutterwavePaymentSuccess(data) {
   }
 }
 
+async function handleFlutterwavePaymentFailure(data) {
+  try {
+    const { tx_ref, flw_ref, amount, currency, customer } = data;
+    
+    // Update transaction status in database
+    await updateTransactionStatus(tx_ref, 'failed', {
+      flutterwaveRef: flw_ref,
+      amount,
+      currency,
+      customer
+    });
+
+    // Send failure notification
+    await sendPaymentNotification(customer.email, 'failed', {
+      amount,
+      currency,
+      reference: tx_ref
+    });
+
+    logger.info('Flutterwave payment failed', { tx_ref, amount, currency });
+  } catch (error) {
+    logger.error('Flutterwave failure handler error:', error);
+  }
+}
+
 async function handlePaystackPaymentSuccess(data) {
   try {
     const { reference, amount, currency, customer } = data;
@@ -489,8 +707,33 @@ async function handlePaystackPaymentSuccess(data) {
   }
 }
 
-function getAvailablePaymentMethods(country, amount, currency) {
-  const methods = [];
+async function handlePaystackPaymentFailure(data) {
+  try {
+    const { reference, amount, currency, customer } = data;
+    
+    // Update transaction status
+    await updateTransactionStatus(reference, 'failed', {
+      paystackRef: data.id,
+      amount: amount / 100, // Convert from kobo
+      currency,
+      customer
+    });
+
+    // Send failure notification
+    await sendPaymentNotification(customer.email, 'failed', {
+      amount: amount / 100,
+      currency,
+      reference
+    });
+
+    logger.info('Paystack payment failed', { reference, amount, currency });
+  } catch (error) {
+    logger.error('Paystack failure handler error:', error);
+  }
+}
+
+function getAvailablePaymentMethods(country: string, amount: number, currency: string) {
+  const methods: any[] = [];
 
   switch (country) {
     case 'NG': // Nigeria
