@@ -1,4 +1,4 @@
-import { Component, useEffect, useLayoutEffect, ReactNode } from "react";
+import React, { Component, useEffect, useLayoutEffect, ReactNode } from "react";
 import { ThemeProvider } from "./ThemeContext";
 
 // Use useEffect instead of useLayoutEffect on the server
