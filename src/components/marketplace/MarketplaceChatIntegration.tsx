@@ -54,65 +54,8 @@ import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { chatService } from "@/services/chatService";
-import { orderService } from "@/services/orderService";
-
-// Chat data interfaces
-interface ChatMessage {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderAvatar: string;
-  content: string;
-  messageType:
-    | "text"
-    | "image"
-    | "file"
-    | "system"
-    | "order_update"
-    | "payment"
-    | "contract";
-  timestamp: string;
-  isRead: boolean;
-  attachments?: Array<{
-    type: "image" | "file" | "document";
-    url: string;
-    name: string;
-    size?: number;
-  }>;
-  orderInfo?: {
-    orderId: string;
-    orderNumber: string;
-    status: string;
-    amount: number;
-  };
-}
-
-interface ChatThread {
-  id: string;
-  orderId?: string;
-  orderNumber?: string;
-  participants: string[];
-  type: "marketplace" | "general";
-  title: string;
-  lastMessage?: string;
-  lastMessageAt: string;
-  unreadCount: number;
-  isActive: boolean;
-  productInfo?: {
-    id: string;
-    name: string;
-    image: string;
-    price: number;
-  };
-  sellerInfo?: {
-    id: string;
-    name: string;
-    avatar: string;
-    isVerified: boolean;
-    responseRate: number;
-    responseTime: string;
-  };
-}
+import { orderService } from "@/services";
+import { ChatMessage, ChatThread } from "@/types/chat"; // Import proper types
 
 interface MarketplaceChatIntegrationProps {
   orderId?: string;
@@ -141,6 +84,9 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
   const [showThreadList, setShowThreadList] = useState(true);
   const [loading, setLoading] = useState(true);
 
+  // Get active thread
+  const activeThread = chatThreads.find(thread => thread.id === activeThreadId);
+
   // Load chat threads
   useEffect(() => {
     if (isOpen && user?.id) {
@@ -151,19 +97,20 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
   const loadChatThreads = async () => {
     try {
       setLoading(true);
-      const threads = await chatService.getUserChatThreads(user!.id);
+      // Use the real chat service to get chat threads
+      const threads = await chatService.getChatThreads();
       setChatThreads(threads);
       
       // Find relevant thread based on props
       if (orderId) {
-        const thread = threads.find((t) => t.orderId === orderId);
+        const thread = threads.find((t: ChatThread) => t.referenceId === orderId);
         if (thread) {
           setActiveThreadId(thread.id);
           setShowThreadList(false);
           loadMessages(thread.id);
         }
       } else if (sellerId) {
-        const thread = threads.find((t) => t.sellerInfo?.id === sellerId);
+        const thread = threads.find((t: ChatThread) => t.participants.includes(sellerId));
         if (thread) {
           setActiveThreadId(thread.id);
           setShowThreadList(false);
@@ -185,7 +132,8 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
   // Load messages for active thread
   const loadMessages = async (threadId: string) => {
     try {
-      const threadMessages = await chatService.getThreadMessages(threadId);
+      // Use the real chat service to get messages
+      const threadMessages = await chatService.getMessages(threadId);
       setMessages(threadMessages);
     } catch (error) {
       console.error("Error loading messages:", error);
@@ -197,41 +145,18 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
     }
   };
 
-  // Load messages when active thread changes
-  useEffect(() => {
-    if (activeThreadId) {
-      loadMessages(activeThreadId);
-    }
-  }, [activeThreadId]);
-
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const activeThread = chatThreads.find((t) => t.id === activeThreadId);
-
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeThread || !user) return;
 
     try {
-      const message: ChatMessage = {
-        id: `msg_${Date.now()}`,
-        senderId: user.id || "current_user",
-        senderName: user.user_metadata?.name || "You",
-        senderAvatar:
-          user.user_metadata?.avatar ||
-          "https://ui-avatars.com/api/?name=User&background=random",
+      // Send message through real chat service
+      const message = await chatService.sendMessage({
+        threadId: activeThread.id,
         content: newMessage,
         messageType: "text",
-        timestamp: new Date().toISOString(),
-        isRead: false,
-      };
-
-      // Send message through chat service
-      await chatService.sendMessage(activeThread.id, message);
+      });
       
-      // Update local state
+      // Update local state with the real message
       setMessages((prev) => [...prev, message]);
       setNewMessage("");
 
@@ -283,7 +208,7 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
     }
   };
 
-  const getMessageIcon = (messageType: string) => {
+  const getMessageIcon = (messageType: string | undefined) => {
     switch (messageType) {
       case "order_update":
         return <Package className="h-4 w-4" />;
@@ -301,8 +226,7 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
   const renderMessage = (message: ChatMessage) => {
     const isCurrentUser = message.senderId === user?.id;
     const isSystem =
-      message.messageType === "system" ||
-      message.messageType === "order_update";
+      message.messageType === "system";
 
     if (isSystem) {
       return (
@@ -310,11 +234,6 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
           <div className="bg-gray-100 px-4 py-2 rounded-full text-sm flex items-center gap-2">
             {getMessageIcon(message.messageType)}
             <span>{message.content}</span>
-            {message.orderInfo && (
-              <Badge variant="outline" className="ml-2">
-                {message.orderInfo.status}
-              </Badge>
-            )}
           </div>
         </div>
       );
@@ -327,7 +246,7 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
       >
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src={message.senderAvatar} />
-          <AvatarFallback>{message.senderName.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{message.senderName?.charAt(0) || "U"}</AvatarFallback>
         </Avatar>
 
         <div
@@ -346,16 +265,16 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
               <div className="mt-2 space-y-2">
                 {message.attachments.map((attachment, index) => (
                   <div key={index} className="border rounded p-2 bg-white/10">
-                    {attachment.type === "image" ? (
+                    {typeof attachment === 'string' && (attachment.includes('.jpg') || attachment.includes('.png') || attachment.includes('.jpeg')) ? (
                       <img
-                        src={attachment.url}
-                        alt={attachment.name}
+                        src={attachment}
+                        alt="Attachment"
                         className="max-w-full h-32 object-cover rounded"
                       />
                     ) : (
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        <span className="text-xs">{attachment.name}</span>
+                        <span className="text-xs">Attachment</span>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -414,21 +333,18 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={thread.sellerInfo?.avatar} />
+                    <AvatarImage src={thread.groupAvatar} />
                     <AvatarFallback>
-                      {thread.sellerInfo?.name.charAt(0)}
+                      {thread.groupName?.charAt(0) || "C"}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium truncate">
-                        {thread.sellerInfo?.name}
+                        {thread.groupName || "Conversation"}
                       </h4>
-                      {thread.sellerInfo?.isVerified && (
-                        <CheckCircle className="h-4 w-4 text-blue-500" />
-                      )}
-                      {thread.unreadCount > 0 && (
+                      {thread.unreadCount && thread.unreadCount > 0 && (
                         <Badge className="bg-red-500 text-white text-xs">
                           {thread.unreadCount}
                         </Badge>
@@ -440,22 +356,11 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
                     </p>
 
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {thread.orderNumber}
-                      </Badge>
                       <span className="text-xs text-muted-foreground">
                         {formatTimestamp(thread.lastMessageAt)}
                       </span>
                     </div>
                   </div>
-
-                  {thread.productInfo && (
-                    <img
-                      src={thread.productInfo.image}
-                      alt={thread.productInfo.name}
-                      className="w-12 h-12 rounded object-cover"
-                    />
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -482,41 +387,20 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
           </Button>
 
           <Avatar className="h-10 w-10">
-            <AvatarImage src={activeThread.sellerInfo?.avatar} />
+            <AvatarImage src={activeThread.groupAvatar} />
             <AvatarFallback>
-              {activeThread.sellerInfo?.name.charAt(0)}
+              {activeThread.groupName?.charAt(0) || "C"}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold">{activeThread.sellerInfo?.name}</h3>
-              {activeThread.sellerInfo?.isVerified && (
-                <CheckCircle className="h-4 w-4 text-blue-500" />
-              )}
+              <h3 className="font-semibold">{activeThread.groupName || "Conversation"}</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              {activeThread.sellerInfo?.responseTime}
+              "Typically responds within hours"
             </p>
           </div>
-
-          {activeThread.productInfo && (
-            <div className="hidden md:flex items-center gap-2 bg-gray-50 p-2 rounded">
-              <img
-                src={activeThread.productInfo.image}
-                alt={activeThread.productInfo.name}
-                className="w-8 h-8 rounded object-cover"
-              />
-              <div className="text-sm">
-                <p className="font-medium truncate max-w-32">
-                  {activeThread.productInfo.name}
-                </p>
-                <p className="text-muted-foreground">
-                  ${activeThread.productInfo.price}
-                </p>
-              </div>
-            </div>
-          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -550,9 +434,9 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
           {isTyping && (
             <div className="flex gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={activeThread.sellerInfo?.avatar} />
+                <AvatarImage src={activeThread.groupAvatar} />
                 <AvatarFallback>
-                  {activeThread.sellerInfo?.name.charAt(0)}
+                  {activeThread.groupName?.charAt(0) || "C"}
                 </AvatarFallback>
               </Avatar>
               <div className="bg-gray-100 p-3 rounded-lg">

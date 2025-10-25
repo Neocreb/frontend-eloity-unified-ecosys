@@ -18,13 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { categoryService } from "@/services/categoryService";
+import { CategoryService } from "@/services/categoryService";
 import { useToast } from "@/hooks/use-toast";
 
 interface Category {
   id: string;
   name: string;
-  icon: string;
+  icon?: string; // Make icon optional to match the marketplace Category type
   productCount: number;
   image?: string;
   subcategories?: Category[];
@@ -71,8 +71,18 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const categoriesData = await categoryService.getCategories();
-        setLocalCategories(categoriesData);
+        const categoriesData = await CategoryService.getCategories();
+        // Map the categories to match the component's Category interface
+        const mappedCategories = categoriesData.map(category => ({
+          id: category.id,
+          name: category.name,
+          icon: category.slug || 'package', // Use slug as icon or default to 'package'
+          productCount: category.productCount,
+          image: category.image,
+          subcategories: category.subcategories,
+          // Note: isPopular, isTrending, and description are not in the marketplace Category type
+        }));
+        setLocalCategories(mappedCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
         toast({
@@ -101,8 +111,8 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
     onCategorySelect?.(category);
   };
 
-  const getIcon = (iconName: string) => {
-    const IconComponent = iconMap[iconName] || Package;
+  const getIcon = (iconName?: string) => {
+    const IconComponent = (iconName && iconMap[iconName]) || Package;
     return <IconComponent className="w-6 h-6" />;
   };
 
@@ -144,7 +154,7 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    {getIcon(category.icon)}
+                    {getIcon(category.icon || 'package')}
                     <div>
                       <span className="font-medium">{category.name}</span>
                       <div className="text-xs text-gray-500">
@@ -205,7 +215,7 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
                       className="w-full h-full object-cover rounded-lg"
                     />
                   ) : (
-                    getIcon(category.icon)
+                    getIcon(category.icon || 'package')
                   )}
                 </div>
 

@@ -774,4 +774,23 @@ export class MarketplaceService {
       return [];
     }
   }
+
+  static async deleteProduct(productId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        console.error("Error deleting product:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in deleteProduct:", error);
+      return false;
+    }
+  }
 }
