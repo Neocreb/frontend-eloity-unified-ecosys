@@ -775,6 +775,30 @@ export class MarketplaceService {
     }
   }
 
+  // Get unique tags from all products
+  static async getProductTags(): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('tags')
+        .not('tags', 'is', null);
+
+      if (error) {
+        console.error("Error fetching product tags:", error);
+        return [];
+      }
+
+      // Extract unique tags from all products
+      const allTags = data.flatMap(product => product.tags || []);
+      const uniqueTags = [...new Set(allTags)];
+      
+      return uniqueTags.slice(0, 20); // Return up to 20 tags
+    } catch (error) {
+      console.error("Error in getProductTags:", error);
+      return [];
+    }
+  }
+
   static async deleteProduct(productId: string): Promise<boolean> {
     try {
       const { error } = await supabase

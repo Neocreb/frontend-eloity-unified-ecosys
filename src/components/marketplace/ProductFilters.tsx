@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { useMarketplace } from "@/contexts/MarketplaceContext";
+import { MarketplaceService } from "@/services/marketplaceService";
 
 interface ProductFiltersProps {
   activeCategory: string;
@@ -27,13 +27,32 @@ const ProductFilters = ({
   const [searchInput, setSearchInput] = useState("");
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [productTags, setProductTags] = useState<string[]>([]);
+  const [loadingTags, setLoadingTags] = useState(true);
   const { setFilter } = useMarketplace();
   
-  const productTags = [
-    "wireless", "audio", "electronics", "wearable", "fitness", 
-    "apparel", "casual", "fashion", "skincare", "kitchen", 
-    "home", "organic", "sports"
-  ];
+  // Fetch real product tags
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        setLoadingTags(true);
+        const tags = await MarketplaceService.getProductTags();
+        setProductTags(tags);
+      } catch (error) {
+        console.error("Error fetching product tags:", error);
+        // Fallback to hardcoded tags if real data fetch fails
+        setProductTags([
+          "wireless", "audio", "electronics", "wearable", "fitness", 
+          "apparel", "casual", "fashion", "skincare", "kitchen", 
+          "home", "organic", "sports"
+        ]);
+      } finally {
+        setLoadingTags(false);
+      }
+    };
+    
+    fetchTags();
+  }, []);
   
   const handleSearch = () => {
     onSearch(searchInput);
@@ -119,18 +138,26 @@ const ProductFilters = ({
         <AccordionItem value="tags">
           <AccordionTrigger>Tags</AccordionTrigger>
           <AccordionContent>
-            <div className="flex flex-wrap gap-2">
-              {productTags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant={selectedTags.includes(tag) ? "default" : "outline"}
-                  className="cursor-pointer capitalize"
-                  onClick={() => handleTagToggle(tag)}
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+            {loadingTags ? (
+              <div className="flex flex-wrap gap-2">
+                {Array(6).fill(0).map((_, i) => (
+                  <div key={i} className="h-6 w-16 bg-gray-200 rounded-full animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {productTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer capitalize"
+                    onClick={() => handleTagToggle(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </AccordionContent>
         </AccordionItem>
       </Accordion>
