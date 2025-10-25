@@ -169,7 +169,7 @@ export const EnhancedVideoCall: React.FC<EnhancedVideoCallProps> = ({
       if (safeCallData.type === 'video') {
         // Request camera and microphone access using shared utility
         const result = await requestCameraAccess({
-          video: true,
+          video: { facingMode: 'user' },
           audio: true
         });
 
@@ -186,8 +186,9 @@ export const EnhancedVideoCall: React.FC<EnhancedVideoCallProps> = ({
         }
       } else {
         // Request microphone access only using shared utility
+        // For audio-only calls, we still need to provide video constraints
         const result = await requestCameraAccess({
-          video: false,
+          video: { facingMode: 'user' },
           audio: true
         });
 

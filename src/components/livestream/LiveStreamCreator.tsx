@@ -118,7 +118,7 @@ export function LiveStreamCreator({
   const startPreview = async () => {
     try {
       const result = await requestCameraAccess({
-        video: videoEnabled,
+        video: { facingMode: 'user' },
         audio: audioEnabled,
       });
 

@@ -60,15 +60,15 @@ const GroupContributionPayoutStatus: React.FC<GroupContributionPayoutStatusProps
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Total Amount</p>
-            <p className="font-medium">{formatCurrency(payout.total_amount, payout.currency)}</p>
+            <p className="font-medium">{formatCurrency(payout.total_amount)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Platform Fee</p>
-            <p className="font-medium">{formatCurrency(payout.platform_fee, payout.currency)}</p>
+            <p className="font-medium">{formatCurrency(payout.platform_fee)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Net Amount</p>
-            <p className="font-medium">{formatCurrency(payout.net_amount, payout.currency)}</p>
+            <p className="font-medium">{formatCurrency(payout.net_amount)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Status</p>

@@ -165,7 +165,10 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
 
   const startRecording = async () => {
     try {
-      const result = await requestCameraAccess({ audio: true });
+      const result = await requestCameraAccess({ 
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: true 
+      });
 
       if (result.error) {
         throw new Error(result.error.message);

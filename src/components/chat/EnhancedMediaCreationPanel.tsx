@@ -11,6 +11,11 @@ import {
   Zap,
   Bot,
   FlipHorizontal,
+  Video,
+  X,
+  Upload,
+  Wand2,
+  Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -82,7 +87,7 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
   const createMemePreview = (imageFile: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const img = new Image();
+      const img = document.createElement('img');
       img.onload = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;

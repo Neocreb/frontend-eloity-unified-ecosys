@@ -16,6 +16,7 @@ import {
   TrendingUp,
   BarChart3
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { StartGroupContributionModal } from "./StartGroupContributionModal";
 import { GroupContributionStatus } from "./GroupContributionStatus";
 import { ContributeToGroupModal } from "./ContributeToGroupModal";

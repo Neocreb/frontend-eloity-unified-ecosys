@@ -95,6 +95,11 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { content, media_urls, privacy } = req.body;
     const userId = req.userId;
 
+    // Type guard to ensure userId is a string
+    if (!userId || typeof userId !== 'string') {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     // First, check if the post exists and belongs to the user
     const existingPost = await PostService.getPostById(id);
     
@@ -138,6 +143,11 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const userId = req.userId;
 
+    // Type guard to ensure userId is a string
+    if (!userId || typeof userId !== 'string') {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     const success = await PostService.deletePost(id, userId);
 
     if (!success) {
@@ -157,6 +167,11 @@ router.post('/:id/like', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
+
+    // Type guard to ensure userId is a string
+    if (!userId || typeof userId !== 'string') {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     // Check if already liked
     const isLiked = await PostService.isPostLikedByUser(id, userId);
@@ -221,6 +236,11 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { content, parent_id = null } = req.body;
     const userId = req.userId;
+
+    // Type guard to ensure userId is a string
+    if (!userId || typeof userId !== 'string') {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     if (!content) {
       return res.status(400).json({ error: 'Comment content is required' });
