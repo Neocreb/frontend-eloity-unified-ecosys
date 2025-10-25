@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -68,158 +68,9 @@ import {
 } from "lucide-react";
 import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { orderService } from "@/services/orderService";
 import { Order, OrderStatus, OrderItem } from "@/types/enhanced-marketplace";
-
-// Mock order data
-const mockOrders: Order[] = [
-  {
-    id: "order_1",
-    buyerId: "buyer1",
-    sellerId: "seller1",
-    customerName: "John Doe",
-    customerEmail: "john@example.com",
-    orderNumber: "ORD-2024-001",
-    orderType: "marketplace",
-    items: [
-      {
-        productId: "1",
-        productName: "Wireless Noise Cancelling Headphones",
-        productImage:
-          "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
-        sellerId: "seller1",
-        sellerName: "AudioTech",
-        quantity: 1,
-        unitPrice: 249.99,
-        totalPrice: 249.99,
-        status: "confirmed",
-      },
-    ],
-    subtotal: 249.99,
-    shippingCost: 0,
-    taxAmount: 20.0,
-    discountAmount: 0,
-    totalAmount: 269.99,
-    paymentMethod: "wallet_usdt",
-    paymentCurrency: "USDT",
-    paymentStatus: "paid",
-    escrowId: "escrow_1",
-    shippingAddress: {
-      fullName: "John Doe",
-      addressLine1: "123 Main St",
-      city: "New York",
-      state: "NY",
-      postalCode: "10001",
-      country: "USA",
-    },
-    shippingMethod: "standard",
-    trackingNumber: "1Z999AA1012345675",
-    status: "shipped",
-    fulfillmentStatus: "fulfilled",
-    requiresShipping: true,
-    autoCompleteAfterDays: 7,
-    platformFee: 13.5,
-    feePercentage: 5.0,
-    returnRequested: false,
-    downloadCount: 0,
-    createdAt: "2024-01-15T10:30:00Z",
-    updatedAt: "2024-01-17T14:20:00Z",
-    confirmedAt: "2024-01-15T11:00:00Z",
-    shippedAt: "2024-01-16T09:15:00Z",
-  },
-  {
-    id: "order_2",
-    buyerId: "buyer2",
-    sellerId: "seller2",
-    customerName: "Jane Smith",
-    customerEmail: "jane@example.com",
-    orderNumber: "ORD-2024-002",
-    orderType: "digital",
-    items: [
-      {
-        productId: "3",
-        productName: "Premium E-book Collection",
-        productImage:
-          "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=500&auto=format&fit=crop&q=60",
-        sellerId: "seller3",
-        sellerName: "BusinessHub",
-        quantity: 1,
-        unitPrice: 29.99,
-        totalPrice: 29.99,
-        status: "delivered",
-        downloadUrl: "https://example.com/download/ebook-collection",
-      },
-    ],
-    subtotal: 29.99,
-    shippingCost: 0,
-    taxAmount: 2.4,
-    discountAmount: 10.0,
-    totalAmount: 22.39,
-    paymentMethod: "eloity_points",
-    paymentCurrency: "SOFT_POINTS",
-    paymentStatus: "paid",
-    downloadUrls: ["https://example.com/download/ebook-collection"],
-    downloadLimit: 5,
-    status: "completed",
-    fulfillmentStatus: "fulfilled",
-    requiresShipping: false,
-    autoCompleteAfterDays: 0,
-    platformFee: 1.5,
-    feePercentage: 5.0,
-    returnRequested: false,
-    downloadCount: 2,
-    createdAt: "2024-01-14T16:45:00Z",
-    updatedAt: "2024-01-14T16:50:00Z",
-    confirmedAt: "2024-01-14T16:46:00Z",
-    completedAt: "2024-01-14T16:50:00Z",
-  },
-  {
-    id: "order_3",
-    buyerId: "buyer3",
-    sellerId: "seller4",
-    customerName: "Bob Johnson",
-    customerEmail: "bob@example.com",
-    orderNumber: "ORD-2024-003",
-    orderType: "marketplace",
-    items: [
-      {
-        productId: "4",
-        productName: "Designer Sunglasses",
-        productImage:
-          "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&auto=format&fit=crop&q=60",
-        sellerId: "seller4",
-        sellerName: "LuxeStyle",
-        quantity: 1,
-        unitPrice: 159.99,
-        totalPrice: 159.99,
-        status: "processing",
-      },
-    ],
-    subtotal: 159.99,
-    shippingCost: 9.99,
-    taxAmount: 12.8,
-    discountAmount: 0,
-    totalAmount: 182.78,
-    paymentMethod: "wallet_usdt",
-    paymentCurrency: "USDT",
-    paymentStatus: "paid",
-    escrowId: "escrow_2",
-    status: "disputed",
-    fulfillmentStatus: "processing",
-    requiresShipping: true,
-    autoCompleteAfterDays: 7,
-    platformFee: 9.14,
-    feePercentage: 5.0,
-    disputeId: "dispute_1",
-    disputeReason: "not_as_described",
-    returnRequested: true,
-    returnRequestedAt: "2024-01-18T10:00:00Z",
-    returnReason: "Product does not match description",
-    downloadCount: 0,
-    createdAt: "2024-01-16T12:30:00Z",
-    updatedAt: "2024-01-18T10:00:00Z",
-    confirmedAt: "2024-01-16T13:00:00Z",
-  },
-];
 
 const OrderManagementSystem: React.FC = () => {
   const {
@@ -234,9 +85,11 @@ const OrderManagementSystem: React.FC = () => {
     startOrderChat,
   } = useEnhancedMarketplace();
 
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  const [orders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [showDispute, setShowDispute] = useState(false);
@@ -246,6 +99,30 @@ const OrderManagementSystem: React.FC = () => {
   const [disputeDescription, setDisputeDescription] = useState("");
   const [returnReason, setReturnReason] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
+
+  // Load real order data
+  useEffect(() => {
+    if (user?.id) {
+      loadOrders();
+    }
+  }, [user?.id]);
+
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      const ordersData = await orderService.getUserOrders(user!.id);
+      setOrders(ordersData);
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load orders",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     switch (selectedTab) {
@@ -310,6 +187,12 @@ const OrderManagementSystem: React.FC = () => {
   const handleConfirmDelivery = async (orderId: string) => {
     try {
       await confirmDelivery(orderId);
+      
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status: 'delivered', deliveredAt: new Date().toISOString() } : order
+      ));
+      
       toast({
         title: "Delivery Confirmed",
         description: "Order has been marked as delivered",
@@ -326,6 +209,12 @@ const OrderManagementSystem: React.FC = () => {
   const handleCancelOrder = async (orderId: string, reason: string) => {
     try {
       await cancelOrder(orderId, reason);
+      
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status: 'cancelled' } : order
+      ));
+      
       toast({
         title: "Order Cancelled",
         description: "Your order has been cancelled",
@@ -344,6 +233,12 @@ const OrderManagementSystem: React.FC = () => {
 
     try {
       await requestReturn(selectedOrder.id, returnReason);
+      
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === selectedOrder.id ? { ...order, returnRequested: true, returnReason, returnRequestedAt: new Date().toISOString() } : order
+      ));
+      
       toast({
         title: "Return Requested",
         description: "Your return request has been submitted",
@@ -364,6 +259,12 @@ const OrderManagementSystem: React.FC = () => {
 
     try {
       await raiseDispute(selectedOrder.id, disputeReason, disputeDescription);
+      
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === selectedOrder.id ? { ...order, status: 'disputed', disputeId: `dispute_${Date.now()}`, disputeReason } : order
+      ));
+      
       toast({
         title: "Dispute Raised",
         description: "Your dispute has been submitted for review",
@@ -423,6 +324,16 @@ const OrderManagementSystem: React.FC = () => {
       minute: "2-digit",
     });
   };
+
+  if (loading) {
+    return (
+      <div className="container py-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6 space-y-6">
@@ -636,7 +547,7 @@ const OrderManagementSystem: React.FC = () => {
                               Order Disputed
                             </p>
                             <p className="text-sm text-red-600">
-                              Reason: {order.disputeReason?.replace("_", " ")}
+                              Reason: {order.disputeReason?.replace("_", " ") || "Not specified"}
                             </p>
                             <p className="text-sm text-muted-foreground mt-1">
                               Our support team is reviewing this dispute and

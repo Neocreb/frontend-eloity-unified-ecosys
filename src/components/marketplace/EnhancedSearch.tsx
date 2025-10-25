@@ -32,6 +32,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { searchService } from "@/services/searchService";
+import { categoryService } from "@/services/categoryService";
 
 interface SearchSuggestion {
   id: string;
@@ -69,34 +71,6 @@ const defaultFilters: SearchFilters = {
   sortBy: "relevance",
 };
 
-// Mock search suggestions
-const mockSuggestions: SearchSuggestion[] = [
-  { id: "1", text: "iPhone 14", type: "product", category: "Electronics" },
-  { id: "2", text: "Samsung Galaxy", type: "product", category: "Electronics" },
-  { id: "3", text: "MacBook Pro", type: "product", category: "Electronics" },
-  { id: "4", text: "AirPods", type: "trending", category: "Electronics" },
-  { id: "5", text: "Nintendo Switch", type: "product", category: "Gaming" },
-  { id: "6", text: "Electronics", type: "category", productCount: 1234 },
-  { id: "7", text: "Fashion", type: "category", productCount: 856 },
-  { id: "8", text: "Home & Garden", type: "category", productCount: 632 },
-  { id: "9", text: "Apple", type: "brand", productCount: 89 },
-  { id: "10", text: "Samsung", type: "brand", productCount: 156 },
-];
-
-const recentSearches = [
-  "iPhone 14 Pro",
-  "Wireless headphones",
-  "Gaming laptop",
-  "Smart watch",
-];
-
-const trendingSearches = [
-  "Black Friday deals",
-  "Christmas gifts",
-  "Winter fashion",
-  "Gaming accessories",
-];
-
 export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
   placeholder = "Search products, brands, categories...",
   onSearch,
@@ -111,20 +85,59 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [trendingSearches, setTrendingSearches] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Load recent and trending searches
+  useEffect(() => {
+    const loadSearchData = async () => {
+      try {
+        const recent = await searchService.getRecentSearches();
+        setRecentSearches(recent);
+        
+        const trending = await searchService.getTrendingSearches();
+        setTrendingSearches(trending);
+      } catch (error) {
+        console.error("Error loading search data:", error);
+        // Fallback to empty arrays if real data fetch fails
+        setRecentSearches([]);
+        setTrendingSearches([]);
+      }
+    };
+
+    loadSearchData();
+  }, []);
+
   // Filter suggestions based on query
   useEffect(() => {
-    if (query.length > 0) {
-      const filtered = mockSuggestions.filter((suggestion) =>
-        suggestion.text.toLowerCase().includes(query.toLowerCase()),
-      );
-      setSuggestions(filtered.slice(0, 8));
-    } else {
-      setSuggestions([]);
-    }
+    const fetchSuggestions = async () => {
+      if (query.length > 0) {
+        try {
+          setLoading(true);
+          const searchSuggestions = await searchService.getSearchSuggestions(query);
+          setSuggestions(searchSuggestions.slice(0, 8));
+        } catch (error) {
+          console.error("Error fetching suggestions:", error);
+          // Fallback to empty array if real data fetch fails
+          setSuggestions([]);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setSuggestions([]);
+      }
+    };
+
+    // Debounce the search to avoid too many API calls
+    const debounceTimer = setTimeout(() => {
+      fetchSuggestions();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
   }, [query]);
 
   // Close suggestions when clicking outside
@@ -144,6 +157,9 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
 
   const handleSearch = () => {
     if (query.trim()) {
+      // Save to recent searches
+      searchService.saveRecentSearch(query);
+      
       onSearch(query, filters);
       setShowSuggestions(false);
     }
@@ -154,6 +170,9 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
     setShowSuggestions(false);
     onSuggestionSelect?.(suggestion);
     onSearch(suggestion.text, filters);
+    
+    // Save to recent searches
+    searchService.saveRecentSearch(suggestion.text);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -419,7 +438,11 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
         {/* Search Suggestions */}
         {showSuggestions && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-            {query.length === 0 ? (
+            {loading ? (
+              <div className="p-4 text-center text-gray-500 text-sm">
+                Loading suggestions...
+              </div>
+            ) : query.length === 0 ? (
               <div className="p-4 space-y-4">
                 {/* Recent Searches */}
                 <div>

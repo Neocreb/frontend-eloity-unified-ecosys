@@ -53,8 +53,10 @@ import {
 import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { chatService } from "@/services/chatService";
+import { orderService } from "@/services/orderService";
 
-// Mock chat data
+// Chat data interfaces
 interface ChatMessage {
   id: string;
   senderId: string;
@@ -112,190 +114,6 @@ interface ChatThread {
   };
 }
 
-const mockChatThreads: ChatThread[] = [
-  {
-    id: "thread_1",
-    orderId: "order_1",
-    orderNumber: "ORD-2024-001",
-    participants: ["buyer1", "seller1"],
-    type: "marketplace",
-    title: "Order Discussion - Wireless Headphones",
-    lastMessage: "Thanks for the quick shipping!",
-    lastMessageAt: "2024-01-17T15:30:00Z",
-    unreadCount: 0,
-    isActive: true,
-    productInfo: {
-      id: "1",
-      name: "Wireless Noise Cancelling Headphones",
-      image:
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
-      price: 249.99,
-    },
-    sellerInfo: {
-      id: "seller1",
-      name: "AudioTech",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      isVerified: true,
-      responseRate: 98,
-      responseTime: "Usually responds within 2 hours",
-    },
-  },
-  {
-    id: "thread_2",
-    orderId: "order_3",
-    orderNumber: "ORD-2024-003",
-    participants: ["buyer3", "seller4"],
-    type: "marketplace",
-    title: "Order Issue - Designer Sunglasses",
-    lastMessage: "We understand your concern and will resolve this quickly",
-    lastMessageAt: "2024-01-18T11:20:00Z",
-    unreadCount: 2,
-    isActive: true,
-    productInfo: {
-      id: "4",
-      name: "Designer Sunglasses",
-      image:
-        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&auto=format&fit=crop&q=60",
-      price: 159.99,
-    },
-    sellerInfo: {
-      id: "seller4",
-      name: "LuxeStyle",
-      avatar: "https://randomuser.me/api/portraits/men/42.jpg",
-      isVerified: true,
-      responseRate: 95,
-      responseTime: "Usually responds within 4 hours",
-    },
-  },
-];
-
-const mockMessages: Record<string, ChatMessage[]> = {
-  thread_1: [
-    {
-      id: "msg_1",
-      senderId: "system",
-      senderName: "System",
-      senderAvatar: "",
-      content:
-        "Order chat created. You can now communicate with the seller about your order.",
-      messageType: "system",
-      timestamp: "2024-01-15T11:00:00Z",
-      isRead: true,
-    },
-    {
-      id: "msg_2",
-      senderId: "buyer1",
-      senderName: "John Doe",
-      senderAvatar: "https://randomuser.me/api/portraits/men/15.jpg",
-      content:
-        "Hi! I just ordered the headphones. When can I expect them to ship?",
-      messageType: "text",
-      timestamp: "2024-01-15T11:15:00Z",
-      isRead: true,
-    },
-    {
-      id: "msg_3",
-      senderId: "seller1",
-      senderName: "AudioTech",
-      senderAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      content:
-        "Hello John! Thank you for your order. I'll ship it out today and you should receive it within 2-3 business days. I'll send you the tracking number once it's picked up.",
-      messageType: "text",
-      timestamp: "2024-01-15T11:45:00Z",
-      isRead: true,
-    },
-    {
-      id: "msg_4",
-      senderId: "system",
-      senderName: "System",
-      senderAvatar: "",
-      content: "Order status updated: Shipped",
-      messageType: "order_update",
-      timestamp: "2024-01-16T09:15:00Z",
-      isRead: true,
-      orderInfo: {
-        orderId: "order_1",
-        orderNumber: "ORD-2024-001",
-        status: "shipped",
-        amount: 269.99,
-      },
-    },
-    {
-      id: "msg_5",
-      senderId: "seller1",
-      senderName: "AudioTech",
-      senderAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      content:
-        "Your order has been shipped! Tracking number: 1Z999AA1012345675",
-      messageType: "text",
-      timestamp: "2024-01-16T09:20:00Z",
-      isRead: true,
-    },
-    {
-      id: "msg_6",
-      senderId: "buyer1",
-      senderName: "John Doe",
-      senderAvatar: "https://randomuser.me/api/portraits/men/15.jpg",
-      content: "Thanks for the quick shipping!",
-      messageType: "text",
-      timestamp: "2024-01-17T15:30:00Z",
-      isRead: true,
-    },
-  ],
-  thread_2: [
-    {
-      id: "msg_7",
-      senderId: "system",
-      senderName: "System",
-      senderAvatar: "",
-      content:
-        "Order chat created. You can now communicate with the seller about your order.",
-      messageType: "system",
-      timestamp: "2024-01-16T13:00:00Z",
-      isRead: true,
-    },
-    {
-      id: "msg_8",
-      senderId: "buyer3",
-      senderName: "Bob Johnson",
-      senderAvatar: "https://randomuser.me/api/portraits/men/25.jpg",
-      content:
-        "I received the sunglasses but they don't look like the photos. The frame seems to be a different material.",
-      messageType: "text",
-      timestamp: "2024-01-18T10:30:00Z",
-      isRead: true,
-    },
-    {
-      id: "msg_9",
-      senderId: "buyer3",
-      senderName: "Bob Johnson",
-      senderAvatar: "https://randomuser.me/api/portraits/men/25.jpg",
-      content: "Here are photos of what I received",
-      messageType: "image",
-      timestamp: "2024-01-18T10:32:00Z",
-      isRead: true,
-      attachments: [
-        {
-          type: "image",
-          url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&auto=format",
-          name: "received_sunglasses.jpg",
-        },
-      ],
-    },
-    {
-      id: "msg_10",
-      senderId: "seller4",
-      senderName: "LuxeStyle",
-      senderAvatar: "https://randomuser.me/api/portraits/men/42.jpg",
-      content:
-        "We understand your concern and will resolve this quickly. Can you please provide more details about the differences you notice?",
-      messageType: "text",
-      timestamp: "2024-01-18T11:20:00Z",
-      isRead: false,
-    },
-  ],
-};
-
 interface MarketplaceChatIntegrationProps {
   orderId?: string;
   productId?: string;
@@ -315,34 +133,74 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [chatThreads] = useState<ChatThread[]>(mockChatThreads);
+  const [chatThreads, setChatThreads] = useState<ChatThread[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showThreadList, setShowThreadList] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // Find relevant thread based on props
+  // Load chat threads
   useEffect(() => {
-    if (orderId) {
-      const thread = chatThreads.find((t) => t.orderId === orderId);
-      if (thread) {
-        setActiveThreadId(thread.id);
-        setShowThreadList(false);
-      }
-    } else if (sellerId) {
-      const thread = chatThreads.find((t) => t.sellerInfo?.id === sellerId);
-      if (thread) {
-        setActiveThreadId(thread.id);
-        setShowThreadList(false);
-      }
+    if (isOpen && user?.id) {
+      loadChatThreads();
     }
-  }, [orderId, sellerId, chatThreads]);
+  }, [isOpen, user?.id]);
+
+  const loadChatThreads = async () => {
+    try {
+      setLoading(true);
+      const threads = await chatService.getUserChatThreads(user!.id);
+      setChatThreads(threads);
+      
+      // Find relevant thread based on props
+      if (orderId) {
+        const thread = threads.find((t) => t.orderId === orderId);
+        if (thread) {
+          setActiveThreadId(thread.id);
+          setShowThreadList(false);
+          loadMessages(thread.id);
+        }
+      } else if (sellerId) {
+        const thread = threads.find((t) => t.sellerInfo?.id === sellerId);
+        if (thread) {
+          setActiveThreadId(thread.id);
+          setShowThreadList(false);
+          loadMessages(thread.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading chat threads:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat conversations",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load messages for active thread
+  const loadMessages = async (threadId: string) => {
+    try {
+      const threadMessages = await chatService.getThreadMessages(threadId);
+      setMessages(threadMessages);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load messages",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Load messages when active thread changes
   useEffect(() => {
-    if (activeThreadId && mockMessages[activeThreadId]) {
-      setMessages(mockMessages[activeThreadId]);
+    if (activeThreadId) {
+      loadMessages(activeThreadId);
     }
   }, [activeThreadId]);
 
@@ -356,46 +214,46 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeThread || !user) return;
 
-    const message: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      senderId: user.id || "current_user",
-      senderName: user.user_metadata?.name || "You",
-      senderAvatar:
-        user.user_metadata?.avatar ||
-        "https://ui-avatars.com/api/?name=User&background=random",
-      content: newMessage,
-      messageType: "text",
-      timestamp: new Date().toISOString(),
-      isRead: false,
-    };
+    try {
+      const message: ChatMessage = {
+        id: `msg_${Date.now()}`,
+        senderId: user.id || "current_user",
+        senderName: user.user_metadata?.name || "You",
+        senderAvatar:
+          user.user_metadata?.avatar ||
+          "https://ui-avatars.com/api/?name=User&background=random",
+        content: newMessage,
+        messageType: "text",
+        timestamp: new Date().toISOString(),
+        isRead: false,
+      };
 
-    setMessages((prev) => [...prev, message]);
-    setNewMessage("");
+      // Send message through chat service
+      await chatService.sendMessage(activeThread.id, message);
+      
+      // Update local state
+      setMessages((prev) => [...prev, message]);
+      setNewMessage("");
 
-    // Simulate typing indicator
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      // Simulate seller response
-      if (activeThread.sellerInfo) {
-        const response: ChatMessage = {
-          id: `msg_${Date.now() + 1}`,
-          senderId: activeThread.sellerInfo.id,
-          senderName: activeThread.sellerInfo.name,
-          senderAvatar: activeThread.sellerInfo.avatar,
-          content: "Thank you for your message. I'll get back to you shortly!",
-          messageType: "text",
-          timestamp: new Date().toISOString(),
-          isRead: false,
-        };
-        setMessages((prev) => [...prev, response]);
-      }
-    }, 2000);
+      // Update the thread's last message
+      setChatThreads(prev => prev.map(thread => 
+        thread.id === activeThread.id 
+          ? { ...thread, lastMessage: newMessage, lastMessageAt: new Date().toISOString() }
+          : thread
+      ));
 
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent to the seller",
-    });
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to the seller",
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -527,7 +385,11 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
         <h3 className="font-semibold">Order Conversations</h3>
       </div>
 
-      {chatThreads.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : chatThreads.length === 0 ? (
         <div className="text-center py-8">
           <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">No conversations yet</h3>
@@ -546,6 +408,7 @@ const MarketplaceChatIntegration: React.FC<MarketplaceChatIntegrationProps> = ({
               onClick={() => {
                 setActiveThreadId(thread.id);
                 setShowThreadList(false);
+                loadMessages(thread.id);
               }}
             >
               <CardContent className="p-4">

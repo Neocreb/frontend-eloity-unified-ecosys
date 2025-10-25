@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronRight,
@@ -18,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { categoryService } from "@/services/categoryService";
+import { useToast } from "@/hooks/use-toast";
 
 interface Category {
   id: string;
@@ -32,7 +34,7 @@ interface Category {
 }
 
 interface CategoryBrowserProps {
-  categories: Category[];
+  categories?: Category[];
   onCategorySelect?: (category: Category) => void;
   showSubcategories?: boolean;
   layout?: "grid" | "list" | "sidebar";
@@ -51,173 +53,48 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   package: Package,
 };
 
-// Mock categories data
-const mockCategories: Category[] = [
-  {
-    id: "electronics",
-    name: "Electronics",
-    icon: "smartphone",
-    productCount: 15420,
-    image:
-      "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=200&fit=crop",
-    isPopular: true,
-    description: "Latest gadgets and tech",
-    subcategories: [
-      {
-        id: "smartphones",
-        name: "Smartphones",
-        icon: "smartphone",
-        productCount: 3240,
-      },
-      { id: "laptops", name: "Laptops", icon: "package", productCount: 1850 },
-      {
-        id: "headphones",
-        name: "Headphones",
-        icon: "package",
-        productCount: 2100,
-      },
-      { id: "tablets", name: "Tablets", icon: "package", productCount: 980 },
-    ],
-  },
-  {
-    id: "fashion",
-    name: "Fashion",
-    icon: "shirt",
-    productCount: 28650,
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop",
-    isTrending: true,
-    description: "Trendy clothing and accessories",
-    subcategories: [
-      {
-        id: "mens-clothing",
-        name: "Men's Clothing",
-        icon: "shirt",
-        productCount: 8420,
-      },
-      {
-        id: "womens-clothing",
-        name: "Women's Clothing",
-        icon: "shirt",
-        productCount: 12340,
-      },
-      { id: "shoes", name: "Shoes", icon: "package", productCount: 5890 },
-      {
-        id: "accessories",
-        name: "Accessories",
-        icon: "package",
-        productCount: 2000,
-      },
-    ],
-  },
-  {
-    id: "home-garden",
-    name: "Home & Garden",
-    icon: "home",
-    productCount: 18930,
-    image:
-      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=200&fit=crop",
-    description: "Everything for your home",
-    subcategories: [
-      { id: "furniture", name: "Furniture", icon: "home", productCount: 6780 },
-      { id: "decor", name: "Home Decor", icon: "home", productCount: 4320 },
-      { id: "kitchen", name: "Kitchen", icon: "package", productCount: 3890 },
-      { id: "garden", name: "Garden", icon: "package", productCount: 3940 },
-    ],
-  },
-  {
-    id: "sports",
-    name: "Sports & Outdoors",
-    icon: "dumbbell",
-    productCount: 12450,
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop",
-    isPopular: true,
-    description: "Sports and outdoor gear",
-    subcategories: [
-      { id: "fitness", name: "Fitness", icon: "dumbbell", productCount: 4560 },
-      { id: "outdoor", name: "Outdoor", icon: "package", productCount: 3890 },
-      {
-        id: "team-sports",
-        name: "Team Sports",
-        icon: "package",
-        productCount: 2100,
-      },
-      {
-        id: "water-sports",
-        name: "Water Sports",
-        icon: "package",
-        productCount: 1900,
-      },
-    ],
-  },
-  {
-    id: "toys-games",
-    name: "Toys & Games",
-    icon: "gamepad",
-    productCount: 9820,
-    image:
-      "https://images.unsplash.com/photo-1558060370-d532d3d4c2dc?w=300&h=200&fit=crop",
-    isTrending: true,
-    description: "Fun for all ages",
-    subcategories: [
-      {
-        id: "video-games",
-        name: "Video Games",
-        icon: "gamepad",
-        productCount: 3240,
-      },
-      {
-        id: "board-games",
-        name: "Board Games",
-        icon: "package",
-        productCount: 1890,
-      },
-      {
-        id: "kids-toys",
-        name: "Kids Toys",
-        icon: "package",
-        productCount: 3690,
-      },
-      {
-        id: "educational",
-        name: "Educational",
-        icon: "book",
-        productCount: 1000,
-      },
-    ],
-  },
-  {
-    id: "automotive",
-    name: "Automotive",
-    icon: "car",
-    productCount: 7650,
-    image:
-      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=300&h=200&fit=crop",
-    description: "Car parts and accessories",
-    subcategories: [
-      { id: "car-parts", name: "Car Parts", icon: "car", productCount: 3420 },
-      {
-        id: "accessories",
-        name: "Accessories",
-        icon: "package",
-        productCount: 2130,
-      },
-      { id: "tools", name: "Tools", icon: "package", productCount: 1100 },
-      { id: "tires", name: "Tires", icon: "package", productCount: 1000 },
-    ],
-  },
-];
-
 export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
-  categories = mockCategories,
+  categories,
   onCategorySelect,
   showSubcategories = true,
   layout = "grid",
   className,
 }) => {
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Fetch real categories data
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const categoriesData = await categoryService.getCategories();
+        setLocalCategories(categoriesData);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load categories",
+          variant: "destructive",
+        });
+        // Fallback to empty array if real data fetch fails
+        setLocalCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Only fetch if categories weren't passed as props
+    if (!categories) {
+      fetchCategories();
+    } else {
+      setLocalCategories(categories);
+      setLoading(false);
+    }
+  }, [categories, toast]);
 
   const handleCategoryClick = (category: Category) => {
     setSelectedCategory(category.id);
@@ -236,13 +113,24 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
     return count.toString();
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  const categoriesToDisplay = categories || localCategories;
+
   if (layout === "sidebar") {
     return (
       <div className={cn("w-64 bg-white border-r border-gray-200", className)}>
         <div className="p-4">
           <h3 className="font-semibold text-lg mb-4">Categories</h3>
           <div className="space-y-1">
-            {categories.map((category) => (
+            {categoriesToDisplay.map((category) => (
               <div key={category.id}>
                 <button
                   onClick={() => handleCategoryClick(category)}
@@ -300,7 +188,7 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
     return (
       <div className={cn("w-full", className)}>
         <div className="space-y-4">
-          {categories.map((category) => (
+          {categoriesToDisplay.map((category) => (
             <div
               key={category.id}
               className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
@@ -381,7 +269,7 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
   return (
     <div className={cn("w-full", className)}>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {categories.map((category) => (
+        {categoriesToDisplay.map((category) => (
           <div
             key={category.id}
             className="group relative bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"

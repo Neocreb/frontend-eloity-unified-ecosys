@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Heart, Share2, ShoppingCart, Eye, MessageCircle, ChevronLeft, ChevronRight, Zap, Shield, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { productService } from '@/services/productService';
+import { reviewService } from '@/services/reviewService';
+import { qaService } from '@/services/qaService';
 
 interface ProductImage {
   id: string;
@@ -66,60 +69,9 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [newReview, setNewReview] = useState({ rating: 5, title: '', content: '', images: [] });
   const [newQuestion, setNewQuestion] = useState('');
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  // Mock product data - replace with API call
-  const product = {
-    id: productId,
-    name: 'Premium Wireless Headphones',
-    brand: 'AudioTech',
-    price: '$299.99',
-    originalPrice: '$399.99',
-    discount: '25%',
-    rating: 4.5,
-    reviewCount: 1247,
-    inStock: true,
-    stockCount: 23,
-    description: 'Experience crystal-clear audio with our premium wireless headphones featuring noise cancellation and 30-hour battery life.',
-    features: [
-      'Active Noise Cancellation',
-      '30-hour battery life',
-      'Premium comfort design',
-      'Wireless charging case',
-      'Voice assistant support'
-    ],
-    specifications: {
-      'Driver Size': '40mm',
-      'Frequency Response': '20Hz - 20kHz',
-      'Battery Life': '30 hours',
-      'Charging Time': '2 hours',
-      'Weight': '250g',
-      'Connectivity': 'Bluetooth 5.0'
-    },
-    variants: [
-      { id: '1', name: 'Midnight Black', color: '#000000' },
-      { id: '2', name: 'Pearl White', color: '#FFFFFF' },
-      { id: '3', name: 'Rose Gold', color: '#E8B4B8' }
-    ],
-    images: [
-      { id: '1', url: '/api/placeholder/600/600', alt: 'Main view', isPrimary: true },
-      { id: '2', url: '/api/placeholder/600/600', alt: 'Side view', isPrimary: false },
-      { id: '3', url: '/api/placeholder/600/600', alt: 'Detail view', isPrimary: false },
-      { id: '4', url: '/api/placeholder/600/600', alt: 'Packaging', isPrimary: false }
-    ],
-    seller: {
-      id: 'seller1',
-      name: 'AudioTech Official',
-      rating: 4.8,
-      responseTime: '2 hours',
-      verified: true
-    },
-    shipping: {
-      free: true,
-      estimatedDays: '2-3',
-      express: true
-    }
-  };
 
   useEffect(() => {
     loadProductData();
@@ -127,83 +79,39 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
 
   const loadProductData = async () => {
     try {
+      setLoading(true);
+      
+      // Load product data
+      const productData = await productService.getProductById(productId);
+      setProduct(productData);
+      
       // Load reviews
-      setReviews([
-        {
-          id: '1',
-          userId: 'user1',
-          userName: 'Sarah Johnson',
-          userAvatar: '/api/placeholder/40/40',
-          rating: 5,
-          title: 'Excellent sound quality!',
-          content: 'These headphones exceeded my expectations. The noise cancellation is amazing and the battery lasts all day.',
-          images: ['/api/placeholder/100/100'],
-          verified: true,
-          helpful: 24,
-          createdAt: '2024-01-15'
-        },
-        {
-          id: '2',
-          userId: 'user2',
-          userName: 'Mike Chen',
-          userAvatar: '/api/placeholder/40/40',
-          rating: 4,
-          title: 'Good value for money',
-          content: 'Great headphones for the price. Comfortable to wear for long periods.',
-          images: [],
-          verified: false,
-          helpful: 12,
-          createdAt: '2024-01-10'
-        }
-      ]);
-
+      const reviewsData = await reviewService.getProductReviews(productId);
+      setReviews(reviewsData);
+      
       // Load Q&A
-      setQuestions([
-        {
-          id: '1',
-          question: 'Are these compatible with iPhone?',
-          answer: 'Yes, these headphones are fully compatible with iPhone and all Bluetooth devices.',
-          userId: 'user3',
-          userName: 'Alex Kim',
-          answeredBy: 'AudioTech Support',
-          answeredAt: '2024-01-12',
-          createdAt: '2024-01-10',
-          helpful: 8
-        }
-      ]);
-
+      const qaData = await qaService.getProductQuestions(productId);
+      setQuestions(qaData);
+      
       // Load related products
-      setRelatedProducts([
-        {
-          id: 'related1',
-          name: 'Wireless Earbuds Pro',
-          price: '$199.99',
-          image: '/api/placeholder/200/200',
-          rating: 4.3,
-          reviews: 892
-        },
-        {
-          id: 'related2',
-          name: 'Premium Speaker Set',
-          price: '$449.99',
-          image: '/api/placeholder/200/200',
-          rating: 4.7,
-          reviews: 654
-        }
-      ]);
+      const relatedData = await productService.getRelatedProducts(productId);
+      setRelatedProducts(relatedData);
     } catch (error) {
+      console.error("Error loading product data:", error);
       toast({
         title: "Error",
         description: "Failed to load product data",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddToCart = () => {
     toast({
       title: "Added to Cart",
-      description: `${quantity} ${product.name} added to your cart`
+      description: `${quantity} ${product?.name} added to your cart`
     });
   };
 
@@ -257,11 +165,15 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
+    if (product?.images) {
+      setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+    if (product?.images) {
+      setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -273,6 +185,26 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
     ));
   };
 
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="text-gray-500">Product not found</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -280,29 +212,33 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
         <div className="space-y-4">
           <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group">
             <img
-              src={product.images[currentImageIndex].url}
-              alt={product.images[currentImageIndex].alt}
+              src={product.images?.[currentImageIndex]?.url || product.image}
+              alt={product.images?.[currentImageIndex]?.alt || product.name}
               className="w-full h-full object-cover transition-transform duration-300"
               style={{ transform: `scale(${zoomLevel})` }}
             />
             
             {/* Image Navigation */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={prevImage}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={nextImage}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+            {product.images && product.images.length > 1 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={prevImage}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={nextImage}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </>
+            )}
             
             {/* Zoom Controls */}
             <div className="absolute bottom-2 right-2 flex gap-2">
@@ -324,19 +260,21 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
           </div>
           
           {/* Thumbnail Images */}
-          <div className="flex gap-2 overflow-x-auto">
-            {product.images.map((image, index) => (
-              <button
-                key={image.id}
-                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                  index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
-                }`}
-                onClick={() => setCurrentImageIndex(index)}
-              >
-                <img src={image.url} alt={image.alt} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {product.images && product.images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto">
+              {product.images.map((image: ProductImage, index: number) => (
+                <button
+                  key={image.id}
+                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                    index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
+                  }`}
+                  onClick={() => setCurrentImageIndex(index)}
+                >
+                  <img src={image.url} alt={image.alt} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Information */}
@@ -344,7 +282,7 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Badge variant="secondary">{product.brand}</Badge>
-              {product.seller.verified && (
+              {product.seller?.verified && (
                 <Badge variant="outline" className="text-green-600">
                   <Shield className="w-3 h-3 mr-1" />
                   Verified Seller
@@ -364,11 +302,15 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
 
           {/* Price */}
           <div className="flex items-center gap-4">
-            <span className="text-3xl font-bold text-green-600">{product.price}</span>
-            {product.originalPrice && (
+            <span className="text-3xl font-bold text-green-600">
+              {product.discountPrice ? `$${product.discountPrice}` : `$${product.price}`}
+            </span>
+            {product.originalPrice && product.discountPrice && (
               <>
-                <span className="text-xl text-gray-500 line-through">{product.originalPrice}</span>
-                <Badge variant="destructive">{product.discount} OFF</Badge>
+                <span className="text-xl text-gray-500 line-through">${product.originalPrice}</span>
+                <Badge variant="destructive">
+                  {Math.round(((product.originalPrice - product.discountPrice) / product.originalPrice) * 100)}% OFF
+                </Badge>
               </>
             )}
           </div>
@@ -378,7 +320,7 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
             {product.inStock ? (
               <>
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-green-600">In Stock ({product.stockCount} available)</span>
+                <span className="text-green-600">In Stock ({product.stockCount || 'Available'} available)</span>
               </>
             ) : (
               <>
@@ -389,24 +331,26 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
           </div>
 
           {/* Shipping Info */}
-          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-            <Truck className="w-5 h-5 text-blue-600" />
-            <div>
-              <p className="font-medium">
-                {product.shipping.free ? 'Free Shipping' : 'Shipping Available'}
-              </p>
-              <p className="text-sm text-gray-600">
-                Estimated delivery: {product.shipping.estimatedDays} business days
-              </p>
+          {product.shipping && (
+            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+              <Truck className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="font-medium">
+                  {product.shipping.free ? 'Free Shipping' : 'Shipping Available'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Estimated delivery: {product.shipping.estimatedDays} business days
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Variants */}
-          {product.variants.length > 0 && (
+          {product.variants && product.variants.length > 0 && (
             <div>
               <h3 className="font-medium mb-3">Color</h3>
               <div className="flex gap-2">
-                {product.variants.map((variant) => (
+                {product.variants.map((variant: any) => (
                   <button
                     key={variant.id}
                     className={`w-10 h-10 rounded-full border-2 ${
@@ -476,12 +420,16 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
           <Card>
             <CardContent className="p-6">
               <p className="text-gray-700 mb-4">{product.description}</p>
-              <h4 className="font-medium mb-3">Key Features:</h4>
-              <ul className="list-disc list-inside space-y-1">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="text-gray-700">{feature}</li>
-                ))}
-              </ul>
+              {product.features && (
+                <>
+                  <h4 className="font-medium mb-3">Key Features:</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    {product.features.map((feature: string, index: number) => (
+                      <li key={index} className="text-gray-700">{feature}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -489,14 +437,18 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
         <TabsContent value="specifications" className="mt-4">
           <Card>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(product.specifications).map(([key, value]) => (
-                  <div key={key} className="flex justify-between py-2 border-b">
-                    <span className="font-medium">{key}:</span>
-                    <span className="text-gray-700">{value}</span>
-                  </div>
-                ))}
-              </div>
+              {product.specifications ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(product.specifications).map(([key, value]) => (
+                    <div key={key} className="flex justify-between py-2 border-b">
+                      <span className="font-medium">{key}:</span>
+                      <span className="text-gray-700">{String(value)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No specifications available</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -680,30 +632,32 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
       </Tabs>
 
       {/* Related Products */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Related Products</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {relatedProducts.map((product) => (
-              <div key={product.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full aspect-square object-cover rounded mb-3"
-                />
-                <h4 className="font-medium mb-2 line-clamp-2">{product.name}</h4>
-                <div className="flex items-center gap-1 mb-2">
-                  {renderStars(product.rating)}
-                  <span className="text-xs text-gray-600">({product.reviews})</span>
+      {relatedProducts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Related Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((product) => (
+                <div key={product.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full aspect-square object-cover rounded mb-3"
+                  />
+                  <h4 className="font-medium mb-2 line-clamp-2">{product.name}</h4>
+                  <div className="flex items-center gap-1 mb-2">
+                    {renderStars(product.rating)}
+                    <span className="text-xs text-gray-600">({product.reviews})</span>
+                  </div>
+                  <p className="font-bold text-green-600">{product.price}</p>
                 </div>
-                <p className="font-bold text-green-600">{product.price}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

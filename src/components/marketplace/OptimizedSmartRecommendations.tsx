@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { recommendationService } from "@/services/recommendationService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Product {
   id: string;
@@ -70,208 +72,6 @@ interface OptimizedSmartRecommendationsProps {
   enableRealTimeUpdates?: boolean;
 }
 
-// Stable mock data
-const STABLE_PRODUCTS: Product[] = [
-  {
-    id: "rec-1",
-    name: "iPhone 14 Pro Max 256GB",
-    image:
-      "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400&h=400&fit=crop",
-    originalPrice: 1099,
-    salePrice: 999,
-    rating: 4.8,
-    reviews: 2340,
-    category: "Electronics",
-    tags: ["smartphone", "apple", "premium"],
-    viewCount: 15420,
-    soldCount: 890,
-  },
-  {
-    id: "rec-2",
-    name: "Samsung Galaxy S23 Ultra",
-    image:
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop",
-    originalPrice: 1199,
-    salePrice: 1049,
-    rating: 4.7,
-    reviews: 1890,
-    category: "Electronics",
-    tags: ["smartphone", "samsung", "premium"],
-    viewCount: 12340,
-    soldCount: 670,
-  },
-  {
-    id: "rec-3",
-    name: "MacBook Pro 16-inch M2",
-    image:
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=400&fit=crop",
-    originalPrice: 2499,
-    salePrice: 2299,
-    rating: 4.9,
-    reviews: 890,
-    category: "Electronics",
-    tags: ["laptop", "apple", "professional"],
-    viewCount: 8920,
-    soldCount: 234,
-  },
-  {
-    id: "rec-4",
-    name: "Nike Air Max 270 React",
-    image:
-      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
-    originalPrice: 150,
-    salePrice: 120,
-    rating: 4.6,
-    reviews: 3420,
-    category: "Fashion",
-    tags: ["shoes", "nike", "sports"],
-    viewCount: 18950,
-    soldCount: 1240,
-  },
-  {
-    id: "rec-5",
-    name: "Sony WH-1000XM5 Headphones",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-    originalPrice: 399,
-    salePrice: 329,
-    rating: 4.8,
-    reviews: 2890,
-    category: "Electronics",
-    tags: ["headphones", "sony", "wireless"],
-    viewCount: 14560,
-    soldCount: 980,
-  },
-  {
-    id: "rec-6",
-    name: "Levi's 501 Original Fit Jeans",
-    image:
-      "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop",
-    originalPrice: 89,
-    salePrice: 69,
-    rating: 4.5,
-    reviews: 4560,
-    category: "Fashion",
-    tags: ["jeans", "levis", "classic"],
-    viewCount: 23400,
-    soldCount: 1890,
-  },
-  {
-    id: "rec-7",
-    name: "iPad Pro 12.9-inch",
-    image:
-      "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop",
-    originalPrice: 1099,
-    salePrice: 949,
-    rating: 4.7,
-    reviews: 1567,
-    category: "Electronics",
-    tags: ["tablet", "apple", "productivity"],
-    viewCount: 11230,
-    soldCount: 456,
-  },
-  {
-    id: "rec-8",
-    name: "Adidas Ultraboost 22",
-    image:
-      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop",
-    originalPrice: 180,
-    salePrice: 144,
-    rating: 4.6,
-    reviews: 2890,
-    category: "Fashion",
-    tags: ["shoes", "adidas", "running"],
-    viewCount: 16780,
-    soldCount: 1120,
-  },
-];
-
-// Memoized recommendation generation function
-const generateRecommendations = (
-  products: Product[],
-  userPreferences?: OptimizedSmartRecommendationsProps["userPreferences"],
-  recentlyViewed?: Product[],
-): RecommendedProduct[] => {
-  const recommendations: RecommendedProduct[] = [];
-
-  products.forEach((product) => {
-    let score = 0;
-    let reason: RecommendationReason;
-
-    // Trending algorithm
-    if (product.viewCount && product.viewCount > 15000) {
-      score += 0.8;
-      reason = {
-        type: "trending",
-        text: `${product.viewCount?.toLocaleString()} people viewed this`,
-        confidence: 0.85,
-      };
-    }
-    // High rated products
-    else if (product.rating >= 4.7) {
-      score += 0.9;
-      reason = {
-        type: "high_rated",
-        text: `Highly rated (${product.rating}⭐) by ${product.reviews} customers`,
-        confidence: 0.9,
-      };
-    }
-    // Price drop detection
-    else if (
-      product.salePrice &&
-      (product.originalPrice - product.salePrice) / product.originalPrice > 0.15
-    ) {
-      score += 0.7;
-      const discount = Math.round(
-        ((product.originalPrice - product.salePrice) / product.originalPrice) *
-          100,
-      );
-      reason = {
-        type: "price_drop",
-        text: `${discount}% price drop - limited time offer`,
-        confidence: 0.8,
-      };
-    }
-    // Category-based recommendations
-    else if (userPreferences?.categories.includes(product.category)) {
-      score += 0.6;
-      reason = {
-        type: "category_based",
-        text: `Matches your interest in ${product.category}`,
-        confidence: 0.7,
-      };
-    }
-    // Recently viewed similar items
-    else if (
-      recentlyViewed?.some((viewed) => viewed.category === product.category)
-    ) {
-      score += 0.65;
-      reason = {
-        type: "recently_viewed",
-        text: "Similar to items you recently viewed",
-        confidence: 0.75,
-      };
-    }
-    // Default personalized recommendation
-    else {
-      score += 0.5;
-      reason = {
-        type: "personalized",
-        text: "Recommended for you based on your activity",
-        confidence: 0.6,
-      };
-    }
-
-    recommendations.push({
-      ...product,
-      reason,
-      score,
-    });
-  });
-
-  return recommendations.sort((a, b) => b.score - a.score);
-};
-
 export const OptimizedSmartRecommendations: React.FC<
   OptimizedSmartRecommendationsProps
 > = ({
@@ -291,18 +91,40 @@ export const OptimizedSmartRecommendations: React.FC<
   maxItems = 8,
   enableRealTimeUpdates = false, // Default to false to prevent flickering
 }) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [recommendations, setRecommendations] = useState<RecommendedProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Memoize recommendations to prevent unnecessary recalculations
-  const recommendations = useMemo(() => {
-    return generateRecommendations(
-      STABLE_PRODUCTS,
-      userPreferences,
-      recentlyViewed,
-    ).slice(0, maxItems);
-  }, [userPreferences, recentlyViewed, maxItems, refreshKey]);
+  // Load real recommendations
+  useEffect(() => {
+    loadRecommendations();
+  }, [userId, currentProduct, refreshKey, user?.id]);
+
+  const loadRecommendations = async () => {
+    try {
+      setLoading(true);
+      
+      // Get recommendations from service
+      const recommendationData = await recommendationService.getRecommendations({
+        userId: userId || user?.id,
+        currentProductId: currentProduct?.id,
+        recentlyViewed: recentlyViewed.map(p => p.id),
+        userPreferences,
+        limit: maxItems
+      });
+      
+      setRecommendations(recommendationData);
+    } catch (error) {
+      console.error("Error loading recommendations:", error);
+      // Fallback to empty array if real data fetch fails
+      setRecommendations([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Memoize filtered recommendations
   const filteredRecommendations = useMemo(() => {
@@ -410,6 +232,37 @@ export const OptimizedSmartRecommendations: React.FC<
     },
     [onQuickView],
   );
+
+  if (loading) {
+    return (
+      <div className={cn("w-full", className)}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-purple-500" />
+                <CardTitle className="text-xl">Smart Recommendations</CardTitle>
+              </div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array(4)
+                .fill(0)
+                .map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-200 aspect-square rounded-lg mb-3"></div>
+                    <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                    <div className="bg-gray-200 h-3 rounded w-3/4"></div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("w-full", className)}>

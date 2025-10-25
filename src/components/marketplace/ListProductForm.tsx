@@ -25,25 +25,13 @@ import { ImagePlus, Loader2 } from 'lucide-react';
 import { useMarketplace } from '@/contexts/MarketplaceContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { storageService } from '@/services/storageService';
+import { categoryService } from '@/services/categoryService';
 
 interface ListProductFormProps {
   onSuccess: () => void;
   editProductId?: string;
 }
-
-const CATEGORIES = [
-  "electronics",
-  "clothing",
-  "accessories",
-  "home",
-  "beauty",
-  "footwear",
-  "sports",
-  "books",
-  "toys",
-  "digital",
-  "other"
-];
 
 type FormValues = {
   name: string;
@@ -55,11 +43,28 @@ type FormValues = {
 };
 
 const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => {
-  const { createProduct, getProduct } = useMarketplace();
+  const { createProduct, getProduct, updateProduct } = useMarketplace();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>('');
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
+  
+  // Load categories
+  useState(() => {
+    const loadCategories = async () => {
+      try {
+        const categoryData = await categoryService.getCategories();
+        setCategories(categoryData.map(cat => ({ id: cat.id, name: cat.name })));
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        // Fallback to empty array if real data fetch fails
+        setCategories([]);
+      }
+    };
+    
+    loadCategories();
+  });
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -72,16 +77,27 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
     }
   });
   
-  // For image preview
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // For image preview and upload
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // For now we're just using the URL.createObjectURL for preview
-    // In a real app, this would upload to storage and return a URL
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewImage(objectUrl);
-    form.setValue('imageUrl', objectUrl);
+    try {
+      // Upload image to storage service
+      const imageUrl = await storageService.uploadImage(file, `products/${user?.id}/${Date.now()}_${file.name}`);
+      
+      // Set preview and form value
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewImage(objectUrl);
+      form.setValue('imageUrl', imageUrl);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const onSubmit = async (data: FormValues) => {
@@ -97,10 +113,6 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
     setIsSubmitting(true);
     
     try {
-      // In a real app with proper backend, imageUrl would be the result of an upload
-      // For this demo, we'll use the preview or a placeholder
-      const imageUrl = data.imageUrl || previewImage || 'https://placehold.co/600x400?text=Product+Image';
-      
       const price = parseFloat(data.price);
       if (isNaN(price) || price <= 0) {
         toast({
@@ -112,22 +124,43 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
         return;
       }
       
-      await createProduct({
-        name: data.name,
-        description: data.description,
-        price,
-        category: data.category,
-        image: imageUrl,
-        rating: 0,
-        inStock: true,
-        isNew: true,
-        reviewCount: 0,
-      });
+      // Use the uploaded image URL or a placeholder
+      const imageUrl = data.imageUrl || 'https://placehold.co/600x400?text=Product+Image';
       
-      toast({
-        title: "Product Created",
-        description: "Your product has been listed successfully"
-      });
+      if (editProductId) {
+        // Update existing product
+        await updateProduct(editProductId, {
+          name: data.name,
+          description: data.description,
+          price,
+          category: data.category,
+          image: imageUrl,
+          inStock: data.inStock,
+        });
+        
+        toast({
+          title: "Product Updated",
+          description: "Your product has been updated successfully"
+        });
+      } else {
+        // Create new product
+        await createProduct({
+          name: data.name,
+          description: data.description,
+          price,
+          category: data.category,
+          image: imageUrl,
+          rating: 0,
+          inStock: true,
+          isNew: true,
+          reviewCount: 0,
+        });
+        
+        toast({
+          title: "Product Created",
+          description: "Your product has been listed successfully"
+        });
+      }
       
       form.reset();
       setPreviewImage('');
@@ -146,7 +179,7 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">List a Product</h2>
+      <h2 className="text-xl font-semibold">{editProductId ? 'Edit Product' : 'List a Product'}</h2>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -229,13 +262,12 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CATEGORIES.map(category => (
+                          {categories.map(category => (
                             <SelectItem 
-                              key={category} 
-                              value={category}
-                              className="capitalize"
+                              key={category.id} 
+                              value={category.id}
                             >
-                              {category.charAt(0).toUpperCase() + category.slice(1)}
+                              {category.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -245,6 +277,29 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
                   )}
                 />
               </div>
+              
+              <FormField
+                control={form.control}
+                name="inStock"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="h-4 w-4"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>In Stock</FormLabel>
+                      <FormDescription>
+                        Check if this product is currently available for purchase
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
             </div>
             
             <div className="space-y-4">
@@ -321,10 +376,10 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {editProductId ? 'Updating...' : 'Submitting...'}
                 </>
               ) : (
-                'List Product'
+                editProductId ? 'Update Product' : 'List Product'
               )}
             </Button>
           </div>
