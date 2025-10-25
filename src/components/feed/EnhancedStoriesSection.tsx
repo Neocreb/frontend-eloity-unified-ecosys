@@ -41,6 +41,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
     const fetchStories = async () => {
       try {
         // Fetch recent stories from the database
+        // Using the correct table name and schema based on Supabase setup
         const { data, error } = await supabase
           .from('stories')
           .select(`
@@ -48,7 +49,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
             user_id,
             created_at,
             media_url,
-            user:profiles!user_id(
+            profiles:user_id(
               username,
               full_name,
               avatar_url
@@ -57,15 +58,18 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           .order('created_at', { ascending: false })
           .limit(10);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching stories:", error);
+          throw error;
+        }
 
         // Transform the data to match our Story interface
-        const fetchedStories: Story[] = data.map((story: any) => ({
+        const fetchedStories: Story[] = (data || []).map((story: any) => ({
           id: story.id,
           user: {
             id: story.user_id,
-            name: story.user?.full_name || story.user?.username || "Unknown User",
-            avatar: story.user?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            name: story.profiles?.full_name || story.profiles?.username || "Unknown User",
+            avatar: story.profiles?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
             isUser: story.user_id === user?.id
           },
           hasStory: true,
@@ -80,7 +84,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           user: {
             id: user?.id || "current-user",
             name: "Create story",
-            avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
             isUser: true,
           },
           hasStory: false,
@@ -97,7 +101,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           user: {
             id: user?.id || "current-user",
             name: "Create story",
-            avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
             isUser: true,
           },
           hasStory: false,
@@ -107,7 +111,9 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
       }
     };
 
-    fetchStories();
+    if (user) {
+      fetchStories();
+    }
   }, [user]);
 
   const scroll = (direction: "left" | "right") => {
@@ -148,7 +154,6 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
-            WebkitScrollbar: { display: "none" }
           }}
         >
           {stories.map((story, index) => (

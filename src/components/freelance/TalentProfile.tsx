@@ -40,9 +40,8 @@ import {
 } from "lucide-react";
 import { useFreelance } from "@/hooks/use-freelance";
 import { FreelancerProfile } from "@/types/freelance";
-import { reviewService } from "@/services/reviewService";
-import { employmentService } from "@/services/employmentService";
-import { certificationService } from "@/services/certificationService";
+import { ReviewService } from "@/services/reviewService";
+import type { Review as MarketplaceReview } from "@/types/marketplace";
 
 interface TalentProfileProps {
   talentId: string;
@@ -77,6 +76,9 @@ interface Talent {
   languages: string[];
   joinedDate: string;
   lastSeen: string;
+  // Add employment history and certifications from profile
+  employmentHistory: EmploymentHistory[];
+  certifications: Certification[];
 }
 
 interface Review {
@@ -117,8 +119,6 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
   const [isSaved, setIsSaved] = useState(false);
   const [talent, setTalent] = useState<Talent | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [employmentHistory, setEmploymentHistory] = useState<EmploymentHistory[]>([]);
-  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
   const { getFreelancer } = useFreelance();
 
@@ -134,46 +134,64 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
           // Transform FreelancerProfile to Talent interface
           const transformedTalent: Talent = {
             id: freelancerProfile.id,
-            name: freelancerProfile.full_name || freelancerProfile.username || `User ${freelancerProfile.id}`,
-            avatar: freelancerProfile.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            name: `User ${freelancerProfile.id}`,
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
             title: freelancerProfile.title || "Freelancer",
             description: freelancerProfile.description || "No description available",
             skills: freelancerProfile.skills || [],
-            hourlyRate: freelancerProfile.hourly_rate || 0,
+            hourlyRate: freelancerProfile.hourlyRate || 0,
             rating: freelancerProfile.rating || 0,
-            reviewCount: freelancerProfile.review_count || 0,
-            location: freelancerProfile.location || "Remote",
-            availability: freelancerProfile.availability || "available",
-            verified: freelancerProfile.verified || false,
-            completedJobs: freelancerProfile.completed_projects || 0,
-            responseTime: freelancerProfile.response_time || "24 hours",
-            successRate: freelancerProfile.success_rate || 90,
+            reviewCount: freelancerProfile.reviewCount || 0,
+            location: "Remote",
+            availability: freelancerProfile.availability === "unavailable" ? "offline" : (freelancerProfile.availability || "available"),
+            verified: false,
+            completedJobs: freelancerProfile.completedProjects || 0,
+            responseTime: "24 hours",
+            successRate: 90,
             portfolio: (freelancerProfile.portfolio || []).map((url: string, index: number) => ({
               id: index.toString(),
               title: `Project ${index + 1}`,
               image: url,
               category: "Web Development"
             })),
-            badges: freelancerProfile.badges || [],
+            badges: [],
             languages: freelancerProfile.languages || [],
-            joinedDate: freelancerProfile.created_at?.toISOString() || new Date().toISOString(),
-            lastSeen: freelancerProfile.last_seen || "Recently online"
+            joinedDate: freelancerProfile.createdAt.toISOString() || new Date().toISOString(),
+            lastSeen: "Recently online",
+            employmentHistory: Array.isArray(freelancerProfile.education) ? freelancerProfile.education.map((item: string, index: number) => ({
+              id: index.toString(),
+              company: item,
+              position: "Position",
+              duration: "Duration",
+              description: "Description",
+              type: "Full-time"
+            })) : [],
+            certifications: Array.isArray(freelancerProfile.certifications) ? freelancerProfile.certifications.map((item: string, index: number) => ({
+              id: index.toString(),
+              name: item,
+              issuer: "Issuer",
+              date: new Date().toISOString(),
+              verified: false
+            })) : [],
           };
           
           setTalent(transformedTalent);
         }
         
-        // Fetch reviews
-        const reviewsData = await reviewService.getFreelancerReviews(talentId);
-        setReviews(reviewsData);
-        
-        // Fetch employment history
-        const employmentData = await employmentService.getFreelancerEmployment(talentId);
-        setEmploymentHistory(employmentData);
-        
-        // Fetch certifications
-        const certificationData = await certificationService.getFreelancerCertifications(talentId);
-        setCertifications(certificationData);
+        // Fetch reviews - using the correct method
+        const marketplaceReviews = await ReviewService.getProductReviews(talentId);
+        // Transform marketplace reviews to component reviews
+        const transformedReviews: Review[] = marketplaceReviews.map((review: MarketplaceReview) => ({
+          id: review.id,
+          clientName: review.userName,
+          clientAvatar: review.userAvatar,
+          rating: review.rating,
+          review: review.content,
+          projectTitle: "Project Title", // Default value since we don't have this in marketplace reviews
+          date: review.createdAt,
+          verified: review.verified
+        }));
+        setReviews(transformedReviews);
       } catch (error) {
         console.error("Error fetching talent data:", error);
       } finally {
@@ -683,7 +701,7 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {employmentHistory.map((job) => (
+                  {talent.employmentHistory.map((job) => (
                     <div
                       key={job.id}
                       className="border-l-2 border-blue-200 pl-4"
@@ -720,7 +738,7 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {certifications.map((cert) => (
+                  {talent.certifications.map((cert) => (
                     <div
                       key={cert.id}
                       className="flex items-center justify-between"
