@@ -96,8 +96,8 @@ const EnhancedFreelance: React.FC = () => {
   const loadInitialData = async () => {
     try {
       const [categoriesData, skillsData] = await Promise.all([
-        freelanceService.getCategories(),
-        freelanceService.getSkills(),
+        FreelanceService.getCategories(),
+        FreelanceService.getSkills(),
       ]);
       setCategories(categoriesData);
       setSkills(skillsData);
@@ -115,9 +115,10 @@ const EnhancedFreelance: React.FC = () => {
     try {
       const searchFilters: SearchFilters = {
         ...filters,
+        query: searchQuery,
         skills: searchQuery ? [searchQuery] : filters.skills,
       };
-      const jobsData = await freelanceService.searchJobs(searchFilters);
+      const jobsData = await FreelanceService.searchJobs(searchFilters);
       setJobs(jobsData);
     } catch (error) {
       toast({
@@ -135,10 +136,10 @@ const EnhancedFreelance: React.FC = () => {
     try {
       const searchFilters: SearchFilters = {
         ...filters,
+        query: searchQuery,
         skills: searchQuery ? [searchQuery] : filters.skills,
       };
-      const freelancersData =
-        await freelanceService.searchFreelancers(searchFilters);
+      const freelancersData = await FreelanceService.searchFreelancers(searchFilters);
       setFreelancers(freelancersData);
     } catch (error) {
       toast({
@@ -182,7 +183,7 @@ const EnhancedFreelance: React.FC = () => {
 
   const handleSubmitProposal = async (proposalData: any) => {
     try {
-      await freelanceService.submitProposal(proposalData);
+      await FreelanceService.submitProposal(proposalData);
       toast({
         title: "Proposal Submitted",
         description: "Your proposal has been sent successfully!",
@@ -249,7 +250,7 @@ const EnhancedFreelance: React.FC = () => {
         visibility: "public",
       };
 
-      await freelanceService.createJobPosting(jobData);
+      await FreelanceService.createJobPosting(jobData);
 
       toast({
         title: "Job Posted Successfully",

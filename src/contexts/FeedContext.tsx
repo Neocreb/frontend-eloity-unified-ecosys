@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { PostService } from '@/services/postService';
 
 interface UnifiedFeedItem {
   id: string;
@@ -70,124 +71,6 @@ interface FeedProviderProps {
   children: ReactNode;
 }
 
-// Mock feed data generator (will be replaced with real API calls)
-const generateMockFeedData = (page: number = 1, limit: number = 10): UnifiedFeedItem[] => {
-  const baseItems = [
-    {
-      id: `post-${page}-1`,
-      type: "post" as const,
-      timestamp: new Date(Date.now() - (page * 2 * 60 * 60 * 1000)),
-      priority: 8,
-      author: {
-        id: "user-1",
-        name: "Sarah Johnson",
-        username: "sarahj",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-        verified: true,
-        badges: ["Creator"],
-      },
-      content: {
-        text: `Amazing new project launch! 🚀 This is post ${page} - Working on something exciting that will change how we work remotely.`,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=600&fit=crop",
-            alt: "Project screenshot",
-          },
-        ],
-        location: "San Francisco, CA",
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 500) + 50,
-        comments: Math.floor(Math.random() * 50) + 5,
-        shares: Math.floor(Math.random() * 25) + 2,
-        views: Math.floor(Math.random() * 2000) + 100,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
-    },
-    {
-      id: `product-${page}-1`,
-      type: "product" as const,
-      timestamp: new Date(Date.now() - (page * 3 * 60 * 60 * 1000)),
-      priority: 6,
-      author: {
-        id: "seller-1",
-        name: "TechGear Store",
-        username: "techgear",
-        avatar: "https://api.dicebear.com/7.x/initials/svg?seed=TG",
-        verified: true,
-        badges: ["Trusted Seller"],
-      },
-      content: {
-        title: `Premium Wireless Headphones - Page ${page}`,
-        description: "High-quality wireless headphones with noise cancellation and 30-hour battery life.",
-        price: 129.99,
-        originalPrice: 199.99,
-        discount: 35,
-        images: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop"],
-        rating: 4.8,
-        reviews: Math.floor(Math.random() * 3000) + 500,
-        category: "Electronics",
-        inStock: true,
-        fastShipping: true,
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 200) + 20,
-        comments: Math.floor(Math.random() * 30) + 3,
-        shares: Math.floor(Math.random() * 15) + 1,
-        saves: Math.floor(Math.random() * 100) + 10,
-      },
-      userInteracted: {
-        liked: false,
-        commented: false,
-        shared: false,
-        saved: Math.random() > 0.7,
-      },
-    },
-    {
-      id: `post-${page}-2`,
-      type: "post" as const,
-      timestamp: new Date(Date.now() - (page * 4 * 60 * 60 * 1000)),
-      priority: 7,
-      author: {
-        id: "user-2",
-        name: "Mike Chen",
-        username: "mikechen",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-        verified: false,
-      },
-      content: {
-        text: `Beautiful sunset from the office today! Sometimes you need to step back and appreciate the simple things. Page ${page} memories 🌅✨`,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop",
-            alt: "Sunset view",
-          },
-        ],
-      },
-      interactions: {
-        likes: Math.floor(Math.random() * 300) + 30,
-        comments: Math.floor(Math.random() * 40) + 5,
-        shares: Math.floor(Math.random() * 10) + 1,
-      },
-      userInteracted: {
-        liked: Math.random() > 0.5,
-        commented: false,
-        shared: false,
-        saved: false,
-      },
-    },
-  ];
-
-  return baseItems.slice(0, limit);
-};
-
 export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
   const [userPosts, setUserPosts] = useState<UnifiedFeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -205,23 +88,57 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // For now, use mock data. In production, this would be:
-      // const response = await fetch(`/api/posts?page=${page}&limit=${PAGE_SIZE}`);
-      // const data = await response.json();
-      
-      const newPosts = generateMockFeedData(page, PAGE_SIZE);
-
-      if (append) {
-        setUserPosts(prev => [...prev, ...newPosts]);
-      } else {
-        setUserPosts(newPosts);
+      // Check if user is authenticated
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
       }
 
-      // Simulate pagination logic
-      setHasMore(page < 5); // Assume we have 5 pages of content
+      // Fetch real data from PostService
+      const feedPosts = await PostService.getFeedPosts(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
+      
+      // Transform posts to UnifiedFeedItem format
+      const transformedPosts: UnifiedFeedItem[] = feedPosts.map((post: any) => ({
+        id: post.id,
+        type: "post",
+        timestamp: new Date(post.created_at),
+        priority: 5, // Default priority
+        author: {
+          id: post.author?.id || "",
+          name: post.author?.name || "Unknown User",
+          username: post.author?.username || "unknown",
+          avatar: post.author?.avatar || "/placeholder.svg",
+          verified: post.author?.verified || false,
+        },
+        content: {
+          text: post.content,
+          media: post.image ? [{
+            type: "image",
+            url: post.image,
+            alt: "Post image",
+          }] : [],
+        },
+        interactions: {
+          likes: post.likes_count || 0,
+          comments: post.comments_count || 0,
+          shares: post.shares_count || 0,
+        },
+        userInteracted: {
+          liked: post.liked_by_user || false,
+          commented: false,
+          shared: false,
+          saved: false,
+        },
+      }));
+
+      if (append) {
+        setUserPosts(prev => [...prev, ...transformedPosts]);
+      } else {
+        setUserPosts(transformedPosts);
+      }
+
+      // Set pagination
+      setHasMore(feedPosts.length === PAGE_SIZE);
       setCurrentPage(page);
 
     } catch (err) {
@@ -235,7 +152,7 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [user?.id, toast]);
 
   // Load more posts (pagination)
   const loadMorePosts = useCallback(() => {

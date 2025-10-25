@@ -83,7 +83,10 @@ export class MarketplaceService {
     try {
       let query = supabase
         .from('products')
-        .select('*');
+        .select(`
+          *,
+          seller:profiles!seller_id(full_name, username, avatar_url, is_verified)
+        `);
 
       if (filters.categoryId) {
         query = query.eq('category_id', filters.categoryId);
@@ -129,18 +132,26 @@ export class MarketplaceService {
         description: product.description || "",
         price: product.price,
         discountPrice: product.discount_price,
-        currency: product.currency || "USD",
-        imageUrl: product.image_url || "",
-        inStock: product.in_stock || false,
-        stockQuantity: product.stock_quantity || 0,
+        image: product.image_url || "",
+        images: product.image_url ? [product.image_url] : [],
+        category: product.category || "",
+        subcategory: product.subcategory || undefined,
         rating: product.rating || 0,
         reviewCount: product.review_count || 0,
+        inStock: product.in_stock || false,
+        stockQuantity: product.stock_quantity || 0,
+        isNew: product.is_new || false,
         isFeatured: product.is_featured || false,
         isSponsored: product.is_sponsored || false,
-        boostExpiresAt: product.boost_until ? new Date(product.boost_until) : undefined,
         tags: product.tags || [],
-        createdAt: new Date(product.created_at),
-        updatedAt: new Date(product.updated_at)
+        sellerName: product.seller?.full_name || "Unknown Seller",
+        sellerAvatar: product.seller?.avatar_url || "",
+        sellerVerified: product.seller?.is_verified || false,
+        condition: product.condition || "new",
+        brand: product.brand || undefined,
+        model: product.model || undefined,
+        createdAt: new Date(product.created_at).toISOString(),
+        updatedAt: new Date(product.updated_at).toISOString()
       }));
     } catch (error) {
       console.error("Error in getProducts:", error);
@@ -152,7 +163,10 @@ export class MarketplaceService {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(`
+          *,
+          seller:profiles!seller_id(full_name, username, avatar_url, is_verified)
+        `)
         .eq('id', id)
         .single();
 
@@ -170,18 +184,26 @@ export class MarketplaceService {
         description: data.description || "",
         price: data.price,
         discountPrice: data.discount_price,
-        currency: data.currency || "USD",
-        imageUrl: data.image_url || "",
-        inStock: data.in_stock || false,
-        stockQuantity: data.stock_quantity || 0,
+        image: data.image_url || "",
+        images: data.image_url ? [data.image_url] : [],
+        category: data.category || "",
+        subcategory: data.subcategory || undefined,
         rating: data.rating || 0,
         reviewCount: data.review_count || 0,
+        inStock: data.in_stock || false,
+        stockQuantity: data.stock_quantity || 0,
+        isNew: data.is_new || false,
         isFeatured: data.is_featured || false,
         isSponsored: data.is_sponsored || false,
-        boostExpiresAt: data.boost_until ? new Date(data.boost_until) : undefined,
         tags: data.tags || [],
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at)
+        sellerName: data.seller?.full_name || "Unknown Seller",
+        sellerAvatar: data.seller?.avatar_url || "",
+        sellerVerified: data.seller?.is_verified || false,
+        condition: data.condition || "new",
+        brand: data.brand || undefined,
+        model: data.model || undefined,
+        createdAt: new Date(data.created_at).toISOString(),
+        updatedAt: new Date(data.updated_at).toISOString()
       };
     } catch (error) {
       console.error("Error in getProductById:", error);
@@ -228,17 +250,26 @@ export class MarketplaceService {
         price: data.price,
         discountPrice: data.discount_price,
         currency: data.currency || "USD",
-        imageUrl: data.image_url || "",
-        inStock: data.in_stock || false,
-        stockQuantity: data.stock_quantity || 0,
+        image: data.image_url || "",
+        images: data.image_url ? [data.image_url] : [],
+        category: data.category || "",
+        subcategory: data.subcategory || undefined,
         rating: data.rating || 0,
         reviewCount: data.review_count || 0,
+        inStock: data.in_stock || false,
+        stockQuantity: data.stock_quantity || 0,
+        isNew: data.is_new || false,
         isFeatured: data.is_featured || false,
         isSponsored: data.is_sponsored || false,
-        boostExpiresAt: data.boost_until ? new Date(data.boost_until) : undefined,
         tags: data.tags || [],
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at)
+        sellerName: "", // Would need to fetch seller data
+        sellerAvatar: "",
+        sellerVerified: false,
+        condition: data.condition || "new",
+        brand: data.brand || undefined,
+        model: data.model || undefined,
+        createdAt: new Date(data.created_at).toISOString(),
+        updatedAt: new Date(data.updated_at).toISOString()
       };
     } catch (error) {
       console.error("Error in createProduct:", error);

@@ -207,6 +207,13 @@ const FeedSidebar = () => {
   const quickLinks = useQuickLinksStats();
   const { data: trendingTopics } = useTrendingTopicsData();
 
+  // Mock data for user stats - in a real implementation, this would come from an API
+  const [userStats, setUserStats] = useState({
+    posts: 1200,
+    friends: 5400,
+    following: 890
+  });
+
   return (
     <div className="space-y-4">
       {/* User Profile Card */}
@@ -224,15 +231,15 @@ const FeedSidebar = () => {
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-sm">
             <div>
-              <p className="font-semibold">1.2K</p>
+              <p className="font-semibold">{userStats.posts.toLocaleString()}</p>
               <p className="text-gray-500">Posts</p>
             </div>
             <div>
-              <p className="font-semibold">5.4K</p>
+              <p className="font-semibold">{userStats.friends.toLocaleString()}</p>
               <p className="text-gray-500">Friends</p>
             </div>
             <div>
-              <p className="font-semibold">890</p>
+              <p className="font-semibold">{userStats.following.toLocaleString()}</p>
               <p className="text-gray-500">Following</p>
             </div>
           </div>
@@ -293,6 +300,56 @@ const SuggestedSidebar = () => {
   const { liveStreams } = useLiveNowData();
   const [following, setFollowing] = React.useState<Record<string, boolean>>({});
 
+  // Mock data for suggested users - in a real implementation, this would come from an API
+  const mockSuggestedUsers = [
+    {
+      id: "user-1",
+      name: "Alex Johnson",
+      username: "alexj",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
+      verified: true,
+      mutualFriends: 12
+    },
+    {
+      id: "user-2",
+      name: "Maria Garcia",
+      username: "mariag",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maria",
+      verified: false,
+      mutualFriends: 8
+    },
+    {
+      id: "user-3",
+      name: "James Wilson",
+      username: "jamesw",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=james",
+      verified: true,
+      mutualFriends: 15
+    }
+  ];
+
+  // Mock data for live streams - in a real implementation, this would come from an API
+  const mockLiveStreams = [
+    {
+      id: "live-1",
+      title: "Live Coding Session",
+      viewerCount: "1.2K",
+      user: {
+        displayName: "TechDev",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=techdev"
+      }
+    },
+    {
+      id: "live-2",
+      title: "Cooking Show",
+      viewerCount: "890",
+      user: {
+        displayName: "ChefMaster",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=chef"
+      }
+    }
+  ];
+
   const toggleFollowUser = async (id: string) => {
     try {
       const current = !!following[id];
@@ -313,7 +370,7 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">People You May Know</h3>
           <div className="space-y-3">
-            {(suggestedUsers || []).map((u: any) => {
+            {(suggestedUsers || mockSuggestedUsers).map((u: any) => {
               const name = u.name || u.profile?.full_name || u.username;
               const id = u.id || u.profile?.id || (u.username || u.profile?.username || "user");
               const username = u.username || u.profile?.username || "user";
@@ -353,7 +410,7 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Live Now</h3>
           <div className="space-y-3">
-            {liveStreams.map((content) => (
+            {(liveStreams || mockLiveStreams).map((content: any) => (
               <div key={content.id} className="relative cursor-pointer group">
                 <div className="relative">
                   <img
@@ -600,39 +657,40 @@ const EnhancedFeedWithTabs = () => {
       />
 
       {/* Story Viewer */}
-      <StoryViewer
-        isOpen={showStoryViewer}
-        onClose={() => setShowStoryViewer(false)}
-        stories={[
-          ...userStories,
-          {
-            id: "2",
-            user: { id: "user-sarah", name: "Sarah", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah", isUser: false },
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-            content: { text: "Having a great day! 🌟" },
-            views: 45,
-            hasNew: true,
-          },
-          {
-            id: "3",
-            user: { id: "user-mike", name: "Mike", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike", isUser: false },
-            timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-            content: { text: "Just finished a great workout! 💪" },
-            views: 23,
-            hasNew: false,
-          },
-          {
-            id: "4",
-            user: { id: "user-emma", name: "Emma", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma", isUser: false },
-            timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-            content: { text: "Beautiful sunset today! 🌅" },
-            views: 67,
-            hasNew: true,
-          },
-        ]}
-        currentStoryIndex={currentStoryIndex}
-        onStoryChange={setCurrentStoryIndex}
-      />
+      {showStoryViewer && (
+        <StoryViewer
+          stories={[
+            ...userStories,
+            {
+              id: "2",
+              user: { id: "user-sarah", name: "Sarah", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah", isUser: false },
+              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+              content: { text: "Having a great day! 🌟" },
+              views: 45,
+              hasNew: true,
+            },
+            {
+              id: "3",
+              user: { id: "user-mike", name: "Mike", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike", isUser: false },
+              timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
+              content: { text: "Just finished a great workout! 💪" },
+              views: 23,
+              hasNew: false,
+            },
+            {
+              id: "4",
+              user: { id: "user-emma", name: "Emma", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma", isUser: false },
+              timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
+              content: { text: "Beautiful sunset today! 🌅" },
+              views: 67,
+              hasNew: true,
+            },
+          ]}
+          initialIndex={currentStoryIndex}
+          onClose={() => setShowStoryViewer(false)}
+          onStoryChange={setCurrentStoryIndex}
+        />
+      )}
     </div>
   );
 };

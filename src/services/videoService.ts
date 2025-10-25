@@ -54,7 +54,15 @@ export const videoService = {
   async getVideos(limit: number = 20, offset: number = 0, category?: string): Promise<Video[]> {
     let query = supabase
       .from('videos')
-      .select('*')
+      .select(`
+        *,
+        user:profiles!user_id(
+          username,
+          full_name,
+          avatar_url,
+          is_verified
+        )
+      `)
       .eq('is_public', true)
       .order('created_at', { ascending: false });
 
@@ -68,55 +76,33 @@ export const videoService = {
     if (error) throw error;
     if (!data || data.length === 0) return [];
 
-    // Get user profiles separately
-    const userIds = Array.from(new Set(data.map((v: any) => v.user_id)));
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, username, full_name, avatar_url, is_verified')
-      .in('user_id', userIds);
-
-    const profileMap = new Map(
-      (profiles || []).map((p: UserProfile) => [p.user_id, p])
-    );
-
-    return data.map((video: any) => {
-      const profile = profileMap.get(video.user_id);
-      return {
-        ...video,
-        user: profile ? {
-          username: (profile as UserProfile).username || 'unknown',
-          full_name: (profile as UserProfile).full_name || 'Unknown User',
-          avatar_url: (profile as UserProfile).avatar_url || '',
-          is_verified: (profile as UserProfile).is_verified || false
-        } : undefined
-      };
-    });
+    return data.map((video: any) => ({
+      ...video,
+      user: video.user || undefined
+    }));
   },
 
   async getVideoById(id: string): Promise<Video | null> {
     const { data, error } = await supabase
       .from('videos')
-      .select('*')
+      .select(`
+        *,
+        user:profiles!user_id(
+          username,
+          full_name,
+          avatar_url,
+          is_verified
+        )
+      `)
       .eq('id', id)
       .single();
 
     if (error) throw error;
     if (!data) return null;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username, full_name, avatar_url, is_verified')
-      .eq('user_id', data.user_id)
-      .single();
-
     return {
       ...data,
-      user: profile ? {
-        username: (profile as UserProfile).username || 'unknown',
-        full_name: (profile as UserProfile).full_name || 'Unknown User',
-        avatar_url: (profile as UserProfile).avatar_url || '',
-        is_verified: (profile as UserProfile).is_verified || false
-      } : undefined
+      user: data.user || undefined
     };
   },
 
@@ -232,7 +218,14 @@ export const videoService = {
   async getVideoComments(videoId: string): Promise<VideoComment[]> {
     const { data, error } = await supabase
       .from('video_comments')
-      .select('*')
+      .select(`
+        *,
+        user:profiles!user_id(
+          username,
+          full_name,
+          avatar_url
+        )
+      `)
       .eq('video_id', videoId)
       .is('parent_id', null)
       .order('created_at', { ascending: false });
@@ -240,28 +233,10 @@ export const videoService = {
     if (error) throw error;
     if (!data || data.length === 0) return [];
 
-    // Get user profiles separately
-    const userIds = Array.from(new Set(data.map((c: any) => c.user_id)));
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, username, full_name, avatar_url')
-      .in('user_id', userIds);
-
-    const profileMap = new Map(
-      (profiles || []).map((p: UserProfile) => [p.user_id, p])
-    );
-
-    return data.map((comment: any) => {
-      const profile = profileMap.get(comment.user_id);
-      return {
-        ...comment,
-        user: profile ? {
-          username: (profile as UserProfile).username || 'unknown',
-          full_name: (profile as UserProfile).full_name || 'Unknown User',
-          avatar_url: (profile as UserProfile).avatar_url || ''
-        } : undefined
-      };
-    });
+    return data.map((comment: any) => ({
+      ...comment,
+      user: comment.user || undefined
+    }));
   },
 
   async addComment(videoId: string, content: string, parentId?: string): Promise<VideoComment> {

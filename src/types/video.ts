@@ -1,4 +1,3 @@
-
 export interface Video {
   id: string;
   url: string;
@@ -7,6 +6,7 @@ export interface Video {
   likes: number;
   comments: number;
   shares: number;
+  views?: number;
   author: {
     name: string;
     username: string;
@@ -14,6 +14,14 @@ export interface Video {
     verified: boolean;
   };
   isFollowing: boolean;
+  duration?: number;
+  timestamp?: string;
+  tags?: string[];
+  category?: string;
+  allowDuets?: boolean;
+  allowComments?: boolean;
+  hasCaption?: boolean;
+  isLiveStream?: boolean;
 }
 
 export type VideoItem = {
@@ -24,6 +32,7 @@ export type VideoItem = {
   likes: number;
   comments: number;
   shares: number;
+  views?: number;
   author: {
     name: string;
     username: string;
@@ -31,6 +40,14 @@ export type VideoItem = {
     verified: boolean;
   };
   isFollowing: boolean;
+  duration?: number;
+  timestamp?: string;
+  tags?: string[];
+  category?: string;
+  allowDuets?: boolean;
+  allowComments?: boolean;
+  hasCaption?: boolean;
+  isLiveStream?: boolean;
 };
 
 export type AdData = {

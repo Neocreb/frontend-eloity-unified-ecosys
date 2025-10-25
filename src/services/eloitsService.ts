@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { User } from "@/types/user";
+import { supabase } from "@/integrations/supabase/client";
 
 // Eloits Activity Types
 export type ActivityType =
@@ -551,40 +552,93 @@ class EloitsService {
   }
 
   // Award points for an activity
-  awardPoints(
+  async awardPoints(
     activityId: string,
     userId: string,
     multiplier: number = 1,
-  ): number {
+  ): Promise<number> {
     const activity = activityConfig[activityId];
     if (!activity) return 0;
 
+    // Check if user can complete this activity
+    const canComplete = await this.canCompleteActivity(activityId, userId);
+    if (!canComplete) return 0;
+
     const basePoints = activity.points;
-    const levelMultiplier = this.getLevelMultiplier(userId);
+    const levelMultiplier = await this.getLevelMultiplier(userId);
     const totalPoints = Math.round(
       basePoints * multiplier * levelMultiplier * (activity.multiplier || 1),
     );
 
-    // Record transaction
-    this.recordTransaction({
-      id: `txn_${Date.now()}_${userId}`,
-      type: "earned",
-      amount: totalPoints,
-      description: activity.description,
-      timestamp: new Date().toISOString(),
-      category: activity.category,
-      status: "completed",
-      metadata: { activityId, multiplier },
-    });
+    // Get user's current ELO data
+    try {
+      const { data: userEloData, error: fetchError } = await supabase
+        .from('user_rewards')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Update user's ELO balance
+      const newBalance = (userEloData.current_balance || 0) + totalPoints;
+      const newTotalEarned = (userEloData.total_earned || 0) + totalPoints;
+      
+      const { error: updateError } = await supabase
+        .from('user_rewards')
+        .update({
+          current_balance: newBalance,
+          total_earned: newTotalEarned,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+      
+      if (updateError) throw updateError;
 
-    return totalPoints;
+      // Record transaction
+      await this.recordTransaction({
+        id: `txn_${Date.now()}_${userId}`,
+        type: "earned",
+        amount: totalPoints,
+        description: activity.description,
+        timestamp: new Date().toISOString(),
+        category: activity.category,
+        status: "completed",
+        metadata: { 
+          activityId, 
+          multiplier,
+          userId,
+          actionType: activityId,
+          balanceAfter: newBalance,
+          trustScoreImpact: 0.1
+        },
+      });
+
+      return totalPoints;
+    } catch (error) {
+      console.error('Error awarding points:', error);
+      return 0;
+    }
   }
 
   // Get level multiplier for bonus points
-  getLevelMultiplier(userId: string): number {
-    // Mock user level - in real app, fetch from user data
-    const userLevel = "Gold"; // This would come from user data
-    return levelConfig[userLevel as keyof typeof levelConfig]?.multiplier || 1;
+  async getLevelMultiplier(userId: string): Promise<number> {
+    try {
+      // Get user's current ELO data to determine their level
+      const { data: userEloData, error } = await supabase
+        .from('user_rewards')
+        .select('trust_level')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      const userLevel = userEloData.trust_level || "bronze";
+      return levelConfig[userLevel as keyof typeof levelConfig]?.multiplier || 1;
+    } catch (error) {
+      console.error('Error fetching user level:', error);
+      return 1;
+    }
   }
 
   // Calculate cash conversion rate
@@ -614,91 +668,211 @@ class EloitsService {
   }
 
   // Record a transaction
-  recordTransaction(transaction: EloitsTransaction): void {
-    // In a real app, this would save to database
-    console.log("Recording transaction:", transaction);
+  async recordTransaction(transaction: EloitsTransaction): Promise<void> {
+    try {
+      const transactionData = {
+        id: transaction.id,
+        user_id: transaction.metadata?.userId || '',
+        action_type: transaction.metadata?.actionType || 'general_transaction',
+        amount: transaction.amount,
+        balance_after: transaction.metadata?.balanceAfter || 0,
+        description: transaction.description,
+        metadata: transaction.metadata || {},
+        trust_score_impact: transaction.metadata?.trustScoreImpact || 0,
+        multiplier_applied: transaction.metadata?.multiplierApplied || 1.0,
+        decay_factor: transaction.metadata?.decayFactor || 1.0,
+        status: transaction.status,
+        reference_id: transaction.metadata?.referenceId || null,
+        created_at: transaction.timestamp,
+      };
+      
+      const { error } = await supabase
+        .from('reward_transactions')
+        .insert(transactionData);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error recording transaction:', error);
+    }
   }
 
   // Get user's transaction history
-  getTransactionHistory(
+  async getTransactionHistory(
     userId: string,
     limit: number = 50,
-  ): EloitsTransaction[] {
-    // Mock data - in real app, fetch from database
-    return [
-      {
-        id: "1",
-        type: "earned",
-        amount: 1000,
-        description: "Referred a friend",
-        timestamp: new Date().toISOString(),
-        category: "Referral",
-        status: "completed",
-      },
-      {
-        id: "2",
-        type: "spent",
-        amount: 500,
-        description: "Redeemed $5 cash",
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-        category: "Cash Conversion",
-        status: "completed",
-      },
-    ];
+  ): Promise<EloitsTransaction[]> {
+    try {
+      const { data, error } = await supabase
+        .from('reward_transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      return data.map(transaction => ({
+        id: transaction.id,
+        type: transaction.action_type === 'redemption' ? 'spent' : 
+              transaction.action_type.includes('purchase') ? 'spent' : 'earned',
+        amount: transaction.amount,
+        description: transaction.description,
+        timestamp: transaction.created_at,
+        category: transaction.metadata?.category || 'General',
+        status: transaction.status || 'completed',
+      }));
+    } catch (error) {
+      console.error('Error fetching transaction history:', error);
+      // Fallback to mock data if database fetch fails
+      return [
+        {
+          id: "1",
+          type: "earned",
+          amount: 0,
+          description: "No transactions found",
+          timestamp: new Date().toISOString(),
+          category: "General",
+          status: "completed",
+        }
+      ];
+    }
+  }
+
+  // Check if user has completed an activity
+  async hasCompletedActivity(activityId: string, userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('reward_transactions')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('action_type', activityId)
+        .limit(1);
+      
+      if (error) throw error;
+      return data.length > 0;
+    } catch (error) {
+      console.error('Error checking activity completion:', error);
+      return false;
+    }
+  }
+
+  // Check if user has completed an activity today
+  async hasCompletedActivityToday(activityId: string, userId: string): Promise<boolean> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('reward_transactions')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('action_type', activityId)
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`)
+        .limit(1);
+      
+      if (error) throw error;
+      return data.length > 0;
+    } catch (error) {
+      console.error('Error checking today\'s activity completion:', error);
+      return false;
+    }
   }
 
   // Check if user can complete activity
-  canCompleteActivity(activityId: string, userId: string): boolean {
+  async canCompleteActivity(activityId: string, userId: string): Promise<boolean> {
     const activity = activityConfig[activityId];
     if (!activity) return false;
 
     // Check frequency restrictions
     if (activity.frequency === "once") {
       // Check if already completed
-      return !this.hasCompletedActivity(activityId, userId);
+      return !(await this.hasCompletedActivity(activityId, userId));
     }
 
     if (activity.frequency === "daily") {
       // Check if completed today
-      return !this.hasCompletedActivityToday(activityId, userId);
+      return !(await this.hasCompletedActivityToday(activityId, userId));
     }
 
     // For 'unlimited' activities, always allow
     return true;
   }
 
-  // Mock methods for activity tracking
-  private hasCompletedActivity(activityId: string, userId: string): boolean {
-    // Mock - in real app, check database
-    return false;
-  }
-
-  private hasCompletedActivityToday(
-    activityId: string,
-    userId: string,
-  ): boolean {
-    // Mock - in real app, check database for today's completion
-    return false;
-  }
-
   // Get user's Eloits statistics
-  getUserStats(userId: string): UserEloitsData {
-    // Mock data - in real app, fetch from database
-    return {
-      totalEarned: 12450,
-      totalSpent: 3200,
-      currentBalance: 9250,
-      level: "Gold",
-      levelProgress: 65,
-      nextLevelPoints: 2750,
-      streakDays: 7,
-      rank: 234,
-      totalUsers: 10000,
-      lastActivity: new Date().toISOString(),
-      achievements: ["first_post", "verified_user", "crypto_trader"],
-      referralCount: 5,
-      creatorBonus: 2500,
-    };
+  async getUserStats(userId: string): Promise<UserEloitsData> {
+    try {
+      // Fetch user's ELO data from the user_rewards table
+      const { data: userEloData, error } = await supabase
+        .from('user_rewards')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      // Calculate level based on points
+      const currentLevel = this.calculateLevel(userEloData.total_earned);
+      const levelProgress = this.getLevelProgress(userEloData.total_earned);
+      
+      // Get transaction history to calculate additional stats
+      const { data: transactions, error: transactionError } = await supabase
+        .from('reward_transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (transactionError) throw transactionError;
+      
+      // Calculate streak days (simplified implementation)
+      const streakDays = userEloData.streak_days || 0;
+      
+      // Get achievements (simplified implementation)
+      const achievements: string[] = [];
+      if (userEloData.trust_score >= 90) achievements.push("diamond_trust");
+      else if (userEloData.trust_score >= 75) achievements.push("platinum_trust");
+      else if (userEloData.trust_score >= 60) achievements.push("gold_trust");
+      
+      // Add activity-based achievements
+      const activityTypes = transactions.map(t => t.action_type);
+      if (activityTypes.includes("post_content")) achievements.push("content_creator");
+      if (activityTypes.includes("refer_user")) achievements.push("referral_master");
+      if (activityTypes.includes("purchase_product")) achievements.push("shopper");
+      
+      return {
+        totalEarned: userEloData.total_earned || 0,
+        totalSpent: userEloData.total_spent || 0,
+        currentBalance: userEloData.current_balance || 0,
+        level: currentLevel,
+        levelProgress: levelProgress.progress,
+        nextLevelPoints: levelProgress.pointsToNext,
+        streakDays: streakDays,
+        rank: 0, // This would require a more complex query to calculate
+        totalUsers: 0, // This would require a count query
+        lastActivity: userEloData.updated_at || new Date().toISOString(),
+        achievements: achievements,
+        referralCount: userEloData.referral_count || 0,
+        creatorBonus: 0, // This would need to be calculated from creator activities
+      };
+    } catch (error) {
+      console.error('Error fetching user ELO stats:', error);
+      // Fallback to mock data if database fetch fails
+      return {
+        totalEarned: 0,
+        totalSpent: 0,
+        currentBalance: 0,
+        level: "Bronze",
+        levelProgress: 0,
+        nextLevelPoints: 5000,
+        streakDays: 0,
+        rank: 0,
+        totalUsers: 0,
+        lastActivity: new Date().toISOString(),
+        achievements: [],
+        referralCount: 0,
+        creatorBonus: 0,
+      };
+    }
   }
 
   // Process cash conversion
@@ -709,20 +883,61 @@ class EloitsService {
   ): Promise<boolean> {
     if (points < 500) throw new Error("Minimum conversion is 500 ELO");
 
-    // Record conversion transaction
-    this.recordTransaction({
-      id: `conversion_${Date.now()}_${userId}`,
-      type: "converted",
-      amount: points,
-      description: `Converted to ${this.calculateCashValue(points)} USD`,
-      timestamp: new Date().toISOString(),
-      category: "Cash Conversion",
-      status: "pending",
-      metadata: { paymentMethod, cashValue: this.calculateCashValue(points) },
-    });
+    try {
+      // Get user's current ELO data
+      const { data: userEloData, error: fetchError } = await supabase
+        .from('user_rewards')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Check if user has enough points
+      if ((userEloData.current_balance || 0) < points) {
+        throw new Error("Insufficient ELO balance");
+      }
+      
+      // Deduct points from user's balance
+      const newBalance = (userEloData.current_balance || 0) - points;
+      const newTotalSpent = (userEloData.total_spent || 0) + points;
+      
+      const { error: updateError } = await supabase
+        .from('user_rewards')
+        .update({
+          current_balance: newBalance,
+          total_spent: newTotalSpent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+      
+      if (updateError) throw updateError;
 
-    // In real app, integrate with payment processor
-    return true;
+      // Record conversion transaction
+      await this.recordTransaction({
+        id: `conversion_${Date.now()}_${userId}`,
+        type: "converted",
+        amount: points,
+        description: `Converted to ${this.calculateCashValue(points)} USD`,
+        timestamp: new Date().toISOString(),
+        category: "Cash Conversion",
+        status: "pending",
+        metadata: { 
+          paymentMethod, 
+          cashValue: this.calculateCashValue(points),
+          userId,
+          actionType: 'redemption',
+          balanceAfter: newBalance,
+          referenceId: `redemption_${Date.now()}_${userId}`
+        },
+      });
+
+      // In real app, integrate with payment processor
+      return true;
+    } catch (error) {
+      console.error('Error converting to cash:', error);
+      return false;
+    }
   }
 }
 

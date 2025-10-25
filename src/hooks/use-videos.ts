@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { videoService, Video } from "@/services/videoService";
-import { ContentItem, VideoItem, AdItem, AdData } from "@/types/video";
+import { ContentItem, VideoItem, AdItem } from "@/types/video";
 
-// Mock ad data - in a real implementation, this would come from an ad service
-const mockAdData: AdData = {
+// Ad data - in a real implementation, this would come from an ad service
+const adData = {
   id: "ad-1",
   title: "Special Offer",
   description: "Check out our amazing products!",
@@ -24,6 +24,7 @@ export const useVideos = () => {
     const fetchVideos = async () => {
       try {
         setLoading(true);
+        setError(null);
         const videoData = await videoService.getVideos(20, 0);
         
         // Transform Video objects to VideoItem objects
@@ -35,13 +36,18 @@ export const useVideos = () => {
           likes: video.likes_count,
           comments: video.comments_count,
           shares: video.shares_count || 0,
+          views: video.views_count,
           author: {
             name: video.user?.full_name || "Unknown User",
             username: video.user?.username || "unknown",
             avatar: video.user?.avatar_url || "",
             verified: video.user?.is_verified || false
           },
-          isFollowing: false // This would need to be fetched from a following service
+          isFollowing: false, // This would need to be fetched from a following service
+          duration: video.duration || 0,
+          timestamp: video.created_at,
+          tags: video.tags || [],
+          category: video.category || "Entertainment"
         }));
         
         setVideos(transformedVideos);
@@ -59,7 +65,7 @@ export const useVideos = () => {
   // Combine videos and ads into a single content feed
   const allItems: ContentItem[] = videos.length > 0 ? [
     ...videos.slice(0, 2),
-    { isAd: true, ad: mockAdData } as AdItem,
+    { isAd: true, ad: adData } as AdItem,
     ...videos.slice(2)
   ] : [];
 

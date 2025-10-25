@@ -818,17 +818,18 @@ const Videos: React.FC = () => {
         likes: videoItem.likes,
         comments: videoItem.comments,
         shares: videoItem.shares,
-        views: "100K", // Placeholder - would come from actual data
+        views: videoItem.views?.toString() || "0",
       },
-      hashtags: ["video", "trending"], // Placeholder
+      hashtags: videoItem.tags || ["video", "trending"],
       videoUrl: videoItem.url,
       thumbnail: videoItem.thumbnail,
-      duration: 30, // Placeholder - would come from actual data
-      timestamp: "2h", // Placeholder - would come from actual data
-      category: "Entertainment", // Placeholder - would come from actual data
-      allowDuets: true,
-      allowComments: true,
-      hasCaption: false,
+      duration: videoItem.duration || 0,
+      timestamp: videoItem.timestamp || "now",
+      category: videoItem.category || "Entertainment",
+      allowDuets: videoItem.allowDuets || true,
+      allowComments: videoItem.allowComments || true,
+      hasCaption: videoItem.hasCaption || false,
+      isLiveStream: videoItem.isLiveStream || false,
     };
   };
 
