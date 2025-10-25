@@ -117,37 +117,37 @@ export const TalentsList: React.FC<TalentsListProps> = ({
           // Transform FreelancerProfile to Talent interface
           const transformedTalents: Talent[] = freelancerProfiles.map((profile: FreelancerProfile) => ({
             id: profile.id,
-            name: profile.userId, // In a real app, this would come from a user profile
-            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user", // Placeholder
-            title: profile.title,
-            description: profile.description,
-            skills: profile.skills,
-            hourlyRate: profile.hourlyRate,
-            rating: profile.rating,
-            reviewCount: profile.reviewCount,
-            location: "San Francisco, CA", // Placeholder
-            availability: profile.availability === "available" ? "available" : "busy",
-            verified: true, // Placeholder
-            completedJobs: profile.completedProjects,
-            responseTime: "1 hour", // Placeholder
-            successRate: 95, // Placeholder
-            portfolio: profile.portfolio.map((url, index) => ({
+            name: profile.full_name || profile.username || `User ${profile.id}`,
+            avatar: profile.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            title: profile.title || "Freelancer",
+            description: profile.description || "No description available",
+            skills: profile.skills || [],
+            hourlyRate: profile.hourly_rate || 0,
+            rating: profile.rating || 0,
+            reviewCount: profile.review_count || 0,
+            location: profile.location || "Remote",
+            availability: profile.availability || "available",
+            verified: profile.verified || false,
+            completedJobs: profile.completed_projects || 0,
+            responseTime: profile.response_time || "24 hours",
+            successRate: profile.success_rate || 90,
+            portfolio: (profile.portfolio || []).map((url: string, index: number) => ({
               id: index.toString(),
               title: `Project ${index + 1}`,
               image: url,
               category: "Web Development"
             })),
-            badges: ["Top Rated", "Verified"], // Placeholder
-            languages: profile.languages,
-            joinedDate: profile.createdAt.toISOString(), // Placeholder
-            lastSeen: "Online now" // Placeholder
+            badges: profile.badges || [],
+            languages: profile.languages || [],
+            joinedDate: profile.created_at?.toISOString() || new Date().toISOString(),
+            lastSeen: profile.last_seen || "Recently online"
           }));
           
           setTalents(transformedTalents);
         }
       } catch (error) {
         console.error("Error fetching talents:", error);
-        // Fallback to mock data if real data fetch fails
+        // Fallback to empty array if real data fetch fails
         setTalents([]);
       } finally {
         setLoading(false);

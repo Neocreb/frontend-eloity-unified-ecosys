@@ -40,6 +40,9 @@ import {
 } from "lucide-react";
 import { useFreelance } from "@/hooks/use-freelance";
 import { FreelancerProfile } from "@/types/freelance";
+import { reviewService } from "@/services/reviewService";
+import { employmentService } from "@/services/employmentService";
+import { certificationService } from "@/services/certificationService";
 
 interface TalentProfileProps {
   talentId: string;
@@ -76,85 +79,33 @@ interface Talent {
   lastSeen: string;
 }
 
-// Mock reviews data - in a real app, this would come from a reviews service
-const mockReviews = [
-  {
-    id: "1",
-    clientName: "John Smith",
-    clientAvatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face",
-    rating: 5,
-    review:
-      "Sarah delivered exceptional work on our e-commerce platform. Her attention to detail and technical expertise exceeded our expectations. The project was completed ahead of schedule and within budget.",
-    projectTitle: "E-commerce Website Redesign",
-    date: "2024-01-15",
-    verified: true,
-  },
-  {
-    id: "2",
-    clientName: "Emily Johnson",
-    clientAvatar:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face",
-    rating: 5,
-    review:
-      "Outstanding developer! Sarah built our mobile app from scratch and it's performing beautifully. Great communication throughout the project and very professional.",
-    projectTitle: "Mobile Banking Application",
-    date: "2024-01-08",
-    verified: true,
-  },
-  {
-    id: "3",
-    clientName: "Michael Brown",
-    clientAvatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face",
-    rating: 4,
-    review:
-      "Solid work on our dashboard redesign. Sarah understood our requirements well and delivered a clean, user-friendly interface. Would work with her again.",
-    projectTitle: "SaaS Dashboard Development",
-    date: "2023-12-22",
-    verified: false,
-  },
-];
+interface Review {
+  id: string;
+  clientName: string;
+  clientAvatar: string;
+  rating: number;
+  review: string;
+  projectTitle: string;
+  date: string;
+  verified: boolean;
+}
 
-// Mock employment history - in a real app, this would come from a profile service
-const mockEmploymentHistory = [
-  {
-    id: "1",
-    company: "TechCorp Inc.",
-    position: "Senior Frontend Developer",
-    duration: "2021 - 2023",
-    description:
-      "Led frontend development for enterprise applications serving 100k+ users.",
-    type: "Full-time",
-  },
-  {
-    id: "2",
-    company: "StartupXYZ",
-    position: "Full-Stack Developer",
-    duration: "2020 - 2021",
-    description:
-      "Built MVP from scratch and scaled to 10k users in first year.",
-    type: "Contract",
-  },
-];
+interface EmploymentHistory {
+  id: string;
+  company: string;
+  position: string;
+  duration: string;
+  description: string;
+  type: string;
+}
 
-// Mock certifications - in a real app, this would come from a profile service
-const mockCertifications = [
-  {
-    id: "1",
-    name: "AWS Certified Solutions Architect",
-    issuer: "Amazon Web Services",
-    date: "2023",
-    verified: true,
-  },
-  {
-    id: "2",
-    name: "React Developer Certification",
-    issuer: "Meta",
-    date: "2022",
-    verified: true,
-  },
-];
+interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  verified: boolean;
+}
 
 export const TalentProfile: React.FC<TalentProfileProps> = ({
   talentId,
@@ -165,56 +116,73 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [talent, setTalent] = useState<Talent | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [employmentHistory, setEmploymentHistory] = useState<EmploymentHistory[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
   const { getFreelancer } = useFreelance();
 
   useEffect(() => {
-    const fetchTalent = async () => {
+    const fetchAllData = async () => {
       try {
         setLoading(true);
+        
+        // Fetch talent profile
         const freelancerProfile = await getFreelancer(talentId);
         
         if (freelancerProfile) {
           // Transform FreelancerProfile to Talent interface
           const transformedTalent: Talent = {
             id: freelancerProfile.id,
-            name: freelancerProfile.userId, // In a real app, this would come from a user profile
-            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user", // Placeholder
-            title: freelancerProfile.title,
-            description: freelancerProfile.description,
-            skills: freelancerProfile.skills,
-            hourlyRate: freelancerProfile.hourlyRate,
-            rating: freelancerProfile.rating,
-            reviewCount: freelancerProfile.reviewCount,
-            location: "San Francisco, CA", // Placeholder
-            availability: freelancerProfile.availability === "available" ? "available" : "busy",
-            verified: true, // Placeholder
-            completedJobs: freelancerProfile.completedProjects,
-            responseTime: "1 hour", // Placeholder
-            successRate: 95, // Placeholder
-            portfolio: freelancerProfile.portfolio.map((url, index) => ({
+            name: freelancerProfile.full_name || freelancerProfile.username || `User ${freelancerProfile.id}`,
+            avatar: freelancerProfile.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            title: freelancerProfile.title || "Freelancer",
+            description: freelancerProfile.description || "No description available",
+            skills: freelancerProfile.skills || [],
+            hourlyRate: freelancerProfile.hourly_rate || 0,
+            rating: freelancerProfile.rating || 0,
+            reviewCount: freelancerProfile.review_count || 0,
+            location: freelancerProfile.location || "Remote",
+            availability: freelancerProfile.availability || "available",
+            verified: freelancerProfile.verified || false,
+            completedJobs: freelancerProfile.completed_projects || 0,
+            responseTime: freelancerProfile.response_time || "24 hours",
+            successRate: freelancerProfile.success_rate || 90,
+            portfolio: (freelancerProfile.portfolio || []).map((url: string, index: number) => ({
               id: index.toString(),
               title: `Project ${index + 1}`,
               image: url,
               category: "Web Development"
             })),
-            badges: ["Top Rated", "Verified"], // Placeholder
-            languages: freelancerProfile.languages,
-            joinedDate: freelancerProfile.createdAt.toISOString(), // Placeholder
-            lastSeen: "Online now" // Placeholder
+            badges: freelancerProfile.badges || [],
+            languages: freelancerProfile.languages || [],
+            joinedDate: freelancerProfile.created_at?.toISOString() || new Date().toISOString(),
+            lastSeen: freelancerProfile.last_seen || "Recently online"
           };
           
           setTalent(transformedTalent);
         }
+        
+        // Fetch reviews
+        const reviewsData = await reviewService.getFreelancerReviews(talentId);
+        setReviews(reviewsData);
+        
+        // Fetch employment history
+        const employmentData = await employmentService.getFreelancerEmployment(talentId);
+        setEmploymentHistory(employmentData);
+        
+        // Fetch certifications
+        const certificationData = await certificationService.getFreelancerCertifications(talentId);
+        setCertifications(certificationData);
       } catch (error) {
-        console.error("Error fetching talent:", error);
+        console.error("Error fetching talent data:", error);
       } finally {
         setLoading(false);
       }
     };
 
     if (talentId) {
-      fetchTalent();
+      fetchAllData();
     }
   }, [talentId, getFreelancer]);
 
@@ -397,7 +365,7 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
                     <div className="space-y-2">
                       <Button className="w-full" size="lg" onClick={handleHire}>
                         <Briefcase className="w-4 h-4 mr-2" />
-                        Hire Sarah
+                        Hire {talent.name.split(" ")[0]}
                       </Button>
                       <Button
                         variant="outline"
@@ -651,7 +619,7 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
 
               {/* Individual Reviews */}
               <div className="space-y-4">
-                {mockReviews.map((review) => (
+                {reviews.map((review) => (
                   <Card key={review.id}>
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
@@ -715,7 +683,7 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockEmploymentHistory.map((job) => (
+                  {employmentHistory.map((job) => (
                     <div
                       key={job.id}
                       className="border-l-2 border-blue-200 pl-4"
@@ -752,7 +720,7 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockCertifications.map((cert) => (
+                  {certifications.map((cert) => (
                     <div
                       key={cert.id}
                       className="flex items-center justify-between"

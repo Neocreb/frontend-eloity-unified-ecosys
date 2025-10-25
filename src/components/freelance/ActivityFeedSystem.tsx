@@ -68,6 +68,9 @@ import {
   PlayCircle,
   PauseCircle,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { activityService } from "@/services/activityService";
+import { notificationService } from "@/services/notificationService";
 
 interface ActivityItem {
   id: string;
@@ -151,6 +154,8 @@ const ActivityFeedSystem: React.FC = () => {
     null,
   );
   const [showActivityDetails, setShowActivityDetails] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     initializeActivityFeed();
@@ -158,259 +163,128 @@ const ActivityFeedSystem: React.FC = () => {
     initializeNotificationChannels();
   }, []);
 
-  const initializeActivityFeed = () => {
-    const sampleActivities: ActivityItem[] = [
-      {
-        id: "activity_1",
-        type: "project_update",
-        title: "New Project Proposal",
-        description:
-          'TechCorp Inc. submitted a proposal for "E-commerce Website Development"',
+  const initializeActivityFeed = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch real activities data
+      let activitiesData: any[] = [];
+      if (user?.id) {
+        activitiesData = await activityService.getUserActivities(user.id);
+      }
+      
+      const transformedActivities: ActivityItem[] = activitiesData.map((activity: any) => ({
+        id: activity.id,
+        type: activity.type,
+        title: activity.title,
+        description: activity.description,
         actor: {
-          id: "client_1",
-          name: "TechCorp Inc.",
-          avatar: "/avatars/techcorp.png",
-          type: "client",
+          id: activity.actor_id,
+          name: activity.actor_name || "Unknown User",
+          avatar: activity.actor_avatar || "/api/placeholder/40/40",
+          type: activity.actor_type || "user",
         },
-        target: {
-          id: "proj_1",
-          name: "E-commerce Website Development",
-          type: "project",
-        },
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        isRead: false,
-        isPinned: false,
-        priority: "high",
-        category: ["projects", "proposals"],
-        actions: [
-          {
-            id: "view_proposal",
-            label: "View Proposal",
-            icon: <Eye className="w-4 h-4" />,
-            type: "primary",
-            onClick: () => console.log("View proposal"),
-          },
-          {
-            id: "respond",
-            label: "Respond",
-            icon: <MessageSquare className="w-4 h-4" />,
-            type: "secondary",
-            onClick: () => console.log("Respond"),
-          },
-        ],
-      },
-      {
-        id: "activity_2",
-        type: "payment",
-        title: "Payment Received",
-        description:
-          'You received $2,500 for milestone completion in "Mobile App UI Design"',
-        actor: {
-          id: "system",
-          name: "System",
-          type: "system",
-        },
-        target: {
-          id: "payment_1",
-          name: "Milestone Payment",
-          type: "payment",
-        },
-        metadata: {
-          amount: 2500,
-          currency: "USD",
-          projectTitle: "Mobile App UI Design",
-        },
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        isRead: true,
-        isPinned: true,
-        priority: "medium",
-        category: ["payments", "milestones"],
-      },
-      {
-        id: "activity_3",
-        type: "review",
-        title: "New Review Received",
-        description:
-          'Jane Client gave you a 5-star review for "Website Redesign Project"',
-        actor: {
-          id: "client_2",
-          name: "Jane Client",
-          avatar: "/avatars/jane.png",
-          type: "client",
-        },
-        metadata: {
-          rating: 5,
-          projectTitle: "Website Redesign Project",
-          comment: "Excellent work and great communication!",
-        },
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        isRead: false,
-        isPinned: false,
-        priority: "medium",
-        category: ["reviews", "feedback"],
-        actions: [
-          {
-            id: "view_review",
-            label: "View Review",
-            icon: <Star className="w-4 h-4" />,
-            type: "primary",
-            onClick: () => console.log("View review"),
-          },
-          {
-            id: "respond_review",
-            label: "Respond",
-            icon: <MessageSquare className="w-4 h-4" />,
-            type: "secondary",
-            onClick: () => console.log("Respond to review"),
-          },
-        ],
-      },
-      {
-        id: "activity_4",
-        type: "achievement",
-        title: "Badge Unlocked!",
-        description:
-          'You earned the "Project Veteran" badge for completing 50 projects',
-        actor: {
-          id: "system",
-          name: "System",
-          type: "system",
-        },
-        metadata: {
-          badgeName: "Project Veteran",
-          badgeType: "achievement",
-          tier: "gold",
-        },
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        isRead: true,
-        isPinned: false,
-        priority: "low",
-        category: ["achievements", "badges"],
-      },
-      {
-        id: "activity_5",
-        type: "message",
-        title: "New Message",
-        description:
-          "StartupXYZ sent you a direct message about potential collaboration",
-        actor: {
-          id: "client_3",
-          name: "StartupXYZ",
-          avatar: "/avatars/startup.png",
-          type: "client",
-        },
-        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-        isRead: false,
-        isPinned: false,
-        priority: "medium",
-        category: ["messages", "communication"],
-        actions: [
-          {
-            id: "read_message",
-            label: "Read Message",
-            icon: <MessageSquare className="w-4 h-4" />,
-            type: "primary",
-            onClick: () => console.log("Read message"),
-          },
-        ],
-      },
-      {
-        id: "activity_6",
-        type: "milestone",
-        title: "Milestone Approved",
-        description:
-          'TechCorp Inc. approved milestone 2 of "E-commerce Website Development"',
-        actor: {
-          id: "client_1",
-          name: "TechCorp Inc.",
-          avatar: "/avatars/techcorp.png",
-          type: "client",
-        },
-        target: {
-          id: "milestone_2",
-          name: "Backend API Development",
-          type: "milestone",
-        },
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-        isRead: true,
-        isPinned: false,
-        priority: "medium",
-        category: ["milestones", "projects"],
-        actions: [
-          {
-            id: "continue_project",
-            label: "Continue Project",
-            icon: <PlayCircle className="w-4 h-4" />,
-            type: "primary",
-            onClick: () => console.log("Continue project"),
-          },
-        ],
-      },
-    ];
+        target: activity.target ? {
+          id: activity.target.id,
+          name: activity.target.name,
+          type: activity.target.type,
+        } : undefined,
+        metadata: activity.metadata,
+        timestamp: new Date(activity.created_at),
+        isRead: activity.is_read || false,
+        isPinned: activity.is_pinned || false,
+        priority: activity.priority || "medium",
+        category: activity.categories || [],
+        actions: activity.actions || [],
+      }));
 
-    setActivities(sampleActivities);
-    setNotifications(sampleActivities.filter((a) => !a.isRead));
+      setActivities(transformedActivities);
+      setNotifications(transformedActivities.filter((a) => !a.isRead));
+    } catch (error) {
+      console.error("Error loading activity feed:", error);
+      // Fallback to empty arrays if real data fetch fails
+      setActivities([]);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const initializeNotificationPreferences = () => {
-    const prefs: NotificationPreferences = {
-      projectUpdates: true,
-      messages: true,
-      payments: true,
-      reviews: true,
-      milestones: true,
-      marketing: false,
-      emailNotifications: true,
-      pushNotifications: true,
-      smsNotifications: false,
-      frequency: "real_time",
-      quietHours: {
-        enabled: true,
-        start: "22:00",
-        end: "08:00",
-      },
-    };
-
-    setPreferences(prefs);
+  const initializeNotificationPreferences = async () => {
+    try {
+      if (user?.id) {
+        const prefs = await notificationService.getPreferences(user.id);
+        setPreferences(prefs);
+      }
+    } catch (error) {
+      console.error("Error loading notification preferences:", error);
+      // Fallback to default preferences if real data fetch fails
+      const defaultPrefs: NotificationPreferences = {
+        projectUpdates: true,
+        messages: true,
+        payments: true,
+        reviews: true,
+        milestones: true,
+        marketing: false,
+        emailNotifications: true,
+        pushNotifications: true,
+        smsNotifications: false,
+        frequency: "real_time",
+        quietHours: {
+          enabled: true,
+          start: "22:00",
+          end: "08:00",
+        },
+      };
+      setPreferences(defaultPrefs);
+    }
   };
 
-  const initializeNotificationChannels = () => {
-    const channelData: NotificationChannel[] = [
-      {
-        id: "in_app",
-        name: "In-App Notifications",
-        type: "in_app",
-        enabled: true,
-        icon: <Bell className="w-5 h-5" />,
-        description: "Real-time notifications within the platform",
-      },
-      {
-        id: "email",
-        name: "Email Notifications",
-        type: "email",
-        enabled: true,
-        icon: <Mail className="w-5 h-5" />,
-        description: "Email alerts for important updates",
-      },
-      {
-        id: "push",
-        name: "Push Notifications",
-        type: "push",
-        enabled: true,
-        icon: <Smartphone className="w-5 h-5" />,
-        description: "Mobile and desktop push notifications",
-      },
-      {
-        id: "sms",
-        name: "SMS Notifications",
-        type: "sms",
-        enabled: false,
-        icon: <MessageSquare className="w-5 h-5" />,
-        description: "Text message alerts for urgent updates",
-      },
-    ];
-
-    setChannels(channelData);
+  const initializeNotificationChannels = async () => {
+    try {
+      if (user?.id) {
+        const channelData = await notificationService.getChannels(user.id);
+        setChannels(channelData);
+      }
+    } catch (error) {
+      console.error("Error loading notification channels:", error);
+      // Fallback to default channels if real data fetch fails
+      const defaultChannels: NotificationChannel[] = [
+        {
+          id: "in_app",
+          name: "In-App Notifications",
+          type: "in_app",
+          enabled: true,
+          icon: <Bell className="w-5 h-5" />,
+          description: "Real-time notifications within the platform",
+        },
+        {
+          id: "email",
+          name: "Email Notifications",
+          type: "email",
+          enabled: true,
+          icon: <Mail className="w-5 h-5" />,
+          description: "Email alerts for important updates",
+        },
+        {
+          id: "push",
+          name: "Push Notifications",
+          type: "push",
+          enabled: true,
+          icon: <Smartphone className="w-5 h-5" />,
+          description: "Mobile and desktop push notifications",
+        },
+        {
+          id: "sms",
+          name: "SMS Notifications",
+          type: "sms",
+          enabled: false,
+          icon: <MessageSquare className="w-5 h-5" />,
+          description: "Text message alerts for urgent updates",
+        },
+      ];
+      setChannels(defaultChannels);
+    }
   };
 
   const getActivityIcon = (type: string) => {
@@ -467,30 +341,54 @@ const ActivityFeedSystem: React.FC = () => {
     return timestamp.toLocaleDateString();
   };
 
-  const markAsRead = (activityId: string) => {
-    setActivities((prev) =>
-      prev.map((activity) =>
-        activity.id === activityId ? { ...activity, isRead: true } : activity,
-      ),
-    );
-    setNotifications((prev) => prev.filter((n) => n.id !== activityId));
+  const markAsRead = async (activityId: string) => {
+    try {
+      if (user?.id) {
+        await activityService.markAsRead(activityId, user.id);
+      }
+      
+      setActivities((prev) =>
+        prev.map((activity) =>
+          activity.id === activityId ? { ...activity, isRead: true } : activity,
+        ),
+      );
+      setNotifications((prev) => prev.filter((n) => n.id !== activityId));
+    } catch (error) {
+      console.error("Error marking activity as read:", error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setActivities((prev) =>
-      prev.map((activity) => ({ ...activity, isRead: true })),
-    );
-    setNotifications([]);
+  const markAllAsRead = async () => {
+    try {
+      if (user?.id) {
+        await activityService.markAllAsRead(user.id);
+      }
+      
+      setActivities((prev) =>
+        prev.map((activity) => ({ ...activity, isRead: true })),
+      );
+      setNotifications([]);
+    } catch (error) {
+      console.error("Error marking all activities as read:", error);
+    }
   };
 
-  const togglePin = (activityId: string) => {
-    setActivities((prev) =>
-      prev.map((activity) =>
-        activity.id === activityId
-          ? { ...activity, isPinned: !activity.isPinned }
-          : activity,
-      ),
-    );
+  const togglePin = async (activityId: string) => {
+    try {
+      if (user?.id) {
+        await activityService.togglePin(activityId, user.id);
+      }
+      
+      setActivities((prev) =>
+        prev.map((activity) =>
+          activity.id === activityId
+            ? { ...activity, isPinned: !activity.isPinned }
+            : activity,
+        ),
+      );
+    } catch (error) {
+      console.error("Error toggling pin for activity:", error);
+    }
   };
 
   const ActivityCard = ({ activity }: { activity: ActivityItem }) => {
@@ -607,6 +505,36 @@ const ActivityFeedSystem: React.FC = () => {
   const NotificationSettings = () => {
     if (!preferences) return null;
 
+    const updatePreference = async (key: string, value: any) => {
+      try {
+        if (user?.id) {
+          await notificationService.updatePreferences(user.id, { [key]: value });
+        }
+        
+        setPreferences((prev) =>
+          prev ? { ...prev, [key]: value } : null,
+        );
+      } catch (error) {
+        console.error("Error updating notification preferences:", error);
+      }
+    };
+
+    const updateChannel = async (channelId: string, enabled: boolean) => {
+      try {
+        if (user?.id) {
+          await notificationService.updateChannel(user.id, channelId, enabled);
+        }
+        
+        setChannels((prev) =>
+          prev.map((c) =>
+            c.id === channelId ? { ...c, enabled } : c,
+          ),
+        );
+      } catch (error) {
+        console.error("Error updating notification channel:", error);
+      }
+    };
+
     return (
       <div className="space-y-6">
         <Card>
@@ -631,11 +559,7 @@ const ActivityFeedSystem: React.FC = () => {
                 <Switch
                   checked={channel.enabled}
                   onCheckedChange={(checked) => {
-                    setChannels((prev) =>
-                      prev.map((c) =>
-                        c.id === channel.id ? { ...c, enabled: checked } : c,
-                      ),
-                    );
+                    updateChannel(channel.id, checked);
                   }}
                 />
               </div>
@@ -658,9 +582,7 @@ const ActivityFeedSystem: React.FC = () => {
               <Switch
                 checked={preferences.projectUpdates}
                 onCheckedChange={(checked) => {
-                  setPreferences((prev) =>
-                    prev ? { ...prev, projectUpdates: checked } : null,
-                  );
+                  updatePreference("projectUpdates", checked);
                 }}
               />
             </div>
@@ -675,9 +597,7 @@ const ActivityFeedSystem: React.FC = () => {
               <Switch
                 checked={preferences.messages}
                 onCheckedChange={(checked) => {
-                  setPreferences((prev) =>
-                    prev ? { ...prev, messages: checked } : null,
-                  );
+                  updatePreference("messages", checked);
                 }}
               />
             </div>
@@ -692,9 +612,7 @@ const ActivityFeedSystem: React.FC = () => {
               <Switch
                 checked={preferences.payments}
                 onCheckedChange={(checked) => {
-                  setPreferences((prev) =>
-                    prev ? { ...prev, payments: checked } : null,
-                  );
+                  updatePreference("payments", checked);
                 }}
               />
             </div>
@@ -709,9 +627,7 @@ const ActivityFeedSystem: React.FC = () => {
               <Switch
                 checked={preferences.reviews}
                 onCheckedChange={(checked) => {
-                  setPreferences((prev) =>
-                    prev ? { ...prev, reviews: checked } : null,
-                  );
+                  updatePreference("reviews", checked);
                 }}
               />
             </div>
@@ -726,9 +642,7 @@ const ActivityFeedSystem: React.FC = () => {
               <Switch
                 checked={preferences.marketing}
                 onCheckedChange={(checked) => {
-                  setPreferences((prev) =>
-                    prev ? { ...prev, marketing: checked } : null,
-                  );
+                  updatePreference("marketing", checked);
                 }}
               />
             </div>
@@ -745,9 +659,7 @@ const ActivityFeedSystem: React.FC = () => {
               <Select
                 value={preferences.frequency}
                 onValueChange={(value: any) => {
-                  setPreferences((prev) =>
-                    prev ? { ...prev, frequency: value } : null,
-                  );
+                  updatePreference("frequency", value);
                 }}
               >
                 <SelectTrigger className="mt-2">
@@ -768,17 +680,10 @@ const ActivityFeedSystem: React.FC = () => {
                 <Switch
                   checked={preferences.quietHours.enabled}
                   onCheckedChange={(checked) => {
-                    setPreferences((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            quietHours: {
-                              ...prev.quietHours,
-                              enabled: checked,
-                            },
-                          }
-                        : null,
-                    );
+                    updatePreference("quietHours", {
+                      ...preferences.quietHours,
+                      enabled: checked,
+                    });
                   }}
                 />
               </div>
@@ -791,17 +696,10 @@ const ActivityFeedSystem: React.FC = () => {
                       type="time"
                       value={preferences.quietHours.start}
                       onChange={(e) => {
-                        setPreferences((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                quietHours: {
-                                  ...prev.quietHours,
-                                  start: e.target.value,
-                                },
-                              }
-                            : null,
-                        );
+                        updatePreference("quietHours", {
+                          ...preferences.quietHours,
+                          start: e.target.value,
+                        });
                       }}
                     />
                   </div>
@@ -811,17 +709,10 @@ const ActivityFeedSystem: React.FC = () => {
                       type="time"
                       value={preferences.quietHours.end}
                       onChange={(e) => {
-                        setPreferences((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                quietHours: {
-                                  ...prev.quietHours,
-                                  end: e.target.value,
-                                },
-                              }
-                            : null,
-                        );
+                        updatePreference("quietHours", {
+                          ...preferences.quietHours,
+                          end: e.target.value,
+                        });
                       }}
                     />
                   </div>
@@ -847,6 +738,14 @@ const ActivityFeedSystem: React.FC = () => {
 
   const pinnedActivities = filteredActivities.filter((a) => a.isPinned);
   const regularActivities = filteredActivities.filter((a) => !a.isPinned);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

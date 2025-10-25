@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { FreelancerProfile, JobPosting, Project } from "@/types/freelance";
 import { useToast } from "@/components/ui/use-toast";
+import { freelanceMatchingService } from "@/services/freelanceMatchingService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CompatibilityScore {
   overall: number;
@@ -95,6 +97,7 @@ export const SmartFreelanceMatching: React.FC<{
   const [budgetOptimization, setBudgetOptimization] =
     useState<BudgetOptimization | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (jobPosting || projectId) {
@@ -105,118 +108,31 @@ export const SmartFreelanceMatching: React.FC<{
   const loadSmartRecommendations = async () => {
     setLoading(true);
     try {
-      // Simulate API calls - replace with actual service calls
-      const mockTalentSuggestions: TalentSuggestion[] = [
-        {
-          freelancer: {
-            id: "1",
-            name: "Sarah Johnson",
-            email: "sarah@example.com",
-            avatar: "/api/placeholder/64/64",
-            title: "Senior React Developer",
-            bio: "Full-stack developer with 5+ years experience in React and Node.js",
-            hourlyRate: 85,
-            skills: ["React", "Node.js", "TypeScript", "MongoDB"],
-            rating: 4.9,
-            totalEarned: 125000,
-            completedJobs: 87,
-            successRate: 98,
-            languages: ["English", "Spanish"],
-            education: [],
-            certifications: [],
-            portfolio: [],
-            availability: "available",
-            responseTime: "within 1 hour",
-            location: "San Francisco, CA",
-            timezone: "PST",
-            verified: true,
-            joinedDate: "2019-03-15",
-          },
-          compatibility: {
-            overall: 92,
-            skillMatch: 95,
-            experienceLevel: 90,
-            budgetAlignment: 88,
-            availability: 95,
-            communicationStyle: 92,
-            pastSuccess: 98,
-          },
-          predictedSuccess: 94,
-          reasonsToHire: [
-            "Perfect skill match for React development",
-            "Excellent track record with similar projects",
-            "Fast response time and high availability",
-            "Budget aligns with market rates",
-          ],
-          potentialConcerns: [
-            "High demand - may have limited availability soon",
-            "Premium rate might exceed budget",
-          ],
-          recommendedBudget: { min: 80, max: 90 },
-        },
-      ];
+      // Fetch real data from services
+      let talentData: TalentSuggestion[] = [];
+      let successData: ProjectSuccessPredictor | null = null;
+      let skillGapData: SkillGapAnalysis | null = null;
+      let budgetData: BudgetOptimization | null = null;
 
-      const mockSuccessPredictor: ProjectSuccessPredictor = {
-        projectId: projectId || "mock",
-        successProbability: 87,
-        riskFactors: [
-          {
-            factor: "Tight deadline",
-            impact: "medium",
-            mitigation:
-              "Consider extending timeline by 2 weeks or adding team member",
-          },
-          {
-            factor: "Complex requirements",
-            impact: "high",
-            mitigation:
-              "Break down into smaller milestones with regular reviews",
-          },
-        ],
-        recommendations: [
-          "Start with a detailed discovery phase",
-          "Set up weekly milestone reviews",
-          "Consider adding a QA specialist to the team",
-        ],
-      };
+      if (userType === "client" && jobPosting) {
+        // For clients, get talent suggestions for their job posting
+        talentData = await freelanceMatchingService.getTalentSuggestions(jobPosting.id);
+        successData = await freelanceMatchingService.getProjectSuccessPrediction(jobPosting.id);
+        skillGapData = await freelanceMatchingService.getSkillGapAnalysis(jobPosting.id);
+        budgetData = await freelanceMatchingService.getBudgetOptimization(jobPosting.id);
+      } else if (userType === "freelancer" && projectId) {
+        // For freelancers, get project success prediction and skill gap analysis
+        successData = await freelanceMatchingService.getProjectSuccessPrediction(projectId);
+        skillGapData = await freelanceMatchingService.getSkillGapAnalysis(projectId);
+        budgetData = await freelanceMatchingService.getBudgetOptimization(projectId);
+      }
 
-      const mockSkillGap: SkillGapAnalysis = {
-        missingSkills: ["DevOps", "AWS", "Docker"],
-        suggestedTeamMembers: [
-          {
-            role: "DevOps Engineer",
-            skills: ["AWS", "Docker", "Kubernetes", "CI/CD"],
-            estimatedCost: 3500,
-            urgency: "medium",
-          },
-        ],
-        alternativeApproaches: [
-          "Use managed services to reduce DevOps complexity",
-          "Consider no-code/low-code solutions for certain features",
-        ],
-      };
-
-      const mockBudgetOptimization: BudgetOptimization = {
-        currentBudget: 15000,
-        optimizedBudget: { min: 12000, max: 14000 },
-        costBreakdown: [
-          { category: "Development", amount: 10000, percentage: 67 },
-          { category: "Design", amount: 3000, percentage: 20 },
-          { category: "Testing", amount: 2000, percentage: 13 },
-        ],
-        savings: 2000,
-        recommendations: [
-          "Consider fixed-price contracts for predictable costs",
-          "Use experienced freelancers to reduce revision cycles",
-          "Implement thorough requirements gathering to avoid scope creep",
-        ],
-      };
-
-      setTalentSuggestions(mockTalentSuggestions);
-      setSuccessPredictor(mockSuccessPredictor);
-      setSkillGapAnalysis(mockSkillGap);
-      setBudgetOptimization(mockBudgetOptimization);
+      setTalentSuggestions(talentData);
+      setSuccessPredictor(successData);
+      setSkillGapAnalysis(skillGapData);
+      setBudgetOptimization(budgetData);
     } catch (error) {
+      console.error("Error loading recommendations:", error);
       toast({
         title: "Error loading recommendations",
         description: "Please try again later",
@@ -313,14 +229,14 @@ export const SmartFreelanceMatching: React.FC<{
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage src={suggestion.freelancer.avatar} />
+                        <AvatarImage src={suggestion.freelancer.avatar_url} />
                         <AvatarFallback>
-                          {suggestion.freelancer.name[0]}
+                          {suggestion.freelancer.full_name?.[0] || suggestion.freelancer.username?.[0] || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <h3 className="text-xl font-semibold">
-                          {suggestion.freelancer.name}
+                          {suggestion.freelancer.full_name || suggestion.freelancer.username}
                         </h3>
                         <p className="text-muted-foreground">
                           {suggestion.freelancer.title}
@@ -333,10 +249,10 @@ export const SmartFreelanceMatching: React.FC<{
                             </span>
                           </div>
                           <Badge variant="outline">
-                            ${suggestion.freelancer.hourlyRate}/hr
+                            ${suggestion.freelancer.hourly_rate}/hr
                           </Badge>
                           <Badge variant="secondary">
-                            {suggestion.freelancer.completedJobs} jobs
+                            {suggestion.freelancer.completed_projects} jobs
                           </Badge>
                         </div>
                       </div>

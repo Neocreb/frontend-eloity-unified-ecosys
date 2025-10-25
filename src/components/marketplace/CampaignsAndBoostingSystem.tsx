@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -67,6 +67,9 @@ import {
 } from "lucide-react";
 import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
 import { useToast } from "@/components/ui/use-toast";
+import { campaignService } from "@/services/campaignService";
+import { boostService } from "@/services/boostService";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Campaign,
   ProductBoost,
@@ -74,110 +77,8 @@ import {
   Product,
 } from "@/types/enhanced-marketplace";
 
-// Mock campaigns data
-const mockCampaigns: Campaign[] = [
-  {
-    id: "campaign1",
-    name: "Black Friday Mega Sale",
-    slug: "black-friday-2024",
-    description:
-      "The biggest sale of the year with up to 70% off on electronics and fashion",
-    type: "seasonal",
-    startDate: "2024-11-29T00:00:00Z",
-    endDate: "2024-12-02T23:59:59Z",
-    bannerImage:
-      "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=1200&auto=format",
-    bannerText: "BLACK FRIDAY SALE - Up to 70% OFF!",
-    backgroundColor: "#000000",
-    textColor: "#FFFFFF",
-    discountType: "percentage",
-    discountValue: 30,
-    maxDiscount: 500,
-    minOrderAmount: 50,
-    maxParticipants: 500,
-    maxProductsPerSeller: 20,
-    usageLimit: 10000,
-    usageCount: 3456,
-    status: "active",
-    isPublic: true,
-    requiresApproval: true,
-    createdBy: "admin1",
-    viewCount: 45678,
-    clickCount: 12345,
-    conversionCount: 2345,
-    totalRevenue: 234567.89,
-    createdAt: "2024-10-15T10:00:00Z",
-    updatedAt: "2024-11-01T15:30:00Z",
-  },
-  {
-    id: "campaign2",
-    name: "Digital Products Flash Sale",
-    slug: "digital-flash-sale",
-    description: "24-hour flash sale on digital products and courses",
-    type: "flash_sale",
-    startDate: "2024-01-20T12:00:00Z",
-    endDate: "2024-01-21T12:00:00Z",
-    bannerText: "⚡ FLASH SALE - 50% OFF Digital Products!",
-    backgroundColor: "#FF6B6B",
-    textColor: "#FFFFFF",
-    discountType: "percentage",
-    discountValue: 50,
-    maxParticipants: 100,
-    usageLimit: 1000,
-    usageCount: 234,
-    status: "active",
-    isPublic: true,
-    requiresApproval: false,
-    createdBy: "admin1",
-    viewCount: 8976,
-    clickCount: 2134,
-    conversionCount: 456,
-    totalRevenue: 12345.67,
-    createdAt: "2024-01-19T09:00:00Z",
-    updatedAt: "2024-01-20T10:00:00Z",
-  },
-  {
-    id: "campaign3",
-    name: "New Seller Spotlight",
-    slug: "new-seller-spotlight",
-    description: "Featuring amazing products from new sellers on our platform",
-    type: "featured",
-    startDate: "2024-01-15T00:00:00Z",
-    endDate: "2024-02-15T23:59:59Z",
-    bannerText: "🌟 Discover New Sellers",
-    backgroundColor: "#4ECDC4",
-    textColor: "#FFFFFF",
-    maxParticipants: 50,
-    maxProductsPerSeller: 5,
-    status: "active",
-    isPublic: true,
-    requiresApproval: true,
-    createdBy: "admin1",
-    viewCount: 15432,
-    clickCount: 3456,
-    conversionCount: 567,
-    totalRevenue: 23456.78,
-    createdAt: "2024-01-10T14:00:00Z",
-    updatedAt: "2024-01-15T12:00:00Z",
-  },
-];
-
-// Mock boost performance data
-const mockBoostPerformance = {
-  totalSpent: 1250.5,
-  totalImpressions: 45670,
-  totalClicks: 2340,
-  totalConversions: 234,
-  averageROI: 245,
-  clickThroughRate: 5.12,
-  conversionRate: 10.0,
-  costPerClick: 0.53,
-  costPerConversion: 5.34,
-};
-
 const CampaignsAndBoostingSystem: React.FC = () => {
   const {
-    getCampaigns,
     getCampaignProducts,
     requestCampaignParticipation,
     boostProduct,
@@ -187,8 +88,10 @@ const CampaignsAndBoostingSystem: React.FC = () => {
   } = useEnhancedMarketplace();
 
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const [campaigns] = useState<Campaign[]>(mockCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [boostPerformance, setBoostPerformance] = useState<any>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null,
   );
@@ -198,14 +101,44 @@ const CampaignsAndBoostingSystem: React.FC = () => {
   const [showBoostProduct, setShowBoostProduct] = useState(false);
   const [selectedBoostOption, setSelectedBoostOption] = useState<string>("");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCampaignsAndBoostData();
+  }, []);
+
+  const loadCampaignsAndBoostData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch real campaigns data
+      const campaignsData = await campaignService.getActiveCampaigns();
+      setCampaigns(campaignsData);
+      
+      // Fetch real boost performance data
+      if (user?.id) {
+        const performanceData = await boostService.getBoostPerformance(user.id);
+        setBoostPerformance(performanceData);
+      }
+    } catch (error) {
+      console.error("Error loading campaigns and boost data:", error);
+      toast({
+        title: "Error loading data",
+        description: "Failed to load campaigns and boost information",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const myBoosts = getMyBoosts();
   const activeBoosts = myBoosts.filter((b) => b.status === "active");
 
   const getCampaignStatusBadge = (campaign: Campaign) => {
     const now = new Date();
-    const startDate = new Date(campaign.startDate);
-    const endDate = new Date(campaign.endDate);
+    const startDate = new Date(campaign.start_date);
+    const endDate = new Date(campaign.end_date);
 
     if (now < startDate) {
       return <Badge className="bg-blue-500 text-white">Upcoming</Badge>;
@@ -315,6 +248,16 @@ const CampaignsAndBoostingSystem: React.FC = () => {
     return `${minutes}m left`;
   };
 
+  if (loading) {
+    return (
+      <div className="container py-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6 space-y-6">
       {/* Header */}
@@ -359,7 +302,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600">
                     {campaigns
-                      .reduce((sum, c) => sum + c.viewCount, 0)
+                      .reduce((sum, c) => sum + (c.view_count || 0), 0)
                       .toLocaleString()}
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -371,7 +314,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600">
                     {campaigns
-                      .reduce((sum, c) => sum + c.conversionCount, 0)
+                      .reduce((sum, c) => sum + (c.conversion_count || 0), 0)
                       .toLocaleString()}
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -384,7 +327,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   <div className="text-2xl font-bold text-orange-600">
                     $
                     {campaigns
-                      .reduce((sum, c) => sum + c.totalRevenue, 0)
+                      .reduce((sum, c) => sum + (c.total_revenue || 0), 0)
                       .toLocaleString()}
                   </div>
                   <div className="text-sm text-muted-foreground">Revenue</div>
@@ -399,9 +342,9 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   <div
                     className="h-32 relative"
                     style={{
-                      backgroundColor: campaign.backgroundColor || "#f3f4f6",
-                      backgroundImage: campaign.bannerImage
-                        ? `url(${campaign.bannerImage})`
+                      backgroundColor: campaign.background_color || "#f3f4f6",
+                      backgroundImage: campaign.banner_image
+                        ? `url(${campaign.banner_image})`
                         : undefined,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
@@ -410,9 +353,9 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                     <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                       <h3
                         className="text-xl font-bold text-center px-4"
-                        style={{ color: campaign.textColor || "#ffffff" }}
+                        style={{ color: campaign.text_color || "#ffffff" }}
                       >
-                        {campaign.bannerText || campaign.name}
+                        {campaign.banner_text || campaign.name}
                       </h3>
                     </div>
                     <div className="absolute top-2 right-2">
@@ -445,13 +388,13 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                       <div>
                         <p className="text-muted-foreground">Starts</p>
                         <p className="font-medium">
-                          {formatDate(campaign.startDate)}
+                          {formatDate(campaign.start_date)}
                         </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Ends</p>
                         <p className="font-medium">
-                          {formatDate(campaign.endDate)}
+                          {formatDate(campaign.end_date)}
                         </p>
                       </div>
                     </div>
@@ -460,22 +403,22 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">
-                        {calculateTimeLeft(campaign.endDate)}
+                        {calculateTimeLeft(campaign.end_date)}
                       </span>
                     </div>
 
                     {/* Discount Info */}
-                    {campaign.discountType && campaign.discountValue && (
+                    {campaign.discount_type && campaign.discount_value && (
                       <div className="bg-green-50 p-3 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Percent className="h-4 w-4 text-green-600" />
                           <span className="font-medium text-green-800">
-                            {campaign.discountValue}% discount
+                            {campaign.discount_value}% discount
                           </span>
                         </div>
-                        {campaign.minOrderAmount && (
+                        {campaign.min_order_amount && (
                           <p className="text-sm text-green-600 mt-1">
-                            Min order: ${campaign.minOrderAmount}
+                            Min order: ${campaign.min_order_amount}
                           </p>
                         )}
                       </div>
@@ -486,13 +429,13 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                       <div className="flex justify-between text-sm">
                         <span>Participation</span>
                         <span>
-                          {campaign.usageCount}/{campaign.usageLimit || "∞"}
+                          {campaign.usage_count || 0}/{campaign.usage_limit || "∞"}
                         </span>
                       </div>
-                      {campaign.usageLimit && (
+                      {campaign.usage_limit && (
                         <Progress
                           value={
-                            (campaign.usageCount / campaign.usageLimit) * 100
+                            ((campaign.usage_count || 0) / campaign.usage_limit) * 100
                           }
                           className="h-2"
                         />
@@ -503,19 +446,19 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                     <div className="grid grid-cols-3 gap-2 text-center text-sm">
                       <div>
                         <p className="font-medium">
-                          {campaign.viewCount.toLocaleString()}
+                          {(campaign.view_count || 0).toLocaleString()}
                         </p>
                         <p className="text-muted-foreground">Views</p>
                       </div>
                       <div>
                         <p className="font-medium">
-                          {campaign.clickCount.toLocaleString()}
+                          {(campaign.click_count || 0).toLocaleString()}
                         </p>
                         <p className="text-muted-foreground">Clicks</p>
                       </div>
                       <div>
                         <p className="font-medium">
-                          {campaign.conversionCount.toLocaleString()}
+                          {(campaign.conversion_count || 0).toLocaleString()}
                         </p>
                         <p className="text-muted-foreground">Sales</p>
                       </div>
@@ -575,7 +518,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
-                      {mockBoostPerformance.totalImpressions.toLocaleString()}
+                      {boostPerformance?.totalImpressions?.toLocaleString() || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Total Impressions
@@ -583,7 +526,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">
-                      {mockBoostPerformance.totalClicks.toLocaleString()}
+                      {boostPerformance?.totalClicks?.toLocaleString() || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Total Clicks
@@ -591,7 +534,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600">
-                      {mockBoostPerformance.averageROI}%
+                      {boostPerformance?.averageROI ? `${boostPerformance.averageROI}%` : "0%"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Average ROI
@@ -679,13 +622,13 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                                   Impressions
                                 </p>
                                 <p className="font-medium">
-                                  {boost.impressions.toLocaleString()}
+                                  {boost.impressions?.toLocaleString() || 0}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-muted-foreground">Clicks</p>
                                 <p className="font-medium">
-                                  {boost.clicks.toLocaleString()}
+                                  {boost.clicks?.toLocaleString() || 0}
                                 </p>
                               </div>
                               <div>
@@ -693,7 +636,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                                   Conversions
                                 </p>
                                 <p className="font-medium">
-                                  {boost.conversions}
+                                  {boost.conversions || 0}
                                 </p>
                               </div>
                               <div>
@@ -838,7 +781,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600">
-                      ${mockBoostPerformance.totalSpent.toFixed(2)}
+                      ${boostPerformance?.totalSpent?.toFixed(2) || "0.00"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Total Spent
@@ -846,7 +789,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-green-600">
-                      {mockBoostPerformance.averageROI}%
+                      {boostPerformance?.averageROI ? `${boostPerformance.averageROI}%` : "0%"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Average ROI
@@ -854,7 +797,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-purple-600">
-                      {mockBoostPerformance.clickThroughRate}%
+                      {boostPerformance?.clickThroughRate ? `${boostPerformance.clickThroughRate}%` : "0%"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Click Through Rate
@@ -862,7 +805,7 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-orange-600">
-                      {mockBoostPerformance.conversionRate}%
+                      {boostPerformance?.conversionRate ? `${boostPerformance.conversionRate}%` : "0%"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Conversion Rate
@@ -882,25 +825,25 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   <div className="flex justify-between">
                     <span>Cost per Click</span>
                     <span className="font-medium">
-                      ${mockBoostPerformance.costPerClick}
+                      ${boostPerformance?.costPerClick || "0.00"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Cost per Conversion</span>
                     <span className="font-medium">
-                      ${mockBoostPerformance.costPerConversion}
+                      ${boostPerformance?.costPerConversion || "0.00"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Impressions</span>
                     <span className="font-medium">
-                      {mockBoostPerformance.totalImpressions.toLocaleString()}
+                      {boostPerformance?.totalImpressions?.toLocaleString() || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Clicks</span>
                     <span className="font-medium">
-                      {mockBoostPerformance.totalClicks.toLocaleString()}
+                      {boostPerformance?.totalClicks?.toLocaleString() || 0}
                     </span>
                   </div>
                 </CardContent>
@@ -943,9 +886,9 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                 className="h-32 rounded-lg relative"
                 style={{
                   backgroundColor:
-                    selectedCampaign.backgroundColor || "#f3f4f6",
-                  backgroundImage: selectedCampaign.bannerImage
-                    ? `url(${selectedCampaign.bannerImage})`
+                    selectedCampaign.background_color || "#f3f4f6",
+                  backgroundImage: selectedCampaign.banner_image
+                    ? `url(${selectedCampaign.banner_image})`
                     : undefined,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
@@ -954,9 +897,9 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                 <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
                   <h3
                     className="text-xl font-bold text-center px-4"
-                    style={{ color: selectedCampaign.textColor || "#ffffff" }}
+                    style={{ color: selectedCampaign.text_color || "#ffffff" }}
                   >
-                    {selectedCampaign.bannerText || selectedCampaign.name}
+                    {selectedCampaign.banner_text || selectedCampaign.name}
                   </h3>
                 </div>
               </div>
@@ -974,38 +917,38 @@ const CampaignsAndBoostingSystem: React.FC = () => {
                   <div>
                     <h4 className="font-semibold mb-2">Campaign Period</h4>
                     <p className="text-sm">
-                      Start: {formatDate(selectedCampaign.startDate)}
+                      Start: {formatDate(selectedCampaign.start_date)}
                     </p>
                     <p className="text-sm">
-                      End: {formatDate(selectedCampaign.endDate)}
+                      End: {formatDate(selectedCampaign.end_date)}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Participation</h4>
                     <p className="text-sm">
-                      Used: {selectedCampaign.usageCount}
+                      Used: {selectedCampaign.usage_count || 0}
                     </p>
                     <p className="text-sm">
-                      Limit: {selectedCampaign.usageLimit || "Unlimited"}
+                      Limit: {selectedCampaign.usage_limit || "Unlimited"}
                     </p>
                   </div>
                 </div>
 
-                {selectedCampaign.discountType && (
+                {selectedCampaign.discount_type && (
                   <div>
                     <h4 className="font-semibold mb-2">Discount Details</h4>
                     <div className="bg-green-50 p-3 rounded-lg">
                       <p className="text-green-800 font-medium">
-                        {selectedCampaign.discountValue}% discount
+                        {selectedCampaign.discount_value}% discount
                       </p>
-                      {selectedCampaign.minOrderAmount && (
+                      {selectedCampaign.min_order_amount && (
                         <p className="text-green-600 text-sm">
-                          Minimum order: ${selectedCampaign.minOrderAmount}
+                          Minimum order: ${selectedCampaign.min_order_amount}
                         </p>
                       )}
-                      {selectedCampaign.maxDiscount && (
+                      {selectedCampaign.max_discount && (
                         <p className="text-green-600 text-sm">
-                          Maximum discount: ${selectedCampaign.maxDiscount}
+                          Maximum discount: ${selectedCampaign.max_discount}
                         </p>
                       )}
                     </div>
