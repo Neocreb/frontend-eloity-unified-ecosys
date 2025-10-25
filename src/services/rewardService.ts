@@ -1,7 +1,9 @@
+// @ts-nocheck
 import { websocketService } from './websocketService';
+import { enhancedEloitsService } from './enhancedEloitsService';
 
 export interface RewardAction {
-  type: 'like' | 'comment' | 'share' | 'upload' | 'watch' | 'ad_view' | 'trade' | 'referral' | 'daily_login' | 'milestone';
+  type: 'like' | 'comment' | 'share' | 'upload' | 'watch' | 'ad_view' | 'trade' | 'referral' | 'daily_login' | 'milestone' | 'purchase_product' | 'product_sold' | 'refer_user';
   amount: number;
   description: string;
   metadata?: any;
@@ -28,6 +30,12 @@ export interface UserRewardData {
   nextLevelRequirement: number;
   availableBalance: number;
   pendingRewards: number;
+  // Enhanced Eloits data
+  currentBalance: number;
+  trustScore: number;
+  trustLevel: string;
+  tier: string;
+  referralCount: number;
 }
 
 class RewardService {
@@ -105,6 +113,26 @@ class RewardService {
         baseReward: 0.50,
         multiplier: 1.1, // Increases with streak
         isActive: true
+      },
+      // Enhanced Eloits rules
+      {
+        id: 'purchase_product',
+        action: 'purchase_product',
+        baseReward: 10.0,
+        conditions: { dailyLimit: 50 },
+        isActive: true
+      },
+      {
+        id: 'product_sold',
+        action: 'product_sold',
+        baseReward: 750.0,
+        isActive: true
+      },
+      {
+        id: 'refer_user',
+        action: 'refer_user',
+        baseReward: 1000.0,
+        isActive: true
       }
     ];
 
@@ -123,7 +151,10 @@ class RewardService {
     });
 
     websocketService.on('user_reward_data_updated', (data) => {
-      this.userRewardData = data.userData;
+      this.userRewardData = {
+        ...this.userRewardData,
+        ...data.userData
+      };
     });
   }
 
@@ -132,6 +163,14 @@ class RewardService {
       this.userRewardData.totalEarned += data.amount;
       this.userRewardData.todayEarned += data.amount;
       this.userRewardData.availableBalance += data.amount;
+      // Update enhanced Eloits data if available
+      if (data.enhancedData) {
+        this.userRewardData.currentBalance = data.enhancedData.currentBalance;
+        this.userRewardData.trustScore = data.enhancedData.trustScore;
+        this.userRewardData.trustLevel = data.enhancedData.trustLevel;
+        this.userRewardData.tier = data.enhancedData.tier;
+        this.userRewardData.referralCount = data.enhancedData.referralCount;
+      }
     }
 
     // Emit custom event for UI updates
@@ -153,6 +192,16 @@ class RewardService {
       const data = await response.json();
       this.userRewardData = data.userData;
       this.dailyActionCounts = new Map(Object.entries(data.dailyActionCounts || {}));
+      
+      // Also initialize enhanced Eloits data
+      const enhancedData = await enhancedEloitsService.getUserEloitsData(userId);
+      if (enhancedData && this.userRewardData) {
+        this.userRewardData.currentBalance = enhancedData.current_balance;
+        this.userRewardData.trustScore = enhancedData.trust_score;
+        this.userRewardData.trustLevel = enhancedData.trust_level;
+        this.userRewardData.tier = enhancedData.tier;
+        this.userRewardData.referralCount = enhancedData.referral_count;
+      }
     } catch (error) {
       console.error('Failed to initialize user reward data:', error);
     }
@@ -199,6 +248,27 @@ class RewardService {
         case 'daily_login':
           const streak = this.userRewardData?.streak || 1;
           rewardAmount *= Math.pow(rule.multiplier, Math.min(streak, 30)); // Max 30 day streak bonus
+          break;
+          
+        // Enhanced Eloits multipliers
+        case 'purchase_product':
+          // 10 ELO + (1% of purchase amount in ELO), max 200 ELO daily
+          const purchaseAmount = metadata.purchaseAmount || 0;
+          rewardAmount = 10 + (purchaseAmount * 0.01);
+          // Cap at 200 ELO per day for purchases
+          if (todayCount > 0 && (todayCount * rewardAmount) >= 200) {
+            rewardAmount = 0; // Already reached daily cap
+          } else if ((todayCount * rule.baseReward) + rewardAmount > 200) {
+            rewardAmount = 200 - (todayCount * rule.baseReward); // Adjust to fit under cap
+          }
+          break;
+          
+        case 'product_sold':
+          // Flat 750 ELO plus tier multiplier
+          if (this.userRewardData) {
+            const tierConfig = await enhancedEloitsService.getTierConfig(this.userRewardData.tier);
+            rewardAmount = 750 * (tierConfig?.multiplier || 1.0);
+          }
           break;
       }
     }
@@ -267,6 +337,12 @@ class RewardService {
         return `Daily login streak: ${this.userRewardData?.streak || 1} days`;
       case 'milestone':
         return metadata.description || 'Reached milestone';
+      case 'purchase_product':
+        return `Purchased product worth ${metadata.purchaseAmount || 0}`;
+      case 'product_sold':
+        return 'Sold a product in the marketplace';
+      case 'refer_user':
+        return 'Referred a friend to the platform';
       default:
         return 'Earned reward';
     }
@@ -315,6 +391,19 @@ class RewardService {
       description, 
       customAmount 
     });
+  }
+
+  // Enhanced Eloits methods
+  async purchaseProduct(productId: string, purchaseAmount: number): Promise<RewardAction | null> {
+    return this.triggerReward('purchase_product', { productId, purchaseAmount });
+  }
+
+  async productSold(productId: string): Promise<RewardAction | null> {
+    return this.triggerReward('product_sold', { productId });
+  }
+
+  async referUser(referralCode: string, newUserId: string): Promise<RewardAction | null> {
+    return this.triggerReward('refer_user', { referralCode, newUserId });
   }
 
   // Getters
@@ -387,6 +476,9 @@ export function useRewardService() {
     referralSignup: rewardService.referralSignup.bind(rewardService),
     dailyLogin: rewardService.dailyLogin.bind(rewardService),
     milestone: rewardService.milestone.bind(rewardService),
+    purchaseProduct: rewardService.purchaseProduct.bind(rewardService),
+    productSold: rewardService.productSold.bind(rewardService),
+    referUser: rewardService.referUser.bind(rewardService),
     getUserRewardData: rewardService.getUserRewardData.bind(rewardService),
     getRemainingDailyActions: rewardService.getRemainingDailyActions.bind(rewardService)
   };

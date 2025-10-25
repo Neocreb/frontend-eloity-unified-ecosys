@@ -6,7 +6,8 @@ const ACTIVITY_TYPES = [
   "comment_post",
   "share_content",
   "daily_login",
-  "purchase_product"
+  "purchase_product",
+  "product_sold"
 ] as const;
 
 export interface ActivityRewardResponse {
@@ -29,6 +30,9 @@ export interface ActivityContext {
   clickDepth?: number;
   referrer?: string;
 }
+
+// Import the enhanced Eloits service
+import { enhancedEloitsService } from "./enhancedEloitsService";
 
 export class ActivityRewardService {
   private static apiBase = "/api";
@@ -56,6 +60,60 @@ export class ActivityRewardService {
           riskScore: 0,
           message: "No authentication token",
         };
+      }
+
+      // Check for spam before processing rewards
+      const spamCheck = await enhancedEloitsService.checkForSpam(params.userId, params.actionType);
+      if (spamCheck.isSpam) {
+        return {
+          success: false,
+          status: "spam_detected",
+          eloits: 0,
+          walletBonus: 0,
+          newTrustScore: 0,
+          riskScore: 100, // High risk score for spam
+          message: spamCheck.reason || "Spam activity detected",
+        };
+      }
+
+      // Handle enhanced Eloits rewards for specific actions
+      if (params.actionType === "purchase_product" && params.value) {
+        // Handle marketplace purchase reward
+        const result = await enhancedEloitsService.handleMarketplacePurchaseReward(
+          params.userId,
+          params.value,
+          params.targetId || ""
+        );
+        
+        if (result.success) {
+          return {
+            success: true,
+            status: "success",
+            eloits: result.amount,
+            walletBonus: 0,
+            newTrustScore: 0,
+            riskScore: 0,
+            message: result.message,
+          };
+        }
+      } else if (params.actionType === "product_sold") {
+        // Handle product sold reward
+        const result = await enhancedEloitsService.handleProductSoldReward(
+          params.userId,
+          params.targetId || ""
+        );
+        
+        if (result.success) {
+          return {
+            success: true,
+            status: "success",
+            eloits: result.amount,
+            walletBonus: 0,
+            newTrustScore: 0,
+            riskScore: 0,
+            message: result.message,
+          };
+        }
       }
 
       const response = await fetch(`${this.apiBase}/creator/reward`, {
@@ -183,6 +241,16 @@ export class ActivityRewardService {
       targetId: productId,
       targetType: "product",
       value: amount,
+      metadata,
+    });
+  }
+
+  static async logProductSold(userId: string, productId: string, metadata?: Record<string, any>) {
+    return this.logActivity({
+      userId,
+      actionType: "product_sold",
+      targetId: productId,
+      targetType: "product",
       metadata,
     });
   }

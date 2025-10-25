@@ -79,6 +79,7 @@ import walletRouter from './routes/wallet.js';
 import ledgerRouter from './routes/ledger.js';
 import bybitRouter from './routes/bybit.js';
 import cryptoUserRouter from './routes/crypto_user.js';
+import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import startMetricsSync from './tasks/metricsSync.js';
 import startReconciliation from './tasks/reconcileBalances.js';
 
@@ -482,6 +483,7 @@ app.use('/api/explore', exploreRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/ledger', ledgerRouter);
 app.use('/api/bybit', bybitRouter);
+app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 

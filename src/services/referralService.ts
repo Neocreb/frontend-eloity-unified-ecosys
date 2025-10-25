@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { ActivityRewardService } from "./activityRewardService";
+import { enhancedEloitsService } from "./enhancedEloitsService";
 
 export interface ReferralLink {
   id: string;
@@ -168,19 +169,33 @@ export class ReferralService {
       if (response.ok) {
         const result = await response.json();
 
-        // Log referral reward for referrer
-        if (result.referrerReward > 0) {
-          await ActivityRewardService.logActivity({
-            userId: result.referrerId,
-            actionType: "refer_user",
-            targetId: params.newUserId,
-            targetType: "user",
-            value: result.referrerReward,
-            metadata: {
-              referralCode: params.referralCode,
-              refereeId: params.newUserId,
-            },
-          });
+        // Process multi-level referral with enhanced Eloits system
+        const referralResult = await enhancedEloitsService.processMultiLevelReferral(
+          result.referrerId,
+          params.newUserId,
+          params.referralCode
+        );
+
+        if (referralResult.success) {
+          console.log("Multi-level referral processed:", referralResult.message);
+          
+          // Log rewards for each level
+          for (const reward of referralResult.rewards) {
+            // Log activity reward for each level
+            await ActivityRewardService.logActivity({
+              userId: reward.userId,
+              actionType: "refer_user",
+              targetId: params.newUserId,
+              targetType: "user",
+              value: reward.amount,
+              metadata: {
+                referralCode: params.referralCode,
+                refereeId: params.newUserId,
+                level: reward.level,
+                amount: reward.amount
+              },
+            });
+          }
         }
 
         return true;
