@@ -157,6 +157,7 @@ import CreatorStudio from "./pages/CreatorStudio";
 import EnhancedDashboardDemo from "./components/freelance/EnhancedDashboardDemo";
 import UnifiedCreatorStudio from "./pages/UnifiedCreatorStudio";
 import Chat from "./pages/Chat";
+import ChatTest from "./pages/ChatTest";
 import Messages from "./pages/Messages";
 import Explore from "./pages/Explore";
 import GlobalSearch from "./pages/GlobalSearch";
@@ -430,7 +431,7 @@ const AppRoutes = () => {
           <Route path="freelance/profile/:username" element={<FreelancerProfile />} />
           <Route path="chat" element={<Chat />} />
           <Route path="chat/:threadId" element={<ChatRoom />} />
-          {/* <Route path="chat-test/:threadId" element={<ChatTest />} /> */}
+          <Route path="chat-test/:threadId" element={<ChatTest />} />
           <Route path="chat-simple/:threadId" element={<SimpleChatRoom />} />
           <Route
             path="messages"

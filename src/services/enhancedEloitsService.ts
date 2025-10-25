@@ -1333,4 +1333,3 @@ class EnhancedEloitsService {
 }
 
 export const enhancedEloitsService = new EnhancedEloitsService();
-export { TIER_CONFIG };

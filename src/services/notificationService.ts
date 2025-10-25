@@ -107,4 +107,53 @@ export class NotificationService {
       return 0;
     }
   }
+
+  // Get user notifications
+  static async getUserNotifications(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting user notifications:", error);
+      return [];
+    }
+  }
+
+  // Create notification
+  static async createNotification(
+    userId: string,
+    type: string,
+    title: string,
+    message: string
+  ) {
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: userId,
+          type,
+          title,
+          message,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data.id;
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      return null;
+    }
+  }
 }
+
+export const notificationService = new NotificationService();
