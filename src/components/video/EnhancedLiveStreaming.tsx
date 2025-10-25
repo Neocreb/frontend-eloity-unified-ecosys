@@ -98,6 +98,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 
 interface StreamParticipant {
   id: string;
@@ -329,7 +330,8 @@ const EnhancedLiveStreaming: React.FC<EnhancedLiveStreamingProps> = ({
 
   const initializeMediaDevices = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // Use the shared camera permissions utility
+      const result = await requestCameraAccess({
         video: {
           width: { ideal: 1920 },
           height: { ideal: 1080 },
@@ -342,17 +344,22 @@ const EnhancedLiveStreaming: React.FC<EnhancedLiveStreamingProps> = ({
         },
       });
 
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      if (result.error) {
+        throw new Error(result.error.message);
       }
 
-    } catch (error) {
+      if (result.stream) {
+        streamRef.current = result.stream;
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = result.stream;
+        }
+      }
+    } catch (error: any) {
       console.error("Failed to initialize media devices:", error);
       toast({
         title: "Camera Error",
-        description: "Failed to access camera and microphone",
+        description: error.message || "Failed to access camera and microphone",
         variant: "destructive",
       });
     }

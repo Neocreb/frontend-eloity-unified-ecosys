@@ -53,8 +53,10 @@ import {
   liveStreamingService,
 } from "@/services/liveStreamingService";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 
 interface LiveStreamCreatorProps {
   onStreamStart?: (stream: LiveStream) => void;
@@ -115,22 +117,27 @@ export function LiveStreamCreator({
 
   const startPreview = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const result = await requestCameraAccess({
         video: videoEnabled,
         audio: audioEnabled,
       });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setIsPreviewing(true);
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-    } catch (error) {
+
+      if (result.stream) {
+        if (videoRef.current) {
+          videoRef.current.srcObject = result.stream;
+          streamRef.current = result.stream;
+          setIsPreviewing(true);
+        }
+      }
+    } catch (error: any) {
       console.error("Error accessing media devices:", error);
       toast({
         title: "Camera/Microphone Error",
-        description:
-          "Please allow camera and microphone access to start streaming.",
+        description: error.message || "Please allow camera and microphone access to start streaming.",
         variant: "destructive",
       });
     }

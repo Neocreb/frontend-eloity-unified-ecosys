@@ -28,9 +28,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Input } from '../ui/input';
-import { cn } from '../../lib/utils';
-import { LiveStreamData } from '../../hooks/use-live-content';
-import { useToast } from '../../hooks/use-toast';
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 
 interface LiveStreamingCardProps {
   content: LiveStreamData;
@@ -101,16 +102,22 @@ const LiveStreamingCard: React.FC<LiveStreamingCardProps> = ({
   // Start camera if user owns this stream
   useEffect(() => {
     if (isUserOwned && isActive && videoRef.current) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(console.error);
+      requestCameraAccess({ video: true, audio: true })
+        .then(result => {
+          if (result.error) {
+            throw new Error(result.error.message);
           }
-          toast({
-            title: "Camera Started! 📹",
-            description: "Your live stream is now broadcasting",
-          });
+
+          if (result.stream) {
+            if (videoRef.current) {
+              videoRef.current.srcObject = result.stream;
+              videoRef.current.play().catch(console.error);
+            }
+            toast({
+              title: "Camera Started! 📹",
+              description: "Your live stream is now broadcasting",
+            });
+          }
         })
         .catch(error => {
           console.error('Camera access failed:', error);

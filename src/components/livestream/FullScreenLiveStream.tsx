@@ -45,12 +45,10 @@ import { Progress } from '../ui/progress';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { Card, CardContent } from '../ui/card';
-import { cn } from '../../lib/utils';
-import { LiveStreamData } from '../../hooks/use-live-content';
-import { useToast } from '../../hooks/use-toast';
-import { useAuth } from '../../contexts/AuthContext';
-import BattleVoting from '../voting/BattleVoting';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 
 interface LiveChatMessage {
   id: string;
@@ -254,11 +252,17 @@ export const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
   // Start camera if user owns this stream
   useEffect(() => {
     if (isUserOwned && isActive && videoRef.current) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(console.error);
+      requestCameraAccess({ video: true, audio: true })
+        .then(result => {
+          if (result.error) {
+            throw new Error(result.error.message);
+          }
+
+          if (result.stream) {
+            if (videoRef.current) {
+              videoRef.current.srcObject = result.stream;
+              videoRef.current.play().catch(console.error);
+            }
           }
         })
         .catch(error => {

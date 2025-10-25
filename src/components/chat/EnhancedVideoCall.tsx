@@ -10,6 +10,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 import {
   Video,
   VideoOff,
@@ -35,7 +38,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 interface CallParticipant {
@@ -165,22 +167,37 @@ export const EnhancedVideoCall: React.FC<EnhancedVideoCallProps> = ({
   const handleAcceptCall = async () => {
     try {
       if (safeCallData.type === 'video') {
-        // Request camera and microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({
+        // Request camera and microphone access using shared utility
+        const result = await requestCameraAccess({
           video: true,
           audio: true
         });
-        setLocalStream(stream);
 
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+
+        if (result.stream) {
+          setLocalStream(result.stream);
+
+          if (videoRef.current) {
+            videoRef.current.srcObject = result.stream;
+          }
         }
       } else {
-        // Request microphone access only
-        const stream = await navigator.mediaDevices.getUserMedia({
+        // Request microphone access only using shared utility
+        const result = await requestCameraAccess({
+          video: false,
           audio: true
         });
-        setLocalStream(stream);
+
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+
+        if (result.stream) {
+          setLocalStream(result.stream);
+        }
       }
 
       setCallState(prev => ({
@@ -196,11 +213,11 @@ export const EnhancedVideoCall: React.FC<EnhancedVideoCallProps> = ({
         title: "Call Connected",
         description: `${safeCallData.type === 'video' ? 'Video' : 'Voice'} call started`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accessing media devices:', error);
       toast({
         title: "Media Access Error",
-        description: "Could not access camera/microphone. Please check permissions.",
+        description: error.message || "Could not access camera/microphone. Please check permissions.",
         variant: "destructive",
       });
     }

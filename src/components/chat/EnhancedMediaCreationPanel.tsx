@@ -19,7 +19,11 @@ import {
   Bot,
   FlipHorizontal,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useUserCollections } from "@/contexts/UserCollectionsContext";
 import { useUserPremiumStatus } from "@/hooks/useUserPremiumStatus";
@@ -321,22 +325,30 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
   const handleTakePhoto = async () => {
     setCurrentMode("photo");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const result = await requestCameraAccess({ 
         video: { 
           facingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
-        } 
+        },
+        audio: false
       });
-      setCameraStream(stream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-    } catch (error) {
+
+      if (result.stream) {
+        setCameraStream(result.stream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = result.stream;
+        }
+      }
+    } catch (error: any) {
       console.error('Camera access denied:', error);
       toast({
         title: "Camera access denied",
-        description: "Please allow camera access or choose from gallery",
+        description: error.message || "Please allow camera access or choose from gallery",
         variant: "destructive",
       });
       // Fallback to file input
@@ -410,25 +422,33 @@ export const EnhancedMediaCreationPanel: React.FC<EnhancedMediaCreationPanelProp
     setFacingMode(newFacingMode);
     
     if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
+      stopCameraStream(cameraStream);
       
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        const result = await requestCameraAccess({ 
           video: { 
             facingMode: newFacingMode,
             width: { ideal: 1280 },
             height: { ideal: 720 }
-          } 
+          },
+          audio: false
         });
-        setCameraStream(stream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+
+        if (result.error) {
+          throw new Error(result.error.message);
         }
-      } catch (error) {
+
+        if (result.stream) {
+          setCameraStream(result.stream);
+          if (videoRef.current) {
+            videoRef.current.srcObject = result.stream;
+          }
+        }
+      } catch (error: any) {
         console.error('Error switching camera:', error);
         toast({
           title: "Camera switch failed",
-          description: "Could not switch to the other camera",
+          description: error.message || "Could not switch to the other camera",
           variant: "destructive",
         });
       }

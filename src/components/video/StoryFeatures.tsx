@@ -51,6 +51,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 
 interface Story {
   id: string;
@@ -339,18 +340,25 @@ const StoryFeatures: React.FC<StoryFeaturesProps> = ({
 
   const initializeCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const result = await requestCameraAccess({
         video: { facingMode: "user", width: 720, height: 1280 },
         audio: false,
       });
-      streamRef.current = stream;
-      if (cameraRef.current) {
-        cameraRef.current.srcObject = stream;
+
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-    } catch (error) {
+
+      if (result.stream) {
+        streamRef.current = result.stream;
+        if (cameraRef.current) {
+          cameraRef.current.srcObject = result.stream;
+        }
+      }
+    } catch (error: any) {
       toast({
         title: "Camera Error",
-        description: "Unable to access camera",
+        description: error.message || "Unable to access camera",
         variant: "destructive",
       });
     }

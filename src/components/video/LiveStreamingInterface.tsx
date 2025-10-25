@@ -54,9 +54,11 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 
 interface LiveStreamConfig {
   quality: "720p" | "1080p" | "4K";
@@ -249,7 +251,7 @@ const LiveStreamingInterface: React.FC<LiveStreamingInterfaceProps> = ({
 
   const initializeStream = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const result = await requestCameraAccess({
         video: {
           width: { ideal: 1920 },
           height: { ideal: 1080 },
@@ -262,26 +264,32 @@ const LiveStreamingInterface: React.FC<LiveStreamingInterfaceProps> = ({
         },
       });
 
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-
-        // Handle video element load to prevent playback issues
-        videoRef.current.onloadedmetadata = () => {
-          if (videoRef.current && isStreamActive) {
-            videoRef.current.play().catch((error) => {
-              if (error.name !== "AbortError") {
-                console.error("Stream video play error:", error);
-              }
-            });
-          }
-        };
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-    } catch (error) {
+
+      if (result.stream) {
+        streamRef.current = result.stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = result.stream;
+
+          // Handle video element load to prevent playback issues
+          videoRef.current.onloadedmetadata = () => {
+            if (videoRef.current && isStreamActive) {
+              videoRef.current.play().catch((error) => {
+                if (error.name !== "AbortError") {
+                  console.error("Stream video play error:", error);
+                }
+              });
+            }
+          };
+        }
+      }
+    } catch (error: any) {
       console.error("Failed to initialize stream:", error);
       toast({
         title: "Stream Error",
-        description: "Failed to access camera/microphone",
+        description: error.message || "Failed to access camera/microphone",
         variant: "destructive",
       });
     }

@@ -37,7 +37,10 @@ import {
   Scan,
   RefreshCw,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 
 interface EnhancedKYCVerificationProps {
   onComplete?: () => void;
@@ -116,18 +119,25 @@ const EnhancedKYCVerification: React.FC<EnhancedKYCVerificationProps> = ({
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const result = await requestCameraAccess({ 
         video: { facingMode: 'user' },
         audio: false 
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraActive(true);
+
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-    } catch (error) {
+
+      if (result.stream) {
+        if (videoRef.current) {
+          videoRef.current.srcObject = result.stream;
+          setCameraActive(true);
+        }
+      }
+    } catch (error: any) {
       toast({
         title: "Camera Error",
-        description: "Unable to access camera. Please check permissions.",
+        description: error.message || "Unable to access camera. Please check permissions.",
         variant: "destructive",
       });
     }

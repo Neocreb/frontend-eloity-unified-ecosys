@@ -22,8 +22,10 @@ import {
   Plus,
   Sticker,
 } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
+import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 import { MemeStickerPicker } from "./MemeStickerPicker";
 import { WhatsAppStickerPicker } from "./WhatsAppStickerPicker";
 import { MobileStickerBottomSheet } from "./MobileStickerBottomSheet";
@@ -97,47 +99,54 @@ export const WhatsAppChatInput: React.FC<WhatsAppChatInputProps> = ({
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const result = await requestCameraAccess({ audio: true });
 
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
 
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
+      if (result.stream) {
+        const mediaRecorder = new MediaRecorder(result.stream);
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/wav",
-        });
-        const audioUrl = URL.createObjectURL(audioBlob);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
 
-        // Send voice message with transcription (mock for now)
-        const transcription = "Voice message recorded"; // In real app, use speech-to-text API
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunksRef.current.push(event.data);
+        };
 
-        onSendMessage("voice", audioUrl, {
-          duration: recordingTime,
-          transcription,
-          audioBlob,
-        });
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, {
+            type: "audio/wav",
+          });
+          const audioUrl = URL.createObjectURL(audioBlob);
 
-        // Clean up
-        stream.getTracks().forEach((track) => track.stop());
-        setRecordingTime(0);
-      };
+          // Send voice message with transcription (mock for now)
+          const transcription = "Voice message recorded"; // In real app, use speech-to-text API
 
-      mediaRecorder.start();
-      setIsRecording(true);
+          onSendMessage("voice", audioUrl, {
+            duration: recordingTime,
+            transcription,
+            audioBlob,
+          });
 
-      // Start timer
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    } catch (error) {
+          // Clean up
+          stopCameraStream(result.stream);
+          setRecordingTime(0);
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+
+        // Start timer
+        recordingIntervalRef.current = setInterval(() => {
+          setRecordingTime((prev) => prev + 1);
+        }, 1000);
+      }
+    } catch (error: any) {
       toast({
         title: "Recording Error",
-        description: "Could not access microphone. Please check permissions.",
+        description: error.message || "Could not access microphone. Please check permissions.",
         variant: "destructive",
       });
     }

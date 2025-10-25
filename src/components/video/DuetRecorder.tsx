@@ -32,6 +32,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { requestCameraAccess, stopCameraStream, CameraError } from '@/utils/cameraPermissions';
+import CameraPermissionDialog from '@/components/ui/camera-permission-dialog';
 
 interface DuetRecorderProps {
   originalVideo: {
@@ -106,97 +108,57 @@ const DuetRecorder: React.FC<DuetRecorderProps> = ({
     };
   }, []);
 
-  const checkPermissions = async () => {
-    try {
-      // Check if getUserMedia is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera and microphone access not supported in this browser');
-      }
-
-      // Check permission status if supported
-      if (navigator.permissions) {
-        const cameraPermission = await navigator.permissions.query({ name: 'camera' as PermissionName });
-        const microphonePermission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-
-        if (cameraPermission.state === 'denied' || microphonePermission.state === 'denied') {
-          setPermissionState('denied');
-          setPermissionError('Camera or microphone access has been denied. Please enable permissions in your browser settings.');
-          return false;
-        }
-      }
-
-      return true;
-    } catch (error) {
-      console.warn('Permission check failed:', error);
-      // Continue anyway as some browsers don't support permission checks
-      return true;
-    }
-  };
-
   const initializeMedia = async () => {
     try {
       setPermissionState('checking');
 
-      // Check permissions first
-      const hasPermission = await checkPermissions();
-      if (!hasPermission) {
+      // Use the shared camera permissions utility
+      const result = await requestCameraAccess({
+        video: {
+          width: { ideal: 720 },
+          height: { ideal: 1280 },
+          frameRate: { ideal: 30 },
+          facingMode: 'user'
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      if (result.error) {
+        setPermissionState('denied');
+        setPermissionError(result.error.message);
         return;
       }
 
-      setPermissionState('prompt');
+      if (result.stream) {
+        streamRef.current = result.stream;
+        setPermissionState('granted');
 
-      // Get user media with progressive fallback
-      let stream: MediaStream;
+        if (userVideoRef.current) {
+          userVideoRef.current.srcObject = result.stream;
+        }
 
-      try {
-        // Try with ideal settings first
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 720 },
-            height: { ideal: 1280 },
-            frameRate: { ideal: 30 },
-            facingMode: 'user'
-          },
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
-      } catch (error) {
-        // Fallback to basic settings
-        console.warn('High-quality media failed, trying basic settings:', error);
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user' },
-          audio: true
+        // Load original video
+        if (originalVideoRef.current) {
+          originalVideoRef.current.src = originalVideo.url;
+          originalVideoRef.current.muted = !originalAudioEnabled;
+          originalVideoRef.current.currentTime = 0;
+        }
+
+        toast({
+          title: 'Camera Ready!',
+          description: 'You can now start recording your duet.',
         });
       }
-
-      streamRef.current = stream;
-      setPermissionState('granted');
-
-      if (userVideoRef.current) {
-        userVideoRef.current.srcObject = stream;
-      }
-
-      // Load original video
-      if (originalVideoRef.current) {
-        originalVideoRef.current.src = originalVideo.url;
-        originalVideoRef.current.muted = !originalAudioEnabled;
-        originalVideoRef.current.currentTime = 0;
-      }
-
-      toast({
-        title: 'Camera Ready!',
-        description: 'You can now start recording your duet.',
-      });
-
     } catch (error: any) {
       console.error('Error accessing media:', error);
       setPermissionState('denied');
-
+      
       let errorMessage = 'Unable to access camera and microphone.';
-
+      
       if (error.name === 'NotAllowedError') {
         errorMessage = 'Camera and microphone access was denied. Please click "Allow" when prompted and try again.';
       } else if (error.name === 'NotFoundError') {
@@ -209,7 +171,7 @@ const DuetRecorder: React.FC<DuetRecorderProps> = ({
         setTimeout(() => initializeMedia(), 1000);
         return;
       }
-
+      
       setPermissionError(errorMessage);
       toast({
         title: 'Camera Access Error',
@@ -219,14 +181,9 @@ const DuetRecorder: React.FC<DuetRecorderProps> = ({
     }
   };
 
-  const retryPermissions = async () => {
-    setPermissionError('');
-    await initializeMedia();
-  };
-
   const cleanup = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      stopCameraStream(streamRef.current);
     }
     if (timerRef.current) {
       clearInterval(timerRef.current);
