@@ -107,7 +107,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
     
-    if (existingPost.user_id !== userId) {
+    // Cast to any to access user_id property (it should be there from the original post data)
+    if ((existingPost as any).user_id !== userId) {
       return res.status(403).json({ error: 'Not authorized to update this post' });
     }
 
@@ -252,7 +253,7 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
       return res.status(500).json({ error: 'Failed to add comment' });
     }
 
-    logger.info('Comment added', { postId: id, commentId: newComment.id, userId });
+    logger.info('Comment added', { postId: id, commentId: (newComment as any).id, userId });
     res.status(201).json(newComment);
   } catch (error) {
     logger.error('Error adding comment:', error);
