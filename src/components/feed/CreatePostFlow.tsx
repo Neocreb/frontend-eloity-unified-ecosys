@@ -43,6 +43,7 @@ import TagPeopleModal from "./TagPeopleModal";
 import FeelingActivityModal from "./FeelingActivityModal";
 import CheckInModal from "./CheckInModal";
 import { supabase } from "@/integrations/supabase/client";
+import { storiesService } from "@/services/storiesService";
 
 interface CreatePostFlowProps {
   isOpen: boolean;
@@ -227,6 +228,29 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
       };
 
       addPost(newPost);
+
+      // Share to story if enabled
+      if (shareToStory && (selectedMedia || content)) {
+        try {
+          // Create story using the storiesService
+          const storyData = {
+            media_url: publicUrl || "",
+            media_type: (mediaType || "image") as "image" | "video",
+            caption: content || undefined,
+            expires_in_hours: 24, // Default 24 hours
+          };
+
+          await storiesService.createStory(storyData, user.id);
+        } catch (storyError) {
+          console.error("Failed to create story:", storyError);
+          // Don't fail the post creation if story creation fails
+          toast({ 
+            title: "Post published!", 
+            description: "Your post has been shared, but failed to add to story.", 
+            variant: "default" 
+          });
+        }
+      }
 
       if (scheduleDate) {
         toast({ title: "Post scheduled!", description: `Your post will be published on ${format(scheduleDate, "PPP")}` });

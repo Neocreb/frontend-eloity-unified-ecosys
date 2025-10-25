@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Star,
@@ -39,7 +38,8 @@ import {
   Eye,
   ThumbsUp,
 } from "lucide-react";
-import { Talent } from "./TalentsList";
+import { useFreelance } from "@/hooks/use-freelance";
+import { FreelancerProfile } from "@/types/freelance";
 
 interface TalentProfileProps {
   talentId: string;
@@ -47,77 +47,36 @@ interface TalentProfileProps {
   onHire?: (talentId: string) => void;
 }
 
-// Mock detailed talent data
-const mockTalentDetails: Talent = {
-  id: "1",
-  name: "Sarah Chen",
-  avatar:
-    "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=150&h=150&fit=crop&crop=face",
-  title: "Full-Stack React Developer",
-  description:
-    "Passionate full-stack developer with 6+ years of experience building scalable web applications. I specialize in React ecosystems and have a proven track record of delivering high-quality solutions for startups and enterprise clients. My expertise spans from frontend development with modern React patterns to backend systems with Node.js and cloud architecture.",
-  skills: [
-    "React",
-    "Node.js",
-    "TypeScript",
-    "PostgreSQL",
-    "AWS",
-    "Docker",
-    "GraphQL",
-    "Next.js",
-    "MongoDB",
-    "Redis",
-  ],
-  hourlyRate: 85,
-  rating: 4.9,
-  reviewCount: 127,
-  location: "San Francisco, CA",
-  availability: "available",
-  verified: true,
-  completedJobs: 89,
-  responseTime: "1 hour",
-  successRate: 98,
-  portfolio: [
-    {
-      id: "1",
-      title: "E-commerce Platform",
-      image:
-        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
-      category: "Web Development",
-    },
-    {
-      id: "2",
-      title: "Mobile Banking App",
-      image:
-        "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop",
-      category: "Mobile Development",
-    },
-    {
-      id: "3",
-      title: "SaaS Dashboard",
-      image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop",
-      category: "Web Development",
-    },
-    {
-      id: "4",
-      title: "Real Estate Platform",
-      image:
-        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      category: "Web Development",
-    },
-  ],
-  badges: ["Top Rated", "Rising Talent", "React Expert"],
-  languages: [
-    "English (Native)",
-    "Mandarin (Fluent)",
-    "Spanish (Conversational)",
-  ],
-  joinedDate: "2022-03-15",
-  lastSeen: "Online now",
-};
+// Define the Talent interface based on FreelancerProfile
+interface Talent {
+  id: string;
+  name: string;
+  avatar: string;
+  title: string;
+  description: string;
+  skills: string[];
+  hourlyRate: number;
+  rating: number;
+  reviewCount: number;
+  location: string;
+  availability: "available" | "busy" | "offline";
+  verified: boolean;
+  completedJobs: number;
+  responseTime: string;
+  successRate: number;
+  portfolio: {
+    id: string;
+    title: string;
+    image: string;
+    category: string;
+  }[];
+  badges: string[];
+  languages: string[];
+  joinedDate: string;
+  lastSeen: string;
+}
 
-// Mock reviews data
+// Mock reviews data - in a real app, this would come from a reviews service
 const mockReviews = [
   {
     id: "1",
@@ -157,7 +116,7 @@ const mockReviews = [
   },
 ];
 
-// Mock employment history
+// Mock employment history - in a real app, this would come from a profile service
 const mockEmploymentHistory = [
   {
     id: "1",
@@ -179,7 +138,7 @@ const mockEmploymentHistory = [
   },
 ];
 
-// Mock certifications
+// Mock certifications - in a real app, this would come from a profile service
 const mockCertifications = [
   {
     id: "1",
@@ -205,8 +164,59 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
   const [activeTab, setActiveTab] = useState("overview");
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [talent, setTalent] = useState<Talent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { getFreelancer } = useFreelance();
 
-  const talent = mockTalentDetails; // In real app, fetch by talentId
+  useEffect(() => {
+    const fetchTalent = async () => {
+      try {
+        setLoading(true);
+        const freelancerProfile = await getFreelancer(talentId);
+        
+        if (freelancerProfile) {
+          // Transform FreelancerProfile to Talent interface
+          const transformedTalent: Talent = {
+            id: freelancerProfile.id,
+            name: freelancerProfile.userId, // In a real app, this would come from a user profile
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user", // Placeholder
+            title: freelancerProfile.title,
+            description: freelancerProfile.description,
+            skills: freelancerProfile.skills,
+            hourlyRate: freelancerProfile.hourlyRate,
+            rating: freelancerProfile.rating,
+            reviewCount: freelancerProfile.reviewCount,
+            location: "San Francisco, CA", // Placeholder
+            availability: freelancerProfile.availability === "available" ? "available" : "busy",
+            verified: true, // Placeholder
+            completedJobs: freelancerProfile.completedProjects,
+            responseTime: "1 hour", // Placeholder
+            successRate: 95, // Placeholder
+            portfolio: freelancerProfile.portfolio.map((url, index) => ({
+              id: index.toString(),
+              title: `Project ${index + 1}`,
+              image: url,
+              category: "Web Development"
+            })),
+            badges: ["Top Rated", "Verified"], // Placeholder
+            languages: freelancerProfile.languages,
+            joinedDate: freelancerProfile.createdAt.toISOString(), // Placeholder
+            lastSeen: "Online now" // Placeholder
+          };
+          
+          setTalent(transformedTalent);
+        }
+      } catch (error) {
+        console.error("Error fetching talent:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (talentId) {
+      fetchTalent();
+    }
+  }, [talentId, getFreelancer]);
 
   const handleHire = () => {
     onHire?.(talentId);
@@ -230,6 +240,33 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!talent) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="text-center py-12">
+          <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Talent not found
+          </h3>
+          <p className="text-gray-600 mb-6">
+            The requested talent profile could not be found
+          </p>
+          <Button onClick={onBack}>Back to Talents</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">

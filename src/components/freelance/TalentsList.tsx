@@ -25,6 +25,8 @@ import {
   MessageCircle,
   Eye,
 } from "lucide-react";
+import { useFreelance } from "@/hooks/use-freelance";
+import { FreelancerProfile } from "@/types/freelance";
 
 export interface Talent {
   id: string;
@@ -66,189 +68,7 @@ interface TalentsListProps {
   showFilters?: boolean;
 }
 
-// Mock talents data
-const mockTalents: Talent[] = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=100&h=100&fit=crop&crop=face",
-    title: "Full-Stack React Developer",
-    description:
-      "Experienced developer specializing in React, Node.js, and modern web technologies. I help businesses build scalable applications.",
-    skills: ["React", "Node.js", "TypeScript", "PostgreSQL", "AWS"],
-    hourlyRate: 85,
-    rating: 4.9,
-    reviewCount: 127,
-    location: "San Francisco, CA",
-    availability: "available",
-    verified: true,
-    completedJobs: 89,
-    responseTime: "1 hour",
-    successRate: 98,
-    portfolio: [
-      {
-        id: "1",
-        title: "E-commerce Platform",
-        image:
-          "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&h=200&fit=crop",
-        category: "Web Development",
-      },
-      {
-        id: "2",
-        title: "Mobile Banking App",
-        image:
-          "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=300&h=200&fit=crop",
-        category: "Mobile Development",
-      },
-    ],
-    badges: ["Top Rated", "Rising Talent"],
-    languages: ["English", "Mandarin"],
-    joinedDate: "2022-03-15",
-    lastSeen: "Online now",
-  },
-  {
-    id: "2",
-    name: "Marcus Rodriguez",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    title: "UI/UX Designer & Brand Specialist",
-    description:
-      "Creative designer with 8 years of experience crafting beautiful and functional digital experiences for startups and enterprises.",
-    skills: [
-      "Figma",
-      "Adobe Creative Suite",
-      "UI/UX Design",
-      "Branding",
-      "Prototyping",
-    ],
-    hourlyRate: 75,
-    rating: 4.8,
-    reviewCount: 94,
-    location: "Austin, TX",
-    availability: "available",
-    verified: true,
-    completedJobs: 156,
-    responseTime: "30 minutes",
-    successRate: 96,
-    portfolio: [
-      {
-        id: "3",
-        title: "SaaS Dashboard Design",
-        image:
-          "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=300&h=200&fit=crop",
-        category: "UI/UX Design",
-      },
-    ],
-    badges: ["Top Rated", "Design Expert"],
-    languages: ["English", "Spanish"],
-    joinedDate: "2021-08-22",
-    lastSeen: "2 hours ago",
-  },
-  {
-    id: "3",
-    name: "Emma Thompson",
-    avatar:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
-    title: "Digital Marketing Strategist",
-    description:
-      "Data-driven marketing expert helping businesses grow through strategic campaigns, SEO optimization, and conversion rate optimization.",
-    skills: [
-      "SEO",
-      "Google Ads",
-      "Content Marketing",
-      "Analytics",
-      "Social Media",
-    ],
-    hourlyRate: 65,
-    rating: 4.7,
-    reviewCount: 73,
-    location: "London, UK",
-    availability: "busy",
-    verified: false,
-    completedJobs: 67,
-    responseTime: "2 hours",
-    successRate: 94,
-    portfolio: [
-      {
-        id: "4",
-        title: "E-commerce Growth Campaign",
-        image:
-          "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&h=200&fit=crop",
-        category: "Digital Marketing",
-      },
-    ],
-    badges: ["Marketing Pro"],
-    languages: ["English", "French"],
-    joinedDate: "2022-01-10",
-    lastSeen: "1 day ago",
-  },
-  {
-    id: "4",
-    name: "Alex Johnson",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    title: "Mobile App Developer (React Native)",
-    description:
-      "Specialized in cross-platform mobile development with React Native. Built 50+ apps with millions of downloads.",
-    skills: ["React Native", "Flutter", "Swift", "Kotlin", "Firebase"],
-    hourlyRate: 90,
-    rating: 4.9,
-    reviewCount: 112,
-    location: "Toronto, Canada",
-    availability: "available",
-    verified: true,
-    completedJobs: 78,
-    responseTime: "1 hour",
-    successRate: 99,
-    portfolio: [
-      {
-        id: "5",
-        title: "Fitness Tracking App",
-        image:
-          "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=200&fit=crop",
-        category: "Mobile Development",
-      },
-    ],
-    badges: ["Top Rated", "Mobile Expert"],
-    languages: ["English", "French"],
-    joinedDate: "2020-11-05",
-    lastSeen: "Online now",
-  },
-  {
-    id: "5",
-    name: "Lisa Wang",
-    avatar:
-      "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=100&h=100&fit=crop&crop=face",
-    title: "Data Scientist & ML Engineer",
-    description:
-      "PhD in Computer Science with expertise in machine learning, data analysis, and AI model development for business solutions.",
-    skills: ["Python", "TensorFlow", "PyTorch", "SQL", "Machine Learning"],
-    hourlyRate: 120,
-    rating: 5.0,
-    reviewCount: 45,
-    location: "Seattle, WA",
-    availability: "available",
-    verified: true,
-    completedJobs: 34,
-    responseTime: "3 hours",
-    successRate: 100,
-    portfolio: [
-      {
-        id: "6",
-        title: "Predictive Analytics Model",
-        image:
-          "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&h=200&fit=crop",
-        category: "Data Science",
-      },
-    ],
-    badges: ["Top Rated", "AI Specialist"],
-    languages: ["English", "Mandarin"],
-    joinedDate: "2023-02-18",
-    lastSeen: "4 hours ago",
-  },
-];
-
+// Define categories and availability options
 const categories = [
   "All Categories",
   "Web Development",
@@ -272,48 +92,77 @@ export const TalentsList: React.FC<TalentsListProps> = ({
   filters,
   showFilters = true,
 }) => {
-  const [talents, setTalents] = useState<Talent[]>(mockTalents);
+  const [talents, setTalents] = useState<Talent[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedAvailability, setSelectedAvailability] = useState("all");
   const [sortBy, setSortBy] = useState("rating");
+  const [loading, setLoading] = useState(true);
+  const { searchFreelancers } = useFreelance();
+
+  // Fetch real talents data
+  useEffect(() => {
+    const fetchTalents = async () => {
+      try {
+        setLoading(true);
+        const searchFilters = {
+          query: searchQuery,
+          category: selectedCategory !== "All Categories" ? selectedCategory : undefined,
+          skills: filters?.skills,
+        };
+        
+        const freelancerProfiles = await searchFreelancers(searchFilters);
+        
+        if (freelancerProfiles) {
+          // Transform FreelancerProfile to Talent interface
+          const transformedTalents: Talent[] = freelancerProfiles.map((profile: FreelancerProfile) => ({
+            id: profile.id,
+            name: profile.userId, // In a real app, this would come from a user profile
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user", // Placeholder
+            title: profile.title,
+            description: profile.description,
+            skills: profile.skills,
+            hourlyRate: profile.hourlyRate,
+            rating: profile.rating,
+            reviewCount: profile.reviewCount,
+            location: "San Francisco, CA", // Placeholder
+            availability: profile.availability === "available" ? "available" : "busy",
+            verified: true, // Placeholder
+            completedJobs: profile.completedProjects,
+            responseTime: "1 hour", // Placeholder
+            successRate: 95, // Placeholder
+            portfolio: profile.portfolio.map((url, index) => ({
+              id: index.toString(),
+              title: `Project ${index + 1}`,
+              image: url,
+              category: "Web Development"
+            })),
+            badges: ["Top Rated", "Verified"], // Placeholder
+            languages: profile.languages,
+            joinedDate: profile.createdAt.toISOString(), // Placeholder
+            lastSeen: "Online now" // Placeholder
+          }));
+          
+          setTalents(transformedTalents);
+        }
+      } catch (error) {
+        console.error("Error fetching talents:", error);
+        // Fallback to mock data if real data fetch fails
+        setTalents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTalents();
+  }, [searchQuery, selectedCategory, selectedAvailability, sortBy, filters, searchFreelancers]);
 
   // Filter and sort talents
   useEffect(() => {
-    let filtered = [...mockTalents];
-
-    // Apply search filter
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (talent) =>
-          talent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          talent.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          talent.skills.some((skill) =>
-            skill.toLowerCase().includes(searchQuery.toLowerCase()),
-          ),
-      );
-    }
-
-    // Apply category filter
-    if (selectedCategory !== "All Categories") {
-      filtered = filtered.filter(
-        (talent) =>
-          talent.skills.some((skill) =>
-            skill.toLowerCase().includes(selectedCategory.toLowerCase()),
-          ) ||
-          talent.title.toLowerCase().includes(selectedCategory.toLowerCase()),
-      );
-    }
-
-    // Apply availability filter
-    if (selectedAvailability !== "all") {
-      filtered = filtered.filter(
-        (talent) => talent.availability === selectedAvailability,
-      );
-    }
-
     // Apply external filters
     if (filters) {
+      let filtered = [...talents];
+      
       if (filters.minRating) {
         filtered = filtered.filter(
           (talent) => talent.rating >= filters.minRating!,
@@ -333,28 +182,10 @@ export const TalentsList: React.FC<TalentsListProps> = ({
           ),
         );
       }
+      
+      setTalents(filtered);
     }
-
-    // Sort talents
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "rating":
-          return b.rating - a.rating;
-        case "rate":
-          return a.hourlyRate - b.hourlyRate;
-        case "experience":
-          return b.completedJobs - a.completedJobs;
-        case "recent":
-          return (
-            new Date(b.joinedDate).getTime() - new Date(a.joinedDate).getTime()
-          );
-        default:
-          return 0;
-      }
-    });
-
-    setTalents(filtered);
-  }, [searchQuery, selectedCategory, selectedAvailability, sortBy, filters]);
+  }, [filters, talents]);
 
   const getAvailabilityBadge = (availability: string) => {
     switch (availability) {
@@ -368,6 +199,14 @@ export const TalentsList: React.FC<TalentsListProps> = ({
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -24,9 +24,21 @@ import {
   ThumbsUp,
   Laugh,
   Angry,
-  Frown
+  Frown,
+  Check,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PostService } from '@/services/postService';
+import { storiesService } from '@/services/storiesService';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Reaction {
   type: 'like' | 'love' | 'laugh' | 'angry' | 'sad' | 'wow';
@@ -108,7 +120,9 @@ const EnhancedSocialFeed: React.FC = () => {
   const [selectedPostType, setSelectedPostType] = useState<'text' | 'photo' | 'event' | 'poll'>('text');
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const reactionEmojis = {
     like: '👍',
@@ -123,151 +137,60 @@ const EnhancedSocialFeed: React.FC = () => {
     loadFeedData();
   }, []);
 
-  const loadFeedData = () => {
-    // Sample stories data
-    const sampleStories: Story[] = [
-      {
-        id: 'story-1',
-        userId: 'user-1',
-        userName: 'Sarah Johnson',
-        userAvatar: '/api/placeholder/40/40',
-        image: '/api/placeholder/300/400',
-        timestamp: '2h',
-        viewed: false
-      },
-      {
-        id: 'story-2',
-        userId: 'user-2',
-        userName: 'Mike Chen',
-        userAvatar: '/api/placeholder/40/40',
-        image: '/api/placeholder/300/400',
-        timestamp: '4h',
-        viewed: true
-      },
-      {
-        id: 'story-3',
-        userId: 'user-3',
-        userName: 'Alex Kim',
-        userAvatar: '/api/placeholder/40/40',
-        image: '/api/placeholder/300/400',
-        timestamp: '6h',
-        viewed: false
+  const loadFeedData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch real stories data
+      let storiesData: any[] = [];
+      if (user?.id) {
+        storiesData = await storiesService.getActiveStories(user.id);
       }
-    ];
+      
+      const transformedStories: Story[] = storiesData.map((story: any) => ({
+        id: story.id,
+        userId: story.user_id,
+        userName: "User", // Would be fetched from user service in a real app
+        userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user", // Placeholder
+        image: story.media_url,
+        timestamp: new Date(story.created_at).toLocaleDateString(),
+        viewed: false // This would come from user's view history in a real app
+      }));
 
-    // Sample posts data
-    const samplePosts: Post[] = [
-      {
-        id: 'post-1',
-        userId: 'user-1',
-        userName: 'Sarah Johnson',
-        userAvatar: '/api/placeholder/40/40',
-        userVerified: true,
-        content: 'Just finished an amazing workout session! Feeling energized and ready to take on the day. Who else is staying active today? 💪',
-        images: ['/api/placeholder/500/400'],
-        timestamp: '2 hours ago',
-        reactions: {
-          like: { type: 'like', count: 24, userReacted: true },
-          love: { type: 'love', count: 8, userReacted: false }
-        },
-        comments: [
-          {
-            id: 'comment-1',
-            userId: 'user-2',
-            userName: 'Mike Chen',
-            userAvatar: '/api/placeholder/40/40',
-            content: 'Great job! Your dedication is inspiring 🔥',
-            timestamp: '1 hour ago',
-            likes: 5,
-            replies: [],
-            userLiked: false
-          }
-        ],
-        shares: 3,
-        privacy: 'public',
-        type: 'photo',
-        location: 'Fitness Center Downtown'
-      },
-      {
-        id: 'post-2',
-        userId: 'user-3',
-        userName: 'Alex Kim',
-        userAvatar: '/api/placeholder/40/40',
-        userVerified: false,
-        content: 'What should we have for our team lunch tomorrow?',
-        images: [],
-        timestamp: '4 hours ago',
-        reactions: {
-          like: { type: 'like', count: 12, userReacted: false }
-        },
-        comments: [],
-        shares: 1,
-        privacy: 'public',
-        type: 'poll',
-        poll: {
-          question: 'What should we have for our team lunch tomorrow?',
-          options: [
-            { id: 'option-1', text: 'Pizza', votes: 8, userVoted: false },
-            { id: 'option-2', text: 'Sushi', votes: 15, userVoted: true },
-            { id: 'option-3', text: 'Burgers', votes: 6, userVoted: false },
-            { id: 'option-4', text: 'Salads', votes: 3, userVoted: false }
-          ],
-          totalVotes: 32
-        }
-      },
-      {
-        id: 'post-3',
-        userId: 'user-4',
-        userName: 'Jessica Martinez',
-        userAvatar: '/api/placeholder/40/40',
-        userVerified: true,
-        content: 'Join us for a community cleanup event this Saturday! Let\'s make our neighborhood beautiful together.',
-        images: ['/api/placeholder/500/300'],
-        timestamp: '1 day ago',
-        reactions: {
-          like: { type: 'like', count: 45, userReacted: false },
-          love: { type: 'love', count: 12, userReacted: false }
-        },
-        comments: [
-          {
-            id: 'comment-2',
-            userId: 'user-5',
-            userName: 'David Wilson',
-            userAvatar: '/api/placeholder/40/40',
-            content: 'Count me in! What time should we meet?',
-            timestamp: '8 hours ago',
-            likes: 3,
-            replies: [
-              {
-                id: 'reply-1',
-                userId: 'user-4',
-                userName: 'Jessica Martinez',
-                userAvatar: '/api/placeholder/40/40',
-                content: 'We start at 9 AM. See you there!',
-                timestamp: '7 hours ago',
-                likes: 2,
-                replies: [],
-                userLiked: false
-              }
-            ],
-            userLiked: true
-          }
-        ],
-        shares: 8,
-        privacy: 'public',
-        type: 'event',
-        event: {
-          title: 'Community Cleanup Day',
-          date: 'Saturday, Dec 30, 2024 at 9:00 AM',
-          location: 'Central Park',
-          attendees: 34,
-          userAttending: false
-        }
+      // Fetch real posts data
+      let postsData: any[] = [];
+      if (user?.id) {
+        postsData = await PostService.getFeedPosts(user.id);
       }
-    ];
+      
+      const transformedPosts: Post[] = postsData.map((post: any) => ({
+        id: post.id,
+        userId: post.user_id,
+        userName: post.author?.full_name || post.author?.username || "Unknown User",
+        userAvatar: post.author?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+        userVerified: post.author?.is_verified || false,
+        content: post.content,
+        images: post.images || [],
+        timestamp: new Date(post.created_at).toLocaleDateString(),
+        reactions: post.reactions || {},
+        comments: post.comments || [],
+        shares: post.shares_count || 0,
+        privacy: post.privacy || 'public',
+        type: post.post_type || 'text'
+      }));
 
-    setStories(sampleStories);
-    setPosts(samplePosts);
+      setStories(transformedStories);
+      setPosts(transformedPosts);
+    } catch (error) {
+      console.error("Error loading feed data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load feed data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreatePost = () => {
@@ -280,11 +203,12 @@ const EnhancedSocialFeed: React.FC = () => {
       return;
     }
 
+    // In a real implementation, this would call the PostService to create a post
     const newPost: Post = {
       id: `post-${Date.now()}`,
-      userId: 'current-user',
-      userName: 'You',
-      userAvatar: '/api/placeholder/40/40',
+      userId: user?.id || 'current-user',
+      userName: user?.name || 'You',
+      userAvatar: user?.avatar || '/api/placeholder/40/40',
       userVerified: false,
       content: newPostContent,
       images: newPostImages,
@@ -343,9 +267,9 @@ const EnhancedSocialFeed: React.FC = () => {
 
     const newComment: Comment = {
       id: `comment-${Date.now()}`,
-      userId: 'current-user',
-      userName: 'You',
-      userAvatar: '/api/placeholder/40/40',
+      userId: user?.id || 'current-user',
+      userName: user?.name || 'You',
+      userAvatar: user?.avatar || '/api/placeholder/40/40',
       content,
       timestamp: 'Just now',
       likes: 0,
@@ -398,37 +322,33 @@ const EnhancedSocialFeed: React.FC = () => {
 
   const formatReactionCount = (reactions: Record<string, Reaction>) => {
     const totalCount = Object.values(reactions).reduce((sum, reaction) => sum + reaction.count, 0);
-    if (totalCount === 0) return '';
-    
-    const topReactions = Object.entries(reactions)
-      .filter(([_, reaction]) => reaction.count > 0)
-      .sort(([_, a], [__, b]) => b.count - a.count)
-      .slice(0, 3);
-    
-    return (
-      <div className="flex items-center gap-1 text-sm text-gray-500">
-        <div className="flex">
-          {topReactions.map(([type, _]) => (
-            <span key={type} className="text-lg -ml-1 first:ml-0">
-              {reactionEmojis[type as keyof typeof reactionEmojis]}
-            </span>
-          ))}
-        </div>
-        <span>{totalCount}</span>
-      </div>
-    );
+    return totalCount > 0 ? `${totalCount}` : '';
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 p-4">
       {/* Stories Section */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {/* Add Story */}
+          <div className="flex space-x-4 overflow-x-auto pb-2">
+            {/* Your Story */}
             <div className="flex-shrink-0 text-center cursor-pointer">
-              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-2 border-2 border-dashed border-gray-300">
-                <Camera className="w-6 h-6 text-gray-500" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-0.5">
+                <div className="bg-white rounded-full p-1">
+                  <img
+                    src="/api/placeholder/40/40"
+                    alt="Your story"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </div>
               </div>
               <span className="text-xs text-gray-600">Your Story</span>
             </div>
@@ -466,332 +386,256 @@ const EnhancedSocialFeed: React.FC = () => {
                 placeholder="What's on your mind?"
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                className="min-h-[80px] resize-none border-none shadow-none text-lg placeholder:text-gray-500"
+                className="min-h-[100px]"
               />
             </div>
           </div>
           
-          {newPostLocation && (
-            <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span>{newPostLocation}</span>
+          {newPostImages.length > 0 && (
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              {newPostImages.map((img, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={img}
+                    alt={`Upload ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-lg"
+                  />
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="absolute top-1 right-1 h-6 w-6 p-0"
+                    onClick={() => setNewPostImages(prev => prev.filter((_, i) => i !== index))}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
-          
-          <div className="flex items-center justify-between pt-3 border-t">
-            <div className="flex gap-4">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600">
-                <ImageIcon className="w-4 h-4" />
+
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm">
+                <Camera className="h-4 w-4 mr-1" />
                 Photo
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600">
-                <Video className="w-4 h-4" />
+              <Button variant="ghost" size="sm">
+                <Video className="h-4 w-4 mr-1" />
                 Video
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600">
-                <Calendar className="w-4 h-4" />
-                Event
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="flex items-center gap-2 text-gray-600"
-                onClick={() => setNewPostLocation(newPostLocation || 'Current Location')}
-              >
-                <MapPin className="w-4 h-4" />
-                Location
+              <Button variant="ghost" size="sm">
+                <Smile className="h-4 w-4 mr-1" />
+                Feeling
               </Button>
             </div>
             
-            <div className="flex items-center gap-2">
-              <select
-                value={newPostPrivacy}
-                onChange={(e) => setNewPostPrivacy(e.target.value as any)}
-                className="text-sm border rounded px-2 py-1"
-              >
-                <option value="public">🌍 Public</option>
-                <option value="friends">👥 Friends</option>
-                <option value="private">🔒 Only me</option>
-              </select>
-              <Button onClick={handleCreatePost} disabled={!newPostContent.trim()}>
-                Post
-              </Button>
+            <div className="flex gap-2">
+              <Select value={newPostPrivacy} onValueChange={(value) => setNewPostPrivacy(value as 'public' | 'friends' | 'private')}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">
+                    <div className="flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      Public
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="friends">
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      Friends
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="private">
+                    <div className="flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      Private
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={handleCreatePost}>Post</Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Posts */}
-      {posts.map(post => (
-        <Card key={post.id}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img
-                  src={post.userAvatar}
-                  alt={post.userName}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">{post.userName}</span>
-                    {post.userVerified && (
-                      <Badge variant="secondary" className="text-xs px-1 py-0">
-                        ✓
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span>{post.timestamp}</span>
-                    {post.privacy === 'public' && <Globe className="w-3 h-3" />}
-                    {post.privacy === 'friends' && <Users className="w-3 h-3" />}
-                    {post.privacy === 'private' && <Lock className="w-3 h-3" />}
-                    {post.location && (
-                      <>
-                        <span>•</span>
-                        <MapPin className="w-3 h-3" />
-                        <span>{post.location}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="pt-0">
-            {/* Content */}
-            <p className="mb-4 whitespace-pre-wrap">{post.content}</p>
-            
-            {/* Event */}
-            {post.event && (
-              <div className="mb-4 p-4 border rounded-lg bg-blue-50">
-                <div className="flex items-center gap-3 mb-3">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+      {/* Posts Feed */}
+      {posts.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium mb-2">No posts yet</h3>
+            <p className="text-gray-500">Be the first to share something with your network!</p>
+          </CardContent>
+        </Card>
+      ) : (
+        posts.map((post) => (
+          <Card key={post.id}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={post.userAvatar}
+                    alt={post.userName}
+                    className="w-10 h-10 rounded-full"
+                  />
                   <div>
-                    <h4 className="font-semibold">{post.event.title}</h4>
-                    <p className="text-sm text-gray-600">{post.event.date}</p>
-                    <p className="text-sm text-gray-600">{post.event.location}</p>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold">{post.userName}</h4>
+                      {post.userVerified && (
+                        <Badge variant="secondary" className="px-1 py-0">
+                          <Check className="h-3 w-3" />
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{post.timestamp}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {post.event.attendees} people interested
-                  </span>
-                  <Button 
-                    variant={post.event.userAttending ? "default" : "outline"}
-                    size="sm"
-                  >
-                    {post.event.userAttending ? 'Going' : 'Interested'}
-                  </Button>
-                </div>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
               </div>
-            )}
+            </CardHeader>
             
-            {/* Poll */}
-            {post.poll && (
-              <div className="mb-4 p-4 border rounded-lg">
-                <h4 className="font-semibold mb-3">{post.poll.question}</h4>
-                <div className="space-y-2">
-                  {post.poll.options.map(option => {
-                    const percentage = post.poll!.totalVotes > 0 
-                      ? (option.votes / post.poll!.totalVotes) * 100 
-                      : 0;
-                    
-                    return (
-                      <div
+            <CardContent className="pb-3">
+              <p className="mb-3">{post.content}</p>
+              
+              {post.images.length > 0 && (
+                <div className="mb-3">
+                  <img
+                    src={post.images[0]}
+                    alt="Post image"
+                    className="w-full rounded-lg"
+                  />
+                </div>
+              )}
+
+              {post.location && (
+                <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
+                  <MapPin className="h-4 w-4" />
+                  {post.location}
+                </div>
+              )}
+
+              {post.poll && (
+                <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                  <h4 className="font-medium mb-3">{post.poll.question}</h4>
+                  <div className="space-y-2">
+                    {post.poll.options.map((option) => (
+                      <Button
                         key={option.id}
-                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                          option.userVoted 
-                            ? 'bg-blue-100 border-blue-300' 
-                            : 'hover:bg-gray-50'
-                        }`}
-                        onClick={() => !option.userVoted && handleVotePoll(post.id, option.id)}
+                        variant="outline"
+                        className="w-full justify-between"
+                        onClick={() => handleVotePoll(post.id, option.id)}
                       >
-                        <div className="flex justify-between items-center">
-                          <span>{option.text}</span>
-                          <span className="text-sm text-gray-600">
-                            {option.votes} ({Math.round(percentage)}%)
-                          </span>
-                        </div>
-                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                        <span>{option.text}</span>
+                        <span className="text-sm">
+                          {option.userVoted ? '✓ ' : ''}
+                          {option.votes > 0 ? `${Math.round((option.votes / post.poll!.totalVotes) * 100)}%` : ''}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-3">
-                  {post.poll.totalVotes} total votes
-                </p>
+              )}
+
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>{formatReactionCount(post.reactions)} reactions</span>
+                <span>{post.comments.length} comments</span>
+                <span>{post.shares} shares</span>
               </div>
-            )}
-            
-            {/* Images */}
-            {post.images.length > 0 && (
-              <div className="mb-4 -mx-4">
-                <div className="grid grid-cols-1 gap-1">
-                  {post.images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`Post image ${index + 1}`}
-                      className="w-full object-cover rounded"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Reactions & Stats */}
-            {(Object.keys(post.reactions).length > 0 || post.comments.length > 0 || post.shares > 0) && (
-              <div className="flex items-center justify-between py-2 border-b">
-                <div className="flex items-center gap-4">
-                  {formatReactionCount(post.reactions)}
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  {post.comments.length > 0 && (
-                    <span>{post.comments.length} comments</span>
-                  )}
-                  {post.shares > 0 && (
-                    <span>{post.shares} shares</span>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-1">
-                <div className="relative">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => setShowReactionPicker(showReactionPicker === post.id ? null : post.id)}
-                  >
-                    <Heart className="w-4 h-4" />
-                    Like
-                  </Button>
-                  
-                  {showReactionPicker === post.id && (
-                    <div className="absolute bottom-full left-0 mb-2 flex gap-1 p-2 bg-white border rounded-lg shadow-lg z-10">
-                      {Object.entries(reactionEmojis).map(([type, emoji]) => (
-                        <button
-                          key={type}
-                          className="text-2xl hover:scale-125 transition-transform"
-                          onClick={() => handleReaction(post.id, type as keyof typeof reactionEmojis)}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
+            </CardContent>
+
+            <div className="border-t">
+              <div className="flex">
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="flex items-center gap-2"
+                  className="flex-1 rounded-none"
+                  onClick={() => setShowReactionPicker(showReactionPicker === post.id ? null : post.id)}
+                >
+                  <Heart className="h-4 w-4 mr-2" />
+                  Like
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex-1 rounded-none"
                   onClick={() => toggleComments(post.id)}
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="h-4 w-4 mr-2" />
                   Comment
                 </Button>
-                
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Share2 className="w-4 h-4" />
+                <Button variant="ghost" className="flex-1 rounded-none">
+                  <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
               </div>
-              
-              <Button variant="ghost" size="icon">
-                <Bookmark className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            {/* Comments */}
-            {expandedComments.has(post.id) && (
-              <div className="mt-4 space-y-3">
-                {post.comments.map(comment => (
-                  <div key={comment.id} className="flex gap-3">
-                    <img
-                      src={comment.userAvatar}
-                      alt={comment.userName}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <div className="bg-gray-100 rounded-lg p-3">
-                        <div className="font-semibold text-sm">{comment.userName}</div>
-                        <p className="text-sm">{comment.content}</p>
-                      </div>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                        <button className="hover:underline">Like</button>
-                        <button className="hover:underline">Reply</button>
-                        <span>{comment.timestamp}</span>
-                        {comment.likes > 0 && (
-                          <span className="flex items-center gap-1">
-                            <ThumbsUp className="w-3 h-3" />
-                            {comment.likes}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* Replies */}
-                      {comment.replies.map(reply => (
-                        <div key={reply.id} className="flex gap-3 mt-3 ml-4">
-                          <img
-                            src={reply.userAvatar}
-                            alt={reply.userName}
-                            className="w-6 h-6 rounded-full"
-                          />
-                          <div className="flex-1">
-                            <div className="bg-gray-100 rounded-lg p-2">
-                              <div className="font-semibold text-xs">{reply.userName}</div>
-                              <p className="text-xs">{reply.content}</p>
+
+              {showReactionPicker === post.id && (
+                <div className="flex justify-center gap-1 p-2 border-t">
+                  {Object.entries(reactionEmojis).map(([type, emoji]) => (
+                    <Button
+                      key={type}
+                      variant="ghost"
+                      size="sm"
+                      className="text-2xl hover:bg-gray-100"
+                      onClick={() => handleReaction(post.id, type as keyof typeof reactionEmojis)}
+                    >
+                      {emoji}
+                    </Button>
+                  ))}
+                </div>
+              )}
+
+              {expandedComments.has(post.id) && (
+                <div className="border-t p-4">
+                  <div className="space-y-3 mb-4">
+                    {post.comments.map((comment) => (
+                      <div key={comment.id} className="flex gap-2">
+                        <img
+                          src={comment.userAvatar}
+                          alt={comment.userName}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div className="flex-1">
+                          <div className="bg-gray-100 rounded-lg p-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{comment.userName}</span>
+                              <span className="text-xs text-gray-500">{comment.timestamp}</span>
                             </div>
-                            <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                              <button className="hover:underline">Like</button>
-                              <span>{reply.timestamp}</span>
-                            </div>
+                            <p className="text-sm">{comment.content}</p>
+                          </div>
+                          <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                            <Button variant="ghost" size="sm" className="h-6 p-0">
+                              Like ({comment.likes})
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-6 p-0">
+                              Reply
+                            </Button>
                           </div>
                         </div>
-                      ))}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <img
+                      src="/api/placeholder/32/32"
+                      alt="Your avatar"
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <div className="flex-1 flex gap-2">
+                      <Input placeholder="Write a comment..." className="flex-1" />
+                      <Button size="sm">Post</Button>
                     </div>
                   </div>
-                ))}
-                
-                {/* Add Comment */}
-                <div className="flex gap-3">
-                  <img
-                    src="/api/placeholder/40/40"
-                    alt="Your avatar"
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Write a comment..."
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleComment(post.id, e.currentTarget.value);
-                          e.currentTarget.value = '';
-                        }
-                      }}
-                      className="bg-gray-100 border-none"
-                    />
-                  </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              )}
+            </div>
+          </Card>
+        ))
+      )}
     </div>
   );
 };

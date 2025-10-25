@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,35 +15,165 @@ import {
   MoreHorizontal,
   Flag
 } from 'lucide-react';
+import { videoService } from '@/services/videoService';
+import { useToast } from '@/components/ui/use-toast';
+
+// Define TypeScript interfaces
+interface VideoCreator {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  verified: boolean;
+  followers: number;
+}
+
+interface VideoData {
+  id: string;
+  title: string;
+  description: string;
+  creator: VideoCreator;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  duration: string;
+  uploadDate: string;
+  thumbnail: string;
+  videoUrl: string;
+  tags: string[];
+  category: string;
+}
 
 const VideoDetail: React.FC = () => {
-  const { videoId } = useParams();
+  const { videoId } = useParams<{ videoId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [video, setVideo] = useState<VideoData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [relatedVideos, setRelatedVideos] = useState<any[]>([]);
+  const [isLiked, setIsLiked] = useState(false);
 
-  // TODO: Replace with real API call
-  const video = {
-    id: videoId,
-    title: 'Amazing Video Content',
-    description: 'This is a detailed description of the video content that provides context and information about what viewers can expect.',
-    creator: {
-      id: 'creator_1',
-      username: 'amazing_creator',
-      displayName: 'Amazing Creator',
-      avatar: '/placeholder.svg',
-      verified: true,
-      followers: 125000
-    },
-    views: 45230,
-    likes: 3420,
-    comments: 156,
-    shares: 89,
-    duration: '2:34',
-    uploadDate: '2024-01-15',
-    thumbnail: '/placeholder.svg',
-    videoUrl: '/placeholder-video.mp4',
-    tags: ['entertainment', 'viral', 'trending'],
-    category: 'Entertainment'
+  useEffect(() => {
+    if (videoId) {
+      fetchVideoData();
+      fetchRelatedVideos();
+    }
+  }, [videoId]);
+
+  const fetchVideoData = async () => {
+    try {
+      setLoading(true);
+      const videoData = await videoService.getVideoById(videoId!);
+      
+      if (videoData) {
+        setVideo({
+          id: videoData.id,
+          title: videoData.title,
+          description: videoData.description || '',
+          creator: {
+            id: videoData.user_id,
+            username: videoData.user?.username || 'unknown',
+            displayName: videoData.user?.full_name || 'Unknown User',
+            avatar: videoData.user?.avatar_url || '/placeholder.svg',
+            verified: videoData.user?.is_verified || false,
+            followers: 0 // This would need to be fetched from a user service
+          },
+          views: videoData.views_count,
+          likes: videoData.likes_count,
+          comments: videoData.comments_count,
+          shares: videoData.shares_count || 0,
+          duration: formatDuration(videoData.duration || 0),
+          uploadDate: videoData.created_at,
+          thumbnail: videoData.thumbnail_url || '/placeholder.svg',
+          videoUrl: videoData.video_url,
+          tags: videoData.tags || [],
+          category: videoData.category || 'General'
+        });
+      } else {
+        setError('Video not found');
+      }
+    } catch (err) {
+      console.error('Error fetching video:', err);
+      setError('Failed to load video');
+      toast({
+        title: "Error",
+        description: "Failed to load video data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const fetchRelatedVideos = async () => {
+    try {
+      const videos = await videoService.getVideos(3, 0, video?.category);
+      setRelatedVideos(videos.filter((v: any) => v.id !== videoId));
+    } catch (err) {
+      console.error('Error fetching related videos:', err);
+      // Fallback to empty array
+      setRelatedVideos([]);
+    }
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const handleLike = async () => {
+    if (!videoId || !video) return;
+    
+    try {
+      if (isLiked) {
+        await videoService.unlikeVideo(videoId);
+        setIsLiked(false);
+        setVideo(prev => ({
+          ...prev!,
+          likes: prev!.likes - 1
+        }));
+      } else {
+        await videoService.likeVideo(videoId);
+        setIsLiked(true);
+        setVideo(prev => ({
+          ...prev!,
+          likes: prev!.likes + 1
+        }));
+      }
+    } catch (err) {
+      console.error('Error liking video:', err);
+      toast({
+        title: "Error",
+        description: "Failed to like video",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !video) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Video not found</h2>
+          <p className="text-muted-foreground mb-6">{error || 'The video you are looking for does not exist.'}</p>
+          <Button onClick={() => navigate(-1)}>Go Back</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
@@ -107,7 +237,7 @@ const VideoDetail: React.FC = () => {
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={video.creator.avatar} />
                     <AvatarFallback>
-                      {video.creator.displayName.split(' ').map(n => n[0]).join('')}
+                      {video.creator.displayName.split(' ').map((n: string) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -127,8 +257,12 @@ const VideoDetail: React.FC = () => {
 
               {/* Engagement Actions */}
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Heart className="w-4 h-4" />
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={handleLike}
+                >
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                   {video.likes.toLocaleString()}
                 </Button>
                 <Button variant="outline" className="flex items-center gap-2">
@@ -151,7 +285,7 @@ const VideoDetail: React.FC = () => {
               <div className="space-y-4">
                 <p className="text-muted-foreground">{video.description}</p>
                 <div className="flex flex-wrap gap-2">
-                  {video.tags.map((tag) => (
+                  {video.tags.map((tag: string) => (
                     <Badge key={tag} variant="secondary">
                       #{tag}
                     </Badge>
@@ -188,27 +322,41 @@ const VideoDetail: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                    <div className="relative w-24 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                      <img 
-                        src="/placeholder.svg" 
-                        alt="Related video"
-                        className="w-full h-full object-cover"
-                      />
-                      <Badge className="absolute bottom-1 right-1 text-xs bg-black/70">
-                        1:45
-                      </Badge>
+                {relatedVideos.length > 0 ? (
+                  relatedVideos.map((relatedVideo) => (
+                    <div 
+                      key={relatedVideo.id} 
+                      className="flex gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      onClick={() => navigate(`/app/videos/${relatedVideo.id}`)}
+                    >
+                      <div className="relative w-24 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                        <img 
+                          src={relatedVideo.thumbnail_url || '/placeholder.svg'} 
+                          alt={relatedVideo.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <Badge className="absolute bottom-1 right-1 text-xs bg-black/70">
+                          {formatDuration(relatedVideo.duration || 0)}
+                        </Badge>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm line-clamp-2 mb-1">
+                          {relatedVideo.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {relatedVideo.user?.full_name || relatedVideo.user?.username || 'Unknown User'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {(relatedVideo.views_count || 0).toLocaleString()} views
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm line-clamp-2 mb-1">
-                        Related Video Title {i}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">Creator Name</p>
-                      <p className="text-xs text-muted-foreground">1.2K views</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>No related videos found</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>

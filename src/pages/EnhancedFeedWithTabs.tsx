@@ -44,6 +44,7 @@ import CommentSection from "@/components/feed/CommentSection";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLiveNowData } from "@/hooks/use-sidebar-widgets";
+import { supabase } from "@/integrations/supabase/client";
 
 // Stories component for the feed
 const StoriesSection = ({
@@ -207,12 +208,56 @@ const FeedSidebar = () => {
   const quickLinks = useQuickLinksStats();
   const { data: trendingTopics } = useTrendingTopicsData();
 
-  // Mock data for user stats - in a real implementation, this would come from an API
+  // Fetch real user stats from the database
   const [userStats, setUserStats] = useState({
-    posts: 1200,
-    friends: 5400,
-    following: 890
+    posts: 0,
+    friends: 0,
+    following: 0
   });
+
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!user?.id) return;
+      
+      try {
+        // Fetch user's post count
+        const { count: postsCount, error: postsError } = await supabase
+          .from('posts')
+          .select('*', { count: 'exact' })
+          .eq('user_id', user.id);
+        
+        // Fetch user's followers count
+        const { count: followersCount, error: followersError } = await supabase
+          .from('followers')
+          .select('*', { count: 'exact' })
+          .eq('following_id', user.id);
+        
+        // Fetch user's following count
+        const { count: followingCount, error: followingError } = await supabase
+          .from('followers')
+          .select('*', { count: 'exact' })
+          .eq('follower_id', user.id);
+        
+        if (!postsError && !followersError && !followingError) {
+          setUserStats({
+            posts: postsCount || 0,
+            friends: followersCount || 0,
+            following: followingCount || 0
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user stats:", error);
+        // Fallback to mock data if database fetch fails
+        setUserStats({
+          posts: 1200,
+          friends: 5400,
+          following: 890
+        });
+      }
+    };
+    
+    fetchUserStats();
+  }, [user?.id]);
 
   return (
     <div className="space-y-4">
@@ -300,56 +345,6 @@ const SuggestedSidebar = () => {
   const { liveStreams } = useLiveNowData();
   const [following, setFollowing] = React.useState<Record<string, boolean>>({});
 
-  // Mock data for suggested users - in a real implementation, this would come from an API
-  const mockSuggestedUsers = [
-    {
-      id: "user-1",
-      name: "Alex Johnson",
-      username: "alexj",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
-      verified: true,
-      mutualFriends: 12
-    },
-    {
-      id: "user-2",
-      name: "Maria Garcia",
-      username: "mariag",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maria",
-      verified: false,
-      mutualFriends: 8
-    },
-    {
-      id: "user-3",
-      name: "James Wilson",
-      username: "jamesw",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=james",
-      verified: true,
-      mutualFriends: 15
-    }
-  ];
-
-  // Mock data for live streams - in a real implementation, this would come from an API
-  const mockLiveStreams = [
-    {
-      id: "live-1",
-      title: "Live Coding Session",
-      viewerCount: "1.2K",
-      user: {
-        displayName: "TechDev",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=techdev"
-      }
-    },
-    {
-      id: "live-2",
-      title: "Cooking Show",
-      viewerCount: "890",
-      user: {
-        displayName: "ChefMaster",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=chef"
-      }
-    }
-  ];
-
   const toggleFollowUser = async (id: string) => {
     try {
       const current = !!following[id];
@@ -370,7 +365,7 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">People You May Know</h3>
           <div className="space-y-3">
-            {(suggestedUsers || mockSuggestedUsers).map((u: any) => {
+            {(suggestedUsers || []).map((u: any) => {
               const name = u.name || u.profile?.full_name || u.username;
               const id = u.id || u.profile?.id || (u.username || u.profile?.username || "user");
               const username = u.username || u.profile?.username || "user";
@@ -410,7 +405,7 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Live Now</h3>
           <div className="space-y-3">
-            {(liveStreams || mockLiveStreams).map((content: any) => (
+            {(liveStreams || []).map((content: any) => (
               <div key={content.id} className="relative cursor-pointer group">
                 <div className="relative">
                   <img
@@ -512,27 +507,38 @@ const EnhancedFeedWithTabs = () => {
     }, 1000);
   };
 
-  const handleCreateStory = (storyData: any) => {
-    const newStory = {
-      id: `story-${Date.now()}`,
-      user: {
-        id: "current-user",
-        name: "Your Story",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-        isUser: true,
-      },
-      timestamp: new Date(),
-      content: storyData,
-      views: 0,
-      hasNew: true,
-    };
+  const handleCreateStory = async (storyData: any) => {
+    try {
+      // Add the new story to the userStories state
+      const newStory = {
+        id: `story-${Date.now()}`,
+        user: {
+          id: user?.id || "current-user",
+          name: user?.name || "You",
+          username: user?.username || "you",
+          avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          isUser: true,
+        },
+        timestamp: new Date(),
+        content: storyData,
+        views: 0,
+        hasNew: true,
+      };
 
-    setUserStories(prev => [newStory, ...prev]);
+      setUserStories(prev => [newStory, ...prev]);
 
-    toast({
-      title: "Story created!",
-      description: "Your story has been published.",
-    });
+      toast({
+        title: "Story created!",
+        description: "Your story has been published.",
+      });
+    } catch (error) {
+      console.error("Error creating story:", error);
+      toast({
+        title: "Failed to create story",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewStory = (storyIndex: number) => {

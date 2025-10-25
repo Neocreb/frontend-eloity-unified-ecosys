@@ -32,6 +32,7 @@ import { MediaUpload, feedService } from "@/services/feedService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { storiesService } from "@/services/storiesService";
 
 interface StoryCreationModalProps {
   isOpen: boolean;
@@ -167,6 +168,15 @@ export function StoryCreationModal({
   };
 
   const handleCreateStory = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create a story.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (storyType === "text" && !textContent.trim()) {
       toast({
         title: "Empty story",
@@ -187,33 +197,64 @@ export function StoryCreationModal({
 
     setIsSubmitting(true);
     try {
-      // Simulate API call to create story
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      let mediaUrl = "";
+      
+      // Upload media to Supabase storage if we have media
+      if ((storyType === "image" || storyType === "video") && selectedMedia) {
+        const bucket = "stories"; // Ensure a public bucket named "stories" exists in Supabase Storage
+        const path = `${user.id}/${Date.now()}-${selectedMedia.file.name}`;
+        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, selectedMedia.file, {
+          upsert: false,
+          cacheControl: "3600",
+          contentType: selectedMedia.file.type,
+        });
+        
+        if (uploadError) {
+          console.error("Upload error:", uploadError.message);
+          toast({ 
+            title: "Upload failed", 
+            description: uploadError.message, 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        mediaUrl = data.publicUrl;
+      }
 
-      const newStory = {
-        id: Date.now().toString(),
+      // Create story using real storiesService
+      const storyDataPayload = {
+        media_url: mediaUrl,
+        media_type: (selectedMedia?.type || "image") as "image" | "video",
+        caption: textContent || undefined,
+        expires_in_hours: storyData.duration,
+      };
+
+      const newStory = await storiesService.createStory(storyDataPayload, user.id);
+
+      const storyResponse = {
+        id: newStory.id,
         user: {
-          id: user?.id || "current-user",
-          name: user?.name || "You",
-          username: user?.username || "you",
-          avatar:
-            user?.avatar ||
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          id: user.id,
+          name: user.name || "You",
+          username: user.username || "you",
+          avatar: user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
         },
         type: storyType,
         content: storyType === "text" ? textContent : undefined,
         media: selectedMedia,
-        backgroundColor:
-          storyType === "text" ? storyData.backgroundColor : undefined,
+        backgroundColor: storyType === "text" ? storyData.backgroundColor : undefined,
         textColor: storyType === "text" ? storyData.textColor : undefined,
-        timestamp: new Date().toISOString(),
+        timestamp: newStory.created_at,
         duration: storyData.duration,
         privacy: storyData.privacy,
-        views: 0,
+        views: newStory.views_count,
         isOwn: true,
       };
 
-      onStoryCreated(newStory);
+      onStoryCreated(storyResponse);
       handleClose();
 
       toast({
@@ -221,9 +262,10 @@ export function StoryCreationModal({
         description: "Your story has been shared with your followers.",
       });
     } catch (error) {
+      console.error("Error creating story:", error);
       toast({
         title: "Failed to create story",
-        description: "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     } finally {

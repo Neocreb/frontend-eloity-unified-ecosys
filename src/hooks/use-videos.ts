@@ -1,16 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { videoService, Video } from "@/services/videoService";
 import { ContentItem, VideoItem, AdItem } from "@/types/video";
+import { supabase } from "@/integrations/supabase/client";
 
-// Ad data - in a real implementation, this would come from an ad service
-const adData = {
-  id: "ad-1",
-  title: "Special Offer",
-  description: "Check out our amazing products!",
-  cta: "Learn More",
-  image: "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=400",
-  url: "#",
-  sponsor: "Sponsored"
+// Ad data - fetch real ads from the database
+const fetchRealAdData = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('ads')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) throw error;
+    
+    if (data) {
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description || "",
+        cta: data.call_to_action || "Learn More",
+        image: data.image_url || "",
+        url: data.target_url || "#",
+        sponsor: data.sponsor_name || "Sponsored"
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching real ad data:", error);
+  }
+  
+  // Fallback to mock ad if database fetch fails
+  return {
+    id: "ad-1",
+    title: "Special Offer",
+    description: "Check out our amazing products!",
+    cta: "Learn More",
+    image: "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=400",
+    url: "#",
+    sponsor: "Sponsored"
+  };
 };
 
 export const useVideos = () => {
@@ -18,6 +48,17 @@ export const useVideos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [adData, setAdData] = useState<any>(null);
+
+  // Fetch real ad data
+  useEffect(() => {
+    const loadAdData = async () => {
+      const realAd = await fetchRealAdData();
+      setAdData(realAd);
+    };
+    
+    loadAdData();
+  }, []);
 
   // Fetch videos from the service
   useEffect(() => {
@@ -63,7 +104,7 @@ export const useVideos = () => {
   }, []);
 
   // Combine videos and ads into a single content feed
-  const allItems: ContentItem[] = videos.length > 0 ? [
+  const allItems: ContentItem[] = videos.length > 0 && adData ? [
     ...videos.slice(0, 2),
     { isAd: true, ad: adData } as AdItem,
     ...videos.slice(2)
