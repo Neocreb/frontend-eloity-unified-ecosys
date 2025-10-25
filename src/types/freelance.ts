@@ -19,6 +19,11 @@ export interface FreelancerProfile {
   certifications: string[];
   createdAt: Date;
   updatedAt: Date;
+  // Additional fields from Supabase join with profiles table
+  full_name?: string;
+  username?: string;
+  avatar_url?: string;
+  bio?: string;
 }
 
 export interface JobPosting {

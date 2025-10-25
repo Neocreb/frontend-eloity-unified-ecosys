@@ -134,30 +134,30 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
           // Transform FreelancerProfile to Talent interface
           const transformedTalent: Talent = {
             id: freelancerProfile.id,
-            name: `User ${freelancerProfile.id}`,
-            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+            name: freelancerProfile.full_name || freelancerProfile.username || `User ${freelancerProfile.id}`,
+            avatar: freelancerProfile.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
             title: freelancerProfile.title || "Freelancer",
             description: freelancerProfile.description || "No description available",
             skills: freelancerProfile.skills || [],
             hourlyRate: freelancerProfile.hourlyRate || 0,
             rating: freelancerProfile.rating || 0,
             reviewCount: freelancerProfile.reviewCount || 0,
-            location: "Remote",
+            location: "Remote", // This isn't in the profile data, keeping default
             availability: freelancerProfile.availability === "unavailable" ? "offline" : (freelancerProfile.availability || "available"),
-            verified: false,
+            verified: false, // This isn't in the profile data, keeping default
             completedJobs: freelancerProfile.completedProjects || 0,
-            responseTime: "24 hours",
-            successRate: 90,
+            responseTime: "24 hours", // This isn't in the profile data, keeping default
+            successRate: 90, // This isn't in the profile data, keeping default
             portfolio: (freelancerProfile.portfolio || []).map((url: string, index: number) => ({
               id: index.toString(),
               title: `Project ${index + 1}`,
               image: url,
               category: "Web Development"
             })),
-            badges: [],
+            badges: [], // This isn't in the profile data, keeping default
             languages: freelancerProfile.languages || [],
-            joinedDate: freelancerProfile.createdAt.toISOString() || new Date().toISOString(),
-            lastSeen: "Recently online",
+            joinedDate: freelancerProfile.createdAt?.toISOString() || new Date().toISOString(),
+            lastSeen: "Recently online", // This isn't in the profile data, keeping default
             employmentHistory: Array.isArray(freelancerProfile.education) ? freelancerProfile.education.map((item: string, index: number) => ({
               id: index.toString(),
               company: item,
@@ -372,7 +372,7 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
                 <Card>
                   <CardContent className="p-4 space-y-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-green-600">
+                      <div className="text-3xl font-bold text-green-6600">
                         ${talent.hourlyRate}
                       </div>
                       <div className="text-sm text-muted-foreground">
