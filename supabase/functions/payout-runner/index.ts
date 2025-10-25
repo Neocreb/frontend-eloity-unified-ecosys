@@ -1,12 +1,16 @@
 // payout-runner/index.ts
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 console.info('payout-runner started');
 
 serve(async (req: Request) => {
+  // @ts-ignore
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+  // @ts-ignore
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  // @ts-ignore
   const PAYOUT_ENDPOINT = Deno.env.get('PAYOUT_ENDPOINT');
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -151,7 +155,9 @@ serve(async (req: Request) => {
 
         // Run payout processing in background
         try {
+          // @ts-ignore
           if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+            // @ts-ignore
             EdgeRuntime.waitUntil(processPayout());
           } else {
             // Fallback for local development

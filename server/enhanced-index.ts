@@ -425,8 +425,13 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-app.get('/api/status', authenticateToken, async (req, res) => {
+app.get('/api/status', authenticateToken, async (req: any, res: any) => {
   try {
+    // Type guard for userId
+    if (!req.userId || typeof req.userId !== 'string') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const user = await db.select().from(users)
       .where(eq(users.id, req.userId))
       .limit(1);
@@ -697,11 +702,11 @@ app.use('/uploads', express.static('uploads'));
 const activeConnections = new Map<string, WebSocket>();
 
 // Handle WebSocket connections
-wss.on('connection', (ws, req) => {
+wss.on('connection', (ws: any, req) => {
   console.log('New WebSocket connection');
 
   // Handle incoming messages
-  ws.on('message', async (message) => {
+  ws.on('message', async (message: any) => {
     try {
       const data = JSON.parse(message.toString());
       
@@ -711,7 +716,7 @@ wss.on('connection', (ws, req) => {
             const decoded = jwt.verify(data.token, process.env.JWT_SECRET || 'your-jwt-secret') as any;
             if (typeof decoded.userId === 'string') {
               (ws as any).userId = decoded.userId;
-              activeConnections.set(decoded.userId, ws);
+              activeConnections.set(decoded.userId, ws as any);
               ws.send(JSON.stringify({ type: 'authenticated', success: true }));
             } else {
               ws.send(JSON.stringify({ type: 'authenticated', success: false, error: 'Invalid user ID' }));
