@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CreatePost } from "@/types/post";
 import { notificationService } from "@/services/notificationService";
+import { PostService } from "@/services/postService";
 
 type CreatePostParams = {
   content: string;
@@ -42,37 +43,36 @@ export const useFeed = () => {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  // Load posts with pagination from Supabase
+  // Load posts with pagination using PostService
   useEffect(() => {
     let aborted = false;
     const load = async () => {
       setIsLoading(true);
       try {
-        const from = (page - 1) * PAGE_SIZE;
-        const to = from + PAGE_SIZE - 1;
-        const { data, error } = await supabase
-          .from('posts')
-          .select('id, content, image_url, created_at, location, tagged_users, profiles:user_id(full_name, username, avatar_url, is_verified)')
-          .order('created_at', { ascending: false })
-          .range(from, to);
-        if (error) throw error;
+        if (!user?.id) {
+          setIsLoading(false);
+          return;
+        }
 
+        const data = await PostService.getFeedPosts(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
+        
         if (aborted) return;
-        const mapped: Post[] = (data || []).map((row: any) => ({
+
+        const mapped: Post[] = data.map((row: any) => ({
           id: row.id,
           author: {
-            name: row.profiles?.full_name || 'User',
-            username: row.profiles?.username || 'user',
-            avatar: row.profiles?.avatar_url || '/placeholder.svg',
-            verified: !!row.profiles?.is_verified,
+            name: row.author?.full_name || row.author?.username || 'User',
+            username: row.author?.username || 'user',
+            avatar: row.author?.avatar_url || '/placeholder.svg',
+            verified: !!row.author?.is_verified,
           },
           content: row.content,
           image: row.image_url || undefined,
           location: row.location || null,
           taggedUsers: row.tagged_users || null,
           createdAt: row.created_at,
-          likes: 0,
-          comments: 0,
+          likes: row.likes_count || 0,
+          comments: row.comments_count || 0,
           shares: 0,
         }));
 
@@ -82,16 +82,16 @@ export const useFeed = () => {
         setPostComments(prev => page === 1 ? initialComments : { ...prev, ...initialComments });
 
         setPosts(prev => page === 1 ? mapped : [...prev, ...mapped]);
-        setHasMore((data || []).length === PAGE_SIZE);
+        setHasMore(data.length === PAGE_SIZE);
       } catch (e) {
-        console.error('Error loading posts from Supabase:', e);
+        console.error('Error loading posts from PostService:', e);
       } finally {
         if (!aborted) setIsLoading(false);
       }
     };
     load();
     return () => { aborted = true; };
-  }, [page]);
+  }, [page, user?.id]);
 
   const loadMorePosts = () => {
     if (!isLoading && hasMore) {
@@ -99,7 +99,7 @@ export const useFeed = () => {
     }
   };
 
-  // Create a post in Supabase (use CreatePostFlow for media uploads)
+  // Create a post using PostService
   const handleCreatePost = useCallback(async ({
     content,
     mediaUrl,
@@ -113,27 +113,27 @@ export const useFeed = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('posts')
-        .insert({
-          user_id: user.id,
-          content,
-          image_url: mediaUrl || null,
-          location: location || null,
-          tagged_users: taggedUsers || null,
-        })
-        .select('*, profiles:user_id(full_name, username, avatar_url, is_verified)')
-        .single();
+      const postData = {
+        user_id: user.id,
+        content,
+        image_url: mediaUrl || null,
+        location: location || null,
+        tagged_users: taggedUsers || null,
+      };
 
-      if (error) throw error;
+      const data = await PostService.createPost(postData);
+      
+      if (!data) {
+        throw new Error('Failed to create post');
+      }
 
       const newPost: Post = {
         id: data.id,
         author: {
-          name: data.profiles?.full_name || user.name || 'You',
-          username: data.profiles?.username || user.profile?.username || 'you',
-          avatar: data.profiles?.avatar_url || user.avatar || '/placeholder.svg',
-          verified: !!data.profiles?.is_verified,
+          name: user.name || 'You',
+          username: user.profile?.username || 'you',
+          avatar: user.avatar || '/placeholder.svg',
+          verified: user.profile?.is_verified || false,
         },
         content: data.content,
         image: data.image_url || undefined,

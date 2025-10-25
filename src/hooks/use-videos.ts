@@ -1,19 +1,67 @@
-// @ts-nocheck
-import { useState, useCallback } from "react";
-import { ContentItem, VideoItem, AdItem } from "@/types/video";
-import { mockVideos, mockAdData } from "@/data/mockVideosData";
+import { useState, useEffect, useCallback } from "react";
+import { videoService, Video } from "@/services/videoService";
+import { ContentItem, VideoItem, AdItem, AdData } from "@/types/video";
+
+// Mock ad data - in a real implementation, this would come from an ad service
+const mockAdData: AdData = {
+  id: "ad-1",
+  title: "Special Offer",
+  description: "Check out our amazing products!",
+  cta: "Learn More",
+  image: "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=400",
+  url: "#",
+  sponsor: "Sponsored"
+};
 
 export const useVideos = () => {
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+
+  // Fetch videos from the service
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        setLoading(true);
+        const videoData = await videoService.getVideos(20, 0);
+        
+        // Transform Video objects to VideoItem objects
+        const transformedVideos: VideoItem[] = videoData.map((video: Video) => ({
+          id: video.id,
+          url: video.video_url,
+          thumbnail: video.thumbnail_url || "",
+          description: video.description || "",
+          likes: video.likes_count,
+          comments: video.comments_count,
+          shares: video.shares_count || 0,
+          author: {
+            name: video.user?.full_name || "Unknown User",
+            username: video.user?.username || "unknown",
+            avatar: video.user?.avatar_url || "",
+            verified: video.user?.is_verified || false
+          },
+          isFollowing: false // This would need to be fetched from a following service
+        }));
+        
+        setVideos(transformedVideos);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching videos:", err);
+        setError("Failed to load videos");
+        setLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, []);
 
   // Combine videos and ads into a single content feed
-  const allItems: ContentItem[] = [
-    ...mockVideos.slice(0, 2),
+  const allItems: ContentItem[] = videos.length > 0 ? [
+    ...videos.slice(0, 2),
     { isAd: true, ad: mockAdData } as AdItem,
-    ...mockVideos.slice(2)
-  ];
+    ...videos.slice(2)
+  ] : [];
 
   const handleNextVideo = useCallback(() => {
     setCurrentIndex((prev) =>
@@ -27,24 +75,6 @@ export const useVideos = () => {
     );
   }, [allItems.length]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientY);
-  };
-
-  const handleTouchEnd = useCallback(() => {
-    if (touchStart - touchEnd > 50) {
-      // Swipe up
-      handleNextVideo();
-    } else if (touchEnd - touchStart > 50) {
-      // Swipe down
-      handlePrevVideo();
-    }
-  }, [touchStart, touchEnd, handleNextVideo, handlePrevVideo]);
-
   const getCurrentItem = (): ContentItem | null => {
     if (allItems.length === 0) return null;
     return allItems[currentIndex % allItems.length];
@@ -55,11 +85,9 @@ export const useVideos = () => {
     handleNextVideo,
     handlePrevVideo,
     allItems,
-    swipeHandlers: {
-      onTouchStart: handleTouchStart,
-      onTouchMove: handleTouchMove,
-      onTouchEnd: handleTouchEnd,
-    },
     currentIndex,
+    loading,
+    error,
+    videos
   };
 };

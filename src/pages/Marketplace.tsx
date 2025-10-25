@@ -420,18 +420,14 @@ const MarketplaceContent = () => {
                               Sponsored Products
                             </h3>
                           </div>
-                          {Array(3).fill(0).map((_, i) => (
-                            <SponsoredProductCard
+                          {sponsoredProducts.slice(0, 3).map((product, i) => (
+                            <ProductCard
                               key={`sponsored-${i}`}
-                              title={`Premium Product ${i + 1}`}
-                              price={`$${29.99 + i * 10}`}
-                              originalPrice={`$${39.99 + i * 10}`}
-                              rating={4.5 + (i * 0.2)}
-                              reviewCount={127 + i * 50}
-                              onClick={() => {
-                                console.log(`Sponsored product ${i + 1} clicked`);
-                                // Handle sponsored product click
-                              }}
+                              product={product}
+                              onAddToCart={handleAddToCart}
+                              onAddToWishlist={handleAddToWishlist}
+                              showSellerInfo={true}
+                              sponsored={true}
                             />
                           ))}
                         </div>

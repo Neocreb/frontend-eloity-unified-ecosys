@@ -647,4 +647,100 @@ export class MarketplaceService {
       return 0;
     }
   }
+
+  // Get sellers (using marketplace_profiles table)
+  static async getSellers(): Promise<SellerProfile[]> {
+    try {
+      // First try to get from marketplace_profiles table
+      const { data: profiles, error: profilesError } = await supabase
+        .from('marketplace_profiles')
+        .select(`
+          *,
+          users:profiles(user_id, username, full_name, avatar_url)
+        `)
+        .eq('is_active', true);
+
+      if (profilesError) {
+        console.warn("Error fetching marketplace profiles:", profilesError);
+        // Fallback to using users table with store information
+        const { data: users, error: usersError } = await supabase
+          .from('users')
+          .select('*')
+          .limit(20);
+
+        if (usersError) {
+          console.error("Error fetching users:", usersError);
+          return [];
+        }
+
+        return users.map(user => ({
+          id: user.id,
+          username: user.username || '',
+          name: user.full_name || 'Unknown User',
+          avatar: user.avatar_url || '',
+          bio: user.bio || '',
+          joinedDate: user.created_at || new Date().toISOString(),
+          isVerified: user.is_verified || false,
+          rating: 0,
+          reviewCount: 0,
+          productCount: 0,
+          salesCount: 0
+        }));
+      }
+
+      return profiles.map(profile => ({
+        id: profile.id,
+        username: profile.users?.username || 'user',
+        name: profile.users?.full_name || profile.store_name || 'Unknown Seller',
+        avatar: profile.users?.avatar_url || profile.store_logo || '',
+        bio: profile.store_description || profile.users?.bio || '',
+        joinedDate: profile.created_at,
+        isVerified: profile.verification_status === 'verified',
+        rating: parseFloat(profile.store_rating?.toString() || '0'),
+        reviewCount: profile.total_orders || 0,
+        productCount: 0, // Would need to fetch from products table
+        salesCount: profile.total_sales || 0
+      }));
+    } catch (error) {
+      console.error("Error in getSellers:", error);
+      return [];
+    }
+  }
+
+  // Get reviews for products
+  static async getProductReviews(productId: string): Promise<Review[]> {
+    try {
+      const { data, error } = await supabase
+        .from('product_reviews')
+        .select(`
+          *,
+          reviewer:users(full_name, avatar_url)
+        `)
+        .eq('product_id', productId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching product reviews:", error);
+        return [];
+      }
+
+      return data.map(review => ({
+        id: review.id,
+        productId: review.product_id,
+        userId: review.user_id,
+        userName: review.reviewer?.full_name || 'Anonymous User',
+        userAvatar: review.reviewer?.avatar_url || '',
+        rating: review.rating,
+        title: review.title || '',
+        comment: review.content || '',
+        helpfulCount: review.helpful_count || 0,
+        verifiedPurchase: review.verified_purchase || false,
+        createdAt: new Date(review.created_at),
+        updatedAt: new Date(review.updated_at)
+      }));
+    } catch (error) {
+      console.error("Error in getProductReviews:", error);
+      return [];
+    }
+  }
 }

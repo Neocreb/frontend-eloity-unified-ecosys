@@ -86,6 +86,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { InVideoAd } from "@/components/ads/InVideoAd";
 import { VideoInterstitialAd } from "@/components/ads/VideoInterstitialAd";
 import { adSettings } from "../../config/adSettings";
+import { useVideos } from "@/hooks/use-videos";
+import { VideoItem } from "@/types/video";
 
 interface VideoData {
   id: string;
@@ -154,173 +156,6 @@ interface VideoData {
   aiGenerated?: boolean;
   transcription?: string;
 }
-
-const mockVideos: VideoData[] = [
-  {
-    id: "1",
-    user: {
-      id: "1",
-      username: "crypto_king",
-      displayName: "Crypto King",
-      avatar: "https://i.pravatar.cc/150?img=1",
-      verified: true,
-      followerCount: 234567,
-    },
-    description:
-      "Bitcoin to the moon! 🚀 Who else is holding? This AI-powered analysis shows why we're still early! #crypto #bitcoin #hodl #ai",
-    music: {
-      title: "Crypto Anthem",
-      artist: "Digital Dreams",
-      id: "crypto-anthem-1",
-      duration: 30,
-    },
-    stats: {
-      likes: 15400,
-      comments: 892,
-      shares: 445,
-      views: "2.1M",
-      saves: 3240,
-    },
-    hashtags: ["crypto", "bitcoin", "hodl", "moon", "ai"],
-    videoUrl:
-      "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=400",
-    duration: 30,
-    timestamp: "2h",
-    category: "Finance & Crypto",
-    allowDuets: true,
-    allowComments: true,
-    hasCaption: true,
-    challenge: {
-      id: "crypto-prediction-2024",
-      title: "Crypto Prediction Challenge",
-      hashtag: "CryptoPrediction2024",
-    },
-  },
-  {
-    id: "2",
-    user: {
-      id: "2",
-      username: "tech_trader",
-      displayName: "Tech Trader",
-      avatar: "https://i.pravatar.cc/150?img=2",
-      verified: false,
-      followerCount: 89456,
-    },
-    description:
-      "Day trading tips that actually work! Follow for more 💰 Using AI to predict market movements #trading #stocks #daytrading #ai",
-    music: {
-      title: "Success Vibes",
-      artist: "Motivation Mix",
-      id: "success-vibes-1",
-      duration: 45,
-    },
-    stats: {
-      likes: 8900,
-      comments: 567,
-      shares: 234,
-      views: "890K",
-      saves: 1890,
-    },
-    hashtags: ["trading", "stocks", "daytrading", "money", "ai"],
-    videoUrl:
-      "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400",
-    duration: 45,
-    timestamp: "5h",
-    category: "Finance & Trading",
-    allowDuets: true,
-    allowComments: true,
-    hasCaption: false,
-    isSponsored: true,
-  },
-  {
-    id: "3",
-    user: {
-      id: "3",
-      username: "nft_creator",
-      displayName: "NFT Creator",
-      avatar: "https://i.pravatar.cc/150?img=3",
-      verified: true,
-    },
-    description:
-      "Just dropped my latest NFT collection! Link in bio 🎨 #nft #digitalart #opensea",
-    music: {
-      title: "Digital Dreams",
-      artist: "Electronic Beats",
-    },
-    stats: {
-      likes: 12600,
-      comments: 445,
-      shares: 789,
-      views: "1.5M",
-    },
-    hashtags: ["nft", "digitalart", "opensea", "blockchain"],
-    videoUrl:
-      "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1634973357973-f2ed2657db3c?w=400",
-    duration: 25,
-  },
-  {
-    id: "4",
-    user: {
-      id: "4",
-      username: "defi_guru",
-      displayName: "DeFi Guru",
-      avatar: "https://i.pravatar.cc/150?img=4",
-      verified: true,
-    },
-    description:
-      "Yield farming strategies for 2024! This is not financial advice 📈 #defi #yield #farming",
-    music: {
-      title: "Future Finance",
-      artist: "Crypto Sounds",
-    },
-    stats: {
-      likes: 9800,
-      comments: 321,
-      shares: 156,
-      views: "750K",
-    },
-    hashtags: ["defi", "yield", "farming", "protocol"],
-    videoUrl:
-      "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=400",
-    duration: 60,
-  },
-  {
-    id: "5",
-    user: {
-      id: "5",
-      username: "web3_dev",
-      displayName: "Web3 Developer",
-      avatar: "https://i.pravatar.cc/150?img=5",
-      verified: false,
-    },
-    description:
-      "Building the future of the internet! Check out my latest dApp 🌐 #web3 #blockchain #dapp",
-    music: {
-      title: "Code & Create",
-      artist: "Dev Beats",
-    },
-    stats: {
-      likes: 7200,
-      comments: 189,
-      shares: 95,
-      views: "420K",
-    },
-    hashtags: ["web3", "blockchain", "dapp", "coding"],
-    videoUrl:
-      "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    thumbnail:
-      "https://images.unsplash.com/photo-1639322537228-f710d846310a?w=400",
-    duration: 40,
-  },
-];
 
 const VideoCard: React.FC<{
   video: VideoData;
@@ -916,8 +751,7 @@ const VideoCard: React.FC<{
 
 const Videos: React.FC = () => {
   const { user } = useAuth();
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [videos, setVideos] = useState<VideoData[]>([]);
+  const { allItems, currentIndex, setCurrentIndex, loading, error } = useVideos();
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
@@ -930,27 +764,73 @@ const Videos: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
-  // Create video list with interstitial ads
-  useEffect(() => {
-    const videosWithAds = [];
-    let adCounter = 0;
-
-    for (let i = 0; i < mockVideos.length; i++) {
-      videosWithAds.push(mockVideos[i]);
-
-      // Insert interstitial ad after every 4 videos
-      if ((i + 1) % adSettings.interstitialFrequency === 0 && adSettings.enableAds) {
-        adCounter++;
-        videosWithAds.push({
-          id: `interstitial-ad-${adCounter}`,
-          isAd: true,
-          adType: 'interstitial'
-        } as any);
-      }
+  // Transform ContentItem to VideoData for compatibility with VideoCard
+  const transformToVideoData = (item: any): VideoData => {
+    if (item.isAd) {
+      // Return a placeholder for ad items
+      return {
+        id: item.ad.id,
+        user: {
+          id: "ad",
+          username: "ad",
+          displayName: "Advertisement",
+          avatar: item.ad.image,
+          verified: false,
+        },
+        description: item.ad.description,
+        music: {
+          title: "Ad Music",
+          artist: "Ad Artist",
+        },
+        stats: {
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          views: "0",
+        },
+        hashtags: [],
+        videoUrl: "", // No video for ads
+        thumbnail: item.ad.image,
+        duration: 30,
+        timestamp: "now",
+        category: "Advertisement",
+        isSponsored: true,
+      };
     }
 
-    setVideos(videosWithAds);
-  }, []);
+    // Transform VideoItem to VideoData
+    const videoItem = item as VideoItem;
+    return {
+      id: videoItem.id,
+      user: {
+        id: "user-" + videoItem.id,
+        username: videoItem.author.username,
+        displayName: videoItem.author.name,
+        avatar: videoItem.author.avatar,
+        verified: videoItem.author.verified,
+      },
+      description: videoItem.description,
+      music: {
+        title: "Original Sound",
+        artist: videoItem.author.username,
+      },
+      stats: {
+        likes: videoItem.likes,
+        comments: videoItem.comments,
+        shares: videoItem.shares,
+        views: "100K", // Placeholder - would come from actual data
+      },
+      hashtags: ["video", "trending"], // Placeholder
+      videoUrl: videoItem.url,
+      thumbnail: videoItem.thumbnail,
+      duration: 30, // Placeholder - would come from actual data
+      timestamp: "2h", // Placeholder - would come from actual data
+      category: "Entertainment", // Placeholder - would come from actual data
+      allowDuets: true,
+      allowComments: true,
+      hasCaption: false,
+    };
+  };
 
   // Auto-hide controls after inactivity
   useEffect(() => {
@@ -973,59 +853,22 @@ const Videos: React.FC = () => {
       const newIndex = Math.round(scrollTop / videoHeight);
 
       if (
-        newIndex !== currentVideoIndex &&
+        newIndex !== currentIndex &&
         newIndex >= 0 &&
-        newIndex < videos.length
+        newIndex < allItems.length
       ) {
-        setCurrentVideoIndex(newIndex);
+        setCurrentIndex(newIndex);
       }
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [currentVideoIndex, videos.length]);
+  }, [currentIndex, allItems.length, setCurrentIndex]);
 
   const handleVideoCreated = (videoFile: File, metadata: any) => {
-    // Create new video entry
-    const newVideo: VideoData = {
-      id: `new-${Date.now()}`,
-      user: {
-        id: "current-user",
-        username: "you",
-        displayName: "You",
-        avatar: "https://i.pravatar.cc/150?u=current",
-        verified: false,
-        followerCount: 0,
-      },
-      description: "My new creation! 🎥✨",
-      music: metadata.sound || {
-        title: "Original Sound",
-        artist: "You",
-        id: "original",
-        duration: metadata.duration || 30,
-      },
-      stats: {
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        views: "0",
-        saves: 0,
-      },
-      hashtags: ["NewVideo", "Creative", "Original"],
-      videoUrl: URL.createObjectURL(videoFile),
-      thumbnail:
-        "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=400",
-      duration: metadata.duration || 30,
-      timestamp: "now",
-      category: "Entertainment",
-      allowDuets: true,
-      allowComments: true,
-      hasCaption: false,
-    };
-
-    setVideos((prev) => [newVideo, ...prev]);
+    // In a real implementation, this would add the new video to the list
+    console.log("New video created:", videoFile, metadata);
     setIsAdvancedRecorderOpen(false);
-    setCurrentVideoIndex(0);
   };
 
   const handleHashtagSelect = (hashtag: string) => {
@@ -1056,6 +899,28 @@ const Videos: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading videos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Error loading videos: {error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
       <Helmet>
@@ -1080,7 +945,7 @@ const Videos: React.FC = () => {
                 <Search className="w-5 h-5" />
               </Button>
               <Badge variant="secondary" className="bg-black/40 text-white">
-                {currentVideoIndex + 1} / {videos.length}
+                {currentIndex + 1} / {allItems.length}
               </Badge>
             </div>
 
@@ -1113,11 +978,11 @@ const Videos: React.FC = () => {
         }}
         onClick={() => setShowControls(!showControls)}
       >
-        {videos.map((video, index) => {
+        {allItems.map((item, index) => {
           // Render interstitial ad
-          if ((video as any).isAd) {
+          if (item.isAd) {
             return (
-              <div key={video.id} className="h-screen w-full bg-black snap-start snap-always flex items-center justify-center p-4">
+              <div key={item.ad.id} className="h-screen w-full bg-black snap-start snap-always flex items-center justify-center p-4">
                 <VideoInterstitialAd
                   onClick={() => {
                     console.log('Interstitial ad clicked');
@@ -1129,14 +994,17 @@ const Videos: React.FC = () => {
             );
           }
 
+          // Transform item to VideoData for compatibility
+          const videoData = transformToVideoData(item);
+
           // Render regular video
           return (
             <VideoCard
-              key={video.id}
-              video={video}
-              isActive={index === currentVideoIndex}
+              key={videoData.id}
+              video={videoData}
+              isActive={index === currentIndex}
               showControls={showControls}
-              onVideoElementReady={index === currentVideoIndex ? setCurrentVideoElement : undefined}
+              onVideoElementReady={index === currentIndex ? setCurrentVideoElement : undefined}
             />
           );
         })}

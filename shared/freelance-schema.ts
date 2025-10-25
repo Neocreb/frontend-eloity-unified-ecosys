@@ -203,6 +203,19 @@ export const freelance_profiles = pgTable('freelance_profiles', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// Freelance messages table
+export const freelance_messages = pgTable('freelance_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  project_id: uuid('project_id').notNull().references(() => freelance_projects.id, { onDelete: 'cascade' }),
+  sender_id: uuid('sender_id').notNull().references(() => users.id),
+  content: text('content').notNull(),
+  attachments: jsonb('attachments'),
+  message_type: text('message_type').default('text'), // 'text', 'file', 'milestone', 'payment'
+  read: boolean('read').default(false),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // Relations
 export const freelanceProjectsRelations = relations(freelance_projects, ({ one, many }) => ({
   client: one(users, {
@@ -217,6 +230,7 @@ export const freelanceProjectsRelations = relations(freelance_projects, ({ one, 
   }),
   proposals: many(freelance_proposals),
   contracts: many(freelance_contracts),
+  messages: many(freelance_messages),
 }));
 
 export const freelanceProposalsRelations = relations(freelance_proposals, ({ one, many }) => ({
@@ -345,6 +359,17 @@ export const freelanceSkillsRelations = relations(freelance_skills, ({ many }) =
 export const freelanceProfilesRelations = relations(freelance_profiles, ({ one }) => ({
   user: one(users, {
     fields: [freelance_profiles.user_id],
+    references: [users.id],
+  }),
+}));
+
+export const freelanceMessagesRelations = relations(freelance_messages, ({ one }) => ({
+  project: one(freelance_projects, {
+    fields: [freelance_messages.project_id],
+    references: [freelance_projects.id],
+  }),
+  sender: one(users, {
+    fields: [freelance_messages.sender_id],
     references: [users.id],
   }),
 }));

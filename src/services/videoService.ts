@@ -42,6 +42,14 @@ export interface VideoComment {
   };
 }
 
+interface UserProfile {
+  user_id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string;
+  is_verified?: boolean;
+}
+
 export const videoService = {
   async getVideos(limit: number = 20, offset: number = 0, category?: string): Promise<Video[]> {
     let query = supabase
@@ -61,25 +69,25 @@ export const videoService = {
     if (!data || data.length === 0) return [];
 
     // Get user profiles separately
-    const userIds = Array.from(new Set(data.map(v => v.user_id)));
+    const userIds = Array.from(new Set(data.map((v: any) => v.user_id)));
     const { data: profiles } = await supabase
       .from('profiles')
       .select('user_id, username, full_name, avatar_url, is_verified')
       .in('user_id', userIds);
 
     const profileMap = new Map(
-      (profiles || []).map(p => [p.user_id, p])
+      (profiles || []).map((p: UserProfile) => [p.user_id, p])
     );
 
-    return data.map(video => {
+    return data.map((video: any) => {
       const profile = profileMap.get(video.user_id);
       return {
         ...video,
         user: profile ? {
-          username: profile.username || 'unknown',
-          full_name: profile.full_name || 'Unknown User',
-          avatar_url: profile.avatar_url || '',
-          is_verified: profile.is_verified || false
+          username: (profile as UserProfile).username || 'unknown',
+          full_name: (profile as UserProfile).full_name || 'Unknown User',
+          avatar_url: (profile as UserProfile).avatar_url || '',
+          is_verified: (profile as UserProfile).is_verified || false
         } : undefined
       };
     });
@@ -104,10 +112,10 @@ export const videoService = {
     return {
       ...data,
       user: profile ? {
-        username: profile.username || 'unknown',
-        full_name: profile.full_name || 'Unknown User',
-        avatar_url: profile.avatar_url || '',
-        is_verified: profile.is_verified || false
+        username: (profile as UserProfile).username || 'unknown',
+        full_name: (profile as UserProfile).full_name || 'Unknown User',
+        avatar_url: (profile as UserProfile).avatar_url || '',
+        is_verified: (profile as UserProfile).is_verified || false
       } : undefined
     };
   },
@@ -233,24 +241,24 @@ export const videoService = {
     if (!data || data.length === 0) return [];
 
     // Get user profiles separately
-    const userIds = Array.from(new Set(data.map(c => c.user_id)));
+    const userIds = Array.from(new Set(data.map((c: any) => c.user_id)));
     const { data: profiles } = await supabase
       .from('profiles')
       .select('user_id, username, full_name, avatar_url')
       .in('user_id', userIds);
 
     const profileMap = new Map(
-      (profiles || []).map(p => [p.user_id, p])
+      (profiles || []).map((p: UserProfile) => [p.user_id, p])
     );
 
-    return data.map(comment => {
+    return data.map((comment: any) => {
       const profile = profileMap.get(comment.user_id);
       return {
         ...comment,
         user: profile ? {
-          username: profile.username || 'unknown',
-          full_name: profile.full_name || 'Unknown User',
-          avatar_url: profile.avatar_url || ''
+          username: (profile as UserProfile).username || 'unknown',
+          full_name: (profile as UserProfile).full_name || 'Unknown User',
+          avatar_url: (profile as UserProfile).avatar_url || ''
         } : undefined
       };
     });
