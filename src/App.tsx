@@ -64,10 +64,6 @@ import JobDetailPage from "./pages/freelance/JobDetailPage";
 import Inbox from "./chat/Inbox";
 import ChatRoom from "./pages/ChatRoom";
 import SimpleChatRoom from "./pages/SimpleChatRoom";
-import ChatTest from "./pages/ChatTest";
-import ChatDemo from "./pages/ChatDemo";
-import WhatsAppChatDemo from "./pages/WhatsAppChatDemo";
-import ChatMobileTest from "./pages/ChatMobileTest";
 import EnhancedProfile from "./pages/EnhancedProfile";
 import UnifiedProfile from "./pages/UnifiedProfile";
 import ProfileStats from "./pages/profile/ProfileStats";
@@ -440,14 +436,14 @@ const AppRoutes = () => {
           <Route path="freelance/profile/:username" element={<FreelancerProfile />} />
           <Route path="chat" element={<Chat />} />
           <Route path="chat/:threadId" element={<ChatRoom />} />
-          <Route path="chat-test/:threadId" element={<ChatTest />} />
+          {/* <Route path="chat-test/:threadId" element={<ChatTest />} /> */}
           <Route path="chat-simple/:threadId" element={<SimpleChatRoom />} />
           <Route
             path="messages"
             element={<Navigate to="/app/chat" replace />}
           />
           <Route path="messages/:threadId" element={<MessagesRedirect />} />
-          <Route path="chat-demo" element={<ChatDemo />} />
+          {/* <Route path="chat-demo" element={<ChatDemo />} /> */}
           <Route path="profile" element={<EnhancedProfile />} />
           <Route path="profile/:username" element={<EnhancedProfile />} />
           <Route path="profile/:username/stats" element={<ProfileStats />} />
@@ -593,8 +589,6 @@ const AppRoutes = () => {
           <Route path="route-test" element={<RouteTest />} />
           <Route path="enhanced-freelance-demo" element={<EnhancedDashboardDemo userType="freelancer" />} />
           <Route path="enhanced-client-demo" element={<EnhancedDashboardDemo userType="client" />} />
-          <Route path="whatsapp-chat-demo" element={<WhatsAppChatDemo />} />
-          <Route path="chat-mobile-test" element={<ChatMobileTest />} />
           <Route path="currency-demo" element={<CurrencyDemo />} />
           <Route
             path="ai-assistant"
