@@ -120,11 +120,7 @@ const DuetRecorder: React.FC<DuetRecorderProps> = ({
           frameRate: { ideal: 30 },
           facingMode: 'user'
         },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
+        audio: true
       });
 
       if (result.error) {
@@ -508,7 +504,7 @@ const DuetRecorder: React.FC<DuetRecorderProps> = ({
 
               <div className="flex gap-3">
                 <Button
-                  onClick={retryPermissions}
+                  onClick={initializeMedia}
                   className="flex-1"
                   variant="default"
                 >

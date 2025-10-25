@@ -44,7 +44,6 @@ import AppLayout from "./components/layout/AppLayout";
 import Auth from "./pages/Auth";
 import Join from "./pages/Join";
 import Home from "./pages/Home";
-import EnhancedFeed from "./pages/EnhancedFeed";
 import EnhancedFeedWithTabs from "./pages/EnhancedFeedWithTabs";
 import EnhancedFreelance from "./pages/EnhancedFreelance";
 import FreelanceJobs from "./pages/freelance/FreelanceJobs";
@@ -147,12 +146,7 @@ import AdminSystem from "./pages/admin/AdminSystem";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 
-import EnhancedVideosV2 from "./pages/EnhancedVideosV2";
-import TikTokStyleVideos from "./pages/TikTokStyleVideos";
-import EnhancedTikTokVideos from "./pages/EnhancedTikTokVideos";
-// import FeedWithFollowDemo from "./pages/FeedWithFollowDemo";
 import EnhancedTikTokVideosV3 from "./pages/EnhancedTikTokVideosV3";
-import DuetDemo from "./pages/DuetDemo";
 import CameraPermissionTest from "./components/debug/CameraPermissionTest";
 import FreelanceDashboardRouteTest from "./components/debug/FreelanceDashboardRouteTest";
 import RouteTest from "./components/debug/RouteTest";
@@ -216,7 +210,6 @@ import AdChoices from "./pages/AdChoices";
 import MonetizationPolicy from "./pages/MonetizationPolicy";
 import Premium from "./pages/Premium";
 import CampaignCenter from "./components/campaigns/CampaignCenter";
-import MemeGifDemo from "./pages/MemeGifDemo";
 import MemeGifTest from "./components/debug/MemeGifTest";
 
 // Import missing components
@@ -335,7 +328,8 @@ const AppRoutes = () => {
       <Route path="/test" element={<TestComponent />} />
       <Route path="/supabase-debug" element={<SupabaseDebug />} />
       <Route path="/home" element={<Home />} />
-      <Route path="/meme-gif-demo" element={<MemeGifDemo />} />
+      {/* Commented out route for missing MemeGifDemo component */}
+      {/* <Route path="/meme-gif-demo" element={<MemeGifDemo />} /> */}
       <Route path="/meme-gif-test" element={<MemeGifTest />} />
 
       {/* Public Blog routes - accessible to everyone */}
@@ -533,7 +527,8 @@ const AppRoutes = () => {
           <Route path="rewards" element={<EnhancedRewards />} />
           <Route path="videos" element={<EnhancedTikTokVideosV3 />} />
           <Route path="videos/:videoId" element={<VideoDetail />} />
-          <Route path="duet-demo" element={<DuetDemo />} />
+          {/* Commented out route for missing DuetDemo component */}
+          {/* <Route path="duet-demo" element={<DuetDemo />} /> */}
           <Route path="explore" element={<Explore />} />
           <Route path="global-search" element={<GlobalSearch />} />
           <Route path="events" element={<CommunityEvents />} />

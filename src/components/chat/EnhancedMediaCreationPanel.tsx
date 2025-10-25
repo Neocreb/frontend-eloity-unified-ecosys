@@ -5,14 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera,
-  Video,
-  Upload,
-  Sparkles,
-  Download,
-  X,
-  ImageIcon,
-  Scissors,
-  Wand2,
+  Image,
   Palette,
   Crown,
   Zap,
@@ -23,8 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { requestCameraAccess, stopCameraStream } from "@/utils/cameraPermissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { useUserCollections } from "@/contexts/UserCollectionsContext";
 import { useUserPremiumStatus } from "@/hooks/useUserPremiumStatus";
 import PremiumGate from "@/components/premium/PremiumGate";
