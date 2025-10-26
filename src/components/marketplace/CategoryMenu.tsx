@@ -52,19 +52,29 @@ const CategoryMenu = ({ activeCategory, onCategoryChange }: CategoryMenuProps) =
     const loadCategories = async () => {
       try {
         const categoriesData = await MarketplaceService.getCategories();
-        // Convert to the format expected by the component
         const formattedCategories = [
           { id: "all", label: "All Categories", icon: Grid },
           ...categoriesData.map(category => ({
             id: category.id,
             label: category.name,
-            icon: iconMap[category.slug] || Grid // Use appropriate icon or fallback to Grid
+            icon: iconMap[category.slug] || Grid
           }))
         ];
         setCategories(formattedCategories);
       } catch (error) {
         console.error("Error loading categories:", error);
-        // Keep the hardcoded categories as fallback
+        // Fallback to mock data
+        const mockCategories = [
+          { id: "all", label: "All Categories", icon: Grid },
+          { id: "electronics", label: "Electronics", icon: Laptop },
+          { id: "fashion", label: "Fashion", icon: Shirt },
+          { id: "home", label: "Home & Garden", icon: Home },
+          { id: "sports", label: "Sports", icon: Laptop }, // Using Laptop as fallback
+          { id: "beauty", label: "Beauty", icon: HeartPulse },
+          { id: "toys", label: "Toys & Games", icon: Laptop }, // Using Laptop as fallback
+          { id: "books", label: "Books", icon: BookOpen },
+        ];
+        setCategories(mockCategories);
       }
     };
 

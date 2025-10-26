@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import { useMarketplace } from "@/contexts/MarketplaceContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { MarketplaceService } from "@/services/marketplaceService";
 
 interface SponsoredProductsProps {
   onAddToCart: (productId: string) => void;
@@ -16,9 +18,32 @@ const SponsoredProducts = ({
   location = "homepage",
   limit = 4,
 }: SponsoredProductsProps) => {
-  const { sponsoredProducts, setActiveProduct } = useMarketplace();
+  const { setActiveProduct } = useMarketplace();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [sponsoredProducts, setSponsoredProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load real sponsored products
+  useEffect(() => {
+    const loadSponsoredProducts = async () => {
+      try {
+        setLoading(true);
+        const sponsoredData = await MarketplaceService.getSponsoredProducts();
+        // Filter for active sponsored products
+        const activeSponsored = sponsoredData.filter((sp: any) => sp.is_active);
+        setSponsoredProducts(activeSponsored);
+      } catch (error) {
+        console.error("Error loading sponsored products:", error);
+        // Fallback to empty array
+        setSponsoredProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSponsoredProducts();
+  }, []);
 
   // Take a random subset if we have more than the limit
   const displayProducts =
@@ -43,6 +68,14 @@ const SponsoredProducts = ({
 
     navigate("/app/chat");
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (displayProducts.length === 0) {
     return null;

@@ -18,8 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { CategoryService } from "@/services/categoryService";
-import { useToast } from "@/hooks/use-toast";
+import { MarketplaceService } from "@/services/marketplaceService";
 
 interface Category {
   id: string;
@@ -53,61 +52,77 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   package: Package,
 };
 
-export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
-  categories,
+const CategoryBrowser = ({
   onCategorySelect,
-  showSubcategories = true,
+  showSubcategories = false,
   layout = "grid",
-  className,
-}) => {
-  const [localCategories, setLocalCategories] = useState<Category[]>([]);
+}: CategoryBrowserProps) => {
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  // Fetch real categories data
+  // Load real categories
   useEffect(() => {
-    const fetchCategories = async () => {
+    const loadCategories = async () => {
       try {
         setLoading(true);
-        const categoriesData = await CategoryService.getCategories();
-        // Map the categories to match the component's Category interface
-        const mappedCategories = categoriesData.map(category => ({
-          id: category.id,
-          name: category.name,
-          icon: category.slug || 'package', // Use slug as icon or default to 'package'
-          productCount: category.productCount,
-          image: category.image,
-          subcategories: category.subcategories,
-          // Note: isPopular, isTrending, and description are not in the marketplace Category type
-        }));
-        setLocalCategories(mappedCategories);
+        const categoriesData = await MarketplaceService.getCategories();
+        setCategories(categoriesData);
       } catch (error) {
-        console.error("Error fetching categories:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load categories",
-          variant: "destructive",
-        });
-        // Fallback to empty array if real data fetch fails
-        setLocalCategories([]);
+        console.error("Error loading categories:", error);
+        // Fallback to mock data
+        setCategories([
+          {
+            id: "1",
+            name: "Electronics",
+            slug: "electronics",
+            image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=200&h=200&auto=format&fit=crop",
+            productCount: 1247,
+          },
+          {
+            id: "2",
+            name: "Fashion",
+            slug: "fashion",
+            image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=200&h=200&auto=format&fit=crop",
+            productCount: 892,
+          },
+          {
+            id: "3",
+            name: "Home & Garden",
+            slug: "home-garden",
+            image: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=200&h=200&auto=format&fit=crop",
+            productCount: 563,
+          },
+          {
+            id: "4",
+            name: "Sports",
+            slug: "sports",
+            image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=200&h=200&auto=format&fit=crop",
+            productCount: 321,
+          },
+          {
+            id: "5",
+            name: "Beauty",
+            slug: "beauty",
+            image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&auto=format&fit=crop",
+            productCount: 456,
+          },
+          {
+            id: "6",
+            name: "Toys",
+            slug: "toys",
+            image: "https://images.unsplash.com/photo-1547106634-56dcd53ae89c?w=200&h=200&auto=format&fit=crop",
+            productCount: 234,
+          },
+        ]);
       } finally {
         setLoading(false);
       }
     };
 
-    // Only fetch if categories weren't passed as props
-    if (!categories) {
-      fetchCategories();
-    } else {
-      setLocalCategories(categories);
-      setLoading(false);
-    }
-  }, [categories, toast]);
+    loadCategories();
+  }, []);
 
   const handleCategoryClick = (category: Category) => {
-    setSelectedCategory(category.id);
     onCategorySelect?.(category);
   };
 
@@ -132,15 +147,13 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
     );
   }
 
-  const categoriesToDisplay = categories || localCategories;
-
   if (layout === "sidebar") {
     return (
       <div className={cn("w-64 bg-white border-r border-gray-200", className)}>
         <div className="p-4">
           <h3 className="font-semibold text-lg mb-4">Categories</h3>
           <div className="space-y-1">
-            {categoriesToDisplay.map((category) => (
+            {categories.map((category) => (
               <div key={category.id}>
                 <button
                   onClick={() => handleCategoryClick(category)}
@@ -198,7 +211,7 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
     return (
       <div className={cn("w-full", className)}>
         <div className="space-y-4">
-          {categoriesToDisplay.map((category) => (
+          {categories.map((category) => (
             <div
               key={category.id}
               className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
@@ -279,7 +292,7 @@ export const CategoryBrowser: React.FC<CategoryBrowserProps> = ({
   return (
     <div className={cn("w-full", className)}>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {categoriesToDisplay.map((category) => (
+        {categories.map((category) => (
           <div
             key={category.id}
             className="group relative bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"

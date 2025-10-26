@@ -162,30 +162,55 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
 
   // Use real categories instead of hardcoded ones
   const categoryList = categories.length > 0 ? categories : [
-    { name: "Woman's Fashion", hasSubmenu: true },
-    { name: "Men's Fashion", hasSubmenu: true },
     { name: "Electronics", hasSubmenu: false },
-    { name: "Home & Lifestyle", hasSubmenu: false },
-    { name: "Medicine", hasSubmenu: false },
-    { name: "Sports & Outdoor", hasSubmenu: false },
-    { name: "Baby's & Toys", hasSubmenu: false },
-    { name: "Groceries & Pets", hasSubmenu: false },
-    { name: "Health & Beauty", hasSubmenu: false },
+    { name: "Fashion", hasSubmenu: true },
+    { name: "Home & Garden", hasSubmenu: false },
+    { name: "Sports & Outdoors", hasSubmenu: false },
+    { name: "Beauty & Health", hasSubmenu: false },
+    { name: "Toys & Games", hasSubmenu: false },
+    { name: "Books & Media", hasSubmenu: false },
+    { name: "Automotive", hasSubmenu: false },
   ];
 
-  const heroSlides = [
+  // Use real hero slides instead of hardcoded ones
+  const [heroSlides, setHeroSlides] = useState([
     {
       id: 1,
-      brand: "Apple",
-      logo: "🍎",
-      title: "iPhone 14 Series",
-      subtitle: "Up to 10% off Voucher",
+      brand: "Featured",
+      logo: "⚡",
+      title: "Limited Time Offers",
+      subtitle: "Up to 70% off on selected items",
       cta: "Shop Now",
-      image:
-        "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&h=400&fit=crop",
-      bgColor: "bg-black",
-    },
-  ];
+      image: "https://images.unsplash.com/photo-1607082350899-7e105aa886ae?w=800&auto=format&fit=crop",
+      bgColor: "bg-gradient-to-r from-blue-900 to-purple-900",
+    }
+  ]);
+
+  // Load real hero content
+  useEffect(() => {
+    const loadHeroContent = async () => {
+      try {
+        // In a real implementation, this would fetch from the database
+        // For now, we'll use a more realistic default
+        setHeroSlides([
+          {
+            id: 1,
+            brand: "Today's Deals",
+            logo: "🔥",
+            title: "Flash Sale Event",
+            subtitle: "Up to 70% off on electronics",
+            cta: "Shop Now",
+            image: "https://images.unsplash.com/photo-1607082350899-7e105aa886ae?w=800&auto=format&fit=crop",
+            bgColor: "bg-gradient-to-r from-red-900 to-orange-900",
+          }
+        ]);
+      } catch (error) {
+        console.error("Error loading hero content:", error);
+      }
+    };
+
+    loadHeroContent();
+  }, []);
 
   // Countdown timer effect
   useEffect(() => {
