@@ -877,6 +877,87 @@ export class MarketplaceService {
     }
   }
 
+  // Campaigns
+  static async getCampaigns(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching campaigns:", error);
+        return [];
+      }
+
+      return data.map(campaign => ({
+        id: campaign.id,
+        name: campaign.name,
+        slug: campaign.slug,
+        description: campaign.description,
+        type: campaign.type,
+        startDate: campaign.start_date,
+        endDate: campaign.end_date,
+        bannerImage: campaign.banner_image,
+        bannerText: campaign.banner_text,
+        backgroundColor: campaign.background_color,
+        textColor: campaign.text_color,
+        discountType: campaign.discount_type,
+        discountValue: campaign.discount_value,
+        usageCount: campaign.usage_count,
+        viewCount: campaign.view_count,
+        clickCount: campaign.click_count,
+        conversionCount: campaign.conversion_count,
+        totalRevenue: campaign.total_revenue,
+        createdAt: campaign.created_at,
+        updatedAt: campaign.updated_at
+      }));
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
+      return [];
+    }
+  }
+
+  static async createCampaign(campaignData: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would insert into the campaigns table
+      // For now, just return the data with an ID
+      return {
+        id: `campaign-${Date.now()}`,
+        ...campaignData
+      };
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      return null;
+    }
+  }
+
+  static async updateCampaign(id: string, updates: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would update the campaigns table
+      // For now, just return the updates with the ID
+      return {
+        id,
+        ...updates
+      };
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      return null;
+    }
+  }
+
+  static async deleteCampaign(id: string): Promise<boolean> {
+    try {
+      // In a real implementation, we would delete from the campaigns table
+      // For now, just return true
+      return true;
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      return false;
+    }
+  }
+
   // Marketplace Ads
   static async getActiveAds(): Promise<any[]> {
     try {

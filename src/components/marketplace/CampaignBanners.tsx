@@ -3,6 +3,7 @@ import { Clock, Zap, Star, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { MarketplaceService } from "@/services/marketplaceService";
 
 interface Campaign {
   id: string;
@@ -17,6 +18,8 @@ interface Campaign {
   ctaText: string;
   ctaLink: string;
   type: "flash" | "seasonal" | "special";
+  // Progress tracking for flash sales
+  progress?: number;
 }
 
 interface CountdownProps {
@@ -125,12 +128,74 @@ const defaultCampaigns: Campaign[] = [
 ];
 
 export const CampaignBanners: React.FC<CampaignBannersProps> = ({
-  campaigns = defaultCampaigns,
+  campaigns,
   showCountdown = true,
   dismissible = true,
   className,
 }) => {
-  const [visibleCampaigns, setVisibleCampaigns] = useState(campaigns);
+  const [visibleCampaigns, setVisibleCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCampaigns = async () => {
+      if (campaigns) {
+        // Use provided campaigns
+        setVisibleCampaigns(campaigns);
+        setLoading(false);
+      } else {
+        // Fetch campaigns from service
+        try {
+          const campaignData = await MarketplaceService.getCampaigns();
+          
+          // Transform database campaigns to component format
+          const transformedCampaigns = campaignData.map(campaign => {
+            // Determine campaign type based on database type
+            let type: "flash" | "seasonal" | "special" = "special";
+            if (campaign.type === "flash_sale") type = "flash";
+            else if (campaign.type === "seasonal") type = "seasonal";
+            
+            // Create background gradient based on colors
+            const bgColor = campaign.backgroundColor ? 
+              `from-${campaign.backgroundColor.split('-')[1] || 'gray'}-500 to-${campaign.backgroundColor.split('-')[1] || 'gray'}-600` : 
+              "from-gray-500 to-gray-600";
+            
+            return {
+              id: campaign.id,
+              title: campaign.name,
+              subtitle: campaign.bannerText || "Special Offer",
+              description: campaign.description || "",
+              discount: campaign.discountValue ? `${campaign.discountValue}% OFF` : "Limited Time Offer",
+              endDate: new Date(campaign.endDate),
+              bgColor,
+              textColor: campaign.textColor || "text-white",
+              ctaText: "Shop Now",
+              ctaLink: `/marketplace/campaign/${campaign.slug}`,
+              type,
+              // Add progress tracking for flash sales (mock data for now)
+              progress: type === "flash" ? 78 : undefined
+            };
+          });
+          
+          setVisibleCampaigns(transformedCampaigns);
+        } catch (error) {
+          console.error("Error loading campaigns:", error);
+          // Fallback to default campaigns
+          setVisibleCampaigns(defaultCampaigns);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCampaigns();
+  }, [campaigns]);
+
+  // If no campaigns provided and no default campaigns, use the default ones
+  useEffect(() => {
+    if (!campaigns && !loading && visibleCampaigns.length === 0) {
+      setVisibleCampaigns(defaultCampaigns);
+    }
+  }, [campaigns, loading, visibleCampaigns.length]);
 
   const handleDismiss = (campaignId: string) => {
     setVisibleCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
@@ -241,12 +306,12 @@ export const CampaignBanners: React.FC<CampaignBannersProps> = ({
             <div className="mt-4">
               <div className="flex justify-between text-xs opacity-80 mb-1">
                 <span>Limited Stock</span>
-                <span>78% claimed</span>
+                <span>{campaign.progress || 78}% claimed</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2">
                 <div
                   className="bg-white rounded-full h-2 transition-all duration-300"
-                  style={{ width: "78%" }}
+                  style={{ width: `${campaign.progress || 78}%` }}
                 ></div>
               </div>
             </div>

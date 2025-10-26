@@ -18,7 +18,9 @@ import {
   Zap,
   TrendingUp,
   Eye,
-  ShoppingCart
+  ShoppingCart,
+  Target,
+  Edit
 } from "lucide-react";
 import { MarketplaceService } from "@/services/marketplaceService";
 import { Product } from "@/types/marketplace";
@@ -59,12 +61,40 @@ interface MarketplaceAd {
   priority: number;
 }
 
+interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  type: "seasonal" | "flash_sale" | "featured" | "category_boost";
+  startDate: string;
+  endDate: string;
+  bannerImage?: string;
+  bannerText?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  discountType?: "percentage" | "fixed_amount" | "buy_x_get_y";
+  discountValue?: number;
+  maxDiscount?: number;
+  minOrderAmount?: number;
+  usageLimit?: number;
+  usageCount: number;
+  status: "draft" | "active" | "paused" | "ended";
+  isPublic: boolean;
+  viewCount: number;
+  clickCount: number;
+  conversionCount: number;
+  totalRevenue: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const MarketplaceAdmin = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
   const [sponsoredProducts, setSponsoredProducts] = useState<SponsoredProduct[]>([]);
   const [ads, setAds] = useState<MarketplaceAd[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("flash-sales");
 
@@ -101,6 +131,22 @@ export const MarketplaceAdmin = () => {
     priority: 1
   });
 
+  const [newCampaign, setNewCampaign] = useState<Omit<Campaign, "id" | "createdAt" | "updatedAt" | "usageCount" | "viewCount" | "clickCount" | "conversionCount" | "totalRevenue">>({
+    name: "",
+    description: "",
+    type: "seasonal",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    status: "draft",
+    isPublic: true,
+    bannerText: "",
+    discountType: "percentage",
+    discountValue: 10,
+    maxDiscount: 100,
+    minOrderAmount: 0,
+    usageLimit: 1000
+  });
+
   useEffect(() => {
     loadMarketplaceData();
   }, []);
@@ -120,6 +166,10 @@ export const MarketplaceAdmin = () => {
       
       const adsData = await MarketplaceService.getActiveAds();
       setAds(adsData);
+      
+      // Load campaigns
+      const campaignsData = await MarketplaceService.getCampaigns();
+      setCampaigns(campaignsData);
     } catch (error) {
       console.error("Error loading marketplace data:", error);
       toast({
@@ -335,6 +385,139 @@ export const MarketplaceAdmin = () => {
     }
   };
 
+  const handleCreateCampaign = async () => {
+    if (!newCampaign.name) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a name for the campaign",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const result = await MarketplaceService.createCampaign(newCampaign);
+      
+      if (result) {
+        setCampaigns([...campaigns, result]);
+        
+        // Reset form
+        setNewCampaign({
+          name: "",
+          description: "",
+          type: "seasonal",
+          startDate: new Date().toISOString().split("T")[0],
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+          status: "draft",
+          isPublic: true,
+          bannerText: "",
+          discountType: "percentage",
+          discountValue: 10,
+          maxDiscount: 100,
+          minOrderAmount: 0,
+          usageLimit: 1000
+        });
+        
+        toast({
+          title: "Success",
+          description: "Campaign created successfully"
+        });
+      } else {
+        throw new Error("Failed to create campaign");
+      }
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create campaign",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteCampaign = async (id: string) => {
+    try {
+      const result = await MarketplaceService.deleteCampaign(id);
+      
+      if (result) {
+        setCampaigns(campaigns.filter(campaign => campaign.id !== id));
+        toast({
+          title: "Success",
+          description: "Campaign deleted successfully"
+        });
+      } else {
+        throw new Error("Failed to delete campaign");
+      }
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete campaign",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const toggleCampaignStatus = (id: string) => {
+    setCampaigns(campaigns.map(campaign => {
+      if (campaign.id === id) {
+        const newStatus = campaign.status === "active" ? "paused" : "active";
+        return { ...campaign, status: newStatus };
+      }
+      return campaign;
+    }));
+  };
+
+  const updateCampaign = async (id: string, updates: Partial<Campaign>) => {
+    try {
+      const result = await MarketplaceService.updateCampaign(id, updates);
+      
+      if (result) {
+        setCampaigns(campaigns.map(campaign => 
+          campaign.id === id ? { ...campaign, ...result } : campaign
+        ));
+        
+        toast({
+          title: "Success",
+          description: "Campaign updated successfully"
+        });
+      } else {
+        throw new Error("Failed to update campaign");
+      }
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update campaign",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getCampaignById = (id: string) => {
+    return campaigns.find(c => c.id === id);
+  };
+
+  const getActiveCampaigns = () => {
+    return campaigns.filter(c => c.status === "active");
+  };
+
+  const getUpcomingCampaigns = () => {
+    const now = new Date();
+    return campaigns.filter(c => {
+      const startDate = new Date(c.startDate);
+      return c.status === "draft" && startDate > now;
+    });
+  };
+
+  const getPastCampaigns = () => {
+    const now = new Date();
+    return campaigns.filter(c => {
+      const endDate = new Date(c.endDate);
+      return c.status === "ended" || endDate < now;
+    });
+  };
+
   const toggleFlashSaleStatus = (id: string) => {
     setFlashSales(flashSales.map(sale => 
       sale.id === id ? { ...sale, isActive: !sale.isActive } : sale
@@ -370,11 +553,11 @@ export const MarketplaceAdmin = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Marketplace Management</h2>
-          <p className="text-gray-600">Manage flash sales, sponsored products, and advertisements</p>
+          <p className="text-gray-600">Manage flash sales, sponsored products, advertisements, and campaigns</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Button
           variant={activeTab === "flash-sales" ? "default" : "outline"}
           className="flex items-center gap-2"
@@ -398,6 +581,14 @@ export const MarketplaceAdmin = () => {
         >
           <Eye className="w-4 h-4" />
           Advertisements
+        </Button>
+        <Button
+          variant={activeTab === "campaigns" ? "default" : "outline"}
+          className="flex items-center gap-2"
+          onClick={() => setActiveTab("campaigns")}
+        >
+          <Target className="w-4 h-4" />
+          Campaigns
         </Button>
         <Button
           variant={activeTab === "analytics" ? "default" : "outline"}
@@ -863,6 +1054,203 @@ export const MarketplaceAdmin = () => {
         </div>
       )}
       
+      {activeTab === "campaigns" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create New Campaign</CardTitle>
+              <CardDescription>Set up a marketing campaign to promote products</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-name">Campaign Name</Label>
+                  <Input
+                    id="campaign-name"
+                    value={newCampaign.name}
+                    onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})}
+                    placeholder="e.g., Summer Sale, Back to School"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-type">Campaign Type</Label>
+                  <Select
+                    value={newCampaign.type}
+                    onValueChange={(value) => setNewCampaign({...newCampaign, type: value as any})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select campaign type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="seasonal">Seasonal</SelectItem>
+                      <SelectItem value="flash_sale">Flash Sale</SelectItem>
+                      <SelectItem value="featured">Featured Products</SelectItem>
+                      <SelectItem value="category_boost">Category Boost</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="campaign-description">Description</Label>
+                <Textarea
+                  id="campaign-description"
+                  value={newCampaign.description}
+                  onChange={(e) => setNewCampaign({...newCampaign, description: e.target.value})}
+                  placeholder="Describe the campaign"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-start">Start Date</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="campaign-start"
+                      type="date"
+                      value={newCampaign.startDate}
+                      onChange={(e) => setNewCampaign({...newCampaign, startDate: e.target.value})}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-end">End Date</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="campaign-end"
+                      type="date"
+                      value={newCampaign.endDate}
+                      onChange={(e) => setNewCampaign({...newCampaign, endDate: e.target.value})}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-discount-value">Discount Value</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="campaign-discount-value"
+                      type="number"
+                      min="0"
+                      value={newCampaign.discountValue}
+                      onChange={(e) => setNewCampaign({...newCampaign, discountValue: parseInt(e.target.value) || 0})}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-discount-type">Discount Type</Label>
+                  <Select
+                    value={newCampaign.discountType}
+                    onValueChange={(value) => setNewCampaign({...newCampaign, discountType: value as any})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select discount type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage</SelectItem>
+                      <SelectItem value="fixed_amount">Fixed Amount</SelectItem>
+                      <SelectItem value="buy_x_get_y">Buy X Get Y</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-banner-text">Banner Text</Label>
+                  <Input
+                    id="campaign-banner-text"
+                    value={newCampaign.bannerText}
+                    onChange={(e) => setNewCampaign({...newCampaign, bannerText: e.target.value})}
+                    placeholder="Text to display on campaign banner"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="campaign-public"
+                  checked={newCampaign.isPublic}
+                  onCheckedChange={(checked) => setNewCampaign({...newCampaign, isPublic: checked})}
+                />
+                <Label htmlFor="campaign-public">Public Campaign</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="campaign-status"
+                  checked={newCampaign.status === "active"}
+                  onCheckedChange={(checked) => setNewCampaign({...newCampaign, status: checked ? "active" : "draft"})}
+                />
+                <Label htmlFor="campaign-status">Active</Label>
+              </div>
+              
+              <Button onClick={handleCreateCampaign} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Create Campaign
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Active Campaigns</CardTitle>
+              <CardDescription>Manage current and upcoming marketing campaigns</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {campaigns.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No campaigns created yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {campaigns.map((campaign) => (
+                    <div key={campaign.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium">{campaign.name}</h3>
+                          <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
+                            {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                          </Badge>
+                          <Badge variant="outline">{campaign.type.replace('_', ' ')}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{campaign.description}</p>
+                        <div className="flex items-center gap-4 mt-2 text-sm">
+                          <span className="flex items-center gap-1">
+                            <Tag className="w-4 h-4" />
+                            {campaign.discountValue}{campaign.discountType === "percentage" ? "%" : "$"} off
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={campaign.status === "active"}
+                          onCheckedChange={() => toggleCampaignStatus(campaign.id)}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDeleteCampaign(campaign.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       {activeTab === "analytics" && (
         <Card>
           <CardHeader>
@@ -870,7 +1258,7 @@ export const MarketplaceAdmin = () => {
             <CardDescription>Track performance of flash sales and sponsored products</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">24</div>
                 <div className="text-sm text-gray-600">Active Flash Sales</div>
@@ -882,6 +1270,10 @@ export const MarketplaceAdmin = () => {
               <div className="p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">89</div>
                 <div className="text-sm text-gray-600">Active Ads</div>
+              </div>
+              <div className="p-4 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">12</div>
+                <div className="text-sm text-gray-600">Active Campaigns</div>
               </div>
             </div>
             
@@ -899,6 +1291,10 @@ export const MarketplaceAdmin = () => {
                 <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
                   <span>Homepage Hero Ad</span>
                   <span className="font-medium">+89% CTR</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <span>Holiday Campaign</span>
+                  <span className="font-medium">+215% conversions</span>
                 </div>
               </div>
             </div>

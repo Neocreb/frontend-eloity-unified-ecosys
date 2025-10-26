@@ -26,6 +26,7 @@ import ProductQuickView from "@/components/marketplace/ProductQuickView";
 import ResponsiveProductCarousel from "@/components/marketplace/ResponsiveProductCarousel";
 import CategoryBrowser from "@/components/marketplace/CategoryBrowser";
 import SmartRecommendations from "@/components/marketplace/SmartRecommendations";
+import { CampaignBanners } from "@/components/marketplace/CampaignBanners";
 
 import { MarketplaceService } from "@/services/marketplaceService";
 import { Product } from "@/types/marketplace";
@@ -292,6 +293,11 @@ const MarketplaceHomepage: React.FC = () => {
             <ChevronDown className="w-4 h-4" />
           </div>
         </div>
+      </div>
+
+      {/* Campaign Banners */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <CampaignBanners showCountdown={true} dismissible={true} />
       </div>
 
       {/* Main Content */}
