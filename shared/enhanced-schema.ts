@@ -550,3 +550,61 @@ export const userRewardsRelations = relations(user_rewards, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Flash Sales table
+export const flash_sales = pgTable('flash_sales', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  description: text('description'),
+  discount_percentage: integer('discount_percentage').notNull(),
+  start_date: timestamp('start_date').notNull(),
+  end_date: timestamp('end_date').notNull(),
+  is_active: boolean('is_active').default(true),
+  featured_product_ids: jsonb('featured_product_ids'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Sponsored Products table
+export const sponsored_products = pgTable('sponsored_products', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  product_id: uuid('product_id').notNull(),
+  title: text('title').notNull(),
+  start_date: timestamp('start_date').notNull(),
+  end_date: timestamp('end_date').notNull(),
+  is_active: boolean('is_active').default(true),
+  boost_level: text('boost_level').default('basic'), // basic, premium, featured
+  position: integer('position').default(1),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Marketplace Ads table
+export const marketplace_ads = pgTable('marketplace_ads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  description: text('description'),
+  image_url: text('image_url').notNull(),
+  target_url: text('target_url').notNull(),
+  start_date: timestamp('start_date').notNull(),
+  end_date: timestamp('end_date').notNull(),
+  is_active: boolean('is_active').default(true),
+  position: text('position').default('hero'), // hero, sidebar, footer, product_page
+  priority: integer('priority').default(1),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Relations for flash sales
+export const flashSalesRelations = relations(flash_sales, ({ }) => ({}));
+
+// Relations for sponsored products
+export const sponsoredProductsRelations = relations(sponsored_products, ({ one }) => ({
+  product: one(products, {
+    fields: [sponsored_products.product_id],
+    references: [products.id],
+  }),
+}));
+
+// Relations for marketplace ads
+export const marketplaceAdsRelations = relations(marketplace_ads, ({ }) => ({}));

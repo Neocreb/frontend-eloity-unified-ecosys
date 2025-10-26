@@ -19,6 +19,7 @@ import { ComprehensiveFeatureShowcase } from "@/components/admin/ComprehensiveFe
 import { WalletWidget } from "@/components/wallet/WalletWidget";
 import { PremiumStatusWidget } from "@/components/premium/PremiumStatusWidget";
 import { ApiHealthChecker } from "@/components/admin/ApiHealthChecker";
+import { MarketplaceAdmin } from "@/components/admin/MarketplaceAdmin";
 import {
   BarChart,
   Bar,
@@ -911,111 +912,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="marketplace" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ShoppingCart className="w-5 h-5" />
-                    Marketplace Analytics
-                  </CardTitle>
-                  <CardDescription>
-                    Sales performance and product metrics
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-green-50 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-green-600">
-                          $12.5K
-                        </p>
-                        <p className="text-sm text-gray-600">Today's Sales</p>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-blue-600">89</p>
-                        <p className="text-sm text-gray-600">Orders</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Top Categories</p>
-                      <div className="space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Electronics</span>
-                          <span className="text-sm font-medium">45%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Fashion</span>
-                          <span className="text-sm font-medium">32%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Home & Garden</span>
-                          <span className="text-sm font-medium">23%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Flag className="w-5 h-5" />
-                    Product Reviews & Disputes
-                  </CardTitle>
-                  <CardDescription>
-                    Content moderation and dispute resolution
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      {
-                        product: "Wireless Headphones",
-                        issue: "Quality complaint",
-                        priority: "high",
-                      },
-                      {
-                        product: "Smartphone Case",
-                        issue: "Shipping delay",
-                        priority: "medium",
-                      },
-                      {
-                        product: "Gaming Mouse",
-                        issue: "False advertising",
-                        priority: "high",
-                      },
-                    ].map((dispute, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium">{dispute.product}</p>
-                          <p className="text-sm text-gray-600">
-                            {dispute.issue}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge
-                            variant={
-                              dispute.priority === "high"
-                                ? "destructive"
-                                : "default"
-                            }
-                          >
-                            {dispute.priority}
-                          </Badge>
-                          <Button size="sm" variant="outline">
-                            Resolve
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <MarketplaceAdmin />
           </TabsContent>
 
           <TabsContent value="crypto" className="space-y-6">

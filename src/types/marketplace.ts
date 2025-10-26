@@ -261,6 +261,8 @@ export interface ProductFilter {
     | "reviews";
   location?: string;
   sellerId?: string;
+  limit?: number; // Add limit property
+  featuredOnly?: boolean; // Add featuredOnly property
 }
 
 export interface BoostOption {

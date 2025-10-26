@@ -775,6 +775,159 @@ export class MarketplaceService {
     }
   }
 
+  // Flash Sales
+  static async getActiveFlashSales(): Promise<any[]> {
+    try {
+      // In a real implementation, we would fetch from the flash_sales table
+      // For now, return an empty array as we're using mock data
+      return [];
+    } catch (error) {
+      console.error("Error fetching flash sales:", error);
+      return [];
+    }
+  }
+
+  static async createFlashSale(flashSaleData: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would insert into the flash_sales table
+      // For now, just return the data with an ID
+      return {
+        id: `flash-${Date.now()}`,
+        ...flashSaleData
+      };
+    } catch (error) {
+      console.error("Error creating flash sale:", error);
+      return null;
+    }
+  }
+
+  static async updateFlashSale(id: string, updates: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would update the flash_sales table
+      // For now, just return the updates with the ID
+      return {
+        id,
+        ...updates
+      };
+    } catch (error) {
+      console.error("Error updating flash sale:", error);
+      return null;
+    }
+  }
+
+  static async deleteFlashSale(id: string): Promise<boolean> {
+    try {
+      // In a real implementation, we would delete from the flash_sales table
+      // For now, just return true
+      return true;
+    } catch (error) {
+      console.error("Error deleting flash sale:", error);
+      return false;
+    }
+  }
+
+  // Sponsored Products
+  static async getSponsoredProducts(): Promise<any[]> {
+    try {
+      // In a real implementation, we would fetch from the sponsored_products table
+      // For now, return an empty array as we're using mock data
+      return [];
+    } catch (error) {
+      console.error("Error fetching sponsored products:", error);
+      return [];
+    }
+  }
+
+  static async createSponsoredProduct(sponsoredProductData: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would insert into the sponsored_products table
+      // For now, just return the data with an ID
+      return {
+        id: `sponsored-${Date.now()}`,
+        ...sponsoredProductData
+      };
+    } catch (error) {
+      console.error("Error creating sponsored product:", error);
+      return null;
+    }
+  }
+
+  static async updateSponsoredProduct(id: string, updates: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would update the sponsored_products table
+      // For now, just return the updates with the ID
+      return {
+        id,
+        ...updates
+      };
+    } catch (error) {
+      console.error("Error updating sponsored product:", error);
+      return null;
+    }
+  }
+
+  static async deleteSponsoredProduct(id: string): Promise<boolean> {
+    try {
+      // In a real implementation, we would delete from the sponsored_products table
+      // For now, just return true
+      return true;
+    } catch (error) {
+      console.error("Error deleting sponsored product:", error);
+      return false;
+    }
+  }
+
+  // Marketplace Ads
+  static async getActiveAds(): Promise<any[]> {
+    try {
+      // In a real implementation, we would fetch from the marketplace_ads table
+      // For now, return an empty array as we're using mock data
+      return [];
+    } catch (error) {
+      console.error("Error fetching ads:", error);
+      return [];
+    }
+  }
+
+  static async createAd(adData: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would insert into the marketplace_ads table
+      // For now, just return the data with an ID
+      return {
+        id: `ad-${Date.now()}`,
+        ...adData
+      };
+    } catch (error) {
+      console.error("Error creating ad:", error);
+      return null;
+    }
+  }
+
+  static async updateAd(id: string, updates: any): Promise<any | null> {
+    try {
+      // In a real implementation, we would update the marketplace_ads table
+      // For now, just return the updates with the ID
+      return {
+        id,
+        ...updates
+      };
+    } catch (error) {
+      console.error("Error updating ad:", error);
+      return null;
+    }
+  }
+
+  static async deleteAd(id: string): Promise<boolean> {
+    try {
+      // In a real implementation, we would delete from the marketplace_ads table
+      // For now, just return true
+      return true;
+    } catch (error) {
+      console.error("Error deleting ad:", error);
+      return false;
+    }
+  }
+
   // Get unique tags from all products
   static async getProductTags(): Promise<string[]> {
     try {

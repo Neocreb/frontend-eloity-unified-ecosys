@@ -30,6 +30,18 @@ import SmartRecommendations from "@/components/marketplace/SmartRecommendations"
 import { MarketplaceService } from "@/services/marketplaceService";
 import { Product } from "@/types/marketplace";
 
+// Add interface for flash sale
+interface FlashSale {
+  id: string;
+  title: string;
+  description: string;
+  discountPercentage: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  featuredProducts: string[]; // Product IDs
+}
+
 interface FlashSaleProduct extends Product {
   discount: number;
 }
@@ -52,14 +64,43 @@ const MarketplaceHomepage: React.FC = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<FlashSaleProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<{name: string, hasSubmenu: boolean}[]>([]);
+  const [activeFlashSale, setActiveFlashSale] = useState<FlashSale | null>(null);
 
   // Load real flash sale products
   useEffect(() => {
     const loadFlashSaleProducts = async () => {
       try {
         setLoading(true);
+        
+        // Load active flash sale
+        const flashSalesData = await MarketplaceService.getActiveFlashSales();
+        const activeFlashSale = flashSalesData.find((sale: any) => sale.is_active) || null;
+        setActiveFlashSale(activeFlashSale as FlashSale);
+        
+        // Update countdown timer based on flash sale end date
+        if (activeFlashSale) {
+          const endDate = new Date(activeFlashSale.end_date);
+          const now = new Date();
+          const diff = endDate.getTime() - now.getTime();
+          
+          if (diff > 0) {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            setTimeLeft({
+              days,
+              hours,
+              minutes,
+              seconds
+            });
+          }
+        }
+        
+        // Load featured products for the flash sale
         const productsData = await MarketplaceService.getProducts({
-          featuredOnly: true, // Get featured products for flash sale
+          featuredOnly: true,
           limit: 8
         });
         
@@ -310,11 +351,11 @@ const MarketplaceHomepage: React.FC = () => {
                   <div className="flex items-center gap-3 lg:gap-4">
                     <div className="w-4 lg:w-5 h-8 lg:h-10 bg-red-500 rounded" />
                     <span className="text-red-500 font-semibold text-sm lg:text-base">
-                      Today's
+                      {activeFlashSale?.title || "Today's"}
                     </span>
                   </div>
                   <h2 className="text-xl sm:text-2xl lg:text-4xl font-semibold tracking-wide">
-                    Flash Sales
+                    {activeFlashSale ? activeFlashSale.description : "Flash Sales"}
                   </h2>
                 </div>
 
@@ -433,18 +474,20 @@ const MarketplaceHomepage: React.FC = () => {
                       </h3>
                       <div className="flex items-center gap-3">
                         <span className="text-red-500 font-semibold">
-                          {formatPrice(product.salePrice)}
+                          {formatPrice(product.salePrice || product.price)}
                         </span>
-                        <span className="text-gray-500 line-through">
-                          {formatPrice(product.originalPrice)}
-                        </span>
+                        {product.discountPrice && (
+                          <span className="text-gray-500 line-through">
+                            {formatPrice(product.price)}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center">
                           {renderStars(product.rating)}
                         </div>
                         <span className="text-sm text-gray-500">
-                          ({product.reviews})
+                          ({product.reviewCount})
                         </span>
                       </div>
                     </div>

@@ -28,6 +28,18 @@ import CategoryBrowser from "@/components/marketplace/CategoryBrowser";
 import { MarketplaceService } from "@/services/marketplaceService";
 import { Product } from "@/types/marketplace";
 
+// Add interface for flash sale
+interface FlashSale {
+  id: string;
+  title: string;
+  description: string;
+  discountPercentage: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  featuredProducts: string[]; // Product IDs
+}
+
 interface FlashSaleProduct extends Product {
   discount: number;
 }
@@ -52,14 +64,43 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<FlashSaleProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<{name: string, hasSubmenu: boolean}[]>([]);
+  const [activeFlashSale, setActiveFlashSale] = useState<FlashSale | null>(null);
 
   // Load real flash sale products
   useEffect(() => {
     const loadFlashSaleProducts = async () => {
       try {
         setLoading(true);
+        
+        // Load active flash sale
+        const flashSalesData = await MarketplaceService.getActiveFlashSales();
+        const activeFlashSale = flashSalesData.find((sale: any) => sale.is_active) || null;
+        setActiveFlashSale(activeFlashSale as FlashSale);
+        
+        // Update countdown timer based on flash sale end date
+        if (activeFlashSale) {
+          const endDate = new Date(activeFlashSale.end_date);
+          const now = new Date();
+          const diff = endDate.getTime() - now.getTime();
+          
+          if (diff > 0) {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            setTimeLeft({
+              days,
+              hours,
+              minutes,
+              seconds
+            });
+          }
+        }
+        
+        // Load featured products for the flash sale
         const productsData = await MarketplaceService.getProducts({
-          featuredOnly: true, // Get featured products for flash sale
+          featuredOnly: true,
           limit: 8
         });
         
@@ -346,11 +387,11 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
                   <div className="flex items-center gap-3 lg:gap-4">
                     <div className="w-4 lg:w-5 h-8 lg:h-10 bg-red-500 rounded" />
                     <span className="text-red-500 font-semibold text-sm lg:text-base">
-                      Today's
+                      {activeFlashSale?.title || "Today's"}
                     </span>
                   </div>
                   <h2 className="text-xl sm:text-2xl lg:text-4xl font-semibold tracking-wide">
-                    Flash Sales
+                    {activeFlashSale ? activeFlashSale.description : "Flash Sales"}
                   </h2>
                 </div>
 
@@ -414,7 +455,7 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
               </div>
 
               {/* Flash Sale Products Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 {flashSaleProducts.map((product, index) => (
                   <div key={product.id} className="group">
                     <div className="relative bg-gray-100 rounded-lg overflow-hidden aspect-square mb-4">
@@ -444,23 +485,22 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
                       </div>
 
                       {/* Product Image */}
-                      <div className="p-4 sm:p-8 h-full flex items-center justify-center overflow-hidden">
+                      <div className="p-8 h-full flex items-center justify-center">
                         <img
                           src={product.image}
                           alt={product.name}
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                          className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform"
                         />
                       </div>
 
                       {/* Add to Cart Button - Shows on Hover */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black text-white py-3 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleAddToCart(product.id, 1)}
-                          className="text-sm font-medium w-full"
-                        >
-                          Add To Cart
-                        </button>
-                      </div>
+                      {index === 1 && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-black text-white py-3 text-center">
+                          <span className="text-sm font-medium">
+                            Add To Cart
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Product Info */}
@@ -470,18 +510,20 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
                       </h3>
                       <div className="flex items-center gap-3">
                         <span className="text-red-500 font-semibold">
-                          {formatPrice(product.salePrice)}
+                          {formatPrice(product.salePrice || product.price)}
                         </span>
-                        <span className="text-gray-500 line-through">
-                          {formatPrice(product.originalPrice)}
-                        </span>
+                        {product.discountPrice && (
+                          <span className="text-gray-500 line-through">
+                            {formatPrice(product.price)}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center">
                           {renderStars(product.rating)}
                         </div>
                         <span className="text-sm text-gray-500">
-                          ({product.reviews})
+                          ({product.reviewCount})
                         </span>
                       </div>
                     </div>

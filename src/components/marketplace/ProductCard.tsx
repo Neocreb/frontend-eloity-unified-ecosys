@@ -90,6 +90,12 @@ const ProductCard = ({
           Sponsored
         </div>
       )}
+      
+      {featured && !sponsored && (
+        <div className="absolute top-0 right-0 left-0 bg-blue-100 text-blue-800 z-10 text-xs font-medium py-0.5 px-2 text-center">
+          Featured
+        </div>
+      )}
 
       <div className="relative pt-[100%] overflow-hidden bg-muted">
         <img

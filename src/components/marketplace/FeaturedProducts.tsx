@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { useMarketplace } from "@/contexts/MarketplaceContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { MarketplaceService } from "@/services/marketplaceService";
 
 interface FeaturedProductsProps {
   onAddToCart: (productId: string) => void;
@@ -17,9 +18,30 @@ const FeaturedProducts = ({
   onAddToWishlist,
   showAll = false,
 }: FeaturedProductsProps) => {
-  const { featuredProducts, setActiveProduct } = useMarketplace();
+  const { featuredProducts: contextFeaturedProducts, setActiveProduct } = useMarketplace();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+
+  // Load real featured products
+  useEffect(() => {
+    const loadFeaturedProducts = async () => {
+      try {
+        // Get featured products from the service
+        const productsData = await MarketplaceService.getProducts({
+          featuredOnly: true,
+          limit: 20
+        });
+        setFeaturedProducts(productsData);
+      } catch (error) {
+        console.error("Error loading featured products:", error);
+        // Fallback to context products
+        setFeaturedProducts(contextFeaturedProducts);
+      }
+    };
+
+    loadFeaturedProducts();
+  }, [contextFeaturedProducts]);
 
   const displayProducts = showAll
     ? featuredProducts

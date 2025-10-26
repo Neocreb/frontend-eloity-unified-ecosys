@@ -8,6 +8,7 @@ import { MessageCircle } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { useMarketplace } from "@/contexts/MarketplaceContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { MarketplaceService } from "@/services/marketplaceService";
 
 interface ProductGridProps {
   category?: string;
@@ -33,6 +34,21 @@ const ProductGrid = ({
   const { products: contextProducts, setActiveProduct } = useMarketplace();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [sponsoredProducts, setSponsoredProducts] = useState<any[]>([]);
+
+  // Load sponsored products
+  useEffect(() => {
+    const loadSponsoredProducts = async () => {
+      try {
+        const sponsoredData = await MarketplaceService.getSponsoredProducts();
+        setSponsoredProducts(sponsoredData);
+      } catch (error) {
+        console.error("Error loading sponsored products:", error);
+      }
+    };
+
+    loadSponsoredProducts();
+  }, []);
 
   // Use the products prop if provided, otherwise use products from context
   const sourceProducts = propProducts || contextProducts;
@@ -41,6 +57,15 @@ const ProductGrid = ({
     // Simulate API fetch delay
     const timer = setTimeout(() => {
       let filtered = [...sourceProducts];
+
+      // Mark sponsored products
+      filtered = filtered.map(product => {
+        const isSponsored = sponsoredProducts.some((sp: any) => sp.product_id === product.id && sp.is_active);
+        return {
+          ...product,
+          isSponsored
+        };
+      });
 
       // Filter by category if not "all"
       if (category !== "all") {
@@ -102,7 +127,7 @@ const ProductGrid = ({
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [category, searchQuery, sortBy, sourceProducts, limit]);
+  }, [category, searchQuery, sortBy, sourceProducts, limit, sponsoredProducts]);
 
   const handleViewProduct = (product: Product) => {
     setActiveProduct(product);
@@ -174,6 +199,7 @@ const ProductGrid = ({
           onMessageSeller={handleMessageSeller}
           showSellerInfo={true}
           sponsored={product.isSponsored}
+          featured={product.isFeatured}
         />
       ))}
     </div>
