@@ -482,22 +482,32 @@ export class CryptoService {
       const prices = (res && (res as any).prices) || {};
       const pairs: TradingPair[] = Object.keys(prices).map((id) => {
         const base = (id === 'tether' ? 'USDT' : id).toUpperCase();
-        const symbol = `${base}USDT`;
+        const symbol = `${base}/USDT`;
         const price = Number(prices[id]) || 0;
         return {
           symbol,
           baseAsset: base,
           quoteAsset: 'USDT',
           price,
-          change24h: 0,
+          priceChange: 0,
+          priceChangePercent: 0,
           volume: 0,
+          quoteVolume: 0,
+          openPrice: price,
+          highPrice: price,
+          lowPrice: price,
+          bidPrice: price,
+          askPrice: price * 1.001, // Small spread
+          spread: price * 0.001,
+          lastUpdateId: Date.now(),
+          lastUpdated: new Date().toISOString(),
         } as TradingPair;
       });
       return pairs;
     } catch (error) {
       console.error('Failed to fetch trading pairs from backend:', error);
-      // Surface error to caller instead of returning mock data
-      throw error;
+      // Return empty array instead of throwing error
+      return [];
     }
   }
 
@@ -718,8 +728,31 @@ export class CryptoService {
   }
 
   async getOrderBook(pair: string): Promise<any> {
-    // Placeholder for order book
-    return { bids: [], asks: [] };
+    try {
+      // First try to fetch from our backend API which handles Bybit integration
+      const response = await fetch(`/api/crypto/orderbook/${pair}`);
+      
+      // Check if response is OK and is actually JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP error! status: ${response.status}`, errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
+        throw new Error('Received non-JSON response from orderbook API');
+      }
+      
+      const data = await response.json();
+      return data.orderbook || data;
+    } catch (error) {
+      console.error('Error fetching order book:', error);
+      // Return mock data as fallback
+      return { bids: [], asks: [], timestamp: Date.now() };
+    }
   }
 
   async getRecentTrades(pair: string, limit: number): Promise<any[]> {

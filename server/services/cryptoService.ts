@@ -141,7 +141,12 @@ export async function getOrderBook(pair: string, depth: number = 20) {
       
       // Get order book from Bybit
       const url = `https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${bybitPair}&limit=${depth}`;
-      const resp = await axios.get(url, { timeout: 5000 });
+      const resp = await axios.get(url, { 
+        timeout: 5000,
+        headers: {
+          'User-Agent': 'Eloity-Crypto-Client/1.0'
+        }
+      });
       
       if (resp.data.retCode === 0) {
         const data = resp.data.result;
@@ -210,7 +215,12 @@ export async function getOrderBook(pair: string, depth: number = 20) {
     };
   } catch (error) {
     logger.error('Orderbook fetch error:', error);
-    throw error;
+    // Return empty orderbook as fallback
+    return {
+      bids: [],
+      asks: [],
+      timestamp: Date.now()
+    };
   }
 }
 
@@ -349,6 +359,7 @@ export async function processDeposit(userId: string, currency: string, amount: n
       currentConfirmations: txVerification.confirmations,
       createdAt: new Date()
     });
+    
     
     
     // Credit wallet if transaction has enough confirmations

@@ -1,5 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the NotificationData type
+export interface NotificationData {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  related_id?: string;
+  related_type?: string;
+  is_read: boolean;
+  created_at: string;
+  read?: boolean; // For compatibility with frontend components
+  content?: string; // For compatibility with frontend components
+}
+
 export class NotificationService {
   // Send notification to group members
   static async sendGroupNotification(

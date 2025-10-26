@@ -76,15 +76,20 @@ self.addEventListener("fetch", (event) => {
   // Skip non-HTTP requests
   if (!request.url.startsWith("http")) return;
 
-  // Handle navigation requests
-  if (request.mode === "navigate") {
-    event.respondWith(handleNavigationRequest(request));
+  // Skip API requests, Bybit requests, and other external API calls
+  if (
+    url.pathname.startsWith("/api/") || 
+    url.hostname.includes("bybit.com") ||
+    url.hostname.includes("coingecko.com") ||
+    url.hostname.includes("supabase.co")
+  ) {
+    // For API requests, bypass cache and go directly to network
     return;
   }
 
-  // Handle API requests
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(handleApiRequest(request));
+  // Handle navigation requests
+  if (request.mode === "navigate") {
+    event.respondWith(handleNavigationRequest(request));
     return;
   }
 
@@ -176,8 +181,8 @@ async function handleStaticRequest(request) {
 
     const networkResponse = await fetch(request);
 
-    // Cache successful responses
-    if (networkResponse.status === 200) {
+    // Cache successful responses for static assets only
+    if (networkResponse.status === 200 && request.destination !== 'document') {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
     }

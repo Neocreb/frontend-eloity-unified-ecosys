@@ -780,7 +780,18 @@ export class MarketplaceService {
     try {
       // In a real implementation, we would fetch from the flash_sales table
       // For now, return an empty array as we're using mock data
-      return [];
+      const { data, error } = await supabase
+        .from('flash_sales')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn("Error fetching flash sales:", error);
+        return [];
+      }
+
+      return data || [];
     } catch (error) {
       console.error("Error fetching flash sales:", error);
       return [];
@@ -789,11 +800,30 @@ export class MarketplaceService {
 
   static async createFlashSale(flashSaleData: any): Promise<any | null> {
     try {
-      // In a real implementation, we would insert into the flash_sales table
-      // For now, just return the data with an ID
+      const { data, error } = await supabase
+        .from('flash_sales')
+        .insert([{
+          title: flashSaleData.title,
+          description: flashSaleData.description,
+          discount_percentage: flashSaleData.discountPercentage,
+          start_date: flashSaleData.startDate,
+          end_date: flashSaleData.endDate,
+          is_active: flashSaleData.isActive,
+          featured_products: flashSaleData.featuredProducts,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating flash sale:", error);
+        return null;
+      }
+
       return {
-        id: `flash-${Date.now()}`,
-        ...flashSaleData
+        id: data.id,
+        ...data
       };
     } catch (error) {
       console.error("Error creating flash sale:", error);
@@ -803,12 +833,22 @@ export class MarketplaceService {
 
   static async updateFlashSale(id: string, updates: any): Promise<any | null> {
     try {
-      // In a real implementation, we would update the flash_sales table
-      // For now, just return the updates with the ID
-      return {
-        id,
-        ...updates
-      };
+      const { data, error } = await supabase
+        .from('flash_sales')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating flash sale:", error);
+        return null;
+      }
+
+      return data;
     } catch (error) {
       console.error("Error updating flash sale:", error);
       return null;
@@ -817,8 +857,16 @@ export class MarketplaceService {
 
   static async deleteFlashSale(id: string): Promise<boolean> {
     try {
-      // In a real implementation, we would delete from the flash_sales table
-      // For now, just return true
+      const { error } = await supabase
+        .from('flash_sales')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error("Error deleting flash sale:", error);
+        return false;
+      }
+
       return true;
     } catch (error) {
       console.error("Error deleting flash sale:", error);
@@ -829,9 +877,18 @@ export class MarketplaceService {
   // Sponsored Products
   static async getSponsoredProducts(): Promise<any[]> {
     try {
-      // In a real implementation, we would fetch from the sponsored_products table
-      // For now, return an empty array as we're using mock data
-      return [];
+      const { data, error } = await supabase
+        .from('sponsored_products')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn("Error fetching sponsored products:", error);
+        return [];
+      }
+
+      return data || [];
     } catch (error) {
       console.error("Error fetching sponsored products:", error);
       return [];
@@ -840,11 +897,30 @@ export class MarketplaceService {
 
   static async createSponsoredProduct(sponsoredProductData: any): Promise<any | null> {
     try {
-      // In a real implementation, we would insert into the sponsored_products table
-      // For now, just return the data with an ID
+      const { data, error } = await supabase
+        .from('sponsored_products')
+        .insert([{
+          product_id: sponsoredProductData.productId,
+          title: sponsoredProductData.title,
+          start_date: sponsoredProductData.startDate,
+          end_date: sponsoredProductData.endDate,
+          is_active: sponsoredProductData.isActive,
+          boost_level: sponsoredProductData.boostLevel,
+          position: sponsoredProductData.position,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating sponsored product:", error);
+        return null;
+      }
+
       return {
-        id: `sponsored-${Date.now()}`,
-        ...sponsoredProductData
+        id: data.id,
+        ...data
       };
     } catch (error) {
       console.error("Error creating sponsored product:", error);
@@ -854,12 +930,22 @@ export class MarketplaceService {
 
   static async updateSponsoredProduct(id: string, updates: any): Promise<any | null> {
     try {
-      // In a real implementation, we would update the sponsored_products table
-      // For now, just return the updates with the ID
-      return {
-        id,
-        ...updates
-      };
+      const { data, error } = await supabase
+        .from('sponsored_products')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating sponsored product:", error);
+        return null;
+      }
+
+      return data;
     } catch (error) {
       console.error("Error updating sponsored product:", error);
       return null;
@@ -868,8 +954,16 @@ export class MarketplaceService {
 
   static async deleteSponsoredProduct(id: string): Promise<boolean> {
     try {
-      // In a real implementation, we would delete from the sponsored_products table
-      // For now, just return true
+      const { error } = await supabase
+        .from('sponsored_products')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error("Error deleting sponsored product:", error);
+        return false;
+      }
+
       return true;
     } catch (error) {
       console.error("Error deleting sponsored product:", error);
@@ -961,9 +1055,18 @@ export class MarketplaceService {
   // Marketplace Ads
   static async getActiveAds(): Promise<any[]> {
     try {
-      // In a real implementation, we would fetch from the marketplace_ads table
-      // For now, return an empty array as we're using mock data
-      return [];
+      const { data, error } = await supabase
+        .from('marketplace_ads')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn("Error fetching ads:", error);
+        return [];
+      }
+
+      return data || [];
     } catch (error) {
       console.error("Error fetching ads:", error);
       return [];
@@ -972,11 +1075,32 @@ export class MarketplaceService {
 
   static async createAd(adData: any): Promise<any | null> {
     try {
-      // In a real implementation, we would insert into the marketplace_ads table
-      // For now, just return the data with an ID
+      const { data, error } = await supabase
+        .from('marketplace_ads')
+        .insert([{
+          title: adData.title,
+          description: adData.description,
+          image_url: adData.imageUrl,
+          target_url: adData.targetUrl,
+          start_date: adData.startDate,
+          end_date: adData.endDate,
+          is_active: adData.isActive,
+          position: adData.position,
+          priority: adData.priority,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating ad:", error);
+        return null;
+      }
+
       return {
-        id: `ad-${Date.now()}`,
-        ...adData
+        id: data.id,
+        ...data
       };
     } catch (error) {
       console.error("Error creating ad:", error);
@@ -986,12 +1110,22 @@ export class MarketplaceService {
 
   static async updateAd(id: string, updates: any): Promise<any | null> {
     try {
-      // In a real implementation, we would update the marketplace_ads table
-      // For now, just return the updates with the ID
-      return {
-        id,
-        ...updates
-      };
+      const { data, error } = await supabase
+        .from('marketplace_ads')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating ad:", error);
+        return null;
+      }
+
+      return data;
     } catch (error) {
       console.error("Error updating ad:", error);
       return null;
@@ -1000,8 +1134,16 @@ export class MarketplaceService {
 
   static async deleteAd(id: string): Promise<boolean> {
     try {
-      // In a real implementation, we would delete from the marketplace_ads table
-      // For now, just return true
+      const { error } = await supabase
+        .from('marketplace_ads')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error("Error deleting ad:", error);
+        return false;
+      }
+
       return true;
     } catch (error) {
       console.error("Error deleting ad:", error);
