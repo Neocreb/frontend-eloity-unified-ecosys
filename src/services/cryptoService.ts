@@ -384,8 +384,8 @@ export class CryptoService {
       }));
     } catch (error) {
       console.error("Error fetching cryptocurrency data from CoinGecko:", error);
-      // Do not fall back to mock data; surface the error to callers
-      throw error;
+      // Fall back to mock data
+      return mockCryptocurrencies;
     }
   }
 
@@ -730,7 +730,13 @@ export class CryptoService {
   async getOrderBook(pair: string): Promise<any> {
     try {
       // First try to fetch from our backend API which handles Bybit integration
-      const response = await fetch(`/api/crypto/orderbook/${pair}`);
+      const response = await fetch(`/api/crypto/orderbook/${pair}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
       
       // Check if response is OK and is actually JSON
       if (!response.ok) {
@@ -748,8 +754,13 @@ export class CryptoService {
       
       const data = await response.json();
       return data.orderbook || data;
-    } catch (error) {
-      console.error('Error fetching order book:', error);
+    } catch (error: any) {
+      // Handle timeout specifically
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        console.error('Orderbook request timed out:', error);
+      } else {
+        console.error('Error fetching order book:', error);
+      }
       // Return mock data as fallback
       return { bids: [], asks: [], timestamp: Date.now() };
     }

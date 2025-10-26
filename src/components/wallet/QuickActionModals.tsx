@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -160,6 +161,9 @@ export const SendMoneyModal = ({ isOpen, onClose }: SendMoneyModalProps) => {
             <Send className="h-5 w-5 text-blue-600" />
             Send Money
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Send money to another user
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -348,6 +352,9 @@ export const RequestMoneyModal = ({ isOpen, onClose }: RequestMoneyModalProps) =
             <ArrowDownLeft className="h-5 w-5 text-green-600" />
             Request Money
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Request money from another user
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -496,9 +503,12 @@ export const TransferModal = ({ isOpen, onClose }: TransferModalProps) => {
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Repeat className="h-5 w-5 text-orange-600" />
-            Internal Transfer
+            <Repeat className="h-5 w-5 text-purple-600" />
+            Transfer Between Wallets
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Transfer funds between your different wallet accounts
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -749,6 +759,9 @@ export const PayBillModal = ({ isOpen, onClose }: PayBillModalProps) => {
             <Receipt className="h-5 w-5 text-red-600" />
             Pay Bill
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Pay bills and utilities
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -991,6 +1004,9 @@ export const TopUpModal = ({ isOpen, onClose }: TopUpModalProps) => {
             <Smartphone className="h-5 w-5 text-indigo-600" />
             Mobile Top-up
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Top up your mobile phone credit
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -1219,9 +1235,12 @@ export const BuyGiftCardModal = ({ isOpen, onClose }: BuyGiftCardModalProps) => 
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Gift className="h-5 w-5 text-fuchsia-600" />
+            <Gift className="h-5 w-5 text-pink-600" />
             Buy Gift Card
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Purchase a digital gift card
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -1365,9 +1384,12 @@ export const SellGiftCardModal = ({ isOpen, onClose }: SellGiftCardModalProps) =
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Store className="h-5 w-5 text-emerald-600" />
+            <Store className="h-5 w-5 text-orange-600" />
             Sell Gift Card
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Sell your unused gift cards for cash
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

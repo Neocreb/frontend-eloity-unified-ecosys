@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -932,6 +933,9 @@ export const GamificationSystem: React.FC = () => {
             <DialogTitle className="text-2xl font-bold text-center">
               🏆 Achievement Unlocked!
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              You've unlocked a new achievement in the gamification system
+            </DialogDescription>
           </DialogHeader>
 
           {showAchievementDialog && (

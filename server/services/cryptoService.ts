@@ -142,7 +142,7 @@ export async function getOrderBook(pair: string, depth: number = 20) {
       // Get order book from Bybit
       const url = `https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${bybitPair}&limit=${depth}`;
       const resp = await axios.get(url, { 
-        timeout: 5000,
+        timeout: 10000, // 10 second timeout
         headers: {
           'User-Agent': 'Eloity-Crypto-Client/1.0'
         }

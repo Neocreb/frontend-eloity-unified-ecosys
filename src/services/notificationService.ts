@@ -169,6 +169,23 @@ export class NotificationService {
       return null;
     }
   }
+
+  // Mark all notifications as read for user
+  static async markAllAsRead(userId: string) {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", userId)
+        .eq("is_read", false);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      return false;
+    }
+  }
 }
 
 export const notificationService = new NotificationService();
