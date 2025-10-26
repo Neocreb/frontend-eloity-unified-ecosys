@@ -27,16 +27,11 @@ import ResponsiveProductCarousel from "@/components/marketplace/ResponsiveProduc
 import CategoryBrowser from "@/components/marketplace/CategoryBrowser";
 import SmartRecommendations from "@/components/marketplace/SmartRecommendations";
 
-interface FlashSaleProduct {
-  id: string;
-  name: string;
-  image: string;
-  originalPrice: number;
-  salePrice: number;
+import { MarketplaceService } from "@/services/marketplaceService";
+import { Product } from "@/types/marketplace";
+
+interface FlashSaleProduct extends Product {
   discount: number;
-  rating: number;
-  reviews: number;
-  inStock: boolean;
 }
 
 const MarketplaceHomepage: React.FC = () => {
@@ -54,60 +49,78 @@ const MarketplaceHomepage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] =
     useState<FlashSaleProduct | null>(null);
   const [showQuickView, setShowQuickView] = useState(false);
+  const [flashSaleProducts, setFlashSaleProducts] = useState<FlashSaleProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<{name: string, hasSubmenu: boolean}[]>([]);
 
-  // Mock flash sale products
-  const flashSaleProducts: FlashSaleProduct[] = [
-    {
-      id: "1",
-      name: "HAVIT HV-G92 Gamepad",
-      image:
-        "https://cdn.builder.io/api/v1/image/assets%2Fb10c564763a64f819a10cd7f992a4935%2F9eadb6fc5c7b4b588ac9775aacb69514?format=webp&width=800",
-      originalPrice: 160,
-      salePrice: 120,
-      discount: 40,
-      rating: 5,
-      reviews: 88,
-      inStock: true,
-    },
-    {
-      id: "2",
-      name: "AK-900 Wired Keyboard",
-      image:
-        "https://cdn.builder.io/api/v1/image/assets%2Fb10c564763a64f819a10cd7f992a4935%2F3c8a7dc1ab114461b045b94feccaff70?format=webp&width=800",
-      originalPrice: 1160,
-      salePrice: 960,
-      discount: 35,
-      rating: 4,
-      reviews: 75,
-      inStock: true,
-    },
-    {
-      id: "3",
-      name: "IPS LCD Gaming Monitor",
-      image:
-        "https://cdn.builder.io/api/v1/image/assets%2Fb10c564763a64f819a10cd7f992a4935%2Ff1952dcefa174b889e077e00c09aa01d?format=webp&width=800",
-      originalPrice: 400,
-      salePrice: 370,
-      discount: 30,
-      rating: 5,
-      reviews: 99,
-      inStock: true,
-    },
-    {
-      id: "4",
-      name: "S-Series Comfort Chair",
-      image:
-        "https://cdn.builder.io/api/v1/image/assets%2Fb10c564763a64f819a10cd7f992a4935%2F37fbd48f02174d0ab69861a850cbc688?format=webp&width=800",
-      originalPrice: 400,
-      salePrice: 375,
-      discount: 25,
-      rating: 4.5,
-      reviews: 99,
-      inStock: true,
-    },
-  ];
+  // Load real flash sale products
+  useEffect(() => {
+    const loadFlashSaleProducts = async () => {
+      try {
+        setLoading(true);
+        const productsData = await MarketplaceService.getProducts({
+          featuredOnly: true, // Get featured products for flash sale
+          limit: 8
+        });
+        
+        // Convert products to flash sale format with calculated discounts
+        const flashSaleData = productsData.map(product => {
+          const discount = product.discountPrice 
+            ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
+            : 0;
+            
+          return {
+            ...product,
+            discount
+          } as FlashSaleProduct;
+        });
+        
+        setFlashSaleProducts(flashSaleData);
+      } catch (error) {
+        console.error("Error loading flash sale products:", error);
+        // Fallback to empty array if real data fetch fails
+        setFlashSaleProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const categoryList = [
+    loadFlashSaleProducts();
+  }, []);
+
+  // Load real categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await MarketplaceService.getCategories();
+        // Convert to the format expected by the component
+        const formattedCategories = categoriesData.map(category => ({
+          name: category.name,
+          hasSubmenu: false // For now, all categories don't have submenus
+        }));
+        setCategories(formattedCategories);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        // Fallback to hardcoded categories if real data fetch fails
+        setCategories([
+          { name: "Woman's Fashion", hasSubmenu: true },
+          { name: "Men's Fashion", hasSubmenu: true },
+          { name: "Electronics", hasSubmenu: false },
+          { name: "Home & Lifestyle", hasSubmenu: false },
+          { name: "Medicine", hasSubmenu: false },
+          { name: "Sports & Outdoor", hasSubmenu: false },
+          { name: "Baby's & Toys", hasSubmenu: false },
+          { name: "Groceries & Pets", hasSubmenu: false },
+          { name: "Health & Beauty", hasSubmenu: false },
+        ]);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // Use real categories instead of hardcoded ones
+  const categoryList = categories.length > 0 ? categories : [
     { name: "Woman's Fashion", hasSubmenu: true },
     { name: "Men's Fashion", hasSubmenu: true },
     { name: "Electronics", hasSubmenu: false },

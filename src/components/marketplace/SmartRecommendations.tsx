@@ -19,20 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-
-interface Product {
-  id: string;
-  name: string;
-  image: string;
-  originalPrice: number;
-  salePrice?: number;
-  rating: number;
-  reviews: number;
-  category: string;
-  tags: string[];
-  viewCount?: number;
-  soldCount?: number;
-}
+import { MarketplaceService } from "@/services/marketplaceService";
+import { Product } from "@/types/marketplace";
 
 interface RecommendationReason {
   type:
@@ -70,89 +58,7 @@ interface SmartRecommendationsProps {
   enableRealTimeUpdates?: boolean;
 }
 
-// Mock product data
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "iPhone 14 Pro Max",
-    image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
-    originalPrice: 1099,
-    salePrice: 999,
-    rating: 4.8,
-    reviews: 2340,
-    category: "Electronics",
-    tags: ["smartphone", "apple", "premium"],
-    viewCount: 15420,
-    soldCount: 890,
-  },
-  {
-    id: "2",
-    name: "Samsung Galaxy S23 Ultra",
-    image: "https://fakestoreapi.com/img/61IBBVJvSDL._AC_SY879_.jpg",
-    originalPrice: 1199,
-    salePrice: 1049,
-    rating: 4.7,
-    reviews: 1890,
-    category: "Electronics",
-    tags: ["smartphone", "samsung", "premium"],
-    viewCount: 12340,
-    soldCount: 670,
-  },
-  {
-    id: "3",
-    name: "MacBook Pro 16-inch",
-    image: "https://fakestoreapi.com/img/81QpkIctqPL._AC_SX679_.jpg",
-    originalPrice: 2499,
-    salePrice: 2299,
-    rating: 4.9,
-    reviews: 890,
-    category: "Electronics",
-    tags: ["laptop", "apple", "professional"],
-    viewCount: 8920,
-    soldCount: 234,
-  },
-  {
-    id: "4",
-    name: "Nike Air Max 270",
-    image:
-      "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg",
-    originalPrice: 150,
-    salePrice: 120,
-    rating: 4.6,
-    reviews: 3420,
-    category: "Fashion",
-    tags: ["shoes", "nike", "sports"],
-    viewCount: 18950,
-    soldCount: 1240,
-  },
-  {
-    id: "5",
-    name: "Sony WH-1000XM4",
-    image: "https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_.jpg",
-    originalPrice: 349,
-    salePrice: 279,
-    rating: 4.8,
-    reviews: 2890,
-    category: "Electronics",
-    tags: ["headphones", "sony", "wireless"],
-    viewCount: 14560,
-    soldCount: 980,
-  },
-  {
-    id: "6",
-    name: "Levi's 501 Original Jeans",
-    image: "https://fakestoreapi.com/img/71YAIFU48IL._AC_UL640_QL65_ML3_.jpg",
-    originalPrice: 89,
-    salePrice: 69,
-    rating: 4.5,
-    reviews: 4560,
-    category: "Fashion",
-    tags: ["jeans", "levis", "classic"],
-    viewCount: 23400,
-    soldCount: 1890,
-  },
-];
-
+// Remove mock product data and fetch real products instead
 const generateRecommendations = (
   products: Product[],
   userPreferences?: SmartRecommendationsProps["userPreferences"],
@@ -164,12 +70,12 @@ const generateRecommendations = (
     let score = 0;
     let reason: RecommendationReason;
 
-    // Trending algorithm
-    if (product.viewCount && product.viewCount > 15000) {
+    // Trending algorithm - based on view count and recent sales
+    if (product.reviewCount && product.reviewCount > 1000) {
       score += 0.8;
       reason = {
         type: "trending",
-        text: `${product.viewCount?.toLocaleString()} people viewed this`,
+        text: `${product.reviewCount?.toLocaleString()} reviews`,
         confidence: 0.85,
       };
     }
@@ -178,18 +84,18 @@ const generateRecommendations = (
       score += 0.9;
       reason = {
         type: "high_rated",
-        text: `Highly rated (${product.rating}⭐) by ${product.reviews} customers`,
+        text: `Highly rated (${product.rating}⭐) by ${product.reviewCount} customers`,
         confidence: 0.9,
       };
     }
     // Price drop detection
     else if (
-      product.salePrice &&
-      (product.originalPrice - product.salePrice) / product.originalPrice > 0.15
+      product.discountPrice &&
+      (product.price - product.discountPrice) / product.price > 0.15
     ) {
       score += 0.7;
       const discount = Math.round(
-        ((product.originalPrice - product.salePrice) / product.originalPrice) *
+        ((product.price - product.discountPrice) / product.price) *
           100,
       );
       reason = {
@@ -260,6 +166,28 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
   );
   const [activeTab, setActiveTab] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Load real products from the marketplace service
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true);
+        const productsData = await MarketplaceService.getProducts({
+          limit: 20 // Fetch more products to have a good selection for recommendations
+        });
+        setProducts(productsData);
+      } catch (error) {
+        console.error("Error loading products:", error);
+        // Fallback to empty array if real data fetch fails
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   useEffect(() => {
     const generateAndSetRecommendations = () => {
@@ -268,7 +196,7 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
       // Simulate AI processing delay
       setTimeout(() => {
         const newRecommendations = generateRecommendations(
-          mockProducts,
+          products,
           userPreferences,
           recentlyViewed,
         ).slice(0, maxItems);
@@ -278,8 +206,10 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
       }, 500);
     };
 
-    generateAndSetRecommendations();
-  }, [userPreferences, recentlyViewed, maxItems]);
+    if (products.length > 0) {
+      generateAndSetRecommendations();
+    }
+  }, [products, userPreferences, recentlyViewed, maxItems]);
 
   const getReasonIcon = (type: RecommendationReason["type"]) => {
     switch (type) {
@@ -349,7 +279,7 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
     setIsLoading(true);
     setTimeout(() => {
       const newRecommendations = generateRecommendations(
-        mockProducts.sort(() => Math.random() - 0.5), // Shuffle for variety
+        products.sort(() => Math.random() - 0.5), // Shuffle for variety
         userPreferences,
         recentlyViewed,
       ).slice(0, maxItems);
@@ -507,7 +437,7 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
                             {renderStars(product.rating)}
                           </div>
                           <span className="text-xs text-gray-500">
-                            ({product.reviews})
+                            ({product.reviewCount})
                           </span>
                         </div>
 
@@ -515,12 +445,12 @@ export const SmartRecommendations: React.FC<SmartRecommendationsProps> = ({
                         <div className="flex items-center gap-2 mb-3">
                           <span className="font-bold text-red-500 text-sm">
                             {formatPrice(
-                              product.salePrice || product.originalPrice,
+                              product.discountPrice || product.price,
                             )}
                           </span>
-                          {product.salePrice && (
+                          {product.discountPrice && (
                             <span className="text-xs text-gray-500 line-through">
-                              {formatPrice(product.originalPrice)}
+                              {formatPrice(product.price)}
                             </span>
                           )}
                         </div>
