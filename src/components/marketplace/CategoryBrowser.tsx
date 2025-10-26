@@ -56,9 +56,12 @@ const CategoryBrowser = ({
   onCategorySelect,
   showSubcategories = false,
   layout = "grid",
+  className,
 }: CategoryBrowserProps) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Load real categories
   useEffect(() => {
@@ -185,7 +188,7 @@ const CategoryBrowser = ({
                   selectedCategory === category.id &&
                   category.subcategories && (
                     <div className="ml-4 mt-2 space-y-1">
-                      {category.subcategories.map((sub) => (
+                      {category.subcategories.map((sub: any) => (
                         <button
                           key={sub.id}
                           onClick={() => onCategorySelect?.(sub)}
@@ -263,7 +266,7 @@ const CategoryBrowser = ({
               {showSubcategories && category.subcategories && (
                 <div className="px-4 pb-4">
                   <div className="flex flex-wrap gap-2">
-                    {category.subcategories.map((sub) => (
+                    {category.subcategories.map((sub: any) => (
                       <button
                         key={sub.id}
                         onClick={(e) => {
@@ -337,7 +340,7 @@ const CategoryBrowser = ({
                   <div className="absolute inset-0 bg-black/75 flex items-center justify-center p-2">
                     <div className="text-center">
                       <div className="text-white text-xs space-y-1">
-                        {category.subcategories.slice(0, 4).map((sub) => (
+                        {category.subcategories.slice(0, 4).map((sub: any) => (
                           <div key={sub.id} className="hover:text-blue-300">
                             {sub.name}
                           </div>

@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Heart, Share2, ShoppingCart, Eye, MessageCircle, ChevronLeft, ChevronRight, Zap, Shield, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { productService } from '@/services/productService';
-import { reviewService } from '@/services/reviewService';
-import { qaService } from '@/services/qaService';
+import { ProductService } from '@/services/productService';
+import { ReviewService } from '@/services/reviewService';
+import { QAService } from '@/services/qaService';
 
 interface ProductImage {
   id: string;
@@ -20,16 +20,22 @@ interface ProductImage {
 
 interface ProductReview {
   id: string;
+  productId: string;
   userId: string;
   userName: string;
   userAvatar: string;
   rating: number;
-  title: string;
   content: string;
-  images: string[];
+  images?: string[];
   verified: boolean;
   helpful: number;
+  reported: boolean;
+  sellerResponse?: {
+    content: string;
+    createdAt: string;
+  };
   createdAt: string;
+  updatedAt?: string;
 }
 
 interface ProductQA {
@@ -47,10 +53,10 @@ interface ProductQA {
 interface RelatedProduct {
   id: string;
   name: string;
-  price: string;
+  price: number;
   image: string;
   rating: number;
-  reviews: number;
+  reviewCount?: number;
 }
 
 interface EnhancedProductDetailProps {
@@ -82,20 +88,27 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
       setLoading(true);
       
       // Load product data
-      const productData = await productService.getProductById(productId);
+      const productData = await ProductService.getProductById(productId);
       setProduct(productData);
       
       // Load reviews
-      const reviewsData = await reviewService.getProductReviews(productId);
-      setReviews(reviewsData);
+      const reviewsData = await ReviewService.getProductReviews(productId);
+      setReviews(reviewsData as ProductReview[]);
       
       // Load Q&A
-      const qaData = await qaService.getProductQuestions(productId);
+      const qaData = await QAService.getProductQuestions(productId);
       setQuestions(qaData);
       
       // Load related products
-      const relatedData = await productService.getRelatedProducts(productId);
-      setRelatedProducts(relatedData);
+      const relatedData = await ProductService.getRelatedProducts(productId);
+      setRelatedProducts(relatedData.map(product => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        rating: product.rating,
+        reviewCount: product.reviewCount
+      })));
     } catch (error) {
       console.error("Error loading product data:", error);
       toast({
@@ -544,9 +557,8 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
                         </div>
                         <span className="text-sm text-gray-600">{review.createdAt}</span>
                       </div>
-                      <h4 className="font-medium mb-2">{review.title}</h4>
                       <p className="text-gray-700 mb-3">{review.content}</p>
-                      {review.images.length > 0 && (
+                      {review.images && review.images.length > 0 && (
                         <div className="flex gap-2 mb-3">
                           {review.images.map((img, index) => (
                             <img
@@ -649,7 +661,7 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
                   <h4 className="font-medium mb-2 line-clamp-2">{product.name}</h4>
                   <div className="flex items-center gap-1 mb-2">
                     {renderStars(product.rating)}
-                    <span className="text-xs text-gray-600">({product.reviews})</span>
+                    <span className="text-xs text-gray-600">({product.reviewCount || 0})</span>
                   </div>
                   <p className="font-bold text-green-600">{product.price}</p>
                 </div>

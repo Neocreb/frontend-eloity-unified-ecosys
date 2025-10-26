@@ -45,6 +45,8 @@ interface FlashSaleProduct extends Product {
 }
 
 const EnhancedMarketplaceHomepage: React.FC = () => {
+  const { addToCart, addToWishlist } = useEnhancedMarketplace();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
