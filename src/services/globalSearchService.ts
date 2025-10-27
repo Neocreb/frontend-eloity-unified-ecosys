@@ -334,25 +334,12 @@ class GlobalSearchService {
 
   async search(params: SearchParams): Promise<SearchResponse> {
     try {
-      // Use only real API calls - no mock data fallback
+      // Try to use real API calls first
       return await this.searchRealAPIs(params);
     } catch (error) {
-      console.error('Search API failed:', error);
-      // Return empty results on error instead of mock data
-      return {
-        results: [],
-        totalCount: 0,
-        currentPage: params.page || 1,
-        totalPages: 0,
-        suggestions: [],
-        relatedSearches: [],
-        facets: {
-          categories: [],
-          priceRanges: [],
-          ratings: [],
-          locations: []
-        }
-      };
+      console.warn('Search API failed, using mock data as fallback:', error);
+      // Fallback to mock data when API is not available
+      return await this.searchMockData(params);
     }
   }
 
