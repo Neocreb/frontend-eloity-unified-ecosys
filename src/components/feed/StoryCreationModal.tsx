@@ -33,6 +33,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { storiesService } from "@/services/storiesService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StoryCreationModalProps {
   isOpen: boolean;
@@ -168,7 +169,8 @@ export function StoryCreationModal({
   };
 
   const handleCreateStory = async () => {
-    if (!user) {
+    // Validate user authentication first
+    if (!user || !user.id) {
       toast({
         title: "Authentication required",
         description: "Please sign in to create a story.",
@@ -198,7 +200,7 @@ export function StoryCreationModal({
     setIsSubmitting(true);
     try {
       let mediaUrl = "";
-      
+
       // Upload media to Supabase storage if we have media
       if ((storyType === "image" || storyType === "video") && selectedMedia) {
         const bucket = "stories"; // Ensure a public bucket named "stories" exists in Supabase Storage
@@ -234,13 +236,18 @@ export function StoryCreationModal({
 
       const newStory = await storiesService.createStory(storyDataPayload, user.id);
 
+      // Safely extract user properties
+      const userName = user.name || user.profile?.full_name || "You";
+      const userUsername = user.username || user.profile?.username || "you";
+      const userAvatar = user.avatar || user.profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user";
+
       const storyResponse = {
         id: newStory.id,
         user: {
           id: user.id,
-          name: user.name || "You",
-          username: user.username || "you",
-          avatar: user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          name: userName,
+          username: userUsername,
+          avatar: userAvatar,
         },
         type: storyType,
         content: storyType === "text" ? textContent : undefined,
@@ -398,7 +405,7 @@ export function StoryCreationModal({
                 <Button
                   variant="destructive"
                   size="icon"
-                  className="absolute top-2 right-2 w-8 h-8"
+                  className="absolute top-2 right-2 h-6 w-6"
                   onClick={() => {
                     if (selectedMedia.preview) {
                       URL.revokeObjectURL(selectedMedia.preview);
@@ -406,93 +413,69 @@ export function StoryCreationModal({
                     setSelectedMedia(null);
                   }}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-3 w-3" />
                 </Button>
               </div>
             </Card>
+
+            {/* Text Content for Media */}
+            <div className="mt-4">
+              <Textarea
+                placeholder="Add a caption..."
+                value={textContent}
+                onChange={(e) => setTextContent(e.target.value)}
+                rows={3}
+              />
+            </div>
           </div>
         )}
 
-        {/* Text Story Creation */}
+        {/* Text Story */}
         {storyType === "text" && (
           <div className="space-y-4">
-            {/* Text Preview */}
-            <Card className="relative overflow-hidden">
+            <div className="relative">
               <div
                 className={cn(
-                  "aspect-[9/16] max-h-80 flex items-center justify-center p-6",
+                  "min-h-[400px] rounded-lg p-6 flex flex-col justify-center items-center relative",
                   storyData.backgroundColor,
                 )}
               >
                 <Textarea
-                  placeholder="Share what's on your mind..."
+                  placeholder="Type your story..."
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
                   className={cn(
-                    "text-center text-xl font-bold bg-transparent border-none resize-none",
-                    "focus:ring-0 focus:border-none placeholder:opacity-70",
+                    "text-2xl font-bold text-center bg-transparent border-none resize-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-white/70 w-full max-w-xs",
                     storyData.textColor,
                   )}
-                  style={{ minHeight: "120px" }}
+                  rows={4}
                 />
               </div>
-            </Card>
-
-            {/* Background Colors */}
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Background</h4>
-              <div className="grid grid-cols-4 gap-2">
-                {TEXT_BACKGROUNDS.map((bg, index) => (
-                  <button
-                    key={index}
-                    onClick={() =>
-                      setStoryData((prev) => ({
-                        ...prev,
-                        backgroundColor: bg.value,
-                      }))
-                    }
-                    className={cn(
-                      "aspect-square rounded-lg border-2 transition-all",
-                      bg.value,
-                      storyData.backgroundColor === bg.value
-                        ? "border-blue-500 scale-105"
-                        : "border-gray-200",
-                    )}
-                    title={bg.name}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Text Colors */}
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Text Color</h4>
-              <div className="flex gap-2">
-                {TEXT_COLORS.map((color, index) => (
-                  <Button
-                    key={index}
-                    variant={
-                      storyData.textColor === color.value
-                        ? "default"
-                        : "outline"
-                    }
-                    size="sm"
-                    onClick={() =>
-                      setStoryData((prev) => ({
-                        ...prev,
-                        textColor: color.value,
-                      }))
-                    }
-                    className="h-8"
-                  >
-                    <span
+              
+              {/* Text Color Picker */}
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Text Color</p>
+                <div className="flex flex-wrap gap-2">
+                  {TEXT_COLORS.map((color) => (
+                    <button
+                      key={color.name}
                       className={cn(
-                        "w-4 h-4 rounded-full",
+                        "w-8 h-8 rounded-full border-2",
+                        color.value === storyData.textColor
+                          ? "border-gray-800"
+                          : "border-gray-300",
                         color.value.replace("text-", "bg-"),
                       )}
+                      onClick={() =>
+                        setStoryData((prev) => ({
+                          ...prev,
+                          textColor: color.value,
+                        }))
+                      }
+                      title={color.name}
                     />
-                  </Button>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -503,7 +486,7 @@ export function StoryCreationModal({
           {/* Duration */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-500" />
+              <Clock className="w-4 h-4" />
               <span className="text-sm font-medium">Duration</span>
             </div>
             <select
@@ -546,32 +529,15 @@ export function StoryCreationModal({
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-4">
-          <Button variant="outline" onClick={handleClose} className="flex-1">
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button
-            onClick={handleCreateStory}
-            disabled={
-              isSubmitting ||
-              (storyType === "text" && !textContent.trim()) ||
-              ((storyType === "image" || storyType === "video") &&
-                !selectedMedia)
-            }
-            className="flex-1 bg-blue-500 hover:bg-blue-600"
-          >
-            {isSubmitting ? "Creating..." : "Share Story"}
+          <Button onClick={handleCreateStory} disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create Story"}
           </Button>
         </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={storyType === "image" ? "image/*" : "video/*"}
-          onChange={(e) => handleFileSelect(e.target.files)}
-          className="hidden"
-        />
       </DialogContent>
     </Dialog>
   );
