@@ -422,10 +422,10 @@ export default function EnhancedSellerDashboard() {
 
   return (
     <div className="container py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Enhanced Header with proper layout */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Seller Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Seller Dashboard</h1>
           <p className="text-muted-foreground">
             Manage your products, track performance, and grow your business
           </p>
@@ -433,10 +433,10 @@ export default function EnhancedSellerDashboard() {
 
         <Button
           onClick={handleCreateListing}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 w-full sm:w-auto"
         >
           <Plus className="h-4 w-4" />
-          <span>List New Product</span>
+          <span>List Product</span>
         </Button>
       </div>
 
@@ -833,15 +833,419 @@ export default function EnhancedSellerDashboard() {
       </div>
     
       <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            <span>Orders</span>
+          </TabsTrigger>
+          <TabsTrigger value="products" className="flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            <span>Products</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <span>Analytics</span>
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="overview" className="space-y-4">
-          {/* ... existing code ... */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Stats Grid - 2 rows x 3 columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Revenue Card */}
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/app/marketplace/analytics")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Revenue</p>
+                    <p className="text-2xl font-bold">
+                      ${sellerAnalytics?.totalRevenue?.toLocaleString() || "0"}
+                    </p>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <DollarSign className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Orders Card */}
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/app/marketplace/orders")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Orders</p>
+                    <p className="text-2xl font-bold">
+                      {sellerAnalytics?.totalOrders || "0"}
+                    </p>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <Package className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Products Card */}
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/app/marketplace/my?tab=products")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Products</p>
+                    <p className="text-2xl font-bold">
+                      {sellerAnalytics?.totalProducts || "0"}
+                    </p>
+                  </div>
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <ShoppingCart className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Rating Card */}
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/app/marketplace/analytics")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Rating</p>
+                    <p className="text-2xl font-bold">
+                      {sellerAnalytics?.customerSatisfaction || "0"}/5
+                    </p>
+                  </div>
+                  <div className="bg-yellow-100 p-3 rounded-full">
+                    <Star className="h-6 w-6 text-yellow-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Conversion Card */}
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/app/marketplace/analytics")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Conversion</p>
+                    <p className="text-2xl font-bold">
+                      {sellerAnalytics?.conversionRate || "0"}%
+                    </p>
+                  </div>
+                  <div className="bg-orange-100 p-3 rounded-full">
+                    <Target className="h-6 w-6 text-orange-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Boost ROI Card */}
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/app/marketplace/analytics")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Boost ROI</p>
+                    <p className="text-2xl font-bold">
+                      {sellerAnalytics?.boostROI || "0"}%
+                    </p>
+                  </div>
+                  <div className="bg-amber-100 p-3 rounded-full">
+                    <Zap className="h-6 w-6 text-amber-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Additional Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Revenue Trend */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Revenue Trend</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/analytics")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[200px] flex items-center justify-center border rounded-md">
+                  <div className="text-center">
+                    <BarChart3 className="h-8 w-8 text-gray-300 mx-auto" />
+                    <p className="text-muted-foreground mt-2">
+                      Revenue chart will appear here
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Category Performance */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Category Performance</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/analytics")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {sellerAnalytics?.categoryBreakdown?.map((category: any) => (
+                    <div key={category.category} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>{category.category}</span>
+                        <span>${category.revenue?.toLocaleString() || "0"}</span>
+                      </div>
+                      <Progress value={category.percentage || 0} className="h-2" />
+                    </div>
+                  )) || (
+                    <p className="text-muted-foreground text-sm">
+                      No category data available
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Key Metrics */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Key Metrics</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/analytics")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Average Order Value
+                    </span>
+                    <span className="font-medium">
+                      ${sellerAnalytics?.averageOrderValue || "0"}
+                    </span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Response Rate
+                    </span>
+                    <span className="font-medium">
+                      {sellerAnalytics?.responseRate || "0"}%
+                    </span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      On-time Delivery
+                    </span>
+                    <span className="font-medium">
+                      {sellerAnalytics?.onTimeDeliveryRate || "0"}%
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Top Products */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Top Products</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/my?tab=products")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {sellerAnalytics?.topProducts?.slice(0, 3).map((product: any, index: number) => (
+                    <div key={product.id} className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
+                        {index + 1}
+                      </div>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-10 h-10 rounded object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {product.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.totalSales || "0"} sales
+                        </p>
+                      </div>
+                    </div>
+                  )) || (
+                    <p className="text-muted-foreground text-sm">
+                      No product data available
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Boosts */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Active Boosts</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/my?tab=products")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {activeBoosts.length === 0 ? (
+                  <div className="text-center py-4">
+                    <Zap className="h-8 w-8 text-gray-400 mx-auto" />
+                    <p className="text-muted-foreground text-sm mt-2">
+                      No active boosts
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activeBoosts.slice(0, 3).map((boost) => {
+                      const product = myListings.find(
+                        (p) => p.id === boost.productId,
+                      );
+                      if (!product) return null;
+
+                      return (
+                        <div
+                          key={boost.id}
+                          className="flex items-center justify-between p-2 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-8 h-8 rounded object-cover"
+                            />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {product.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {boost.boostType}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge className="bg-amber-500 text-white text-xs">
+                            Active
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Additional Performance Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Boost History */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Boost History</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/my?tab=products")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {myBoosts.length === 0 ? (
+                  <div className="text-center py-4">
+                    <Activity className="h-8 w-8 text-gray-400 mx-auto" />
+                    <p className="text-muted-foreground text-sm mt-2">
+                      No boost history
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {myBoosts.slice(0, 3).map((boost) => {
+                      const product = myListings.find(
+                        (p) => p.id === boost.productId,
+                      );
+                      if (!product) return null;
+
+                      return (
+                        <div
+                          key={boost.id}
+                          className="flex items-center justify-between p-2 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-8 h-8 rounded object-cover"
+                            />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {product.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDate(boost.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                          {getBoostStatusBadge(boost)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Boost Performance Summary */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Boost Performance</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/analytics")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <p className="text-xl font-bold text-green-600">245%</p>
+                    <p className="text-xs text-muted-foreground">Average ROI</p>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <p className="text-xl font-bold text-blue-600">12,543</p>
+                    <p className="text-xs text-muted-foreground">Impressions</p>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <p className="text-xl font-bold text-purple-600">1,234</p>
+                    <p className="text-xs text-muted-foreground">Clicks</p>
+                  </div>
+                  <div className="text-center p-3 bg-amber-50 rounded-lg">
+                    <p className="text-xl font-bold text-amber-600">89</p>
+                    <p className="text-xs text-muted-foreground">Conversions</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         <TabsContent value="orders" className="space-y-4">

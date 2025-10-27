@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -44,9 +44,15 @@ import {
   DollarSign,
   Users,
   Target,
+  BarChart3,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useMarketplace } from "@/contexts/EnhancedMarketplaceContext";
+import { OrderService } from "@/services/orderService";
+import { WishlistService } from "@/services/wishlistService";
+import { ReviewService } from "@/services/reviewService";
 
 interface Order {
   id: string;
@@ -90,95 +96,89 @@ interface Review {
   verified: boolean;
 }
 
-// Mock data
-const mockOrders: Order[] = [
-  {
-    id: "1",
-    orderNumber: "MP-2024-001",
-    status: "delivered",
-    date: "2024-01-15",
-    total: 299.99,
-    tracking: "TRK123456789",
-    estimatedDelivery: "2024-01-18",
-    items: [
-      {
-        id: "1",
-        name: "iPhone 14 Pro Max",
-        image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
-        price: 299.99,
-        quantity: 1,
-        seller: "Tech Store",
-      },
-    ],
-  },
-  {
-    id: "2",
-    orderNumber: "MP-2024-002",
-    status: "shipped",
-    date: "2024-01-20",
-    total: 149.99,
-    tracking: "TRK987654321",
-    estimatedDelivery: "2024-01-25",
-    items: [
-      {
-        id: "2",
-        name: "Nike Air Max 270",
-        image:
-          "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg",
-        price: 149.99,
-        quantity: 1,
-        seller: "Shoe World",
-      },
-    ],
-  },
-];
-
-const mockWishlist: WishlistItem[] = [
-  {
-    id: "1",
-    name: "MacBook Pro 16-inch",
-    image: "https://fakestoreapi.com/img/81QpkIctqPL._AC_SX679_.jpg",
-    price: 2299,
-    originalPrice: 2499,
-    inStock: true,
-    rating: 4.9,
-    reviews: 890,
-    dateAdded: "2024-01-10",
-  },
-  {
-    id: "2",
-    name: "Sony WH-1000XM4",
-    image: "https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_.jpg",
-    price: 279,
-    originalPrice: 349,
-    inStock: true,
-    rating: 4.8,
-    reviews: 2890,
-    dateAdded: "2024-01-12",
-  },
-];
-
-const mockReviews: Review[] = [
-  {
-    id: "1",
-    productId: "1",
-    productName: "iPhone 14 Pro Max",
-    productImage: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
-    rating: 5,
-    comment:
-      "Excellent phone! Camera quality is amazing and battery life is great.",
-    date: "2024-01-18",
-    helpful: 12,
-    verified: true,
-  },
-];
-
 export default function BuyerDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getSellerOrders, getSellerAnalytics } = useMarketplace();
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
+    wishlistItems: 0,
+    reviewsWritten: 0,
+    savedAmount: 0,
+    favoriteCategory: "Electronics",
+  });
+
+  // Load real data
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        
+        // Load orders
+        const userOrders = await OrderService.getUserOrders(user.id);
+        setOrders(userOrders);
+        
+        // Load wishlist
+        const userWishlists = await WishlistService.getUserWishlists(user.id);
+        if (userWishlists.length > 0) {
+          const wishlistItems = await WishlistService.getWishlistItems(userWishlists[0].id);
+          setWishlist(wishlistItems.map(item => ({
+            id: item.id,
+            name: item.product?.name || "Unknown Product",
+            image: item.product?.image || "",
+            price: item.product?.price || 0,
+            originalPrice: item.product?.discountPrice || undefined,
+            inStock: item.product?.inStock || false,
+            rating: item.product?.rating || 0,
+            reviews: item.product?.reviewCount || 0,
+            dateAdded: item.addedAt,
+          })));
+        }
+        
+        // Load reviews (this would typically come from a user reviews service)
+        // For now, we'll simulate with a placeholder
+        setReviews([]);
+        
+        // Calculate stats
+        const totalSpent = userOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+        const savedAmount = wishlist.reduce(
+          (sum, item) => sum + ((item.originalPrice || item.price) - item.price),
+          0,
+        );
+        
+        setStats({
+          totalOrders: userOrders.length,
+          totalSpent,
+          wishlistItems: wishlist.length,
+          reviewsWritten: reviews.length,
+          savedAmount,
+          favoriteCategory: "Electronics",
+        });
+      } catch (error) {
+        console.error("Error loading buyer data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id, toast]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -247,115 +247,310 @@ export default function BuyerDashboard() {
     setShowOrderDetails(true);
   };
 
-  const buyerStats = {
-    totalOrders: mockOrders.length,
-    totalSpent: mockOrders.reduce((sum, order) => sum + order.total, 0),
-    wishlistItems: mockWishlist.length,
-    reviewsWritten: mockReviews.length,
-    savedAmount: mockWishlist.reduce(
-      (sum, item) => sum + ((item.originalPrice || item.price) - item.price),
-      0,
-    ),
-    favoriteCategory: "Electronics",
-  };
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p>Loading your dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
-        <p className="text-gray-600 mt-2">
-          Welcome back, {user?.name || "Customer"}! Manage your orders,
-          wishlist, and account settings.
-        </p>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card
-          className="cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => navigate("/app/marketplace/orders")}
-        >
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">
-                  Total Orders
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {buyerStats.totalOrders}
-                </p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Package className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatPrice(buyerStats.totalSpent)}
-                </p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">
-                  Wishlist Items
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {buyerStats.wishlistItems}
-                </p>
-              </div>
-              <div className="bg-red-100 p-3 rounded-full">
-                <Heart className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Money Saved</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatPrice(buyerStats.savedAmount)}
-                </p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-full">
-                <Gift className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="orders" className="w-full">
-        <div className="overflow-x-auto -mx-1 pb-2">
-          <TabsList className="flex w-max gap-2 bg-gray-100 p-1 rounded-lg">
-            <TabsTrigger value="orders" className="px-3 py-2 text-sm whitespace-nowrap">Orders</TabsTrigger>
-            <TabsTrigger value="wishlist" className="px-3 py-2 text-sm whitespace-nowrap">Wishlist</TabsTrigger>
-            <TabsTrigger value="reviews" className="px-3 py-2 text-sm whitespace-nowrap">Reviews</TabsTrigger>
-            <TabsTrigger value="addresses" className="px-3 py-2 text-sm whitespace-nowrap">Addresses</TabsTrigger>
-            <TabsTrigger value="payment" className="px-3 py-2 text-sm whitespace-nowrap">Payment</TabsTrigger>
-            <TabsTrigger value="settings" className="px-3 py-2 text-sm whitespace-nowrap">Settings</TabsTrigger>
-          </TabsList>
+      {/* Enhanced Header with proper layout */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Buyer Dashboard</h1>
+          <p className="text-gray-600 mt-2">
+            Welcome back, {user?.name || "Customer"}! Track your orders, manage wishlist, and more.
+          </p>
         </div>
+
+        <Button
+          onClick={() => navigate("/app/marketplace")}
+          className="flex items-center gap-2 w-full sm:w-auto"
+        >
+          <ShoppingCart className="w-4 h-4" />
+          <span>Continue Shopping</span>
+        </Button>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Stats Overview - Updated to 2x3 grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate("/app/marketplace/orders")}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Orders
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.totalOrders}
+                    </p>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <Package className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate("/app/marketplace/orders")}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Spent</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {formatPrice(stats.totalSpent)}
+                    </p>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <DollarSign className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate("/app/marketplace/wishlist")}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Wishlist Items
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.wishlistItems}
+                    </p>
+                  </div>
+                  <div className="bg-red-100 p-3 rounded-full">
+                    <Heart className="w-6 h-6 text-red-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate("/app/marketplace/my?tab=reviews")}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Reviews Written
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.reviewsWritten}
+                    </p>
+                  </div>
+                  <div className="bg-yellow-100 p-3 rounded-full">
+                    <Star className="w-6 h-6 text-yellow-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Saved Amount
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {formatPrice(stats.savedAmount)}
+                    </p>
+                  </div>
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <Gift className="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Favorite Category
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.favoriteCategory}
+                    </p>
+                  </div>
+                  <div className="bg-orange-100 p-3 rounded-full">
+                    <TrendingUp className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs">
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Additional Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Order Trends */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Order Trends
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  Order trend visualization would appear here
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs" onClick={() => navigate("/app/marketplace/analytics")}>
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Category Spending */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Category Spending
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Electronics</span>
+                      <span>$1,240</span>
+                    </div>
+                    <Progress value={60} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Fashion</span>
+                      <span>$890</span>
+                    </div>
+                    <Progress value={45} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Home & Garden</span>
+                      <span>$620</span>
+                    </div>
+                    <Progress value={30} className="h-2" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 h-auto mt-2 text-xs" onClick={() => navigate("/app/marketplace/analytics")}>
+                  See More
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Recent Reviews */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Recent Reviews</CardTitle>
+                <Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/app/marketplace/my?tab=reviews")}>
+                  See More
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {reviews.slice(0, 2).map((review) => (
+                    <div
+                      key={review.id}
+                      className="flex items-start gap-3"
+                    >
+                      <img
+                        src={review.productImage}
+                        alt={review.productName}
+                        className="w-10 h-10 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{review.productName}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {renderStars(review.rating)}
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                          "{review.comment}"
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Shopping Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Shopping Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Avg. Order Value</span>
+                    <span className="font-medium">
+                      {formatPrice(stats.totalSpent / Math.max(stats.totalOrders, 1))}
+                    </span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Wishlist Conversion</span>
+                    <span className="font-medium">23%</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Favorite Store</span>
+                    <span className="font-medium">Tech Store</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* Orders Tab */}
         <TabsContent value="orders" className="space-y-6">
@@ -372,360 +567,357 @@ export default function BuyerDashboard() {
               </Button>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
-                Download All
+                Export Orders
               </Button>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {mockOrders.map((order) => (
-              <Card
-                key={order.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <Badge className={getStatusColor(order.status)}>
-                        {getStatusIcon(order.status)}
-                        <span className="ml-1 capitalize">{order.status}</span>
-                      </Badge>
-                      <span className="text-sm text-gray-600">
-                        Order #{order.orderNumber}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        {formatPrice(order.total)}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {formatDate(order.date)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 mb-4">
-                    {order.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-12 h-12 object-cover rounded-lg"
-                        />
-                        <div>
-                          <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-xs text-gray-600">
-                            Qty: {item.quantity} • {item.seller}
-                          </p>
+          {orders.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
+                <p className="text-gray-600 mb-4">
+                  You haven't placed any orders yet. Start shopping to see your orders here.
+                </p>
+                <Button onClick={() => navigate("/app/marketplace")}>
+                  Start Shopping
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {orders.slice(0, 5).map((order) => (
+                <Card key={order.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                          <h3 className="font-semibold">Order #{order.orderNumber}</h3>
+                          <Badge className={getStatusColor(order.status)}>
+                            <span className="flex items-center gap-1">
+                              {getStatusIcon(order.status)}
+                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </span>
+                          </Badge>
                         </div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {order.items.length} item(s) • {formatDate(order.createdAt)}
+                        </p>
+                        <p className="font-semibold">{formatPrice(order.totalAmount)}</p>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      {order.tracking && (
-                        <span className="text-sm text-gray-600">
-                          <Truck className="w-4 h-4 inline mr-1" />
-                          {order.tracking}
-                        </span>
-                      )}
-                      {order.estimatedDelivery && (
-                        <span className="text-sm text-gray-600">
-                          <Calendar className="w-4 h-4 inline mr-1" />
-                          Est. {formatDate(order.estimatedDelivery)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewOrderDetails(order)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </Button>
-                      {order.status === "delivered" && (
-                        <Button variant="outline" size="sm">
-                          <Star className="w-4 h-4 mr-2" />
-                          Review
+                      
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewOrderDetails(order)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
                         </Button>
-                      )}
+                        <Button variant="outline" size="sm">
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Contact Seller
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {orders.length > 5 && (
+                <div className="text-center">
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate("/app/marketplace/orders")}
+                  >
+                    View All {orders.length} Orders
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* Wishlist Tab */}
         <TabsContent value="wishlist" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="text-xl font-semibold">My Wishlist</h2>
-            <Button variant="outline" size="sm">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Add All to Cart
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockWishlist.map((item) => (
-              <Card
-                key={item.id}
-                className="group hover:shadow-lg transition-shadow"
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/app/marketplace/wishlist")}
               >
-                <CardContent className="p-4">
-                  <div className="relative mb-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                    >
-                      <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                    </Button>
-                    {item.originalPrice && item.originalPrice > item.price && (
-                      <Badge className="absolute top-2 left-2 bg-red-500 text-white">
-                        -
-                        {Math.round(
-                          ((item.originalPrice - item.price) /
-                            item.originalPrice) *
-                            100,
-                        )}
-                        %
-                      </Badge>
-                    )}
-                  </div>
-
-                  <h3 className="font-medium text-lg mb-2 line-clamp-2">
-                    {item.name}
-                  </h3>
-
-                  <div className="flex items-center gap-1 mb-2">
-                    {renderStars(item.rating)}
-                    <span className="text-sm text-gray-600">
-                      ({item.reviews})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl font-bold text-red-600">
-                      {formatPrice(item.price)}
-                    </span>
-                    {item.originalPrice && item.originalPrice > item.price && (
-                      <span className="text-sm text-gray-500 line-through">
-                        {formatPrice(item.originalPrice)}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between mb-3">
-                    <Badge variant={item.inStock ? "default" : "destructive"}>
-                      {item.inStock ? "In Stock" : "Out of Stock"}
-                    </Badge>
-                    <span className="text-xs text-gray-500">
-                      Added {formatDate(item.dateAdded)}
-                    </span>
-                  </div>
-
-                  <Button className="w-full" disabled={!item.inStock}>
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                <Heart className="w-4 h-4 mr-2" />
+                View Full Wishlist
+              </Button>
+              <Button variant="outline" size="sm">
+                <Gift className="w-4 h-4 mr-2" />
+                Share Wishlist
+              </Button>
+            </div>
           </div>
+
+          {wishlist.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Your wishlist is empty</h3>
+                <p className="text-gray-600 mb-4">
+                  Save items to your wishlist to view them here later.
+                </p>
+                <Button onClick={() => navigate("/app/marketplace")}>
+                  Start Shopping
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {wishlist.slice(0, 6).map((item) => (
+                <Card key={item.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="relative">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full aspect-square object-cover rounded-lg mb-3"
+                      />
+                      {item.originalPrice && item.originalPrice > item.price && (
+                        <Badge className="absolute top-2 right-2 bg-red-500 text-white">
+                          Save {formatPrice(item.originalPrice - item.price)}
+                        </Badge>
+                      )}
+                    </div>
+                    <h3 className="font-medium mb-1 line-clamp-2">{item.name}</h3>
+                    <div className="flex items-center gap-1 mb-2">
+                      {renderStars(item.rating)}
+                      <span className="text-xs text-muted-foreground">
+                        ({item.reviews})
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">
+                          {formatPrice(item.price)}
+                        </p>
+                        {item.originalPrice && item.originalPrice > item.price && (
+                          <p className="text-xs text-muted-foreground line-through">
+                            {formatPrice(item.originalPrice)}
+                          </p>
+                        )}
+                      </div>
+                      <Button size="sm">Add to Cart</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {wishlist.length > 6 && (
+                <div className="col-span-full text-center">
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate("/app/marketplace/wishlist")}
+                  >
+                    View All {wishlist.length} Items
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* Reviews Tab */}
         <TabsContent value="reviews" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">My Reviews</h2>
-            <Badge variant="secondary">
-              {mockReviews.length} reviews written
-            </Badge>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate("/app/marketplace/my?tab=reviews")}
+            >
+              <Star className="w-4 h-4 mr-2" />
+              View All Reviews
+            </Button>
           </div>
 
-          <div className="space-y-4">
-            {mockReviews.map((review) => (
-              <Card key={review.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <img
-                      src={review.productImage}
-                      alt={review.productName}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium">{review.productName}</h3>
-                        <div className="flex items-center gap-2">
-                          {review.verified && (
-                            <Badge variant="secondary" className="text-xs">
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Verified Purchase
-                            </Badge>
-                          )}
+          {reviews.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No reviews yet</h3>
+                <p className="text-gray-600 mb-4">
+                  After purchasing items, you can leave reviews to help other buyers.
+                </p>
+                <Button onClick={() => navigate("/app/marketplace")}>
+                  Start Shopping
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {reviews.slice(0, 5).map((review) => (
+                <Card key={review.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <img
+                        src={review.productImage}
+                        alt={review.productName}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-medium">{review.productName}</h3>
+                          <div className="flex items-center gap-2">
+                            {review.verified && (
+                              <Badge variant="secondary" className="text-xs">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Verified Purchase
+                              </Badge>
+                            )}
+                            <span className="text-sm text-gray-600">
+                              {formatDate(review.date)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-3">
+                          {renderStars(review.rating)}
                           <span className="text-sm text-gray-600">
-                            {formatDate(review.date)}
+                            {review.rating} out of 5 stars
                           </span>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2 mb-3">
-                        {renderStars(review.rating)}
-                        <span className="text-sm text-gray-600">
-                          {review.rating}/5
-                        </span>
-                      </div>
+                        <p className="text-gray-700 mb-3">{review.comment}</p>
 
-                      <p className="text-gray-700 mb-3">{review.comment}</p>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">
-                          {review.helpful} people found this helpful
-                        </span>
-                        <Button variant="outline" size="sm">
-                          Edit Review
-                        </Button>
+                        <div className="flex items-center gap-4">
+                          <Button variant="ghost" size="sm">
+                            👍 Helpful ({review.helpful})
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* Other tabs placeholders */}
-        <TabsContent value="addresses">
-          <Card>
-            <CardHeader>
-              <CardTitle>Shipping Addresses</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Manage your shipping addresses here.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="payment">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Methods</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Manage your payment methods here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Manage your account preferences here.
-              </p>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {reviews.length > 5 && (
+                <div className="text-center">
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate("/app/marketplace/my?tab=reviews")}
+                  >
+                    View All {reviews.length} Reviews
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
-      {/* Order Details Modal */}
+      {/* Order Details Dialog */}
       <Dialog open={showOrderDetails} onOpenChange={setShowOrderDetails}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
             <DialogDescription>
-              Order #{selectedOrder?.orderNumber} -{" "}
-              {formatDate(selectedOrder?.date || "")}
+              Order #{selectedOrder?.orderNumber}
             </DialogDescription>
           </DialogHeader>
-
+          
           {selectedOrder && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Badge className={getStatusColor(selectedOrder.status)}>
-                  {getStatusIcon(selectedOrder.status)}
-                  <span className="ml-1 capitalize">
-                    {selectedOrder.status}
-                  </span>
-                </Badge>
-                <span className="font-semibold text-lg">
-                  {formatPrice(selectedOrder.total)}
-                </span>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <h4 className="font-medium">Items</h4>
-                {selectedOrder.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <h5 className="font-medium">{item.name}</h5>
-                      <p className="text-sm text-gray-600">
-                        Sold by {item.seller}
-                      </p>
-                      <p className="text-sm">
-                        Qty: {item.quantity} • {formatPrice(item.price)}
+            <div className="space-y-6">
+              {/* Order Summary */}
+              <div>
+                <h3 className="font-semibold mb-3">Order Summary</h3>
+                <div className="space-y-3">
+                  {selectedOrder.items.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Qty: {item.quantity} × {formatPrice(item.price)}
+                        </p>
+                      </div>
+                      <p className="font-semibold">
+                        {formatPrice(item.price * item.quantity)}
                       </p>
                     </div>
+                  ))}
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(selectedOrder.total)}</span>
                   </div>
-                ))}
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span>Free</span>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>{formatPrice(selectedOrder.total)}</span>
+                  </div>
+                </div>
               </div>
-
+              
+              {/* Order Status */}
+              <div>
+                <h3 className="font-semibold mb-3">Order Status</h3>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(selectedOrder.status)}>
+                    <span className="flex items-center gap-1">
+                      {getStatusIcon(selectedOrder.status)}
+                      {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                    </span>
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    Placed on {formatDate(selectedOrder.date)}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Tracking */}
               {selectedOrder.tracking && (
-                <>
-                  <Separator />
-                  <div>
-                    <h4 className="font-medium mb-2">Tracking Information</h4>
-                    <p className="text-sm text-gray-600">
-                      Tracking Number:{" "}
-                      <span className="font-mono">
-                        {selectedOrder.tracking}
-                      </span>
-                    </p>
-                    {selectedOrder.estimatedDelivery && (
-                      <p className="text-sm text-gray-600">
-                        Estimated Delivery:{" "}
-                        {formatDate(selectedOrder.estimatedDelivery)}
-                      </p>
-                    )}
+                <div>
+                  <h3 className="font-semibold mb-3">Tracking Information</h3>
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">
+                      Tracking #: {selectedOrder.tracking}
+                    </span>
                   </div>
-                </>
+                  {selectedOrder.estimatedDelivery && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        Estimated Delivery: {formatDate(selectedOrder.estimatedDelivery)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
-
+          
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowOrderDetails(false)}
-            >
+            <Button variant="outline" onClick={() => setShowOrderDetails(false)}>
               Close
             </Button>
-            <Button>Track Package</Button>
+            <Button>
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Contact Seller
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
