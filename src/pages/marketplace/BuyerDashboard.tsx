@@ -283,13 +283,27 @@ export default function BuyerDashboard() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="w-full overflow-x-auto pb-2">
+          <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground min-w-fit">
+            <TabsTrigger value="overview" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <BarChart3 className="w-4 h-4" />
+              <span>Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <Package className="w-4 h-4" />
+              <span>Orders</span>
+            </TabsTrigger>
+            <TabsTrigger value="wishlist" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <Heart className="w-4 h-4" />
+              <span>Wishlist</span>
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <Star className="w-4 h-4" />
+              <span>Reviews</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
