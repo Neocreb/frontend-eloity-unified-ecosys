@@ -36,52 +36,75 @@ interface MobileDialogContentProps
 const MobileDialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   MobileDialogContentProps
->(({ className, children, size = 'base', mobileFullScreen = false, ...props }, ref) => (
-  <MobileDialogPortal>
-    <MobileDialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        'fixed bg-background border shadow-lg duration-200',
-        zIndex.modal,
-        // Mobile-first positioning
-        mobileFullScreen 
-          ? 'inset-0 m-0 rounded-none' // Full screen on mobile
-          : 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg m-4', // Centered with margin
-        // Responsive sizing
-        !mobileFullScreen && responsiveModal[size],
-        // Mobile-specific height management
-        mobileFullScreen 
-          ? viewportHeight.safe 
-          : 'max-h-[90vh] sm:max-h-[85vh]',
-        // Mobile optimizations
-        'overflow-y-auto overscroll-contain',
-        // Animations
-        'data-[state=open]:animate-in data-[state=closed]:animate-out',
-        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-        mobileFullScreen 
-          ? 'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95'
-          : 'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close
+>(({ className, children, size = 'base', mobileFullScreen = false, ...props }, ref) => {
+  // Development warning for missing DialogTitle
+  React.useEffect(() => {
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
+      const childrenArray = React.Children.toArray(children);
+      const hasDialogTitle = childrenArray.some(child =>
+        React.isValidElement(child) &&
+        (child.type === MobileDialogTitle ||
+         (typeof child.type === 'object' && child.type?.displayName === 'DialogTitle') ||
+         child.props?.children && React.Children.toArray(child.props.children).some(grandchild =>
+           React.isValidElement(grandchild) &&
+           (grandchild.type === MobileDialogTitle ||
+            (typeof grandchild.type === 'object' && grandchild.type?.displayName === 'DialogTitle'))
+         ))
+      );
+
+      if (!hasDialogTitle) {
+        console.warn('MobileDialogContent requires a MobileDialogTitle for accessibility. Consider adding a MobileDialogTitle or wrapping it with VisuallyHidden if you want to hide it visually.');
+      }
+    }
+  }, [children]);
+
+  return (
+    <MobileDialogPortal>
+      <MobileDialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
         className={cn(
-          'absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity',
-          'hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-          'disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground',
-          // Touch-friendly close button
-          'min-h-[44px] min-w-[44px] flex items-center justify-center'
+          'fixed bg-background border shadow-lg duration-200',
+          zIndex.modal,
+          // Mobile-first positioning
+          mobileFullScreen 
+            ? 'inset-0 m-0 rounded-none' // Full screen on mobile
+            : 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg m-4', // Centered with margin
+          // Responsive sizing
+          !mobileFullScreen && responsiveModal[size],
+          // Mobile-specific height management
+          mobileFullScreen 
+            ? viewportHeight.safe 
+            : 'max-h-[90vh] sm:max-h-[85vh]',
+          // Mobile optimizations
+          'overflow-y-auto overscroll-contain',
+          // Animations
+          'data-[state=open]:animate-in data-[state=closed]:animate-out',
+          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+          mobileFullScreen 
+            ? 'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95'
+            : 'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+          className
         )}
+        {...props}
       >
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </MobileDialogPortal>
-));
+        {children}
+        <DialogPrimitive.Close
+          className={cn(
+            'absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity',
+            'hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            'disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground',
+            // Touch-friendly close button
+            'min-h-[44px] min-w-[44px] flex items-center justify-center'
+          )}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </MobileDialogPortal>
+  );
+});
 MobileDialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const MobileDialogHeader = ({
@@ -184,6 +207,27 @@ const MobileDrawer = React.forwardRef<
   MobileDrawerProps
 >(({ className, children, snapPoints = [50, 100], defaultSnapPoint = 50, ...props }, ref) => {
   const [snapPoint, setSnapPoint] = React.useState(defaultSnapPoint);
+
+  // Development warning for missing DialogTitle
+  React.useEffect(() => {
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
+      const childrenArray = React.Children.toArray(children);
+      const hasDialogTitle = childrenArray.some(child =>
+        React.isValidElement(child) &&
+        (child.type === MobileDialogTitle ||
+         (typeof child.type === 'object' && child.type?.displayName === 'DialogTitle') ||
+         child.props?.children && React.Children.toArray(child.props.children).some(grandchild =>
+           React.isValidElement(grandchild) &&
+           (grandchild.type === MobileDialogTitle ||
+            (typeof grandchild.type === 'object' && grandchild.type?.displayName === 'DialogTitle'))
+         ))
+      );
+
+      if (!hasDialogTitle) {
+        console.warn('MobileDrawer requires a MobileDialogTitle for accessibility. Consider adding a MobileDialogTitle or wrapping it with VisuallyHidden if you want to hide it visually.');
+      }
+    }
+  }, [children]);
 
   return (
     <MobileDialogPortal>

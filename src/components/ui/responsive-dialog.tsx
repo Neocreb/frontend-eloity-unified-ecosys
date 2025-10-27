@@ -40,6 +40,27 @@ const ResponsiveDialogContent = React.forwardRef<
     { className, children, size = "md", mobileFullScreen = false, ...props },
     ref,
   ) => {
+    // Development warning for missing DialogTitle
+    React.useEffect(() => {
+      if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
+        const childrenArray = React.Children.toArray(children);
+        const hasDialogTitle = childrenArray.some(child =>
+          React.isValidElement(child) &&
+          (child.type === ResponsiveDialogTitle ||
+           (typeof child.type === 'object' && child.type?.displayName === 'DialogTitle') ||
+           child.props?.children && React.Children.toArray(child.props.children).some(grandchild =>
+             React.isValidElement(grandchild) &&
+             (grandchild.type === ResponsiveDialogTitle ||
+              (typeof grandchild.type === 'object' && grandchild.type?.displayName === 'DialogTitle'))
+           ))
+        );
+
+        if (!hasDialogTitle) {
+          console.warn('ResponsiveDialogContent requires a ResponsiveDialogTitle for accessibility. Consider adding a ResponsiveDialogTitle or wrapping it with VisuallyHidden if you want to hide it visually.');
+        }
+      }
+    }, [children]);
+
     const sizeClasses = {
       sm: "max-w-sm",
       md: "max-w-md",
