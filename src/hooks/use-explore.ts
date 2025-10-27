@@ -59,11 +59,19 @@ export const useExplore = () => {
                   count: result.stats?.views || 0
                 });
                 break;
-              case "job":
+              case "group":
                 groups.push({
                   id: result.id,
                   name: result.title,
                   members: result.stats?.views || 0,
+                  category: result.category
+                });
+                break;
+              case "page":
+                pages.push({
+                  id: result.id,
+                  name: result.title,
+                  followers: result.stats?.views || 0,
                   category: result.category
                 });
                 break;

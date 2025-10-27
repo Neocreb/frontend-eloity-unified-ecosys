@@ -7,6 +7,7 @@ import EnhancedPostCard from "@/components/feed/EnhancedPostCard";
 import { Post } from "@/types/post";
 import { Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { exploreService } from "@/services/exploreService";
 
 interface Group {
   id: string;
@@ -36,153 +37,65 @@ interface ExploreGroupsProps {
 const ExploreGroups = ({ groups }: ExploreGroupsProps) => {
   const [groupPosts, setGroupPosts] = useState<GroupPost[]>([]);
   const [loading, setLoading] = useState(false);
-  const [joinedGroups] = useState<Group[]>([]);
+  const [joinedGroups, setJoinedGroups] = useState<Group[]>([]);
   const { toast } = useToast();
-
-  // Mock user groups data
-  const mockJoinedGroups: any[] = [
-    {
-      id: 'joined-1',
-      name: 'Tech Enthusiasts',
-      members: 15420,
-      category: 'Technology',
-      cover: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400',
-      isJoined: true,
-      description: 'Discussion about latest tech trends',
-      privacy: 'public'
-    },
-    {
-      id: 'joined-2',
-      name: 'Crypto Traders',
-      members: 8340,
-      category: 'Finance',
-      cover: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400',
-      isJoined: true,
-      description: 'Cryptocurrency trading strategies and tips',
-      privacy: 'public'
-    }
-  ];
-
-  const mockMyGroups: any[] = [
-    {
-      id: 'my-1',
-      name: 'Web3 Developers',
-      members: 2350,
-      category: 'Technology',
-      cover: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400',
-      isOwner: true,
-      description: 'Building decentralized applications',
-      privacy: 'public'
-    }
-  ];
 
   // Load group posts on component mount
   useEffect(() => {
     loadGroupPosts();
+    loadJoinedGroups();
   }, []);
+
+  const loadJoinedGroups = async () => {
+    try {
+      // In a real implementation, this would fetch the user's joined groups
+      // For now, we'll use an empty array
+      setJoinedGroups([]);
+    } catch (error) {
+      console.error("Error loading joined groups:", error);
+    }
+  };
 
   const loadGroupPosts = async () => {
     setLoading(true);
-
-    // Mock group posts data - in real app, this would come from API
-    const mockGroupPosts: GroupPost[] = [
-      {
-        id: "group-post-1",
+    try {
+      // Fetch real group posts using exploreService
+      const suggestedGroups = await exploreService.getSuggestedGroups(10);
+      
+      // For now, we'll create mock posts based on real groups
+      // In a full implementation, we would fetch actual posts from each group
+      const mockGroupPosts: GroupPost[] = suggestedGroups.slice(0, 4).map((group, index) => ({
+        id: `group-post-${index + 1}`,
         author: {
-          name: "Alex Chen",
-          username: "alexchen",
-          avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+          name: `Member of ${group.name}`,
+          username: group.name.toLowerCase().replace(/\s+/g, ''),
+          avatar: group.avatar_url || `https://images.unsplash.com/photo-${index + 1}?w=100`,
           verified: false
         },
-        content: "Just deployed my first dApp on Ethereum! The future of decentralized applications is here. Who else is building on web3? 🚀",
-        image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500",
-        createdAt: "2 hours ago",
-        likes: 45,
-        comments: 12,
-        shares: 8,
-        liked: false,
-        groupId: "joined-1",
-        groupName: "Tech Enthusiasts",
-        groupAvatar: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=100"
-      },
-      {
-        id: "group-post-2",
-        author: {
-          name: "Sarah Williams",
-          username: "sarahw",
-          avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-          verified: true
-        },
-        content: "Bitcoin hits new resistance level. Technical analysis suggests a potential breakout incoming. What are your thoughts on the current market trend? 📈",
-        createdAt: "4 hours ago",
-        likes: 78,
-        comments: 23,
-        shares: 15,
-        liked: true,
-        groupId: "joined-2",
-        groupName: "Crypto Traders",
-        groupAvatar: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=100"
-      },
-      {
-        id: "group-post-3",
-        author: {
-          name: "Mike Johnson",
-          username: "mikej",
-          avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-          verified: false
-        },
-        content: "Amazing conference today! Learned so much about the latest ML algorithms and their real-world applications. The AI revolution is accelerating faster than ever.",
-        image: "https://images.unsplash.com/photo-1555255707-c07966088b7b?w=500",
-        createdAt: "6 hours ago",
-        likes: 34,
-        comments: 7,
-        shares: 4,
-        liked: false,
-        groupId: "1",
-        groupName: "Web Development Hub",
-        groupAvatar: "https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=100"
-      },
-      {
-        id: "group-post-4",
-        author: {
-          name: "Emma Davis",
-          username: "emmad",
-          avatar: "https://randomuser.me/api/portraits/women/4.jpg",
-          verified: false
-        },
-        content: "Check out this amazing traditional recipe I tried from my grandmother's cookbook! The flavors are absolutely incredible. Food truly brings people together ❤️",
-        image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=500",
-        createdAt: "8 hours ago",
-        likes: 67,
-        comments: 18,
-        shares: 12,
-        liked: true,
-        groupId: "joined-4",
-        groupName: "Foodies United",
-        groupAvatar: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=100"
-      }
-    ];
+        content: `Discussion in ${group.name}: ${group.description || 'Join our community to participate in discussions!'}`,
+        image: index % 2 === 0 ? `https://images.unsplash.com/photo-${index + 10}?w=500` : undefined,
+        createdAt: `${index + 1} hour${index + 1 > 1 ? 's' : ''} ago`,
+        likes: Math.floor(Math.random() * 100),
+        comments: Math.floor(Math.random() * 30),
+        shares: Math.floor(Math.random() * 20),
+        liked: index % 3 === 0,
+        groupId: group.id,
+        groupName: group.name,
+        groupAvatar: group.avatar_url || `https://images.unsplash.com/photo-${index + 1}?w=100`
+      }));
 
-    // Sort posts: prioritize joined groups first, then by engagement
-    const joinedGroupIds = [...mockJoinedGroups, ...joinedGroups].map(g => g.id);
-    const sortedPosts = mockGroupPosts.sort((a, b) => {
-      const aIsJoined = joinedGroupIds.includes(a.groupId);
-      const bIsJoined = joinedGroupIds.includes(b.groupId);
-
-      if (aIsJoined && !bIsJoined) return -1;
-      if (!aIsJoined && bIsJoined) return 1;
-
-      // If both are joined or both are not joined, sort by engagement
-      return (b.likes + b.comments + b.shares) - (a.likes + a.comments + a.shares);
-    });
-
-    setGroupPosts(sortedPosts);
-    setLoading(false);
+      setGroupPosts(mockGroupPosts);
+    } catch (error) {
+      console.error("Error loading group posts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load group posts",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
-
-
-
 
   return (
     <div className="space-y-4">
@@ -197,7 +110,7 @@ const ExploreGroups = ({ groups }: ExploreGroupsProps) => {
         </div>
         <div className="flex items-center gap-2">
           <div className="text-sm text-muted-foreground">
-            Showing posts from your joined groups first
+            Showing posts from popular groups
           </div>
           <Button
             variant="ghost"
@@ -243,7 +156,7 @@ const ExploreGroups = ({ groups }: ExploreGroupsProps) => {
                   <span className="sm:hidden">From</span>
                   <span className="font-semibold text-primary truncate max-w-[200px]">{post.groupName}</span>
                 </div>
-                {[...mockJoinedGroups, ...joinedGroups].some(g => g.id === post.groupId) && (
+                {joinedGroups.some(g => g.id === post.groupId) && (
                   <Badge variant="secondary" className="text-xs">Joined</Badge>
                 )}
               </div>
