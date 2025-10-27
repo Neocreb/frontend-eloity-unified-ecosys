@@ -230,7 +230,7 @@ class ApiClient {
         }
       });
     }
-    return this.request(`/search?${params.toString()}`);
+    return this.request(`/explore/search?${params.toString()}`);
   }
 
   // Marketplace methods
