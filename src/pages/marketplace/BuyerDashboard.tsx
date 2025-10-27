@@ -49,28 +49,30 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { useMarketplace } from "@/contexts/EnhancedMarketplaceContext";
+import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
+import type { Order as EnhancedOrder } from "@/types/enhanced-marketplace";
 import { OrderService } from "@/services/orderService";
 import { WishlistService } from "@/services/wishlistService";
 import { ReviewService } from "@/services/reviewService";
 
-interface Order {
-  id: string;
-  orderNumber: string;
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
-  date: string;
-  total: number;
-  items: {
-    id: string;
-    name: string;
-    image: string;
-    price: number;
-    quantity: number;
-    seller: string;
-  }[];
-  tracking?: string;
-  estimatedDelivery?: string;
-}
+// Use the enhanced Order type from the marketplace types
+// interface Order {
+//   id: string;
+//   orderNumber: string;
+//   status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+//   date: string;
+//   total: number;
+//   items: {
+//     id: string;
+//     name: string;
+//     image: string;
+//     price: number;
+//     quantity: number;
+//     seller: string;
+//   }[];
+//   tracking?: string;
+//   estimatedDelivery?: string;
+// }
 
 interface WishlistItem {
   id: string;
@@ -99,12 +101,12 @@ interface Review {
 export default function BuyerDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getSellerOrders, getSellerAnalytics } = useMarketplace();
+  const { getSellerOrders, getSellerAnalytics } = useEnhancedMarketplace();
   const navigate = useNavigate();
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<EnhancedOrder | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<EnhancedOrder[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -242,7 +244,7 @@ export default function BuyerDashboard() {
     ));
   };
 
-  const handleViewOrderDetails = (order: Order) => {
+  const handleViewOrderDetails = (order: EnhancedOrder) => {
     setSelectedOrder(order);
     setShowOrderDetails(true);
   };
@@ -834,20 +836,20 @@ export default function BuyerDashboard() {
                 <h3 className="font-semibold mb-3">Order Summary</h3>
                 <div className="space-y-3">
                   {selectedOrder.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3">
+                    <div key={item.productId} className="flex items-center gap-3">
                       <img
-                        src={item.image}
-                        alt={item.name}
+                        src={item.productImage}
+                        alt={item.productName}
                         className="w-12 h-12 object-cover rounded"
                       />
                       <div className="flex-1">
-                        <p className="font-medium">{item.name}</p>
+                        <p className="font-medium">{item.productName}</p>
                         <p className="text-sm text-muted-foreground">
-                          Qty: {item.quantity} × {formatPrice(item.price)}
+                          Qty: {item.quantity} × {formatPrice(item.unitPrice)}
                         </p>
                       </div>
                       <p className="font-semibold">
-                        {formatPrice(item.price * item.quantity)}
+                        {formatPrice(item.totalPrice)}
                       </p>
                     </div>
                   ))}
@@ -858,7 +860,7 @@ export default function BuyerDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>{formatPrice(selectedOrder.total)}</span>
+                    <span>{formatPrice(selectedOrder.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -866,7 +868,7 @@ export default function BuyerDashboard() {
                   </div>
                   <div className="flex justify-between font-semibold">
                     <span>Total</span>
-                    <span>{formatPrice(selectedOrder.total)}</span>
+                    <span>{formatPrice(selectedOrder.totalAmount)}</span>
                   </div>
                 </div>
               </div>
@@ -882,19 +884,19 @@ export default function BuyerDashboard() {
                     </span>
                   </Badge>
                   <span className="text-sm text-muted-foreground">
-                    Placed on {formatDate(selectedOrder.date)}
+                    Placed on {formatDate(selectedOrder.createdAt)}
                   </span>
                 </div>
               </div>
               
               {/* Tracking */}
-              {selectedOrder.tracking && (
+              {selectedOrder.trackingNumber && (
                 <div>
                   <h3 className="font-semibold mb-3">Tracking Information</h3>
                   <div className="flex items-center gap-2">
                     <Package className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm">
-                      Tracking #: {selectedOrder.tracking}
+                      Tracking #: {selectedOrder.trackingNumber}
                     </span>
                   </div>
                   {selectedOrder.estimatedDelivery && (
