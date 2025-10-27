@@ -21,7 +21,32 @@ async function handleNewUser(user: any) {
         {
           id: user.id,
           email: user.email,
-          email_confirmed: user.email_confirmed || false,
+          username: null,
+          full_name: null,
+          avatar_url: null,
+          banner_url: null,
+          bio: null,
+          location: null,
+          website: null,
+          phone: null,
+          date_of_birth: null,
+          gender: null,
+          is_verified: false,
+          points: 0,
+          level: 'bronze',
+          role: 'user',
+          reputation: 0,
+          followers_count: 0,
+          following_count: 0,
+          posts_count: 0,
+          profile_views: 0,
+          is_online: false,
+          last_active: null,
+          profile_visibility: 'public',
+          allow_direct_messages: true,
+          allow_notifications: true,
+          preferred_currency: 'USDT',
+          timezone: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
@@ -41,21 +66,18 @@ async function handleNewUser(user: any) {
       .insert([
         {
           user_id: user.id,
-          username: null,
-          full_name: null,
           name: null,
-          bio: null,
           avatar: null,
-          avatar_url: null,
-          is_verified: false,
-          level: 'bronze',
-          points: 0,
+          bio: null,
           role: 'user',
           status: 'active',
-          bank_account_name: null,
-          bank_account_number: null,
-          bank_name: null,
           preferences: {},
+          username: null,
+          full_name: null,
+          avatar_url: null,
+          is_verified: false,
+          points: 0,
+          level: 'bronze',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
@@ -69,23 +91,20 @@ async function handleNewUser(user: any) {
     
     console.log('Created profile entry:', profileData?.[0]?.user_id);
     
-    // 3. Create default wallet for the user
+    // 3. Create entry in wallets table
     const { data: walletData, error: walletError } = await supabase
       .from('wallets')
       .insert([
         {
           user_id: user.id,
-          usdt_balance: '0',
-          eth_balance: '0',
-          btc_balance: '0',
-          soft_points_balance: '0',
-          is_active: true,
-          is_frozen: false,
-          freeze_reason: null,
-          frozen_by: null,
-          frozen_at: null,
-          backup_seed: null,
-          last_backup_at: null,
+          btc_balance: 0,
+          eth_balance: 0,
+          sol_balance: 0,
+          usdt_balance: 0,
+          softpoints_balance: 0,
+          kyc_verified: false,
+          kyc_level: 0,
+          kyc_documents: {},
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
