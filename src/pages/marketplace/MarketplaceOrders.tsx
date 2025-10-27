@@ -51,182 +51,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { OrderService } from "@/services/orderService";
-
-// Order status types
-type OrderStatus = 
-  | "pending" 
-  | "confirmed" 
-  | "processing" 
-  | "shipped" 
-  | "delivered" 
-  | "cancelled" 
-  | "refunded";
-
-// Order interface
-interface Order {
-  id: string;
-  orderNumber: string;
-  status: OrderStatus;
-  date: string;
-  total: number;
-  currency: string;
-  seller: {
-    id: string;
-    name: string;
-    avatar?: string;
-    rating: number;
-  };
-  items: {
-    id: string;
-    name: string;
-    image: string;
-    quantity: number;
-    price: number;
-    sku?: string;
-  }[];
-  shipping: {
-    address: string;
-    method: string;
-    cost: number;
-    trackingNumber?: string;
-    estimatedDelivery?: string;
-  };
-  payment: {
-    method: string;
-    transactionId: string;
-  };
-  timeline: {
-    date: string;
-    status: string;
-    description: string;
-  }[];
-}
-
-// Sample order data
-const getSampleOrders = (): Order[] => [
-  {
-    id: "ord_001",
-    orderNumber: "MP-2024-001",
-    status: "delivered",
-    date: "2024-01-15T10:30:00Z",
-    total: 129.99,
-    currency: "USD",
-    seller: {
-      id: "seller_1",
-      name: "TechGear Store",
-      avatar: "/api/placeholder/40/40",
-      rating: 4.8,
-    },
-    items: [
-      {
-        id: "item_1",
-        name: "Wireless Bluetooth Headphones",
-        image: "/api/placeholder/80/80",
-        quantity: 1,
-        price: 129.99,
-        sku: "WBH-001",
-      },
-    ],
-    shipping: {
-      address: "123 Main St, City, State 12345",
-      method: "Express Shipping",
-      cost: 9.99,
-      trackingNumber: "TRK123456789",
-      estimatedDelivery: "2024-01-20",
-    },
-    payment: {
-      method: "Credit Card",
-      transactionId: "TXN_001234567",
-    },
-    timeline: [
-      { date: "2024-01-15T10:30:00Z", status: "pending", description: "Order placed" },
-      { date: "2024-01-15T11:00:00Z", status: "confirmed", description: "Order confirmed by seller" },
-      { date: "2024-01-16T09:00:00Z", status: "processing", description: "Order is being processed" },
-      { date: "2024-01-17T14:30:00Z", status: "shipped", description: "Order shipped" },
-      { date: "2024-01-19T16:45:00Z", status: "delivered", description: "Order delivered" },
-    ],
-  },
-  {
-    id: "ord_002",
-    orderNumber: "MP-2024-002",
-    status: "shipped",
-    date: "2024-01-18T14:20:00Z",
-    total: 45.50,
-    currency: "USD",
-    seller: {
-      id: "seller_2",
-      name: "BookWorld",
-      avatar: "/api/placeholder/40/40",
-      rating: 4.6,
-    },
-    items: [
-      {
-        id: "item_2",
-        name: "Programming Fundamentals Book",
-        image: "/api/placeholder/80/80",
-        quantity: 2,
-        price: 22.75,
-        sku: "BOOK-PF-001",
-      },
-    ],
-    shipping: {
-      address: "456 Oak Ave, Town, State 67890",
-      method: "Standard Shipping",
-      cost: 5.99,
-      trackingNumber: "TRK987654321",
-      estimatedDelivery: "2024-01-25",
-    },
-    payment: {
-      method: "PayPal",
-      transactionId: "TXN_987654321",
-    },
-    timeline: [
-      { date: "2024-01-18T14:20:00Z", status: "pending", description: "Order placed" },
-      { date: "2024-01-18T15:00:00Z", status: "confirmed", description: "Order confirmed by seller" },
-      { date: "2024-01-19T10:00:00Z", status: "processing", description: "Order is being processed" },
-      { date: "2024-01-20T16:30:00Z", status: "shipped", description: "Order shipped" },
-    ],
-  },
-  {
-    id: "ord_003",
-    orderNumber: "MP-2024-003",
-    status: "processing",
-    date: "2024-01-20T09:15:00Z",
-    total: 89.99,
-    currency: "USD",
-    seller: {
-      id: "seller_3",
-      name: "Fashion Hub",
-      avatar: "/api/placeholder/40/40",
-      rating: 4.5,
-    },
-    items: [
-      {
-        id: "item_3",
-        name: "Cotton T-Shirt",
-        image: "/api/placeholder/80/80",
-        quantity: 3,
-        price: 29.99,
-        sku: "TSH-CT-001",
-      },
-    ],
-    shipping: {
-      address: "789 Pine St, Village, State 13579",
-      method: "Standard Shipping",
-      cost: 3.99,
-      estimatedDelivery: "2024-01-28",
-    },
-    payment: {
-      method: "Credit Card",
-      transactionId: "TXN_135792468",
-    },
-    timeline: [
-      { date: "2024-01-20T09:15:00Z", status: "pending", description: "Order placed" },
-      { date: "2024-01-20T10:00:00Z", status: "confirmed", description: "Order confirmed by seller" },
-      { date: "2024-01-21T08:00:00Z", status: "processing", description: "Order is being processed" },
-    ],
-  },
-];
+import type { Order } from "@/types/enhanced-marketplace";
 
 const MarketplaceOrders: React.FC = () => {
   const navigate = useNavigate();
@@ -269,8 +94,8 @@ const MarketplaceOrders: React.FC = () => {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = searchQuery === "" || 
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items.some(item => item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      order.seller.name.toLowerCase().includes(searchQuery.toLowerCase());
+      order.items.some(item => item.productName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      order.customerName.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesTab = activeTab === "all" || order.status === activeTab;
 
@@ -278,7 +103,7 @@ const MarketplaceOrders: React.FC = () => {
   });
 
   // Get status color
-  const getStatusColor = (status: OrderStatus) => {
+  const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "confirmed": return "bg-blue-100 text-blue-800 border-blue-200";
@@ -286,13 +111,12 @@ const MarketplaceOrders: React.FC = () => {
       case "shipped": return "bg-orange-100 text-orange-800 border-orange-200";
       case "delivered": return "bg-green-100 text-green-800 border-green-200";
       case "cancelled": return "bg-red-100 text-red-800 border-red-200";
-      case "refunded": return "bg-gray-100 text-gray-800 border-gray-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   // Get status icon
-  const getStatusIcon = (status: OrderStatus) => {
+  const getStatusIcon = (status: Order['status']) => {
     switch (status) {
       case "pending": return <Clock className="w-4 h-4" />;
       case "confirmed": return <CheckCircle className="w-4 h-4" />;
@@ -300,7 +124,6 @@ const MarketplaceOrders: React.FC = () => {
       case "shipped": return <Truck className="w-4 h-4" />;
       case "delivered": return <Package className="w-4 h-4" />;
       case "cancelled": return <XCircle className="w-4 h-4" />;
-      case "refunded": return <AlertTriangle className="w-4 h-4" />;
       default: return <Package className="w-4 h-4" />;
     }
   };
@@ -318,16 +141,16 @@ const MarketplaceOrders: React.FC = () => {
 
   // Handle order actions
   const handleTrackOrder = (order: Order) => {
-    if (order.shipping.trackingNumber) {
+    if (order.trackingNumber) {
       toast({
         title: "Tracking Order",
-        description: `Tracking number: ${order.shipping.trackingNumber}`,
+        description: `Tracking number: ${order.trackingNumber}`,
       });
     }
   };
 
   const handleContactSeller = (order: Order) => {
-    navigate(`/app/chat/${order.seller.id}`);
+    navigate(`/app/chat/${order.sellerId}`);
   };
 
   const handleReorder = (order: Order) => {
@@ -339,7 +162,7 @@ const MarketplaceOrders: React.FC = () => {
 
   const handleCancelOrder = (order: Order) => {
     setOrders(prev => 
-      prev.map(o => o.id === order.id ? { ...o, status: "cancelled" as OrderStatus } : o)
+      prev.map(o => o.id === order.id ? { ...o, status: "cancelled" } : o)
     );
     toast({
       title: "Order Cancelled",
@@ -513,19 +336,19 @@ const MarketplaceOrders: React.FC = () => {
                               <div>
                                 <span className="text-muted-foreground">Date:</span>
                                 <br />
-                                <span className="font-medium">{formatDate(order.date)}</span>
+                                <span className="font-medium">{formatDate(order.createdAt)}</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Total:</span>
                                 <br />
                                 <span className="font-medium">
-                                  ${order.total.toFixed(2)} {order.currency}
+                                  ${order.totalAmount.toFixed(2)}
                                 </span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Seller:</span>
                                 <br />
-                                <span className="font-medium">{order.seller.name}</span>
+                                <span className="font-medium">{order.sellerName}</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Items:</span>
@@ -538,9 +361,9 @@ const MarketplaceOrders: React.FC = () => {
                             <div className="flex items-center gap-2 mt-4">
                               {order.items.slice(0, 3).map((item) => (
                                 <img
-                                  key={item.id}
-                                  src={item.image}
-                                  alt={item.name}
+                                  key={item.productId}
+                                  src={item.productImage}
+                                  alt={item.productName}
                                   className="w-12 h-12 rounded-lg object-cover border"
                                 />
                               ))}
@@ -566,7 +389,7 @@ const MarketplaceOrders: React.FC = () => {
                               View Details
                             </Button>
 
-                            {order.status === "shipped" && order.shipping.trackingNumber && (
+                            {order.status === "shipped" && order.trackingNumber && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -646,7 +469,7 @@ const MarketplaceOrders: React.FC = () => {
                   </Badge>
                 </DialogTitle>
                 <DialogDescription>
-                  Placed on {formatDate(selectedOrder.date)}
+                  Placed on {formatDate(selectedOrder.createdAt)}
                 </DialogDescription>
               </DialogHeader>
 
@@ -656,22 +479,22 @@ const MarketplaceOrders: React.FC = () => {
                   <h3 className="font-semibold mb-3">Order Items</h3>
                   <div className="space-y-3">
                     {selectedOrder.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                      <div key={item.productId} className="flex items-center gap-4 p-3 border rounded-lg">
                         <img
-                          src={item.image}
-                          alt={item.name}
+                          src={item.productImage}
+                          alt={item.productName}
                           className="w-16 h-16 rounded-lg object-cover"
                         />
                         <div className="flex-1">
-                          <h4 className="font-medium">{item.name}</h4>
+                          <h4 className="font-medium">{item.productName}</h4>
                           <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
                           <p className="text-sm">
-                            Quantity: {item.quantity} × ${item.price.toFixed(2)}
+                            Quantity: {item.quantity} × ${item.unitPrice.toFixed(2)}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">
-                            ${(item.quantity * item.price).toFixed(2)}
+                            ${(item.quantity * item.unitPrice).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -683,7 +506,7 @@ const MarketplaceOrders: React.FC = () => {
                 <div>
                   <h3 className="font-semibold mb-3">Order Timeline</h3>
                   <div className="space-y-3">
-                    {selectedOrder.timeline.map((event, index) => (
+                    {selectedOrder.timeline && selectedOrder.timeline.map((event, index) => (
                       <div key={index} className="flex items-start gap-3">
                         <div className="w-2 h-2 bg-primary rounded-full mt-2" />
                         <div className="flex-1">
@@ -702,14 +525,14 @@ const MarketplaceOrders: React.FC = () => {
                   <div>
                     <h3 className="font-semibold mb-3">Shipping Information</h3>
                     <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">Address:</span> {selectedOrder.shipping.address}</p>
-                      <p><span className="font-medium">Method:</span> {selectedOrder.shipping.method}</p>
-                      <p><span className="font-medium">Cost:</span> ${selectedOrder.shipping.cost.toFixed(2)}</p>
-                      {selectedOrder.shipping.trackingNumber && (
-                        <p><span className="font-medium">Tracking:</span> {selectedOrder.shipping.trackingNumber}</p>
+                      <p><span className="font-medium">Address:</span> {selectedOrder.shippingAddress?.addressLine1}</p>
+                      <p><span className="font-medium">Method:</span> {selectedOrder.shippingMethod}</p>
+                      <p><span className="font-medium">Cost:</span> ${selectedOrder.shippingCost?.toFixed(2)}</p>
+                      {selectedOrder.trackingNumber && (
+                        <p><span className="font-medium">Tracking:</span> {selectedOrder.trackingNumber}</p>
                       )}
-                      {selectedOrder.shipping.estimatedDelivery && (
-                        <p><span className="font-medium">Estimated Delivery:</span> {selectedOrder.shipping.estimatedDelivery}</p>
+                      {selectedOrder.estimatedDelivery && (
+                        <p><span className="font-medium">Estimated Delivery:</span> {selectedOrder.estimatedDelivery}</p>
                       )}
                     </div>
                   </div>
@@ -717,20 +540,20 @@ const MarketplaceOrders: React.FC = () => {
                   <div>
                     <h3 className="font-semibold mb-3">Payment Information</h3>
                     <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">Method:</span> {selectedOrder.payment.method}</p>
-                      <p><span className="font-medium">Transaction ID:</span> {selectedOrder.payment.transactionId}</p>
+                      <p><span className="font-medium">Method:</span> {selectedOrder.paymentMethod}</p>
+                      <p><span className="font-medium">Transaction ID:</span> {selectedOrder.paymentTransactionId}</p>
                       <Separator className="my-2" />
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
-                        <span>${(selectedOrder.total - selectedOrder.shipping.cost).toFixed(2)}</span>
+                        <span>${(selectedOrder.totalAmount - (selectedOrder.shippingCost || 0)).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Shipping:</span>
-                        <span>${selectedOrder.shipping.cost.toFixed(2)}</span>
+                        <span>${selectedOrder.shippingCost?.toFixed(2) || "0.00"}</span>
                       </div>
                       <div className="flex justify-between font-semibold">
                         <span>Total:</span>
-                        <span>${selectedOrder.total.toFixed(2)}</span>
+                        <span>${selectedOrder.totalAmount.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -738,7 +561,7 @@ const MarketplaceOrders: React.FC = () => {
               </div>
 
               <DialogFooter className="gap-2">
-                {selectedOrder.status === "shipped" && selectedOrder.shipping.trackingNumber && (
+                {selectedOrder.status === "shipped" && selectedOrder.trackingNumber && (
                   <Button onClick={() => handleTrackOrder(selectedOrder)}>
                     <Truck className="w-4 h-4 mr-2" />
                     Track Order

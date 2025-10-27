@@ -917,7 +917,7 @@ export type MarketplaceContextType = {
   moveToWishlist: (cartItemId: string, wishlistId?: string) => Promise<boolean>;
 
   // Wishlist management
-  getWishlists: () => Wishlist[];
+  getWishlists: () => Promise<Wishlist[]>;
   createWishlist: (name: string, description?: string) => Promise<Wishlist>;
   addToWishlist: (
     productId: string,
@@ -984,8 +984,8 @@ export type MarketplaceContextType = {
   cancelBoost: (boostId: string) => Promise<boolean>;
 
   // Seller management
-  getSeller: (sellerId: string) => SellerProfile | undefined;
-  getSellerProducts: (sellerId: string) => Product[];
+  getSeller: (sellerId: string) => Promise<SellerProfile | undefined>;
+  getSellerProducts: (sellerId: string) => Promise<Product[]>;
   updateSellerProfile: (
     updates: Partial<SellerProfile>,
   ) => Promise<SellerProfile>;
@@ -1013,7 +1013,7 @@ export type MarketplaceContextType = {
     shippingAddress?: Address,
     paymentMethod?: string,
   ) => Promise<Order>;
-  getOrder: (orderId: string) => Order | undefined;
+  getOrder: (orderId: string) => Promise<Order | undefined>;
   updateOrderStatus: (
     orderId: string,
     status: OrderStatus,
@@ -1040,7 +1040,7 @@ export type MarketplaceContextType = {
     description: string,
     evidence?: string[],
   ) => Promise<boolean>;
-  getOrderDisputes: (orderId: string) => any[];
+  getOrderDisputes: (orderId: string) => Promise<any[]>;
 
   // Address management
   addAddress: (address: Omit<Address, "id">) => Promise<Address>;
