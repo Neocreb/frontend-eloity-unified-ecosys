@@ -12,6 +12,16 @@ export class ProductService {
     }
   }
 
+  static async getProducts(filters: any = {}): Promise<Product[]> {
+    try {
+      // Use MarketplaceService to fetch products with filters
+      return await MarketplaceService.getProducts(filters);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return [];
+    }
+  }
+
   static async getRelatedProducts(productId: string): Promise<Product[]> {
     try {
       // First, get the product to determine its category
@@ -65,6 +75,24 @@ export class ProductService {
     } catch (error) {
       console.error("Error fetching related products:", error);
       return [];
+    }
+  }
+
+  static async createProduct(productData: any): Promise<Product | null> {
+    try {
+      return await MarketplaceService.createProduct(productData);
+    } catch (error) {
+      console.error("Error creating product:", error);
+      return null;
+    }
+  }
+
+  static async deleteProduct(productId: string): Promise<boolean> {
+    try {
+      return await MarketplaceService.deleteProduct(productId);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      return false;
     }
   }
 }
