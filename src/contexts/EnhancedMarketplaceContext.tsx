@@ -22,6 +22,8 @@ import {
 } from "@/types/enhanced-marketplace";
 import { useAuth } from "./AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { unifiedAnalyticsService } from "@/services/unifiedAnalyticsService";
+import { OrderService } from "@/services/orderService";
 
 // Mock data for enhanced marketplace
 const mockCategories: ProductCategory[] = [
@@ -1296,8 +1298,7 @@ export const EnhancedMarketplaceProvider = ({
 
     try {
       // Use the unified analytics service for real data
-      const analyticsService = (await import("@/services/unifiedAnalyticsService")).default;
-      const ecommerceMetrics = await analyticsService.getEcommerceMetrics(user.id, period);
+      const ecommerceMetrics = await unifiedAnalyticsService.getEcommerceMetrics(user.id, period);
       
       // Transform the data to match the expected format
       return {
@@ -1368,8 +1369,7 @@ export const EnhancedMarketplaceProvider = ({
 
     try {
       // Use the OrderService to fetch real seller orders
-      const orderService = (await import("@/services/orderService")).OrderService;
-      const orders = await orderService.getSellerOrders(sellerId);
+      const orders = await OrderService.getSellerOrders(sellerId);
       return orders;
     } catch (error) {
       console.error("Error fetching seller orders:", error);

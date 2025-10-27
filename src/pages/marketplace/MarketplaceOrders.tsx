@@ -50,6 +50,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { OrderService } from "@/services/orderService";
 
 // Order status types
 type OrderStatus = 
@@ -242,11 +243,13 @@ const MarketplaceOrders: React.FC = () => {
   // Load orders on component mount
   useEffect(() => {
     const loadOrders = async () => {
+      if (!user?.id) return;
+      
       try {
-        // In a real app, this would fetch from the API
-        // const response = await fetch('/api/marketplace/orders');
-        // const data = await response.json();
-        setOrders(getSampleOrders());
+        setLoading(true);
+        // Fetch real orders from the API
+        const userOrders = await OrderService.getUserOrders(user.id);
+        setOrders(userOrders);
       } catch (error) {
         console.error('Error loading orders:', error);
         toast({
@@ -260,7 +263,7 @@ const MarketplaceOrders: React.FC = () => {
     };
 
     loadOrders();
-  }, [toast]);
+  }, [user?.id, toast]);
 
   // Filter orders by tab
   const filteredOrders = orders.filter(order => {

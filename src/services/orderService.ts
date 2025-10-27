@@ -101,6 +101,105 @@ export class OrderService {
     }
   }
 
+  static async getSellerOrders(sellerId: string): Promise<Order[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items(*),
+          products(*)
+        `)
+        .eq('seller_id', sellerId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching seller orders:", error);
+        return [];
+      }
+
+      return data.map((order: any) => ({
+        id: order.id,
+        buyerId: order.buyer_id,
+        sellerId: order.seller_id,
+        customerName: order.customer_name,
+        customerEmail: order.customer_email,
+        orderNumber: order.order_number,
+        orderType: order.order_type,
+        items: (order.order_items || []).map((item: any) => ({
+          productId: item.product_id,
+          variantId: item.variant_id,
+          productName: item.product_name,
+          productImage: item.product_image,
+          sellerId: item.seller_id,
+          sellerName: item.seller_name,
+          quantity: item.quantity,
+          unitPrice: item.unit_price,
+          totalPrice: item.total_price,
+          selectedVariants: item.selected_variants,
+          customOptions: item.custom_options,
+          status: item.status,
+          downloadUrl: item.download_url,
+          licenseKey: item.license_key,
+          deliveryDate: item.delivery_date,
+          serviceNotes: item.service_notes,
+        })),
+        subtotal: order.subtotal,
+        shippingCost: order.shipping_cost,
+        taxAmount: order.tax_amount,
+        discountAmount: order.discount_amount,
+        discountCode: order.discount_code,
+        totalAmount: order.total_amount,
+        paymentMethod: order.payment_method,
+        paymentCurrency: order.payment_currency,
+        paymentStatus: order.payment_status as PaymentStatus,
+        escrowId: order.escrow_id,
+        paymentTransactionId: order.payment_transaction_id,
+        shippingAddress: order.shipping_address,
+        billingAddress: order.billing_address,
+        shippingMethod: order.shipping_method,
+        trackingNumber: order.tracking_number,
+        trackingUrl: order.tracking_url,
+        estimatedDelivery: order.estimated_delivery,
+        actualDelivery: order.actual_delivery,
+        downloadUrls: order.download_urls,
+        downloadExpiresAt: order.download_expires_at,
+        downloadCount: order.download_count,
+        downloadLimit: order.download_limit,
+        status: order.status as OrderStatus,
+        fulfillmentStatus: order.fulfillment_status,
+        requiresShipping: order.requires_shipping,
+        autoCompleteAfterDays: order.auto_complete_after_days,
+        chatThreadId: order.chat_thread_id,
+        customerNotes: order.customer_notes,
+        sellerNotes: order.seller_notes,
+        adminNotes: order.admin_notes,
+        confirmedAt: order.confirmed_at,
+        processingAt: order.processing_at,
+        shippedAt: order.shipped_at,
+        deliveredAt: order.delivered_at,
+        completedAt: order.completed_at,
+        cancelledAt: order.cancelled_at,
+        platformFee: order.platform_fee,
+        feePercentage: order.fee_percentage,
+        sellerRevenue: order.seller_revenue,
+        disputeId: order.dispute_id,
+        disputeReason: order.dispute_reason,
+        returnRequested: order.return_requested,
+        returnRequestedAt: order.return_requested_at,
+        returnReason: order.return_reason,
+        returnStatus: order.return_status,
+        refundAmount: order.refund_amount,
+        refundedAt: order.refunded_at,
+        createdAt: new Date(order.created_at).toISOString(),
+        updatedAt: new Date(order.updated_at).toISOString(),
+      }));
+    } catch (error) {
+      console.error("Error in getSellerOrders:", error);
+      return [];
+    }
+  }
+
   static async getOrderById(orderId: string): Promise<Order | null> {
     try {
       const { data, error } = await supabase
