@@ -81,7 +81,9 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/api/") || 
     url.hostname.includes("bybit.com") ||
     url.hostname.includes("coingecko.com") ||
-    url.hostname.includes("supabase.co")
+    url.hostname.includes("supabase.co") ||
+    request.headers.get('accept')?.includes('application/json') ||
+    request.headers.get('content-type')?.includes('application/json')
   ) {
     // For API requests, bypass cache and go directly to network
     return;
