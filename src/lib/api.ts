@@ -261,11 +261,25 @@ class ApiClient {
 
   // Crypto methods
   async getCryptoPrices() {
-    return this.request('/crypto/prices');
+    try {
+      const response = await this.request('/crypto/prices');
+      return response;
+    } catch (error) {
+      console.error('Error fetching crypto prices:', error);
+      // Return a safe fallback structure
+      return { prices: {}, timestamp: Date.now() };
+    }
   }
 
   async getCryptoTrades() {
-    return this.request('/crypto/trades');
+    try {
+      const response = await this.request('/crypto/trades');
+      return response;
+    } catch (error) {
+      console.error('Error fetching crypto trades:', error);
+      // Return empty array as fallback
+      return [];
+    }
   }
 }
 

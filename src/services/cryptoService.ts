@@ -515,7 +515,29 @@ export class CryptoService {
     // Fetch user's portfolio from backend. Do not fallback to mock data.
     try {
       const { apiCall } = await import('@/lib/api');
-      const data = await apiCall('/crypto/wallet/balance');
+      const response = await fetch('/api/crypto/wallet/balance', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      // Check if response is OK and is actually JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP error! status: ${response.status}`, errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
+        throw new Error('Received non-JSON response from portfolio API');
+      }
+      
+      const data = await response.json();
+      
       // Expecting shape { balances, totalValueUSD, lastUpdated }
       const assets = (data?.balances && Object.keys(data.balances).map((k) => ({
         asset: k,

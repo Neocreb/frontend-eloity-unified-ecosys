@@ -160,7 +160,20 @@ export class RealAPIService {
 
     try {
       const response = await fetch(url, { headers });
-      if (!response.ok) throw new Error("API request failed");
+      
+      // Check if response is OK and is actually JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`CoinGecko API error! status: ${response.status}`, errorText);
+        throw new Error(`CoinGecko API error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('CoinGecko returned non-JSON response:', text.substring(0, 200));
+        throw new Error('CoinGecko returned non-JSON response');
+      }
 
       const data = await response.json();
       const coinData = data[symbol];

@@ -87,7 +87,21 @@ const ProfessionalCrypto = () => {
     try {
       // 1) Fetch live prices from backend (Bybit/CoinGecko under the hood)
       const pricesRes = await fetch(`/api/crypto/prices?symbols=${TRACKED.join(",")}`);
-      if (!pricesRes.ok) throw new Error("Failed to load prices");
+      
+      // Check if response is OK and is actually JSON
+      if (!pricesRes.ok) {
+        const errorText = await pricesRes.text();
+        console.error(`HTTP error! status: ${pricesRes.status}`, errorText);
+        throw new Error(`HTTP error! status: ${pricesRes.status}`);
+      }
+      
+      const contentType = pricesRes.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await pricesRes.text();
+        console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
+        throw new Error('Received non-JSON response from crypto prices API');
+      }
+      
       const pricesPayload = await pricesRes.json();
       const prices = pricesPayload?.prices || {};
 
@@ -133,6 +147,21 @@ const ProfessionalCrypto = () => {
         try {
           if (user?.id) {
             const r = await fetch(`/api/wallet/balance?userId=${encodeURIComponent(user.id)}`);
+            
+            // Check if response is OK and is actually JSON
+            if (!r.ok) {
+              const errorText = await r.text();
+              console.error(`HTTP error! status: ${r.status}`, errorText);
+              throw new Error(`HTTP error! status: ${r.status}`);
+            }
+            
+            const contentType = r.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              const text = await r.text();
+              console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
+              throw new Error('Received non-JSON response from wallet balance API');
+            }
+            
             const j = await r.json();
             const total = Number(j?.data?.balances?.crypto || 0);
             perCurrency = total > 0 ? [{ currency: "USDT", balance: total }] : [];
