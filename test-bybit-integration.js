@@ -30,20 +30,38 @@ async function testBybitConnection() {
     }
 
     console.log('✅ Bybit API keys found');
+    console.log('🔑 Public Key:', BYBIT_PUBLIC_API);
+    console.log('📍 Your IP Address:', '102.90.97.156');
+    console.log('⚠️  Make sure this IP is whitelisted in your Bybit API settings\n');
     
     // Test 1: Get server time (no authentication required)
-    console.log('\n📡 Test 1: Getting server time...');
+    console.log('📡 Test 1: Getting server time...');
     try {
-      const timeResponse = await axios.get('https://api.bybit.com/v5/market/time', { timeout: 5000 });
+      const timeResponse = await axios.get('https://api.bybit.com/v5/market/time', { 
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'Eloity-Crypto-Client/1.0'
+        }
+      });
       console.log('✅ Server time:', timeResponse.data.time_now);
     } catch (error) {
       console.log('❌ Failed to get server time:', error.message);
+      console.log('   Error code:', error.code);
+      if (error.response) {
+        console.log('   Response status:', error.response.status);
+        console.log('   Response data:', error.response.data);
+      }
     }
 
     // Test 2: Get BTC/USDT ticker (no authentication required)
     console.log('\n📈 Test 2: Getting BTC/USDT ticker...');
     try {
-      const tickerResponse = await axios.get('https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT', { timeout: 5000 });
+      const tickerResponse = await axios.get('https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT', { 
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'Eloity-Crypto-Client/1.0'
+        }
+      });
       if (tickerResponse.data.retCode === 0) {
         const ticker = tickerResponse.data.result.list[0];
         console.log('✅ BTC/USDT Price:', ticker.lastPrice);
@@ -53,6 +71,11 @@ async function testBybitConnection() {
       }
     } catch (error) {
       console.log('❌ Failed to get ticker:', error.message);
+      console.log('   Error code:', error.code);
+      if (error.response) {
+        console.log('   Response status:', error.response.status);
+        console.log('   Response data:', error.response.data);
+      }
     }
 
     // Test 3: Get wallet balance (authentication required)
@@ -68,9 +91,10 @@ async function testBybitConnection() {
           'X-BAPI-API-KEY': BYBIT_PUBLIC_API,
           'X-BAPI-SIGN': signature,
           'X-BAPI-TIMESTAMP': timestamp,
-          'X-BAPI-RECV-WINDOW': '5000'
+          'X-BAPI-RECV-WINDOW': '5000',
+          'User-Agent': 'Eloity-Crypto-Client/1.0'
         },
-        timeout: 5000
+        timeout: 10000
       });
 
       if (balanceResponse.data.retCode === 0) {
@@ -86,9 +110,19 @@ async function testBybitConnection() {
       }
     } catch (error) {
       console.log('❌ Failed to get wallet balance:', error.message);
+      console.log('   Error code:', error.code);
+      if (error.response) {
+        console.log('   Response status:', error.response.status);
+        console.log('   Response data:', error.response.data);
+      }
     }
 
     console.log('\n🏁 Bybit integration test completed!');
+    console.log('\n💡 Troubleshooting tips:');
+    console.log('   1. Ensure your IP (102.90.97.156) is whitelisted in Bybit API settings');
+    console.log('   2. Check if your API keys have the required permissions');
+    console.log('   3. Verify that your network can access https://api.bybit.com');
+    console.log('   4. Try using a VPN if there are regional restrictions');
     
   } catch (error) {
     console.error('❌ Error testing Bybit integration:', error.message);
