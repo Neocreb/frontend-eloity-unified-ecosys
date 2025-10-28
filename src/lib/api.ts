@@ -259,26 +259,65 @@ class ApiClient {
     return this.request(`/freelance/jobs?${params.toString()}`);
   }
 
-  // Crypto methods
+  // Crypto methods - now using Bybit API
   async getCryptoPrices() {
     try {
-      const response = await this.request('/crypto/prices');
-      return response;
+      // Use Bybit API directly instead of CoinGecko
+      const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot', {
+        headers: {
+          'X-BAPI-API-KEY': import.meta.env?.VITE_BYBIT_API_KEY || ''
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const prices: Record<string, any> = {};
+      
+      data.result.list.forEach((ticker: any) => {
+        const symbol = ticker.symbol.toLowerCase().replace('usdt', '');
+        prices[symbol] = {
+          usd: parseFloat(ticker.lastPrice),
+          usd_market_cap: 0, // Bybit doesn't provide market cap
+          usd_24h_change: parseFloat(ticker.price24hPcnt) * 100,
+          usd_24h_vol: parseFloat(ticker.volume24h)
+        };
+      });
+      
+      return { prices, timestamp: Date.now() };
     } catch (error) {
-      console.error('Error fetching crypto prices:', error);
-      // Return a safe fallback structure
-      return { prices: {}, timestamp: Date.now() };
+      console.error('Error fetching crypto prices from Bybit:', error);
+      throw error; // No fallback to mock data
     }
   }
 
   async getCryptoTrades() {
     try {
-      const response = await this.request('/crypto/trades');
-      return response;
+      // Use Bybit API to get recent trades
+      const response = await fetch('https://api.bybit.com/v5/market/recent-trade?category=spot&symbol=BTCUSDT&limit=50', {
+        headers: {
+          'X-BAPI-API-KEY': import.meta.env?.VITE_BYBIT_API_KEY || ''
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.result.list.map((trade: any) => ({
+        id: trade.execId,
+        symbol: 'BTCUSDT',
+        price: parseFloat(trade.price),
+        quantity: parseFloat(trade.size),
+        time: trade.time,
+        isBuyerMaker: trade.side === 'Sell'
+      }));
     } catch (error) {
-      console.error('Error fetching crypto trades:', error);
-      // Return empty array as fallback
-      return [];
+      console.error('Error fetching crypto trades from Bybit:', error);
+      throw error; // No fallback to mock data
     }
   }
 }

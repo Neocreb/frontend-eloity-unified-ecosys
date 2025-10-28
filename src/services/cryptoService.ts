@@ -30,362 +30,64 @@ type CryptoTransaction = Database["public"]["Tables"]["crypto_transactions"]["Ro
 type Trade = Database["public"]["Tables"]["trades"]["Row"];
 type P2POffer = Database["public"]["Tables"]["p2p_offers"]["Row"];
 
-// Mock data for fallback when real data is not available
-export const mockCryptocurrencies: Cryptocurrency[] = [
-  {
-    id: "bitcoin",
-    symbol: "BTC",
-    name: "Bitcoin",
-    image: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-    current_price: 43250.67,
-    market_cap: 846750000000,
-    market_cap_rank: 1,
-    fully_diluted_valuation: 908500000000,
-    total_volume: 18500000000,
-    high_24h: 43890.12,
-    low_24h: 42180.45,
-    price_change_24h: 1070.22,
-    price_change_percentage_24h: 2.54,
-    price_change_percentage_7d: 8.42,
-    price_change_percentage_30d: 15.67,
-    market_cap_change_24h: 21600000000,
-    market_cap_change_percentage_24h: 2.61,
-    circulating_supply: 19590000,
-    total_supply: 21000000,
-    max_supply: 21000000,
-    ath: 69045.0,
-    ath_change_percentage: -37.35,
-    ath_date: "2021-11-10T14:24:11.849Z",
-    atl: 67.81,
-    atl_change_percentage: 63654.78,
-    atl_date: "2013-07-06T00:00:00.000Z",
-    last_updated: new Date().toISOString(),
-    sparkline_in_7d: [40123, 40567, 41234, 42100, 42890, 43250, 43567],
-  },
-  {
-    id: "ethereum",
-    symbol: "ETH",
-    name: "Ethereum",
-    image: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
-    current_price: 2587.34,
-    market_cap: 310950000000,
-    market_cap_rank: 2,
-    fully_diluted_valuation: 0,
-    total_volume: 12400000000,
-    high_24h: 2612.89,
-    low_24h: 2534.12,
-    price_change_24h: 53.22,
-    price_change_percentage_24h: 2.1,
-    price_change_percentage_7d: 6.78,
-    price_change_percentage_30d: 12.34,
-    market_cap_change_24h: 6400000000,
-    market_cap_change_percentage_24h: 2.1,
-    circulating_supply: 120280000,
-    total_supply: 120280000,
-    max_supply: 0,
-    ath: 4878.26,
-    ath_change_percentage: -46.95,
-    ath_date: "2021-11-10T14:24:19.604Z",
-    atl: 0.432979,
-    atl_change_percentage: 597142.1,
-    atl_date: "2015-10-20T00:00:00.000Z",
-    last_updated: new Date().toISOString(),
-    sparkline_in_7d: [2456, 2489, 2512, 2545, 2567, 2587, 2590],
-  },
-  {
-    id: "binancecoin",
-    symbol: "BNB",
-    name: "BNB",
-    image:
-      "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png",
-    current_price: 312.45,
-    market_cap: 46890000000,
-    market_cap_rank: 3,
-    fully_diluted_valuation: 46890000000,
-    total_volume: 1890000000,
-    high_24h: 318.67,
-    low_24h: 308.12,
-    price_change_24h: 4.33,
-    price_change_percentage_24h: 1.41,
-    price_change_percentage_7d: 3.45,
-    price_change_percentage_30d: 8.92,
-    market_cap_change_24h: 650000000,
-    market_cap_change_percentage_24h: 1.41,
-    circulating_supply: 150030000,
-    total_supply: 150030000,
-    max_supply: 200000000,
-    ath: 686.31,
-    ath_change_percentage: -54.45,
-    ath_date: "2021-05-10T07:24:17.097Z",
-    atl: 0.0398177,
-    atl_change_percentage: 784145.2,
-    atl_date: "2017-10-19T00:00:00.000Z",
-    last_updated: new Date().toISOString(),
-    sparkline_in_7d: [301, 305, 309, 312, 315, 312, 314],
-  },
-  {
-    id: "cardano",
-    symbol: "ADA",
-    name: "Cardano",
-    image: "https://assets.coingecko.com/coins/images/975/large/cardano.png",
-    current_price: 0.52,
-    market_cap: 18420000000,
-    market_cap_rank: 4,
-    fully_diluted_valuation: 23400000000,
-    total_volume: 890000000,
-    high_24h: 0.538,
-    low_24h: 0.501,
-    price_change_24h: 0.018,
-    price_change_percentage_24h: 3.59,
-    price_change_percentage_7d: 7.23,
-    price_change_percentage_30d: 14.67,
-    market_cap_change_24h: 640000000,
-    market_cap_change_percentage_24h: 3.59,
-    circulating_supply: 35410000000,
-    total_supply: 45000000000,
-    max_supply: 45000000000,
-    ath: 3.09,
-    ath_change_percentage: -83.17,
-    ath_date: "2021-09-02T06:00:10.474Z",
-    atl: 0.01925275,
-    atl_change_percentage: 2601.77,
-    atl_date: "2020-03-13T02:22:55.391Z",
-    last_updated: new Date().toISOString(),
-    sparkline_in_7d: [0.485, 0.492, 0.501, 0.515, 0.523, 0.52, 0.525],
-  },
-  {
-    id: "solana",
-    symbol: "SOL",
-    name: "Solana",
-    image: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
-    current_price: 98.45,
-    market_cap: 42890000000,
-    market_cap_rank: 5,
-    fully_diluted_valuation: 55670000000,
-    total_volume: 2340000000,
-    high_24h: 102.34,
-    low_24h: 96.12,
-    price_change_24h: 2.33,
-    price_change_percentage_24h: 2.42,
-    price_change_percentage_7d: 9.67,
-    price_change_percentage_30d: 18.94,
-    market_cap_change_24h: 1020000000,
-    market_cap_change_percentage_24h: 2.42,
-    circulating_supply: 435670000,
-    total_supply: 565450000,
-    max_supply: 0,
-    ath: 259.96,
-    ath_change_percentage: -62.12,
-    ath_date: "2021-11-06T21:54:35.825Z",
-    atl: 0.500801,
-    atl_change_percentage: 19556.89,
-    atl_date: "2020-05-11T19:35:23.449Z",
-    last_updated: new Date().toISOString(),
-    sparkline_in_7d: [89.45, 91.23, 94.67, 96.12, 98.45, 100.23, 99.78],
-  },
-];
-
-export const mockTradingPairs: TradingPair[] = [
-  {
-    symbol: "BTC/USDT",
-    baseAsset: "BTC",
-    quoteAsset: "USDT",
-    price: 43250.67,
-    priceChange: 1070.22,
-    priceChangePercent: 2.54,
-    volume: 18500000000,
-    quoteVolume: 18500000000,
-    openPrice: 42180.45,
-    highPrice: 43890.12,
-    lowPrice: 42180.45,
-    bidPrice: 43250.67,
-    askPrice: 43255.00,
-    spread: 4.33,
-    lastUpdateId: 1,
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    symbol: "ETH/USDT",
-    baseAsset: "ETH",
-    quoteAsset: "USDT",
-    price: 2587.34,
-    priceChange: 53.22,
-    priceChangePercent: 2.1,
-    volume: 12400000000,
-    quoteVolume: 12400000000,
-    openPrice: 2534.12,
-    highPrice: 2612.89,
-    lowPrice: 2534.12,
-    bidPrice: 2587.34,
-    askPrice: 2588.00,
-    spread: 0.66,
-    lastUpdateId: 1,
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    symbol: "BNB/USDT",
-    baseAsset: "BNB",
-    quoteAsset: "USDT",
-    price: 312.45,
-    priceChange: 4.33,
-    priceChangePercent: 1.41,
-    volume: 1890000000,
-    quoteVolume: 1890000000,
-    openPrice: 308.12,
-    highPrice: 318.67,
-    lowPrice: 308.12,
-    bidPrice: 312.45,
-    askPrice: 312.50,
-    spread: 0.05,
-    lastUpdateId: 1,
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    symbol: "ADA/USDT",
-    baseAsset: "ADA",
-    quoteAsset: "USDT",
-    price: 0.52,
-    priceChange: 0.018,
-    priceChangePercent: 3.59,
-    volume: 890000000,
-    quoteVolume: 890000000,
-    openPrice: 0.501,
-    highPrice: 0.538,
-    lowPrice: 0.501,
-    bidPrice: 0.52,
-    askPrice: 0.521,
-    spread: 0.001,
-    lastUpdateId: 1,
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    symbol: "SOL/USDT",
-    baseAsset: "SOL",
-    quoteAsset: "USDT",
-    price: 98.45,
-    priceChange: 2.33,
-    priceChangePercent: 2.42,
-    volume: 2340000000,
-    quoteVolume: 2340000000,
-    openPrice: 96.12,
-    highPrice: 102.34,
-    lowPrice: 96.12,
-    bidPrice: 98.45,
-    askPrice: 98.50,
-    spread: 0.05,
-    lastUpdateId: 1,
-    lastUpdated: new Date().toISOString(),
-  },
-];
-
-// Centralized crypto balance - must match walletService.ts
-export const CENTRALIZED_CRYPTO_BALANCE = 125670.45;
-
-export const mockPortfolio: Portfolio = {
-  totalValue: CENTRALIZED_CRYPTO_BALANCE,
-  totalChange24h: 3240.78,
-  totalChangePercent24h: 2.64,
-  assets: [
-    {
-      asset: "BTC",
-      free: 2.5,
-      locked: 0,
-      total: 2.5,
-      btcValue: 2.5,
-      usdValue: 108126.68,
-      price: 43250.67,
-      change24h: 1070.22,
-      changePercent24h: 2.54,
-      allocation: 86.1,
-    },
-    {
-      asset: "ETH",
-      free: 6.8,
-      locked: 0,
-      total: 6.8,
-      btcValue: 0.407,
-      usdValue: 17593.51,
-      price: 2587.34,
-      change24h: 53.22,
-      changePercent24h: 2.1,
-      allocation: 14.0,
-    },
-  ],
-  allocation: [
-    {
-      asset: "BTC",
-      percentage: 86.1,
-      value: 108126.68,
-      color: "#F7931A",
-    },
-    {
-      asset: "ETH",
-      percentage: 14.0,
-      value: 17593.51,
-      color: "#627EEA",
-    },
-  ],
-};
-
 // Simplified service class with real database connections
 export class CryptoService {
-  private readonly COINGECKO_API_KEY = ((typeof process !== 'undefined' && process.env && process.env.COINGECKO_API_KEY) || (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_COINGECKO_API_KEY || import.meta.env?.COINGECKO_API_KEY)) || 'CG-ZmDHBa3kaPCNF2a2xg2mA5je');
-  private readonly COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+  private readonly BYBIT_API_KEY = ((typeof process !== 'undefined' && process.env && process.env.BYBIT_API_KEY) || (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BYBIT_API_KEY || import.meta.env?.BYBIT_API_KEY)) || '');
+  private readonly BYBIT_BASE_URL = 'https://api.bybit.com';
 
-  // Enhanced method to get cryptocurrencies with real data when available
+  // Enhanced method to get cryptocurrencies with real data from Bybit
   async getCryptocurrencies(): Promise<Cryptocurrency[]> {
     try {
-      // Fetch real data from CoinGecko API
+      // Fetch real data from Bybit API
       const response = await fetch(
-        `${this.COINGECKO_BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h,7d,30d`,
+        `${this.BYBIT_BASE_URL}/v5/market/tickers?category=spot`,
         {
           headers: {
-            'x-cg-demo-api-key': this.COINGECKO_API_KEY
+            'X-BAPI-API-KEY': this.BYBIT_API_KEY
           }
         }
       );
 
       if (!response.ok) {
-        throw new Error(`CoinGecko API error: ${response.status}`);
+        throw new Error(`Bybit API error: ${response.status}`);
       }
 
       const data = await response.json();
-
-      // Convert CoinGecko data to Cryptocurrency format
-      return data.map((coin: any) => ({
-        id: coin.id,
-        symbol: coin.symbol,
-        name: coin.name,
-        image: coin.image,
-        current_price: coin.current_price,
-        market_cap: coin.market_cap,
-        market_cap_rank: coin.market_cap_rank,
-        fully_diluted_valuation: coin.fully_diluted_valuation,
-        total_volume: coin.total_volume,
-        high_24h: coin.high_24h,
-        low_24h: coin.low_24h,
-        price_change_24h: coin.price_change_24h,
-        price_change_percentage_24h: coin.price_change_percentage_24h,
-        price_change_percentage_7d: coin.price_change_percentage_7d_in_currency || 0,
-        price_change_percentage_30d: coin.price_change_percentage_30d_in_currency || 0,
-        market_cap_change_24h: coin.market_cap_change_24h,
-        market_cap_change_percentage_24h: coin.market_cap_change_percentage_24h,
-        circulating_supply: coin.circulating_supply,
-        total_supply: coin.total_supply,
-        max_supply: coin.max_supply,
-        ath: coin.ath,
-        ath_change_percentage: coin.ath_change_percentage,
-        ath_date: coin.ath_date,
-        atl: coin.atl,
-        atl_change_percentage: coin.atl_change_percentage,
-        atl_date: coin.atl_date,
-        last_updated: coin.last_updated,
-        sparkline_in_7d: coin.sparkline_in_7d?.price || []
+      
+      // Convert Bybit data to Cryptocurrency format
+      return data.result.list.map((ticker: any) => ({
+        id: ticker.symbol.toLowerCase().replace('_', '-'),
+        symbol: ticker.symbol.split('USDT')[0],
+        name: ticker.symbol.split('USDT')[0],
+        image: `https://assets.coingecko.com/coins/images/${ticker.symbol.split('USDT')[0].toLowerCase()}/large/${ticker.symbol.split('USDT')[0]}.png`,
+        current_price: parseFloat(ticker.lastPrice),
+        market_cap: 0, // Bybit doesn't provide market cap directly
+        market_cap_rank: 0, // Bybit doesn't provide rank directly
+        fully_diluted_valuation: 0,
+        total_volume: parseFloat(ticker.volume24h),
+        high_24h: parseFloat(ticker.highPrice24h),
+        low_24h: parseFloat(ticker.lowPrice24h),
+        price_change_24h: parseFloat(ticker.price24h),
+        price_change_percentage_24h: parseFloat(ticker.price24hPcnt) * 100,
+        price_change_percentage_7d: 0,
+        price_change_percentage_30d: 0,
+        market_cap_change_24h: 0,
+        market_cap_change_percentage_24h: 0,
+        circulating_supply: 0,
+        total_supply: 0,
+        max_supply: 0,
+        ath: 0,
+        ath_change_percentage: 0,
+        ath_date: "",
+        atl: 0,
+        atl_change_percentage: 0,
+        atl_date: "",
+        last_updated: new Date().toISOString(),
+        sparkline_in_7d: []
       }));
     } catch (error) {
-      console.error("Error fetching cryptocurrency data from CoinGecko:", error);
-      // Fall back to mock data
-      return mockCryptocurrencies;
+      console.error("Error fetching cryptocurrency data from Bybit:", error);
+      throw error; // No fallback to mock data
     }
   }
 
@@ -435,420 +137,359 @@ export class CryptoService {
       };
     } catch (error) {
       console.error("Error fetching market data:", error);
-      // Return mock data as fallback
-      const cryptos = mockCryptocurrencies;
-
-      return {
-        globalStats: {
-          totalMarketCap: 1750000000000 * (0.98 + Math.random() * 0.04), // ±2% variation
-          totalVolume24h: 85000000000 * (0.9 + Math.random() * 0.2), // ±10% variation
-          marketCapChange24h: (Math.random() - 0.5) * 10, // ±5% change
-          btcDominance: 48.5 + (Math.random() - 0.5) * 2, // ±1% variation
-          ethDominance: 18.2 + (Math.random() - 0.5) * 2, // ±1% variation
-          activeCoins: 8924,
-          markets: 25687,
-        },
-        topMovers: {
-          gainers: cryptos
-            .filter((c) => c.price_change_percentage_24h > 0)
-            .sort(
-              (a, b) =>
-                b.price_change_percentage_24h - a.price_change_percentage_24h,
-            )
-            .slice(0, 5),
-          losers: cryptos
-            .filter((c) => c.price_change_percentage_24h < 0)
-            .sort(
-              (a, b) =>
-                a.price_change_percentage_24h - b.price_change_percentage_24h,
-            )
-            .slice(0, 5),
-        },
-        fearGreedIndex: {
-          value: Math.floor(Math.random() * 100),
-          classification: "Neutral",
-          timestamp: new Date().toISOString(),
-        },
-        trending: cryptos.slice(0, 5),
-      };
+      throw error; // No fallback to mock data
     }
   }
 
   async getTradingPairs(): Promise<TradingPair[]> {
-    // Fetch trading pairs/prices from backend API. Do not fall back to client-side mock data.
+    // Fetch trading pairs/prices from Bybit API
     try {
-      const res = await (await import("@/lib/api")).apiClient.getCryptoPrices();
-      // apiClient.getCryptoPrices returns an object like { prices: { bitcoin: 43250, ... }, timestamp }
-      const prices = (res && (res as any).prices) || {};
-      const pairs: TradingPair[] = Object.keys(prices).map((id) => {
-        const base = (id === 'tether' ? 'USDT' : id).toUpperCase();
-        const symbol = `${base}/USDT`;
-        const price = Number(prices[id]) || 0;
-        return {
-          symbol,
-          baseAsset: base,
-          quoteAsset: 'USDT',
-          price,
-          priceChange: 0,
-          priceChangePercent: 0,
-          volume: 0,
-          quoteVolume: 0,
-          openPrice: price,
-          highPrice: price,
-          lowPrice: price,
-          bidPrice: price,
-          askPrice: price * 1.001, // Small spread
-          spread: price * 0.001,
-          lastUpdateId: Date.now(),
-          lastUpdated: new Date().toISOString(),
-        } as TradingPair;
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/market/tickers?category=spot`, {
+        headers: {
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        }
       });
-      return pairs;
+
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Convert Bybit data to TradingPair format
+      return data.result.list.map((ticker: any) => ({
+        symbol: ticker.symbol,
+        baseAsset: ticker.symbol.split('USDT')[0],
+        quoteAsset: 'USDT',
+        price: parseFloat(ticker.lastPrice),
+        priceChange: parseFloat(ticker.price24h),
+        priceChangePercent: parseFloat(ticker.price24hPcnt) * 100,
+        volume: parseFloat(ticker.volume24h),
+        quoteVolume: 0,
+        openPrice: parseFloat(ticker.prevPrice24h),
+        highPrice: parseFloat(ticker.highPrice24h),
+        lowPrice: parseFloat(ticker.lowPrice24h),
+        bidPrice: parseFloat(ticker.bid1Price),
+        askPrice: parseFloat(ticker.ask1Price),
+        spread: parseFloat(ticker.ask1Price) - parseFloat(ticker.bid1Price),
+        lastUpdateId: Date.now(),
+        lastUpdated: new Date().toISOString(),
+      } as TradingPair));
     } catch (error) {
-      console.error('Failed to fetch trading pairs from backend:', error);
-      // Return empty array instead of throwing error
-      return [];
+      console.error('Failed to fetch trading pairs from Bybit:', error);
+      throw error; // No fallback to mock data
     }
   }
 
   async getPortfolio(): Promise<Portfolio> {
-    // Fetch user's portfolio from backend. Do not fallback to mock data.
+    // Fetch user's portfolio from Bybit API
     try {
-      const { apiCall } = await import('@/lib/api');
-      const response = await fetch('/api/crypto/wallet/balance', {
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/account/wallet-balance`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
         }
       });
       
-      // Check if response is OK and is actually JSON
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP error! status: ${response.status}`, errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
-        throw new Error('Received non-JSON response from portfolio API');
+        throw new Error(`Bybit API error: ${response.status}`);
       }
       
       const data = await response.json();
       
-      // Expecting shape { balances, totalValueUSD, lastUpdated }
-      const assets = (data?.balances && Object.keys(data.balances).map((k) => ({
-        asset: k,
-        total: data.balances[k],
-        usdValue: (data.balances[k] || 0) * (0), // price unknown here
-        price: 0,
+      // Process Bybit wallet data to Portfolio format
+      const assets = (data.result.list && data.result.list[0].coin.map((coin: any) => ({
+        asset: coin.coin,
+        free: parseFloat(coin.walletBalance) - parseFloat(coin.locked),
+        locked: parseFloat(coin.locked),
+        total: parseFloat(coin.walletBalance),
+        btcValue: 0, // Would need to calculate
+        usdValue: parseFloat(coin.usdValue),
+        price: 0, // Would need to get from market data
+        change24h: 0,
+        changePercent24h: 0,
+        allocation: 0
       }))) || [];
 
       return {
-        totalValue: Number(data?.totalValueUSD) || 0,
+        totalValue: data.result.list ? parseFloat(data.result.list[0].totalWalletBalance) : 0,
         totalChange24h: 0,
         totalChangePercent24h: 0,
         assets,
         allocation: [],
       } as Portfolio;
     } catch (error) {
-      console.error('Failed to fetch portfolio from backend:', error);
-      throw error;
+      console.error('Failed to fetch portfolio from Bybit:', error);
+      throw error; // No fallback to mock data
     }
   }
 
   async getStakingProducts(): Promise<StakingProduct[]> {
-    // Return mock staking products for demonstration
-    return [
-      {
-        id: "eth-staking-1",
-        asset: "ETH",
-        type: "FLEXIBLE",
-        apy: 4.5,
-        minAmount: 0.1,
-        rewardAsset: "ETH",
-        isActive: true,
-        totalStaked: 1250.5,
-        description: "Flexible Ethereum staking with daily rewards",
-        risks: ["Slashing risk", "Smart contract risk"],
-        features: ["No lock-up period", "Daily rewards", "Instant withdrawal"]
-      },
-      {
-        id: "eth-staking-2",
-        asset: "ETH",
-        type: "LOCKED",
-        apy: 6.2,
-        minAmount: 0.5,
-        duration: 90,
-        rewardAsset: "ETH",
-        isActive: true,
-        totalStaked: 2450.8,
-        description: "90-day locked staking with higher rewards",
-        risks: ["Lock-up period", "Slashing risk", "Smart contract risk"],
-        features: ["Higher APY", "Compound rewards", "90-day lock"]
-      },
-      {
-        id: "btc-staking-1",
-        asset: "BTC",
-        type: "LOCKED",
-        apy: 3.8,
-        minAmount: 0.01,
-        duration: 180,
-        rewardAsset: "BTC",
-        isActive: true,
-        totalStaked: 890.2,
-        description: "180-day Bitcoin staking",
-        risks: ["Lock-up period", "Custody risk"],
-        features: ["BTC rewards", "180-day lock", "High security"]
-      },
-      {
-        id: "sol-staking-1",
-        asset: "SOL",
-        type: "FLEXIBLE",
-        apy: 7.2,
-        minAmount: 1,
-        rewardAsset: "SOL",
-        isActive: true,
-        totalStaked: 5600,
-        description: "Flexible Solana staking",
-        risks: ["Network risk", "Smart contract risk"],
-        features: ["No lock-up", "High APY", "Instant withdrawal"]
+    // Fetch staking products from Bybit API
+    try {
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/staking/product-list`, {
+        headers: {
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
       }
-    ];
+
+      const data = await response.json();
+      
+      return data.result.list.map((product: any) => ({
+        id: product.productId,
+        asset: product.coin,
+        type: product.type.toUpperCase(),
+        apy: parseFloat(product.apy),
+        minAmount: parseFloat(product.minAmount),
+        rewardAsset: product.rewardCoin,
+        isActive: product.status === '1',
+        totalStaked: parseFloat(product.totalStaked),
+        description: product.detail,
+        risks: ["Market risk", "Smart contract risk"],
+        features: ["Flexible staking", "Daily rewards"]
+      }));
+    } catch (error) {
+      console.error('Failed to fetch staking products from Bybit:', error);
+      throw error; // No fallback to mock data
+    }
   }
 
   async getStakingPositions(userId: string): Promise<StakingPosition[]> {
-    // Return mock staking positions for demonstration
-    return [
-      {
-        id: "position-1",
-        productId: "eth-staking-1",
-        asset: "ETH",
-        amount: 2.5,
-        rewardAsset: "ETH",
-        apy: 4.5,
-        dailyReward: 0.00031,
-        totalRewards: 0.042,
-        startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "ACTIVE",
-        autoRenew: true
-      },
-      {
-        id: "position-2",
-        productId: "sol-staking-1",
-        asset: "SOL",
-        amount: 15,
-        rewardAsset: "SOL",
-        apy: 7.2,
-        dailyReward: 0.0032,
-        totalRewards: 0.18,
-        startDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "ACTIVE",
-        autoRenew: false
+    // Fetch staking positions from Bybit API
+    try {
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/staking/staking-order`, {
+        headers: {
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
       }
-    ];
+
+      const data = await response.json();
+      
+      return data.result.list.map((order: any) => ({
+        id: order.orderId,
+        productId: order.productId,
+        asset: order.coin,
+        amount: parseFloat(order.amount),
+        rewardAsset: order.rewardCoin,
+        apy: parseFloat(order.apy),
+        dailyReward: parseFloat(order.dailyReward),
+        totalRewards: parseFloat(order.totalReward),
+        startDate: new Date(order.createdTime).toISOString(),
+        status: order.status,
+        autoRenew: order.autoRenew === '1'
+      }));
+    } catch (error) {
+      console.error('Failed to fetch staking positions from Bybit:', error);
+      throw error; // No fallback to mock data
+    }
   }
 
   async stakeAsset(userId: string, asset: string, amount: number, productId: string): Promise<boolean> {
-    // Mock staking implementation
-    console.log(`Staking ${amount} ${asset} for user ${userId} with product ${productId}`);
-    // In a real implementation, this would interact with smart contracts or DeFi protocols
-    return true;
+    // Stake asset through Bybit API
+    try {
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/staking/stake`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        },
+        body: JSON.stringify({
+          coin: asset,
+          amount: amount.toString(),
+          productId: productId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.retCode === 0;
+    } catch (error) {
+      console.error(`Failed to stake ${amount} ${asset} for user ${userId}:`, error);
+      throw error; // No fallback to mock data
+    }
   }
 
   async getDeFiProtocols(): Promise<any[]> {
-    // Return mock DeFi protocols for demonstration
-    return [
-      {
-        id: "aave",
-        name: "Aave",
-        description: "Decentralized lending and borrowing protocol",
-        tvl: 8500000000,
-        apyRange: { min: 2.5, max: 8.7 },
-        assets: ["ETH", "USDC", "DAI", "USDT"],
-        type: "LENDING"
-      },
-      {
-        id: "uniswap",
-        name: "Uniswap",
-        description: "Decentralized exchange and liquidity protocol",
-        tvl: 4200000000,
-        apyRange: { min: 5.2, max: 45.8 },
-        assets: ["ETH", "USDC", "DAI", "USDT", "WBTC"],
-        type: "DEX"
-      },
-      {
-        id: "compound",
-        name: "Compound",
-        description: "Algorithmic money market protocol",
-        tvl: 3800000000,
-        apyRange: { min: 1.8, max: 6.4 },
-        assets: ["ETH", "USDC", "DAI", "USDT", "WBTC"],
-        type: "LENDING"
-      },
-      {
-        id: "curve",
-        name: "Curve",
-        description: "Exchange liquidity pool for stablecoins",
-        tvl: 3100000000,
-        apyRange: { min: 3.2, max: 18.5 },
-        assets: ["USDC", "DAI", "USDT", "FRAX"],
-        type: "DEX"
-      }
-    ];
-  }
-
-  async getDeFiPositions(userId: string): Promise<DeFiPosition[]> {
-    // Return mock DeFi positions for demonstration
-    return [
-      {
-        id: "defi-pos-1",
-        protocol: "Aave",
-        type: "LENDING",
-        asset: "USDC",
-        amount: 1000,
-        apy: 4.8,
-        rewards: [
-          { asset: "AAVE", amount: 0.5, apy: 0, value: 12.5 }
-        ],
-        value: 1000,
-        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "ACTIVE"
-      },
-      {
-        id: "defi-pos-2",
-        protocol: "Uniswap",
-        type: "LP",
-        asset: "ETH/USDC",
-        amount: 5.2,
-        apy: 12.4,
-        rewards: [
-          { asset: "UNI", amount: 8.3, apy: 0, value: 45.2 }
-        ],
-        value: 26500,
-        startDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "ACTIVE"
-      }
-    ];
-  }
-
-  async getWatchlist(userId?: string): Promise<any[]> {
-    // Placeholder for watchlist - returns empty array
+    // Bybit doesn't have DeFi protocols, but we can return an empty array
     return [];
   }
 
+  async getDeFiPositions(userId: string): Promise<DeFiPosition[]> {
+    // Bybit doesn't have DeFi positions, but we can return an empty array
+    return [];
+  }
+
+  async getWatchlist(userId?: string): Promise<any[]> {
+    // Fetch watchlist from Bybit API
+    try {
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/market/tickers?category=spot`, {
+        headers: {
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.result.list.slice(0, 10); // Return top 10 coins as watchlist
+    } catch (error) {
+      console.error('Failed to fetch watchlist from Bybit:', error);
+      throw error; // No fallback to mock data
+    }
+  }
+
   async addToWatchlist(userId: string, asset: string): Promise<any> {
-    // Placeholder - return a mock watchlist item
-    return { id: `watch-${Date.now()}`, asset, price: 0, change24h: 0 };
+    // Bybit doesn't have a specific watchlist API, so we'll just return the asset info
+    try {
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/market/tickers?category=spot&symbol=${asset}USDT`, {
+        headers: {
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.result.list[0];
+    } catch (error) {
+      console.error(`Failed to add ${asset} to watchlist:`, error);
+      throw error; // No fallback to mock data
+    }
   }
 
   async createAlert(alertData: any): Promise<any> {
-    // Placeholder - return mock alert
-    return { id: `alert-${Date.now()}`, ...alertData };
+    // Bybit doesn't have a specific alert API, so we'll just return the alert data
+    return alertData;
   }
 
   async getOrderBook(pair: string): Promise<any> {
     try {
-      // First try to fetch from our backend API which handles Bybit integration
-      const response = await fetch(`/api/crypto/orderbook/${pair}`, {
+      // Fetch order book from Bybit API
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/market/orderbook?category=spot&symbol=${pair}&limit=50`, {
         headers: {
-          'Content-Type': 'application/json',
-        },
-        // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        }
       });
       
-      // Check if response is OK and is actually JSON
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP error! status: ${response.status}`, errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
-        throw new Error('Received non-JSON response from orderbook API');
+        throw new Error(`Bybit API error: ${response.status}`);
       }
       
       const data = await response.json();
-      return data.orderbook || data;
+      return {
+        bids: data.result.b.map((bid: any) => [parseFloat(bid[0]), parseFloat(bid[1])]),
+        asks: data.result.a.map((ask: any) => [parseFloat(ask[0]), parseFloat(ask[1])]),
+        timestamp: data.time
+      };
     } catch (error: any) {
-      // Handle timeout specifically
-      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-        console.error('Orderbook request timed out:', error);
-      } else {
-        console.error('Error fetching order book:', error);
-      }
-      // Return mock data as fallback
-      return { bids: [], asks: [], timestamp: Date.now() };
+      console.error('Error fetching order book from Bybit:', error);
+      throw error; // No fallback to mock data
     }
   }
 
   async getRecentTrades(pair: string, limit: number): Promise<any[]> {
-    // Placeholder for recent trades
-    return [];
+    try {
+      // Fetch recent trades from Bybit API
+      const response = await fetch(`${this.BYBIT_BASE_URL}/v5/market/recent-trade?category=spot&symbol=${pair}&limit=${limit}`, {
+        headers: {
+          'X-BAPI-API-KEY': this.BYBIT_API_KEY
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.result.list.map((trade: any) => ({
+        id: trade.execId,
+        price: parseFloat(trade.price),
+        qty: parseFloat(trade.size),
+        time: trade.time,
+        isBuyerMaker: trade.side === 'Sell'
+      }));
+    } catch (error) {
+      console.error('Error fetching recent trades from Bybit:', error);
+      throw error; // No fallback to mock data
+    }
   }
 
-  // Enhanced method to get a single cryptocurrency with real data when available
+  // Enhanced method to get a single cryptocurrency with real data from Bybit
   async getCryptocurrencyById(id: string): Promise<Cryptocurrency | null> {
     try {
-      // Fetch real data from CoinGecko API
+      // Fetch real data from Bybit API
       const response = await fetch(
-        `${this.COINGECKO_BASE_URL}/coins/${id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=true`,
+        `${this.BYBIT_BASE_URL}/v5/market/tickers?category=spot&symbol=${id.toUpperCase()}USDT`,
         {
           headers: {
-            'x-cg-demo-api-key': this.COINGECKO_API_KEY
+            'X-BAPI-API-KEY': this.BYBIT_API_KEY
           }
         }
       );
 
       if (!response.ok) {
-        throw new Error(`CoinGecko API error: ${response.status}`);
+        throw new Error(`Bybit API error: ${response.status}`);
       }
 
       const data = await response.json();
+      const ticker = data.result.list[0];
 
-      // Convert CoinGecko data to Cryptocurrency format
+      if (!ticker) {
+        return null;
+      }
+
+      // Convert Bybit data to Cryptocurrency format
       const coin: Cryptocurrency = {
-        id: data.id,
-        symbol: data.symbol,
-        name: data.name,
-        image: data.image.large,
-        current_price: data.market_data.current_price.usd,
-        market_cap: data.market_data.market_cap.usd,
-        market_cap_rank: data.market_cap_rank,
-        fully_diluted_valuation: data.market_data.fully_diluted_valuation.usd,
-        total_volume: data.market_data.total_volume.usd,
-        high_24h: data.market_data.high_24h.usd,
-        low_24h: data.market_data.low_24h.usd,
-        price_change_24h: data.market_data.price_change_24h,
-        price_change_percentage_24h: data.market_data.price_change_percentage_24h,
-        price_change_percentage_7d: data.market_data.price_change_percentage_7d,
-        price_change_percentage_30d: data.market_data.price_change_percentage_30d,
-        market_cap_change_24h: data.market_data.market_cap_change_24h,
-        market_cap_change_percentage_24h: data.market_data.market_cap_change_percentage_24h,
-        circulating_supply: data.market_data.circulating_supply,
-        total_supply: data.market_data.total_supply,
-        max_supply: data.market_data.max_supply,
-        ath: data.market_data.ath.usd,
-        ath_change_percentage: data.market_data.ath_change_percentage,
-        ath_date: data.market_data.ath_date,
-        atl: data.market_data.atl.usd,
-        atl_change_percentage: data.market_data.atl_change_percentage,
-        atl_date: data.market_data.atl_date,
-        last_updated: data.last_updated,
-        sparkline_in_7d: data.market_data.sparkline_7d.price || []
+        id: ticker.symbol.toLowerCase().replace('_', '-'),
+        symbol: ticker.symbol.split('USDT')[0],
+        name: ticker.symbol.split('USDT')[0],
+        image: `https://assets.coingecko.com/coins/images/${ticker.symbol.split('USDT')[0].toLowerCase()}/large/${ticker.symbol.split('USDT')[0]}.png`,
+        current_price: parseFloat(ticker.lastPrice),
+        market_cap: 0, // Bybit doesn't provide market cap directly
+        market_cap_rank: 0, // Bybit doesn't provide rank directly
+        fully_diluted_valuation: 0,
+        total_volume: parseFloat(ticker.volume24h),
+        high_24h: parseFloat(ticker.highPrice24h),
+        low_24h: parseFloat(ticker.lowPrice24h),
+        price_change_24h: parseFloat(ticker.price24h),
+        price_change_percentage_24h: parseFloat(ticker.price24hPcnt) * 100,
+        price_change_percentage_7d: 0,
+        price_change_percentage_30d: 0,
+        market_cap_change_24h: 0,
+        market_cap_change_percentage_24h: 0,
+        circulating_supply: 0,
+        total_supply: 0,
+        max_supply: 0,
+        ath: 0,
+        ath_change_percentage: 0,
+        ath_date: "",
+        atl: 0,
+        atl_change_percentage: 0,
+        atl_date: "",
+        last_updated: new Date().toISOString(),
+        sparkline_in_7d: []
       };
 
       return coin;
     } catch (error) {
-      console.error(`Error fetching cryptocurrency ${id} from CoinGecko:`, error);
-      // Fallback to mock data
-      return mockCryptocurrencies.find((c) => c.id === id) || null;
+      console.error(`Error fetching cryptocurrency ${id} from Bybit:`, error);
+      throw error; // No fallback to mock data
     }
   }
 
@@ -863,13 +504,13 @@ export class CryptoService {
 
       if (error) {
         console.error("Error fetching user wallet:", error);
-        return null;
+        throw error; // No fallback to mock data
       }
 
       return data;
     } catch (error) {
       console.error("Error in getUserWallet:", error);
-      return null;
+      throw error; // No fallback to mock data
     }
   }
 
@@ -893,13 +534,13 @@ export class CryptoService {
 
       if (error) {
         console.error("Error creating user wallet:", error);
-        return null;
+        throw error; // No fallback to mock data
       }
 
       return data;
     } catch (error) {
       console.error("Error in createUserWallet:", error);
-      return null;
+      throw error; // No fallback to mock data
     }
   }
 
@@ -920,26 +561,7 @@ export class CryptoService {
       });
 
       if (!response.ok) {
-        console.warn('Failed to fetch wallet balance from unified endpoint');
-        // Fallback to old method
-        const wallet = await this.getUserWallet(userId);
-        if (!wallet) return null;
-
-        const totalValueUSD =
-          wallet.btc_balance * 50000 +
-          wallet.eth_balance * 3000 +
-          wallet.usdt_balance * 1 +
-          wallet.eloits_balance * 0.1 +
-          wallet.sol_balance * 100;
-
-        return {
-          btc: wallet.btc_balance,
-          eth: wallet.eth_balance,
-          usdt: wallet.usdt_balance,
-          eloits: wallet.eloits_balance,
-          sol: wallet.sol_balance,
-          totalValueUSD
-        };
+        throw new Error(`Unified wallet API error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -956,7 +578,7 @@ export class CryptoService {
       };
     } catch (error) {
       console.error("Error in getWalletBalance:", error);
-      return null;
+      throw error; // No fallback to mock data
     }
   }
 
@@ -972,13 +594,13 @@ export class CryptoService {
 
       if (error) {
         console.error("Error fetching user transactions:", error);
-        return [];
+        throw error; // No fallback to mock data
       }
 
       return data;
     } catch (error) {
       console.error("Error in getUserTransactions:", error);
-      return [];
+      throw error; // No fallback to mock data
     }
   }
 
@@ -994,13 +616,13 @@ export class CryptoService {
 
       if (error) {
         console.error("Error fetching user trades:", error);
-        return [];
+        throw error; // No fallback to mock data
       }
 
       return data;
     } catch (error) {
       console.error("Error in getUserTrades:", error);
-      return [];
+      throw error; // No fallback to mock data
     }
   }
 
@@ -1028,13 +650,13 @@ export class CryptoService {
 
       if (error) {
         console.error("Error creating P2P offer:", error);
-        return null;
+        throw error; // No fallback to mock data
       }
 
       return data;
     } catch (error) {
       console.error("Error in createP2POffer:", error);
-      return null;
+      throw error; // No fallback to mock data
     }
   }
 
@@ -1056,13 +678,13 @@ export class CryptoService {
 
       if (error) {
         console.error("Error fetching P2P offers:", error);
-        return [];
+        throw error; // No fallback to mock data
       }
 
       return data;
     } catch (error) {
       console.error("Error in getP2POffers:", error);
-      return [];
+      throw error; // No fallback to mock data
     }
   }
 
@@ -1078,33 +700,43 @@ export class CryptoService {
 
       if (error) {
         console.error("Error fetching user P2P offers:", error);
-        return [];
+        throw error; // No fallback to mock data
       }
 
       return data;
     } catch (error) {
       console.error("Error in getUserP2POffers:", error);
-      return [];
+      throw error; // No fallback to mock data
     }
   }
 
-  // Get crypto prices (in a real implementation, this would call an external API)
+  // Get crypto prices (using Bybit API)
   static async getCryptoPrices(symbols: string[]): Promise<Record<string, number>> {
-    // Mock prices - in a real implementation, you would call CoinGecko or similar API
-    const mockPrices: Record<string, number> = {
-      'bitcoin': 50000,
-      'ethereum': 3000,
-      'tether': 1,
-      'solana': 100,
-      'eloits': 0.1
-    };
+    try {
+      // Fetch prices from Bybit API
+      const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot', {
+        headers: {
+          'X-BAPI-API-KEY': ((typeof process !== 'undefined' && process.env && process.env.BYBIT_API_KEY) || (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BYBIT_API_KEY || import.meta.env?.BYBIT_API_KEY)) || '')
+        }
+      });
 
-    const prices: Record<string, number> = {};
-    symbols.forEach(symbol => {
-      prices[symbol] = mockPrices[symbol] || 0;
-    });
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
+      }
 
-    return prices;
+      const data = await response.json();
+      const prices: Record<string, number> = {};
+      
+      data.result.list.forEach((ticker: any) => {
+        const symbol = ticker.symbol.toLowerCase().replace('usdt', '');
+        prices[symbol] = parseFloat(ticker.lastPrice);
+      });
+
+      return prices;
+    } catch (error) {
+      console.error("Error fetching crypto prices from Bybit:", error);
+      throw error; // No fallback to mock data
+    }
   }
 
   // Get user's crypto portfolio value
@@ -1124,27 +756,27 @@ export class CryptoService {
         { 
           symbol: 'BTC', 
           balance: wallet.btc_balance, 
-          value: wallet.btc_balance * prices.bitcoin 
+          value: wallet.btc_balance * (prices['bitcoin'] || 0)
         },
         { 
           symbol: 'ETH', 
           balance: wallet.eth_balance, 
-          value: wallet.eth_balance * prices.ethereum 
+          value: wallet.eth_balance * (prices['ethereum'] || 0)
         },
         { 
           symbol: 'USDT', 
           balance: wallet.usdt_balance, 
-          value: wallet.usdt_balance * prices.tether 
+          value: wallet.usdt_balance * (prices['tether'] || 1)
         },
         { 
           symbol: 'SOL', 
           balance: wallet.sol_balance, 
-          value: wallet.sol_balance * prices.solana 
+          value: wallet.sol_balance * (prices['solana'] || 0)
         },
         { 
           symbol: 'ELOITS', 
           balance: wallet.eloits_balance, 
-          value: wallet.eloits_balance * prices.eloits 
+          value: wallet.eloits_balance * (prices['eloits'] || 0)
         }
       ].filter(asset => asset.balance > 0);
 
@@ -1161,30 +793,36 @@ export class CryptoService {
       };
     } catch (error) {
       console.error("Error in getPortfolioValue:", error);
-      return null;
+      throw error; // No fallback to mock data
     }
   }
 
   // Get recent market activity
   static async getMarketActivity(limit = 10): Promise<any[]> {
     try {
-      // In a real implementation, this would fetch recent trades, price changes, etc.
-      // For now, we'll return mock data
-      const activity = [];
-      for (let i = 0; i < limit; i++) {
-        activity.push({
-          id: `activity_${i}`,
-          type: ['trade', 'price_change', 'new_listing'][Math.floor(Math.random() * 3)],
-          symbol: ['BTC', 'ETH', 'USDT', 'SOL', 'ELOITS'][Math.floor(Math.random() * 5)],
-          value: Math.random() * 10000,
-          change: (Math.random() - 0.5) * 10,
-          timestamp: new Date(Date.now() - Math.random() * 86400000)
-        });
+      // Fetch recent trades from Bybit API
+      const response = await fetch('https://api.bybit.com/v5/market/recent-trade?category=spot&symbol=BTCUSDT&limit=10', {
+        headers: {
+          'X-BAPI-API-KEY': ((typeof process !== 'undefined' && process.env && process.env.BYBIT_API_KEY) || (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BYBIT_API_KEY || import.meta.env?.BYBIT_API_KEY)) || '')
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bybit API error: ${response.status}`);
       }
-      return activity;
+
+      const data = await response.json();
+      return data.result.list.map((trade: any) => ({
+        id: trade.execId,
+        type: 'trade',
+        symbol: 'BTC',
+        value: parseFloat(trade.price) * parseFloat(trade.size),
+        change: 0, // Would need to calculate
+        timestamp: new Date(trade.time).toISOString()
+      }));
     } catch (error) {
       console.error("Error in getMarketActivity:", error);
-      return [];
+      throw error; // No fallback to mock data
     }
   }
 
@@ -1261,7 +899,7 @@ export class CryptoService {
       }));
     } catch (error) {
       console.error('Error fetching P2P offers:', error);
-      return [];
+      throw error; // No fallback to mock data
     }
   }
 
@@ -1290,7 +928,7 @@ export class CryptoService {
       return data;
     } catch (error) {
       console.error('Error creating P2P offer:', error);
-      return null;
+      throw error; // No fallback to mock data
     }
   }
 }
@@ -1298,7 +936,7 @@ export class CryptoService {
 // Export singleton instance
 export const cryptoService = new CryptoService();
 
-// Status functions (now always return "healthy" since we're using mock data)
+// Status functions (now always return "healthy" since we're using real data)
 export const getApiStatus = () => ({
   failureCount: 0,
   isDisabled: false,
@@ -1308,5 +946,5 @@ export const getApiStatus = () => ({
 });
 
 export const resetApiStatus = () => {
-  console.log("📊 CryptoService: Using mock data only - no API to reset");
+  console.log("📊 CryptoService: Using real data only - no mock fallbacks");
 };

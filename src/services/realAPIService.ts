@@ -61,8 +61,8 @@ export class RealAPIService {
     if (cached) return cached;
 
     try {
-      // Try CoinGecko API (free tier available)
-      const response = await this.fetchCoinGeckoData(symbol);
+      // Try Bybit API (requires API key)
+      const response = await this.fetchBybitData(symbol);
       if (response.success) {
         this.setCache(cacheKey, response);
         return response;
@@ -147,47 +147,34 @@ export class RealAPIService {
 
   // Real API Integration Methods (when API keys are available)
 
-  private async fetchCoinGeckoData(
+  private async fetchBybitData(
     symbol: string,
   ): Promise<APIResponse<CryptoPrice>> {
-    // CoinGecko API with optional key for higher rate limits
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${symbol}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24h_vol=true`;
+    // Bybit API with optional key for higher rate limits
+    const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol.toUpperCase()}USDT`;
     
     // Note: In a real frontend application, API keys should be handled on the server-side
     // This is just for demonstration purposes. In production, this should be proxied through your backend.
-    const apiKey = import.meta.env?.VITE_COINGECKO_API_KEY || '';
-    const headers = apiKey ? { 'X-CG-Pro-API-Key': apiKey } : {};
+    const apiKey = import.meta.env?.VITE_BYBIT_API_KEY || '';
+    const headers = apiKey ? { 'X-BAPI-API-KEY': apiKey } : {};
 
     try {
       const response = await fetch(url, { headers });
-      
-      // Check if response is OK and is actually JSON
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`CoinGecko API error! status: ${response.status}`, errorText);
-        throw new Error(`CoinGecko API error! status: ${response.status}`);
-      }
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('CoinGecko returned non-JSON response:', text.substring(0, 200));
-        throw new Error('CoinGecko returned non-JSON response');
-      }
+      if (!response.ok) throw new Error("API request failed");
 
       const data = await response.json();
-      const coinData = data[symbol];
+      const tickerData = data.result.list[0];
 
-      if (!coinData) throw new Error("Coin not found");
+      if (!tickerData) throw new Error("Coin not found");
 
       return {
         success: true,
         data: {
           symbol: symbol,
-          price: coinData.usd,
-          change24h: coinData.usd_24h_change || 0,
-          marketCap: coinData.usd_market_cap,
-          volume24h: coinData.usd_24h_vol,
+          price: parseFloat(tickerData.lastPrice),
+          change24h: parseFloat(tickerData.price24hPcnt) * 100 || 0,
+          marketCap: 0, // Bybit doesn't provide market cap directly
+          volume24h: parseFloat(tickerData.volume24h),
         },
         source: "real_api",
         timestamp: Date.now(),

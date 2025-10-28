@@ -85,8 +85,12 @@ const ProfessionalCrypto = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // 1) Fetch live prices from backend (Bybit/CoinGecko under the hood)
-      const pricesRes = await fetch(`/api/crypto/prices?symbols=${TRACKED.join(",")}`);
+      // 1) Fetch live prices from Bybit API instead of CoinGecko
+      const pricesRes = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot`, {
+        headers: {
+          'X-BAPI-API-KEY': import.meta.env?.VITE_BYBIT_API_KEY || ''
+        }
+      });
       
       // Check if response is OK and is actually JSON
       if (!pricesRes.ok) {
@@ -99,11 +103,22 @@ const ProfessionalCrypto = () => {
       if (!contentType || !contentType.includes('application/json')) {
         const text = await pricesRes.text();
         console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
-        throw new Error('Received non-JSON response from crypto prices API');
+        throw new Error('Received non-JSON response from Bybit API');
       }
       
       const pricesPayload = await pricesRes.json();
-      const prices = pricesPayload?.prices || {};
+      const prices = {};
+      
+      // Process Bybit data into the format expected by the UI
+      pricesPayload.result.list.forEach((ticker: any) => {
+        const symbol = ticker.symbol.toLowerCase().replace('usdt', '');
+        prices[symbol] = {
+          usd: parseFloat(ticker.lastPrice),
+          usd_market_cap: 0, // Bybit doesn't provide market cap
+          usd_24h_change: parseFloat(ticker.price24hPcnt) * 100,
+          usd_24h_vol: parseFloat(ticker.volume24h)
+        };
+      });
 
       // Normalize into UI list with metadata
       const list: Cryptocurrency[] = TRACKED.map((id) => {
@@ -166,7 +181,10 @@ const ProfessionalCrypto = () => {
             const total = Number(j?.data?.balances?.crypto || 0);
             perCurrency = total > 0 ? [{ currency: "USDT", balance: total }] : [];
           }
-        } catch {}
+        } catch (error) {
+          console.error("Error fetching wallet balance:", error);
+          throw error; // No fallback to mock data
+        }
       }
 
       // 3) Compute totals in USD and primary asset from holdings and prices
@@ -195,9 +213,10 @@ const ProfessionalCrypto = () => {
       console.error("Error loading crypto data:", error);
       toast({
         title: "Error",
-        description: "Failed to load cryptocurrency data.",
+        description: "Failed to load cryptocurrency data from Bybit.",
         variant: "destructive",
       });
+      throw error; // No fallback to mock data
     } finally {
       setIsLoading(false);
     }
