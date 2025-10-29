@@ -28,6 +28,17 @@ import {
   Coins,
   ChevronUp,
   ChevronDown,
+  ThumbsUp,
+  ThumbsDown,
+  Reply,
+  RotateCcw,
+  Award,
+  Sparkles,
+  Send,
+  Smile,
+  MoreHorizontal,
+  Plus,
+  Minimize
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -66,6 +77,8 @@ interface Comment {
   };
   message: string;
   timestamp: Date;
+  likes?: number;
+  userLiked?: boolean;
 }
 
 interface Vote {
@@ -98,7 +111,7 @@ interface LiveBattleProps {
 
 const gifts: Gift[] = [
   { id: '1', name: 'Rose', icon: '🌹', value: 1, color: 'text-pink-400' },
-  { id: '2', name: 'Heart', icon: '❤��', value: 5, color: 'text-red-400' },
+  { id: '2', name: 'Heart', icon: '❤️', value: 5, color: 'text-red-400' },
   { id: '3', name: 'Diamond', icon: '💎', value: 10, color: 'text-blue-400' },
   { id: '4', name: 'Crown', icon: '👑', value: 25, color: 'text-yellow-400' },
   { id: '5', name: 'Rocket', icon: '🚀', value: 50, color: 'text-purple-400' },
@@ -127,6 +140,8 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
   const [comboCount, setComboCount] = useState(0);
   const [showCombo, setShowCombo] = useState(false);
   const [battlePhase, setBattlePhase] = useState<'active' | 'ending' | 'ended'>('active');
+  const [giftEffects, setGiftEffects] = useState<Array<{ id: string; creatorId: string; gift: Gift; timestamp: Date }>>([]);
+  const [chatMessageLikes, setChatMessageLikes] = useState<Record<string, { likes: number; userLiked: boolean }>>({});
 
   // Voting state
   const [showVoting, setShowVoting] = useState(false);
@@ -266,6 +281,20 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
         prev[recipientId === creator1.id ? 'creator1' : 'creator2'] + points
     }));
 
+    // Add gift effect
+    const effectId = Date.now().toString();
+    setGiftEffects(prev => [...prev, {
+      id: effectId,
+      creatorId: recipientId,
+      gift,
+      timestamp: new Date(),
+    }]);
+    
+    // Remove effect after animation
+    setTimeout(() => {
+      setGiftEffects(prev => prev.filter(effect => effect.id !== effectId));
+    }, 3000);
+
     // Combo system
     setComboCount(prev => prev + 1);
     setShowCombo(true);
@@ -294,6 +323,28 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
 
     setComments(prev => [...prev, comment]);
     setNewComment('');
+  };
+
+  const likeComment = (commentId: string) => {
+    setComments(prev => 
+      prev.map(comment => 
+        comment.id === commentId 
+          ? { 
+              ...comment, 
+              likes: (comment.likes || 0) + 1,
+              userLiked: true
+            } 
+          : comment
+      )
+    );
+    
+    setChatMessageLikes(prev => ({
+      ...prev,
+      [commentId]: {
+        likes: (prev[commentId]?.likes || 0) + 1,
+        userLiked: true
+      }
+    }));
   };
 
   const formatTime = (seconds: number) => {
@@ -602,6 +653,24 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
           </div>
         )}
 
+        {/* Gift Effects */}
+        {giftEffects.map((effect) => (
+          <div
+            key={effect.id}
+            className={cn(
+              "absolute top-1/2 transform -translate-y-1/2 z-30 pointer-events-none animate-bounce",
+              effect.creatorId === creator1.id ? "left-1/4" : "right-1/4"
+            )}
+          >
+            <div className="text-6xl animate-pulse">
+              {effect.gift.icon}
+            </div>
+            <div className="text-center text-white font-bold text-sm mt-2">
+              +{effect.gift.value} SP
+            </div>
+          </div>
+        ))}
+
         {/* Battle End Animation */}
         {battlePhase === 'ending' && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40">
@@ -670,6 +739,31 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
                     <div className="flex-1 min-w-0">
                       <span className="text-yellow-400 font-medium">{comment.user.username}: </span>
                       <span className="text-white break-words">{comment.message}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 p-1 text-gray-400 hover:text-white"
+                          onClick={() => likeComment(comment.id)}
+                        >
+                          <ThumbsUp className="w-3 h-3" />
+                          <span className="text-xs ml-1">{comment.likes || 0}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 p-1 text-gray-400 hover:text-white"
+                        >
+                          <ThumbsDown className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 p-1 text-gray-400 hover:text-white"
+                        >
+                          <Reply className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -691,7 +785,7 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
                 onKeyPress={(e) => e.key === 'Enter' && sendComment()}
               />
               <Button size="sm" onClick={sendComment}>
-                <MessageCircle className="w-4 h-4" />
+                <Send className="w-4 h-4" />
               </Button>
             </div>
 

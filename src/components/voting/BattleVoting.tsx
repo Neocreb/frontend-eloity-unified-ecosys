@@ -18,6 +18,17 @@ import {
   History,
   Wallet,
   CheckCircle,
+  ThumbsUp,
+  ThumbsDown,
+  RotateCcw,
+  Award,
+  Sparkles,
+  Send,
+  Smile,
+  MoreHorizontal,
+  Plus,
+  Minimize,
+  Maximize
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,6 +101,8 @@ const BattleVoting: React.FC<BattleVotingProps> = ({
   const [showVoteConfirm, setShowVoteConfirm] = useState(false);
   const [votingLocked, setVotingLocked] = useState(false);
   const [activeTab, setActiveTab] = useState('vote');
+  const [showOddsExplanation, setShowOddsExplanation] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   
   const { toast } = useToast();
 

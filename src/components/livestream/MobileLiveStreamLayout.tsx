@@ -1,124 +1,167 @@
-// @ts-nocheck
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Heart,
-  MessageCircle,
-  Share2,
-  Users,
-  Gift,
-  X,
-  Send,
-  Smile,
-  Diamond,
   Play,
   Pause,
-  UserPlus,
-  Flag,
-  Crown,
-  Radio,
-  Target,
+  Volume2,
+  VolumeX,
+  Maximize,
+  MessageCircle,
+  Heart,
+  Share2,
+  Users,
   Clock,
-  Eye,
-  Coins,
+  X,
+  Camera,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Gift,
+  Crown,
+  Target,
+  Trophy,
+  Flame,
+  Star,
+  Settings,
+  ThumbsUp,
+  ThumbsDown,
+  Reply,
+  Send,
+  Smile,
+  MoreHorizontal,
+  Plus,
+  Minimize,
   DollarSign,
+  Zap,
+  Award,
+  Sparkles,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { cn } from '../../lib/utils';
-import { LiveStreamData } from '../../hooks/use-live-content';
-import { useToast } from '../../hooks/use-toast';
-import { useAuth } from '../../contexts/AuthContext';
-import BattleVoting from '../voting/BattleVoting';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import VirtualGiftsAndTips from '../premium/VirtualGiftsAndTips';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { requestCameraAccess } from '@/utils/media';
+import { useAuth } from '@/contexts/AuthContext';
+import VirtualGiftsAndTips from '@/components/premium/VirtualGiftsAndTips';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import BattleVoting from '@/components/voting/BattleVoting';
 
-interface LiveChatMessage {
+interface LiveReaction {
   id: string;
+  emoji: string;
+  x: number;
+  y: number;
+  timestamp: number;
+}
+
+interface ChatMessage {
+  id: string;
+  user: {
+    username: string;
+    avatar: string;
+    verified?: boolean;
+    tier?: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'rising_star' | 'pro_creator' | 'legend';
+  };
+  message: string;
+  timestamp: Date;
+  likes?: number;
+  userLiked?: boolean;
+  isSystemMessage?: boolean;
+}
+
+interface LiveStreamData {
+  id: string;
+  type: 'live' | 'battle';
   user: {
     id: string;
     username: string;
     displayName: string;
     avatar: string;
     verified: boolean;
-    tier?: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+    followerCount: number;
   };
-  message: string;
-  timestamp: Date;
-  type: 'message' | 'gift' | 'join' | 'follow' | 'system' | 'reaction' | 'like';
+  title: string;
+  description: string;
+  viewerCount: number;
+  isActive: boolean;
+  startedAt: Date;
+  isUserOwned?: boolean;
+  category?: string;
+  streamKey?: string;
+  battleData?: {
+    opponent?: {
+      id: string;
+      username: string;
+      displayName: string;
+      avatar: string;
+      verified?: boolean;
+    };
+    type: 'dance' | 'rap' | 'comedy' | 'general';
+    timeRemaining?: number;
+    scores?: {
+      user1: number;
+      user2: number;
+    };
+  };
 }
 
 interface MobileLiveStreamLayoutProps {
   content: LiveStreamData;
   isActive: boolean;
   isUserOwned?: boolean;
-  onEndStream?: () => void;
+  onEndStream: () => void;
   className?: string;
 }
 
-const mockChatMessages: LiveChatMessage[] = [
+const mockReactions: LiveReaction[] = [
+  { id: '1', emoji: '❤️', x: 20, y: 30, timestamp: Date.now() },
+  { id: '2', emoji: '🔥', x: 70, y: 50, timestamp: Date.now() },
+  { id: '3', emoji: '👏', x: 40, y: 70, timestamp: Date.now() },
+  { id: '4', emoji: '😂', x: 80, y: 20, timestamp: Date.now() },
+];
+
+const mockChatMessages: ChatMessage[] = [
   {
     id: '1',
-    user: {
-      id: 'user1',
-      username: 'eucilides_vaz',
-      displayName: 'Eucilides Vaz',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      verified: false,
-      tier: 'gold',
-    },
-    message: 'good cooking 😂😂😂',
+    user: { username: 'stream_fan', avatar: 'https://i.pravatar.cc/32?img=1', verified: true, tier: 'gold' },
+    message: 'Amazing stream! 🔥',
     timestamp: new Date(Date.now() - 10000),
-    type: 'message',
   },
   {
     id: '2',
-    user: {
-      id: 'user2',
-      username: 'brAvO',
-      displayName: 'Tez On The Run',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      verified: true,
-      tier: 'diamond',
-    },
-    message: '',
+    user: { username: 'crypto_enthusiast', avatar: 'https://i.pravatar.cc/32?img=2', tier: 'pro_creator' },
+    message: 'Love this content! ❤️',
     timestamp: new Date(Date.now() - 5000),
-    type: 'system',
   },
   {
     id: '3',
-    user: {
-      id: 'user3',
-      username: 'miahzinspire',
-      displayName: 'Miahzinspire',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      verified: false,
-      tier: 'silver',
-    },
-    message: 'joined',
-    timestamp: new Date(Date.now() - 3000),
-    type: 'join',
-  },
-  {
-    id: '4',
-    user: {
-      id: 'user4',
-      username: 'sam',
-      displayName: 'Sam',
-      avatar: 'https://i.pravatar.cc/150?img=4',
-      verified: false,
-      tier: 'bronze',
-    },
-    message: 'liked the LIVE',
-    timestamp: new Date(Date.now() - 1000),
-    type: 'like',
+    user: { username: 'new_viewer', avatar: 'https://i.pravatar.cc/32?img=3' },
+    message: 'Just joined! 👋',
+    timestamp: new Date(),
+    isSystemMessage: true,
   },
 ];
 
-const quickReactions = ['❤️', '😂', '😮', '���', '��', '💎', '🚀', '👑'];
+const mockGifts = [
+  { id: '1', name: 'Rose', icon: '🌹', value: 1, color: 'text-pink-400' },
+  { id: '2', name: 'Heart', icon: '❤️', value: 5, color: 'text-red-400' },
+  { id: '3', name: 'Diamond', icon: '💎', value: 10, color: 'text-blue-400' },
+  { id: '4', name: 'Crown', icon: '👑', value: 25, color: 'text-yellow-400' },
+  { id: '5', name: 'Rocket', icon: '🚀', value: 50, color: 'text-purple-400' },
+  { id: '6', name: 'Fireworks', icon: '🎆', value: 100, color: 'text-rainbow' },
+];
 
-export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
+const quickReactions = ['❤️', '😂', '😮', '👏', '🔥', '💎', '🚀', '👑'];
+
+const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
   content,
   isActive,
   isUserOwned = false,
@@ -130,17 +173,21 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
   
   // Stream state
   const [isLiked, setIsLiked] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(isActive);
   const [localViewerCount, setLocalViewerCount] = useState(content.viewerCount);
-  const [localLikes, setLocalLikes] = useState(Math.floor(content.viewerCount * 0.8));
-  
-  // Chat and interactions
-  const [chatMessages, setChatMessages] = useState<LiveChatMessage[]>(mockChatMessages);
+  const [streamDuration, setStreamDuration] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(mockChatMessages);
+  const [reactions, setReactions] = useState<LiveReaction[]>(mockReactions);
+  const [showChat, setShowChat] = useState(true);
   const [showGifts, setShowGifts] = useState(false);
-  const [showVoting, setShowVoting] = useState(false);
+  const [selectedGift, setSelectedGift] = useState<any>(null);
+  const [giftEffects, setGiftEffects] = useState<Array<{ id: string; emoji: string; x: number; y: number }>>([]);
   const [showQuickReactions, setShowQuickReactions] = useState(false);
+  const [chatMessageLikes, setChatMessageLikes] = useState<Record<string, { likes: number; userLiked: boolean }>>({});
+  const [showVoting, setShowVoting] = useState(false);
   
   // Battle voting state
   const [userBalance] = useState(2500);
@@ -153,6 +200,7 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
   });
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   // Simulate real-time updates
   useEffect(() => {
@@ -177,143 +225,181 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
           'joined',
           'liked the LIVE',
         ];
-
+        
         const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
         const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)];
         
-        const messageType = randomMessage === 'joined' ? 'join' : 
-                           randomMessage === 'liked the LIVE' ? 'like' : 'message';
-        
-        const newMessage: LiveChatMessage = {
-          id: `msg-${Date.now()}`,
-          user: {
-            id: `user-${Date.now()}`,
-            ...randomUser,
-          },
+        const newMessage: ChatMessage = {
+          id: Date.now().toString(),
+          user: randomUser,
           message: randomMessage,
           timestamp: new Date(),
-          type: messageType,
+          isSystemMessage: randomMessage === 'joined',
         };
-
-        setChatMessages(prev => [...prev.slice(-10), newMessage]); // Keep last 10 messages
+        
+        setChatMessages(prev => [...prev.slice(-20), newMessage]);
       }
-
+      
       // Random viewer count changes
-      const viewerChange = Math.floor(Math.random() * 5 - 2);
-      setLocalViewerCount(prev => Math.max(1, prev + viewerChange));
-
-      // Random likes
+      setLocalViewerCount(prev => Math.max(1, prev + Math.floor(Math.random() * 5 - 2)));
+      
+      // Random reactions
       if (Math.random() < 0.3) {
-        setLocalLikes(prev => prev + Math.floor(Math.random() * 3) + 1);
+        const randomReaction = quickReactions[Math.floor(Math.random() * quickReactions.length)];
+        addReaction(randomReaction);
       }
-    }, 2000 + Math.random() * 3000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [isActive, content.isActive]);
 
+  // Simulate stream duration
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStreamDuration(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isActive, content.isActive]);
+
+  // Start camera if user owns this stream
+  useEffect(() => {
+    if (isUserOwned && isActive && videoRef.current) {
+      requestCameraAccess({ video: true, audio: true })
+        .then(result => {
+          if (result.error) {
+            throw new Error(result.error.message);
+          }
+
+          if (result.stream) {
+            if (videoRef.current) {
+              videoRef.current.srcObject = result.stream;
+              videoRef.current.play().catch(console.error);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Camera access failed:', error);
+        });
+    }
+  }, [isUserOwned, isActive]);
+
+  // Handle reactions animation
+  const addReaction = useCallback((emoji: string, x?: number, y?: number) => {
+    const reaction: LiveReaction = {
+      id: `reaction-${Date.now()}`,
+      emoji,
+      x: x || Math.random() * 80 + 10,
+      y: y || Math.random() * 30 + 10,
+      timestamp: Date.now(),
+    };
+    
+    setReactions(prev => [...prev, reaction]);
+    
+    // Remove reaction after animation
+    setTimeout(() => {
+      setReactions(prev => prev.filter(r => r.id !== reaction.id));
+    }, 3000);
+  }, []);
+
   const handleSendChat = () => {
     if (!chatMessage.trim() || !user) return;
 
-    const newMessage: LiveChatMessage = {
-      id: `msg-${Date.now()}`,
+    const newMessage: ChatMessage = {
+      id: Date.now().toString(),
       user: {
-        id: user.id,
-        username: user.username || 'user',
-        displayName: user.name || 'User',
-        avatar: user.avatar || '',
-        verified: false,
-        tier: 'bronze',
+        username: user.username || 'you',
+        avatar: user.avatar_url || 'https://i.pravatar.cc/32?u=you',
       },
       message: chatMessage,
       timestamp: new Date(),
-      type: 'message',
     };
 
-    setChatMessages(prev => [...prev.slice(-10), newMessage]);
+    setChatMessages(prev => [...prev, newMessage]);
     setChatMessage('');
   };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    if (!isLiked) {
-      setLocalLikes(prev => prev + 1);
-      
-      if (user) {
-        const likeMessage: LiveChatMessage = {
-          id: `like-${Date.now()}`,
-          user: {
-            id: user.id,
-            username: user.username || 'user',
-            displayName: user.name || 'User',
-            avatar: user.avatar || '',
-            verified: false,
-            tier: 'bronze',
-          },
-          message: 'liked the LIVE',
-          timestamp: new Date(),
-          type: 'like',
-        };
-
-        setChatMessages(prev => [...prev.slice(-10), likeMessage]);
+  const handleLikeMessage = (messageId: string) => {
+    setChatMessages(prev => 
+      prev.map(msg => 
+        msg.id === messageId 
+          ? { 
+              ...msg, 
+              likes: (msg.likes || 0) + 1,
+              userLiked: true
+            } 
+          : msg
+      )
+    );
+    
+    setChatMessageLikes(prev => ({
+      ...prev,
+      [messageId]: {
+        likes: (prev[messageId]?.likes || 0) + 1,
+        userLiked: true
       }
-    }
+    }));
   };
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing);
-
+  const handleLike = () => {
+    setIsLiked(true);
     toast({
-      title: isFollowing ? 'Unfollowed' : 'Following!',
-      description: `@${content.user.username}`,
+      title: "Liked! ❤️",
+      description: "You earned 10 Eloits for liking this stream"
     });
-  };
-
-  const handleQuickReaction = (emoji: string) => {
-    if (!user) return;
-
-    const reactionMessage: LiveChatMessage = {
-      id: `reaction-${Date.now()}`,
-      user: {
-        id: user.id,
-        username: user.username || 'user',
-        displayName: user.name || 'User',
-        avatar: user.avatar || '',
-        verified: false,
-        tier: 'bronze',
-      },
-      message: emoji,
-      timestamp: new Date(),
-      type: 'reaction',
-    };
-
-    setChatMessages(prev => [...prev.slice(-10), reactionMessage]);
-
-    toast({
-      title: `Reaction sent! ${emoji}`,
-      description: "Your reaction was added to the live chat",
-    });
+    setTimeout(() => setIsLiked(false), 1000);
   };
 
   const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
-  };
-
-  const getTierIcon = (tier?: string) => {
-    switch (tier) {
-      case 'diamond': return <Diamond className="w-3 h-3 text-blue-400" />;
-      case 'gold': return <Crown className="w-3 h-3 text-yellow-400" />;
-      default: return null;
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch(console.error);
+      }
+      setIsPlaying(!isPlaying);
     }
   };
 
-  // Handle placing a vote in battle
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const hours = Math.floor(mins / 60);
+    
+    if (hours > 0) {
+      return `${hours}:${(mins % 60).toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const sendGift = (gift: any) => {
+    // Add gift effect
+    const effectId = Date.now().toString();
+    const effect = {
+      id: effectId,
+      emoji: gift.icon,
+      x: Math.random() * 80 + 10, // Random position
+      y: Math.random() * 30 + 10,
+    };
+    
+    setGiftEffects(prev => [...prev, effect]);
+    
+    // Remove effect after animation
+    setTimeout(() => {
+      setGiftEffects(prev => prev.filter(e => e.id !== effectId));
+    }, 3000);
+    
+    toast({
+      title: `${gift.icon} ${gift.name} sent!`,
+      description: `You earned 5 Eloits for sending a gift`
+    });
+    
+    setShowGifts(false);
+    setSelectedGift(null);
+  };
+
   const handlePlaceVote = (vote: any) => {
+    // Check if user has already voted in this battle
     if (userVotes.length > 0) {
       toast({
         title: "Vote Already Placed! 🚫",
@@ -331,6 +417,8 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
     };
 
     setUserVotes(prev => [...prev, newVote]);
+
+    // Update voting pool
     setVotingPool(prev => ({
       ...prev,
       creator1Total: vote.creatorId === content.user.id ? prev.creator1Total + vote.amount : prev.creator1Total,
@@ -341,23 +429,20 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
 
     toast({
       title: "Vote Placed! 🎯",
-      description: `${vote.amount} SP placed`,
+      description: `${vote.amount} SP on ${vote.creatorId === content.user.id ? content.user.displayName : content.battleData?.opponent?.displayName}`,
     });
-
-    setShowVoting(false);
   };
 
   return (
-    <div className={cn("relative h-screen w-full bg-black overflow-hidden snap-start snap-always", className)}>
-      {/* Video Background */}
+    <div className={cn("relative h-screen w-full bg-black overflow-hidden", className)}>
+      {/* Video */}
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
         autoPlay
-        muted
+        muted={isMuted}
         playsInline
-        poster={`https://images.unsplash.com/photo-${content.type === 'battle' ? '1571019613454-1cb2f99b2d8b' : '1639762681485-074b7f938ba0'}?w=800`}
-        onClick={togglePlayPause}
+        poster={`https://images.unsplash.com/photo-${content.type === 'battle' ? '1571019613454-1cb2f99b2d8b' : '1639762681485-074b7f938ba0'}?w=400`}
       />
 
       {/* Fallback background */}
@@ -368,6 +453,9 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
           zIndex: -1
         }}
       />
+
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
 
       {/* Play/Pause overlay */}
       {!isPlaying && (
@@ -383,340 +471,178 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
         </div>
       )}
 
-      {/* Top Header */}
-      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/50 to-transparent p-4">
-        <div className="flex items-center justify-between">
-          {/* Left: Profile Info */}
-          <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10 border-2 border-white">
+      {/* Live Reactions Animation */}
+      {reactions.map((reaction) => (
+        <div
+          key={reaction.id}
+          className="absolute pointer-events-none animate-pulse"
+          style={{
+            left: `${reaction.x}%`,
+            top: `${reaction.y}%`,
+            animation: 'float-up 3s ease-out forwards',
+          }}
+        >
+          <span className="text-3xl">{reaction.emoji}</span>
+        </div>
+      ))}
+
+      {/* Gift Effects */}
+      {giftEffects.map((effect) => (
+        <div
+          key={effect.id}
+          className="absolute pointer-events-none animate-bounce"
+          style={{
+            left: `${effect.x}%`,
+            top: `${effect.y}%`,
+          }}
+        >
+          <span className="text-4xl">{effect.emoji}</span>
+        </div>
+      ))}
+
+      {/* Top Status Bar */}
+      <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between">
+        {/* Live indicator and stats */}
+        <div className="flex items-center gap-2">
+          <Badge
+            className={cn(
+              "text-white font-semibold px-3 py-1 animate-pulse border-0",
+              content.type === 'battle' ? "bg-red-600" : "bg-red-500"
+            )}
+          >
+            {content.type === 'battle' ? (
+              <>
+                <Target className="w-3 h-3 mr-1" />
+                LIVE BATTLE
+              </>
+            ) : (
+              <>
+                <Radio className="w-3 h-3 mr-1" />
+                LIVE
+              </>
+            )}
+          </Badge>
+          
+          <Badge className="bg-black/50 text-white border-0">
+            <Clock className="w-3 h-3 mr-1" />
+            {formatTime(streamDuration)}
+          </Badge>
+        </div>
+
+        {/* Viewer count and stats */}
+        <div className="flex items-center gap-2">
+          <div className="bg-black/50 rounded-full px-3 py-1 backdrop-blur-sm">
+            <div className="flex items-center text-white text-sm">
+              <Users className="w-4 h-4 mr-1" />
+              <span>{localViewerCount.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Left Side - Stream Info */}
+      <div className="absolute bottom-32 left-4 z-30">
+        <div className="bg-black/50 rounded-lg p-3 backdrop-blur-sm max-w-xs">
+          <div className="flex items-center gap-2 mb-2">
+            <Avatar className="w-10 h-10">
               <AvatarImage src={content.user.avatar} />
               <AvatarFallback>{content.user.displayName[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-white font-semibold">{content.user.username}</span>
-                <div className="flex items-center text-white/70 text-sm">
-                  <Heart className="w-3 h-3 mr-1" />
-                  {formatNumber(localLikes)}
-                </div>
-              </div>
-            </div>
-            {!isUserOwned && (
-              <Button
-                onClick={handleFollow}
-                size="sm"
-                className={cn(
-                  "bg-red-500 hover:bg-red-600 text-white font-medium px-4 rounded-full",
-                  isFollowing && "bg-gray-600 hover:bg-gray-700"
-                )}
-              >
-                {isFollowing ? "Following" : "+ Follow"}
-              </Button>
-            )}
-          </div>
-
-          {/* Right: Viewer Count & Close */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-black/30 rounded-full px-3 py-1">
-              <Users className="w-4 h-4 text-white mr-1" />
-              <span className="text-white text-sm font-medium">{formatNumber(localViewerCount)}</span>
+              <div className="text-white font-semibold">{content.user.displayName}</div>
+              <div className="text-gray-300 text-sm">@{content.user.username}</div>
             </div>
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={onEndStream}
-              className="text-white hover:bg-white/20 rounded-full"
+              size="sm"
+              variant={isFollowing ? "secondary" : "default"}
+              className="ml-2"
+              onClick={() => setIsFollowing(!isFollowing)}
             >
-              <X className="w-5 h-5" />
+              {isFollowing ? "Following" : "Follow"}
             </Button>
           </div>
-        </div>
-      </div>
-
-      {/* Live Badges */}
-      <div className="absolute top-20 left-0 right-0 z-30 flex items-center justify-between px-4">
-        <Badge
-          className="bg-yellow-500/90 text-black font-semibold px-3 py-1.5 rounded-full border-0 shadow-lg cursor-pointer hover:bg-yellow-400/90 transition-colors"
-          onClick={() => {
-            toast({
-              title: "Daily Ranking 👑",
-              description: "View today's top creators and streamers",
-            });
-          }}
-        >
-          <Crown className="w-3 h-3 mr-1" />
-          Daily Ranking
-        </Badge>
-        <Badge
-          className="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold px-3 py-1.5 rounded-full border-0 shadow-lg cursor-pointer hover:from-pink-600 hover:to-purple-600 transition-colors"
-          onClick={() => {
-            toast({
-              title: "Explore Content 🌟",
-              description: "Discover trending streams and creators",
-            });
-          }}
-        >
-          Explore →
-        </Badge>
-      </div>
-
-      {/* Live Indicator */}
-      <div className="absolute top-14 left-4 z-30">
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            <div className="absolute inset-0 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75"></div>
+          
+          <div className="text-white text-sm mb-2">
+            <div className="font-medium">{content.title}</div>
+            <div className="text-gray-300">{content.description}</div>
           </div>
-          <span className="text-white text-sm font-semibold">LIVE</span>
-        </div>
-      </div>
-
-      {/* Battle UI (if battle) */}
-      {content.type === 'battle' && content.battleData && (
-        <div className="absolute top-32 left-4 right-4 z-30">
-          <div className="bg-black/70 rounded-lg p-3 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Avatar className="w-6 h-6 border border-blue-400">
-                  <AvatarImage src={content.user.avatar} />
-                  <AvatarFallback className="text-xs">{content.user.displayName[0]}</AvatarFallback>
-                </Avatar>
-                <span className="text-white text-sm font-medium">{content.battleData.scores?.user1 || 0}</span>
-              </div>
-              <div className="text-white font-bold text-sm">VS</div>
-              <div className="flex items-center gap-2">
-                <span className="text-white text-sm font-medium">{content.battleData.scores?.user2 || 0}</span>
-                <Avatar className="w-6 h-6 border border-red-400">
-                  <AvatarImage src={content.battleData.opponent?.avatar} />
-                  <AvatarFallback className="text-xs">{content.battleData.opponent?.displayName[0]}</AvatarFallback>
-                </Avatar>
-              </div>
-            </div>
-            
-            <div className="flex justify-center mt-2">
-              <Button
-                onClick={() => setShowVoting(true)}
-                size="sm"
-                className="bg-green-500 hover:bg-green-600 text-white px-4 rounded-full"
-              >
-                <DollarSign className="w-3 h-3 mr-1" />
-                Vote
-              </Button>
-            </div>
+          
+          <div className="flex items-center gap-2 text-xs text-gray-300">
+            <span>{content.category}</span>
+            <span>•</span>
+            <span>{content.user.followerCount.toLocaleString()} followers</span>
           </div>
         </div>
-      )}
-
-      {/* Live Chat Messages Overlay */}
-      <div className="absolute left-4 bottom-36 right-20 z-30 space-y-2">
-        {chatMessages.slice(-4).map((msg, index) => (
-          <div
-            key={msg.id}
-            className="flex items-start gap-2 animate-in slide-in-from-bottom-2 duration-300"
-            style={{
-              animationDelay: `${index * 100}ms`,
-              opacity: 0.9 + (index * 0.025) // Slightly more opacity for newer messages
-            }}
-          >
-            <Avatar className="w-7 h-7 border border-white/30 flex-shrink-0">
-              <AvatarImage src={msg.user.avatar} />
-              <AvatarFallback className="text-xs">{msg.user.displayName[0]}</AvatarFallback>
-            </Avatar>
-            <div className="bg-black/60 rounded-2xl px-3 py-1.5 backdrop-blur-sm max-w-xs border border-white/10">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-white text-xs font-semibold">{msg.user.username}</span>
-                {getTierIcon(msg.user.tier)}
-                {msg.user.verified && (
-                  <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                  </div>
-                )}
-                {msg.type === 'join' && (
-                  <span className="text-green-400 text-xs font-medium">joined</span>
-                )}
-                {msg.type === 'like' && (
-                  <Heart className="w-3 h-3 text-red-500 fill-red-500" />
-                )}
-              </div>
-              {msg.message && msg.type === 'message' && (
-                <p className="text-white text-sm leading-tight">{msg.message}</p>
-              )}
-              {msg.type === 'like' && (
-                <p className="text-white text-sm leading-tight">liked the LIVE</p>
-              )}
-            </div>
-          </div>
-        ))}
       </div>
 
-      {/* Bottom Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-        <div className="p-4 pt-8">
-          <div className="flex items-center gap-3">
-            {/* Message Input */}
-            <div className="flex-1">
-              <div className="relative">
-                <Input
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="Say something..."
-                  className="bg-white/15 border-white/20 text-white placeholder:text-white/60 rounded-full px-4 py-3 text-sm backdrop-blur-md shadow-lg"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
-                />
-                {chatMessage && (
-                  <Button
-                    onClick={handleSendChat}
-                    size="sm"
-                    className="absolute right-1 top-1 bg-blue-500 hover:bg-blue-600 rounded-full w-8 h-8 p-0"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-1">
-              <Button
-                onClick={() => setShowQuickReactions(!showQuickReactions)}
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/20 rounded-full w-10 h-10 backdrop-blur-sm"
-                title="Reactions"
-              >
-                <Smile className="w-5 h-5" />
-              </Button>
-
-              <Button
-                onClick={() => {
-                  toast({
-                    title: "Guests Feature 👥",
-                    description: "View and invite guests to your live stream",
-                  });
-                }}
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/20 rounded-full w-10 h-10 backdrop-blur-sm"
-                title="Guests"
-              >
-                <Users className="w-5 h-5" />
-              </Button>
-
-              <Button
-                onClick={() => {
-                  toast({
-                    title: "Recharge Wallet 💰",
-                    description: "Add Eloity Points to your wallet",
-                  });
-                }}
-                variant="ghost"
-                size="icon"
-                className="text-yellow-400 hover:bg-white/20 rounded-full w-10 h-10 backdrop-blur-sm"
-                title="Recharge"
-              >
-                <Coins className="w-5 h-5" />
-              </Button>
-
-              <VirtualGiftsAndTips
-                recipientId={content.user.id}
-                recipientName={content.type === 'battle' ? "Battle Creators" : content.user.displayName}
-                contentId={content.id}
-                recipientType={content.type === 'battle' ? "battle" : "livestream"}
-                battleData={content.type === 'battle' && content.battleData ? {
-                  creator1: {
-                    id: content.user.id,
-                    username: content.user.username,
-                    displayName: content.user.displayName,
-                    avatar: content.user.avatar,
-                  },
-                  creator2: {
-                    id: content.battleData.opponent?.id || 'opponent',
-                    username: content.battleData.opponent?.username || 'opponent',
-                    displayName: content.battleData.opponent?.displayName || 'Opponent',
-                    avatar: content.battleData.opponent?.avatar || '',
-                  }
-                } : undefined}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-pink-400 hover:bg-white/20 rounded-full w-10 h-10 backdrop-blur-sm"
-                    title="Gift"
-                  >
-                    <Gift className="w-5 h-5" />
-                  </Button>
-                }
-              />
-
-              <Button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: content.title,
-                      text: content.description,
-                      url: window.location.href,
-                    });
-                  } else {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast({
-                      title: "Link Copied! 📋",
-                      description: "Share link copied to clipboard",
-                    });
-                  }
-                }}
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/20 rounded-full w-10 h-10 backdrop-blur-sm"
-                title="Share"
-              >
-                <Share2 className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom safe area for mobile */}
-        <div className="h-20 bg-black/50"></div>
-      </div>
-
-      {/* Right Side Actions */}
-      <div className="absolute bottom-48 right-4 z-30 flex flex-col gap-3">
+      {/* Right Side - Interactive Controls */}
+      <div className="absolute right-4 bottom-32 z-30 flex flex-col gap-3">
         {/* Like Button */}
         <Button
           onClick={handleLike}
           variant="ghost"
           size="icon"
-          className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 text-white flex flex-col items-center backdrop-blur-sm"
+          className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 text-white flex flex-col items-center backdrop-blur-sm"
         >
           <Heart className={cn("w-6 h-6", isLiked && "fill-red-500 text-red-500")} />
+          <span className="text-xs mt-1">Like</span>
+        </Button>
+
+        {/* Comment Button */}
+        <Button
+          onClick={() => setShowChat(!showChat)}
+          variant="ghost"
+          size="icon"
+          className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 text-white flex flex-col items-center backdrop-blur-sm"
+        >
+          <MessageCircle className="w-6 h-6" />
+          <span className="text-xs mt-1">Chat</span>
+        </Button>
+
+        {/* Gift Button */}
+        <Button
+          onClick={() => setShowGifts(true)}
+          variant="ghost"
+          size="icon"
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex flex-col items-center backdrop-blur-sm"
+        >
+          <Gift className="w-6 h-6" />
+          <span className="text-xs mt-1">Gift</span>
+        </Button>
+
+        {/* Share Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 text-white flex flex-col items-center backdrop-blur-sm"
+        >
+          <Share2 className="w-6 h-6" />
+          <span className="text-xs mt-1">Share</span>
+        </Button>
+
+        {/* Quick Reactions */}
+        <Button
+          onClick={() => setShowQuickReactions(!showQuickReactions)}
+          variant="ghost"
+          size="icon"
+          className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 text-white flex flex-col items-center backdrop-blur-sm"
+        >
+          <Sparkles className="w-6 h-6" />
+          <span className="text-xs mt-1">React</span>
         </Button>
       </div>
 
-      {/* Quick Reactions Popup */}
+      {/* Quick Reactions Panel */}
       {showQuickReactions && (
-        <div className="absolute bottom-32 left-4 right-4 z-50 bg-black/80 rounded-2xl p-4 backdrop-blur-md">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-white font-semibold">Quick Reactions</h4>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowQuickReactions(false)}
-              className="text-white hover:bg-white/20 rounded-full w-8 h-8"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            {quickReactions.map((emoji, index) => (
+        <div className="absolute right-24 bottom-32 z-30 bg-black/70 backdrop-blur-sm rounded-lg p-3">
+          <div className="grid grid-cols-3 gap-2">
+            {quickReactions.map((emoji) => (
               <Button
-                key={index}
+                key={emoji}
                 variant="ghost"
-                size="lg"
-                onClick={() => {
-                  handleQuickReaction(emoji);
-                  setShowQuickReactions(false);
-                }}
-                className="text-4xl hover:scale-125 transition-transform p-3 h-auto bg-white/10 hover:bg-white/20 rounded-xl"
+                size="icon"
+                className="w-10 h-10 text-2xl hover:bg-white/20"
+                onClick={() => addReaction(emoji)}
               >
                 {emoji}
               </Button>
@@ -725,14 +651,287 @@ export const MobileLiveStreamLayout: React.FC<MobileLiveStreamLayoutProps> = ({
         </div>
       )}
 
+      {/* Chat Overlay */}
+      {showChat && (
+        <div className="absolute bottom-32 left-4 w-64 h-48 bg-black/70 backdrop-blur-sm rounded-lg border border-gray-700 z-30 flex flex-col">
+          {/* Chat Header */}
+          <div className="flex items-center justify-between p-2 border-b border-gray-700">
+            <h3 className="text-white font-medium text-xs">Live Chat</h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-5 h-5 text-gray-400 hover:text-white"
+              onClick={() => setShowChat(false)}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+
+          {/* Chat Messages */}
+          <div 
+            ref={chatRef}
+            className="flex-1 overflow-y-auto p-2 space-y-1"
+          >
+            {chatMessages.map((msg) => (
+              <div key={msg.id} className="text-xs">
+                {msg.isSystemMessage ? (
+                  <div className="text-center text-gray-400 text-[10px]">
+                    {msg.message}
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-1">
+                    <Avatar className="w-4 h-4 flex-shrink-0">
+                      <AvatarImage src={msg.user.avatar} />
+                      <AvatarFallback className="text-[6px]">{msg.user.username[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium text-gray-200 truncate text-[10px]">{msg.user.username}</span>
+                        {msg.user.verified && (
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+                        )}
+                        {msg.user.tier && (
+                          <Badge variant="secondary" className="px-0.5 py-0 text-[6px]">
+                            {msg.user.tier}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-white break-words text-[10px]">{msg.message}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-3 p-0 text-gray-400 hover:text-white"
+                          onClick={() => handleLikeMessage(msg.id)}
+                        >
+                          <ThumbsUp className="w-1.5 h-1.5" />
+                          <span className="text-[8px] ml-0.5">{msg.likes || 0}</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Chat Input */}
+          <div className="p-1 border-t border-gray-700 flex gap-1">
+            <Input
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              placeholder="Message..."
+              className="flex-1 h-6 text-xs bg-gray-800 border-gray-600 text-white"
+              onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
+            />
+            <Button 
+              size="sm" 
+              className="h-6 px-1"
+              onClick={handleSendChat}
+            >
+              <Send className="w-2 h-2" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Stream Owner Controls */}
+      {isUserOwned && (
+        <div className="absolute bottom-24 left-4 z-30 flex gap-2">
+          <Button
+            size="icon"
+            className={cn(
+              "rounded-full w-8 h-8",
+              !isMuted && "bg-red-500 hover:bg-red-600"
+            )}
+          >
+            {isMuted ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3" />}
+          </Button>
+          
+          <Button
+            size="icon"
+            className={cn(
+              "rounded-full w-8 h-8",
+              !videoRef.current?.srcObject && "bg-red-500 hover:bg-red-600"
+            )}
+          >
+            {videoRef.current?.srcObject ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3" />}
+          </Button>
+          
+          <Button
+            onClick={onEndStream}
+            size="icon"
+            className="rounded-full w-8 h-8 bg-red-600 hover:bg-red-700"
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+      )}
+
+      {/* Battle-specific UI */}
+      {content.type === 'battle' && content.battleData && (
+        <div className="absolute top-16 left-4 right-4 z-30">
+          <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3">
+            <div className="text-center text-white mb-2">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Target className="w-4 h-4 text-red-500" />
+                <span className="font-bold text-sm">LIVE BATTLE</span>
+              </div>
+              <div className="text-xs text-gray-300">
+                {content.battleData.type?.toUpperCase()} BATTLE
+              </div>
+            </div>
+            
+            {content.battleData.timeRemaining && (
+              <div className="text-center mb-2">
+                <div className="text-yellow-400 font-bold">
+                  {formatTime(content.battleData.timeRemaining)}
+                </div>
+                <div className="text-xs text-gray-400">Time Remaining</div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Avatar className="w-6 h-6">
+                    <AvatarImage src={content.user.avatar} />
+                    <AvatarFallback>{content.user.displayName[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="text-white text-xs font-medium">{content.user.displayName}</div>
+                    <div className="text-xs text-gray-400">
+                      {content.battleData.scores?.user1 || 0} SP
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-white font-bold text-xs">VS</div>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <div className="text-right">
+                    <div className="text-white text-xs font-medium">
+                      {content.battleData.opponent?.displayName || 'Opponent'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {content.battleData.scores?.user2 || 0} SP
+                    </div>
+                  </div>
+                  <Avatar className="w-6 h-6">
+                    <AvatarImage src={content.battleData.opponent?.avatar || ''} />
+                    <AvatarFallback>
+                      {content.battleData.opponent?.displayName?.[0] || 'O'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+              
+              {content.battleData.scores && (
+                <div className="relative h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="absolute left-0 top-0 h-full bg-red-500"
+                    style={{ 
+                      width: `${(content.battleData.scores.user1 / (content.battleData.scores.user1 + content.battleData.scores.user2 || 1)) * 100}%` 
+                    }}
+                  />
+                  <div 
+                    className="absolute right-0 top-0 h-full bg-blue-500"
+                    style={{ 
+                      width: `${(content.battleData.scores.user2 / (content.battleData.scores.user1 + content.battleData.scores.user2 || 1)) * 100}%` 
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Voting Button for Battles */}
+              <Button
+                size="sm"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                onClick={() => setShowVoting(true)}
+              >
+                <DollarSign className="w-3 h-3 mr-1" />
+                <span className="text-xs">Place Vote</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes float-up {
+          0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-100px) scale(1.5);
+          }
+        }
+      `}</style>
+
+      {/* Virtual Gifts Modal */}
+      {showGifts && (
+        <Dialog open={showGifts} onOpenChange={setShowGifts}>
+          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-xs p-4">
+            <VisuallyHidden>
+              <DialogTitle>Send Gift</DialogTitle>
+            </VisuallyHidden>
+            <div className="space-y-3">
+              <div className="text-center">
+                <h3 className="text-sm font-semibold">Send Gift</h3>
+                <p className="text-gray-400 text-xs">Support the streamer</p>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {mockGifts.map((gift) => (
+                  <Button
+                    key={gift.id}
+                    variant="outline"
+                    className={cn(
+                      "h-auto p-2 flex flex-col items-center gap-1 border-gray-600 hover:border-yellow-400",
+                      selectedGift?.id === gift.id && "border-yellow-400 bg-yellow-400/10"
+                    )}
+                    onClick={() => setSelectedGift(gift)}
+                  >
+                    <div className="text-xl">{gift.icon}</div>
+                    <div className="text-[10px]">
+                      <div className="text-white">{gift.name}</div>
+                      <div className={gift.color}>{gift.value} SP</div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+              
+              {selectedGift && (
+                <div className="text-center pt-3 border-t border-gray-700">
+                  <div className="text-3xl mb-1">{selectedGift.icon}</div>
+                  <div className="font-medium text-sm">{selectedGift.name}</div>
+                  <div className="text-yellow-400 text-sm mb-3">{selectedGift.value} SP</div>
+                  <Button
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 h-8"
+                    onClick={() => sendGift(selectedGift)}
+                  >
+                    <span className="text-xs">Send Gift</span>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Battle Voting Modal */}
-      {showVoting && content.type === 'battle' && content.battleData && (
+      {showVoting && content.battleData && (
         <Dialog open={showVoting} onOpenChange={setShowVoting}>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-4 rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-center">Battle Voting</DialogTitle>
-            </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto">
+          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-xs p-0">
+            <VisuallyHidden>
+              <DialogTitle>Battle Voting</DialogTitle>
+            </VisuallyHidden>
+            <div className="max-h-[70vh] overflow-y-auto">
               <BattleVoting
                 battleId={content.id}
                 creator1={{

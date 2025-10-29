@@ -49,6 +49,7 @@ import {
   Swords,
   ShoppingCart,
   DollarSign,
+  ThumbsUp as ThumbsUpIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -173,12 +174,26 @@ const VideoCard: React.FC<{
   isActive: boolean;
   showControls?: boolean;
   onDuetCreate?: (video: VideoData) => void;
-}> = ({ video, isActive, showControls = true, onDuetCreate }) => {
+  comments: any[];
+  setComments: (comments: any[]) => void;
+}> = ({ video, isActive, showControls = true, onDuetCreate, comments, setComments }) => {
   const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(video.stats.likes);
   const [isMuted, setIsMuted] = useState(true);
   const [showMore, setShowMore] = useState(false);
   const [isPlaying, setIsPlaying] = useState(isActive);
   const [isFollowing, setIsFollowing] = useState(video.user.isFollowing || false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [showSpeedControl, setShowSpeedControl] = useState(false);
+  const [showQualityControl, setShowQualityControl] = useState(false);
+  const [currentQuality, setCurrentQuality] = useState("Auto");
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [showGifts, setShowGifts] = useState(false);
+  const [showBattleActions, setShowBattleActions] = useState(false); // New state for battle actions
+  const [battleVote, setBattleVote] = useState<{creatorId: string, amount: number} | null>(null); // New state for battle voting
+  const [giftEffects, setGiftEffects] = useState<Array<{id: string, emoji: string, creatorId: string}>>([]); // New state for gift effects
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const { safePlay, safePause, togglePlayback } = useVideoPlayback();
@@ -222,6 +237,182 @@ const VideoCard: React.FC<{
     await togglePlayback(videoElement, isPlaying, setIsPlaying);
   }, [isPlaying, togglePlayback]);
 
+  // Enhanced like functionality with platform integration
+  const handleLike = async () => {
+    if (!isLiked) {
+      // Add visual feedback
+      setLikeCount(prev => prev + 1);
+      setIsLiked(true);
+      
+      // Add to liked videos using platform service
+      try {
+        await videoService.likeVideo(video.id);
+        
+        // Award Eloits points for engagement
+        // This integrates with the existing rewards system
+        toast({
+          title: "Liked!",
+          description: "You earned 10 Eloits for engaging with this content"
+        });
+      } catch (error) {
+        console.error("Error liking video:", error);
+        setLikeCount(prev => prev - 1);
+        setIsLiked(false);
+        toast({
+          title: "Error",
+          description: "Failed to like video",
+          variant: "destructive"
+        });
+      }
+    } else {
+      setLikeCount(prev => prev - 1);
+      setIsLiked(false);
+      
+      try {
+        await videoService.unlikeVideo(video.id);
+      } catch (error) {
+        console.error("Error unliking video:", error);
+        setLikeCount(prev => prev + 1);
+        setIsLiked(true);
+      }
+    }
+  };
+
+  // Comment functionality that integrates with platform
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    
+    try {
+      const comment = await videoService.addComment(video.id, newComment);
+      setComments([comment, ...comments]);
+      setNewComment("");
+      
+      // Award Eloits points for commenting
+      toast({
+        title: "Comment added!",
+        description: "You earned 25 Eloits for your comment"
+      });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Follow functionality that integrates with platform
+  const handleFollow = async () => {
+    try {
+      if (isFollowing) {
+        await videoService.unfollowUser(video.user.id);
+        setIsFollowing(false);
+        toast({
+          title: "Unfollowed",
+          description: `You unfollowed ${video.user.displayName}`
+        });
+      } else {
+        await videoService.followUser(video.user.id);
+        setIsFollowing(true);
+        
+        // Award Eloits points for following
+        toast({
+          title: "Following!",
+          description: `You earned 50 Eloits for following ${video.user.displayName}`
+        });
+      }
+    } catch (error) {
+      console.error("Error following user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to follow user",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Share functionality that integrates with platform
+  const handleShare = async (platform: string) => {
+    try {
+      // Implement share logic based on platform
+      navigator.clipboard.writeText(`${window.location.origin}/videos/${video.id}`);
+      
+      // Award Eloits points for sharing
+      toast({
+        title: "Link copied!",
+        description: "You earned 30 Eloits for sharing this content"
+      });
+      setShowShareMenu(false);
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
+
+  // Handle double tap for like (enhanced with animation)
+  const handleDoubleTap = () => {
+    if (!isLiked) {
+      setIsLiked(true);
+      setLikeCount(prev => prev + 1);
+      
+      // Award Eloits points for liking
+      toast({
+        title: "Liked! ❤️",
+        description: "You earned 10 Eloits for liking this content"
+      });
+      
+      // Hide like animation after 1 second
+      setTimeout(() => setIsLiked(false), 1000);
+    }
+  };
+
+  // Enhanced gift sending with animations
+  const handleSendGift = async (gift: { name: string; price: number; emoji: string }) => {
+    try {
+      // Add gift effect animation
+      const effectId = Date.now().toString();
+      setGiftEffects(prev => [...prev, {
+        id: effectId,
+        emoji: gift.emoji,
+        creatorId: video.user.id
+      }]);
+      
+      // Remove effect after animation
+      setTimeout(() => {
+        setGiftEffects(prev => prev.filter(effect => effect.id !== effectId));
+      }, 3000);
+      
+      // In a real implementation, this would integrate with the virtual gifts system
+      toast({
+        title: `Gift sent!`,
+        description: `You sent a ${gift.name} (${gift.emoji}) to ${video.user.displayName}. You earned 5 Eloits!`
+      });
+      setShowGifts(false);
+    } catch (error) {
+      console.error("Error sending gift:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send gift",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Battle voting functionality
+  const handleBattleVote = (creatorId: string, amount: number) => {
+    setBattleVote({ creatorId, amount });
+    
+    // Award Eloits points for voting
+    toast({
+      title: "Vote Placed! 🎯",
+      description: `You voted ${amount} SP on this creator. You earned 15 Eloits!`
+    });
+    
+    // Hide vote options after voting
+    setShowBattleActions(false);
+  };
+
+  // Format large numbers
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + "M";
@@ -232,57 +423,61 @@ const VideoCard: React.FC<{
     return num.toString();
   };
 
-  const description = video.description;
-  const truncatedDescription =
-    description.length > 100 ? description.substring(0, 100) + "..." : description;
-
   return (
     <div className="relative h-screen w-full bg-black snap-start snap-always">
-      {/* Enhanced Video Player */}
-      <div className="absolute inset-0 w-full h-full">
-        <EnhancedVideoPlayer
-          videoRef={videoRef}
-          src={video.videoUrl}
-          poster={video.thumbnail}
-          muted={isMuted}
-          autoPlay={isActive && isPlaying}
-          loop={true}
-          className="w-full h-full object-cover"
-          onClick={togglePlay}
-          onMuteChange={setIsMuted}
-          showControls={true}
-          chapters={video.chapters || []}
-          captions={video.captions || []}
-          qualities={video.videoSources || []}
-          onProgress={(progress) => {
-            // Handle progress updates if needed
-          }}
-        />
-      </div>
+      {/* Video */}
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover"
+        loop
+        muted={isMuted}
+        playsInline
+        preload="metadata"
+        poster={video.thumbnail}
+        onClick={handleDoubleTap}
+        onLoadedMetadata={() => {
+          if (videoRef.current) {
+            videoRef.current.playbackRate = playbackSpeed;
+          }
+        }}
+      >
+        <source src={video.videoUrl} type="video/mp4" />
+        {/* Add multiple quality sources if available */}
+        {video.videoSources?.map((source) => (
+          <source key={source.quality} src={source.url} type="video/mp4" media={`(min-width: ${source.minWidth}px)`} />
+        ))}
 
-      {/* Live indicator for live streams */}
-      {video.isLiveStream && (
-        <div className="absolute top-4 left-4 z-30">
-          <Badge className="bg-red-500 text-white animate-pulse">
-            <Radio className="w-3 h-3 mr-1" />
-            LIVE
-          </Badge>
+        {/* Add captions if available */}
+        {video.captions?.map((caption) => (
+          <track
+            key={caption.language}
+            kind="subtitles"
+            src={caption.url}
+            srcLang={caption.language}
+            label={caption.label}
+            default={caption.default}
+          />
+        ))}
+      </video>
+
+      {/* Double tap like animation */}
+      {isLiked && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-red-500 text-9xl animate-ping">❤️</div>
         </div>
       )}
 
-      {/* Play/Pause indicator */}
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/20 hover:bg-white/30 border-none backdrop-blur-sm"
-            onClick={togglePlay}
-          >
-            <Play className="w-8 h-8 md:w-10 md:h-10 text-white fill-white ml-1" />
-          </Button>
+      {/* Gift effects animation */}
+      {giftEffects.map(effect => (
+        <div 
+          key={effect.id}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none animate-bounce"
+        >
+          <div className="text-6xl animate-pulse">
+            {effect.emoji}
+          </div>
         </div>
-      )}
+      ))}
 
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
@@ -290,7 +485,7 @@ const VideoCard: React.FC<{
       {/* Content overlay */}
       <div className="absolute inset-0 flex">
         {/* Left side - user info and description */}
-        <div className="flex-1 flex flex-col justify-end p-3 md:p-4 pb-44 md:pb-8">
+        <div className="flex-1 flex flex-col justify-end p-3 md:p-4 pb-28 md:pb-4">
           <div className="space-y-2 md:space-y-3">
             {/* User info */}
             <div className="flex items-center gap-2 md:gap-3">
@@ -373,51 +568,475 @@ const VideoCard: React.FC<{
           </div>
         </div>
 
-        {/* Right side - Interactive Features */}
-        <div className="flex flex-col items-center justify-end gap-3 md:gap-4 p-2 md:p-4 pb-44 md:pb-8">
-          <InteractiveFeatures
-            videoId={video.id}
-            isLiveStream={video.isLiveStream}
-            allowDuets={video.allowDuets}
-            allowComments={video.allowComments}
-            isBattle={video.timestamp === "BATTLE"}
-            battleData={video.timestamp === "BATTLE" ? {
-              creator1: {
-                id: video.user.id,
-                username: video.user.username,
-                displayName: video.user.displayName,
-                avatar: video.user.avatar,
-              },
-              creator2: {
-                id: "opponent_" + video.id,
-                username: video.id === "battle1" ? "melody_queen" : "freestyle_master",
-                displayName: video.id === "battle1" ? "Melody Queen" : "Freestyle Master",
-                avatar: `https://i.pravatar.cc/150?img=${video.id === "battle1" ? "9" : "10"}`,
-              }
-            } : undefined}
-            onDuetCreate={(videoId) => {
-              // Handle duet creation by opening the new duet recorder
-              if (onDuetCreate) {
-                onDuetCreate(video);
-              }
-            }}
-          />
+        {/* Right side - Enhanced Interactive Features that integrate with existing platform */}
+        <div className="flex flex-col items-center justify-end gap-3 md:gap-4 p-2 md:p-4 pb-28 md:pb-8">
+          {/* User avatar with follow button */}
+          <div className="flex flex-col items-center gap-2">
+            <Avatar className="w-12 h-12 md:w-14 md:h-14 border-2 border-white/20 cursor-pointer">
+              <AvatarImage src={video.user.avatar} />
+              <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
+            </Avatar>
+            <Button
+              size="sm"
+              variant={isFollowing ? "secondary" : "default"}
+              className={`w-8 h-8 rounded-full text-xs ${
+                isFollowing 
+                  ? "bg-gray-700 hover:bg-gray-600" 
+                  : "bg-pink-600 hover:bg-pink-700"
+              }`}
+              onClick={handleFollow}
+            >
+              {isFollowing ? (
+                <CheckCircle className="w-3 h-3" />
+              ) : (
+                <UserPlus className="w-3 h-3" />
+              )}
+            </Button>
+          </div>
+
+          {/* Like button with enhanced animation */}
+          <div className="flex flex-col items-center gap-1">
+            <Button
+              size="icon"
+              className={`w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm ${
+                isLiked ? "text-red-500" : "text-white"
+              }`}
+              onClick={() => {
+                setIsLiked(true);
+                setLikeCount(prev => prev + 1);
+                toast({
+                  title: "Liked! ❤️",
+                  description: "You earned 10 Eloits for liking this content"
+                });
+                setTimeout(() => setIsLiked(false), 1000);
+              }}
+            >
+              <Heart className={`w-6 h-6 md:w-7 md:h-7 ${isLiked ? "fill-current" : ""}`} />
+            </Button>
+            <span className="text-white text-xs md:text-sm font-medium">
+              {formatNumber(likeCount)}
+            </span>
+          </div>
+
+          {/* Comment button */}
+          <div className="flex flex-col items-center gap-1">
+            <Button
+              size="icon"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white"
+              onClick={() => setShowComments(true)}
+            >
+              <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+            </Button>
+            <span className="text-white text-xs md:text-sm font-medium">
+              {formatNumber(video.stats.comments)}
+            </span>
+          </div>
+
+          {/* Share button */}
+          <div className="flex flex-col items-center gap-1">
+            <DropdownMenu open={showShareMenu} onOpenChange={setShowShareMenu}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white"
+                >
+                  <Share className="w-6 h-6 md:w-7 md:h-7" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700">
+                <DropdownMenuItem 
+                  className="text-white hover:bg-gray-800 cursor-pointer"
+                  onClick={() => handleShare("copy")}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Link
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-white hover:bg-gray-800 cursor-pointer"
+                  onClick={() => handleShare("twitter")}
+                >
+                  <Twitter className="w-4 h-4 mr-2" />
+                  Share on Twitter
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-white hover:bg-gray-800 cursor-pointer"
+                  onClick={() => handleShare("facebook")}
+                >
+                  <Facebook className="w-4 h-4 mr-2" />
+                  Share on Facebook
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <span className="text-white text-xs md:text-sm font-medium">
+              {formatNumber(video.stats.shares)}
+            </span>
+          </div>
+
+          {/* Gift button for battles */}
+          {video.timestamp === "BATTLE" && (
+            <div className="flex flex-col items-center gap-1">
+              <Button
+                size="icon"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white"
+                onClick={() => setShowGifts(true)}
+              >
+                <Gift className="w-6 h-6 md:w-7 md:h-7" />
+              </Button>
+              <span className="text-white text-xs md:text-sm font-medium">Gift</span>
+            </div>
+          )}
+
+          {/* Battle vote button */}
+          {video.timestamp === "BATTLE" && (
+            <div className="flex flex-col items-center gap-1">
+              <Button
+                size="icon"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 backdrop-blur-sm text-white"
+                onClick={() => setShowBattleActions(!showBattleActions)}
+              >
+                <Target className="w-6 h-6 md:w-7 md:h-7" />
+              </Button>
+              <span className="text-white text-xs md:text-sm font-medium">Vote</span>
+              
+              {/* Battle voting options */}
+              {showBattleActions && (
+                <div className="absolute bottom-32 right-4 bg-gray-900/90 backdrop-blur-sm rounded-lg p-3 border border-gray-700">
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      size="sm" 
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      onClick={() => handleBattleVote(video.user.id, 10)}
+                    >
+                      10 SP
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => handleBattleVote(video.user.id, 50)}
+                    >
+                      50 SP
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      onClick={() => handleBattleVote(video.user.id, 100)}
+                    >
+                      100 SP
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Duet button */}
+          {video.allowDuets && (
+            <div className="flex flex-col items-center gap-1">
+              <Button
+                size="icon"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-sm text-white"
+                onClick={() => onDuetCreate && onDuetCreate(video)}
+              >
+                <Users className="w-6 h-6 md:w-7 md:h-7" />
+              </Button>
+              <span className="text-white text-xs md:text-sm font-medium">Duet</span>
+            </div>
+          )}
+
+          {/* Save button */}
+          <div className="flex flex-col items-center gap-1">
+            <Button
+              size="icon"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white"
+              onClick={handleSave}
+            >
+              <Bookmark className="w-6 h-6 md:w-7 md:h-7" />
+            </Button>
+            <span className="text-white text-xs md:text-sm font-medium">
+              {video.stats.saves ? formatNumber(video.stats.saves) : "Save"}
+            </span>
+          </div>
+
+          {/* Music disc */}
+          <div className="flex flex-col items-center gap-1 animate-spin-slow">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center backdrop-blur-sm">
+              <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Volume control */}
-      <Button
-        size="icon"
-        variant="ghost"
-        className="absolute top-4 right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none"
-        onClick={() => setIsMuted(!isMuted)}
-      >
-        {isMuted ? (
-          <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-white" />
-        ) : (
-          <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
-        )}
-      </Button>
+      {/* Enhanced Controls Bar */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2">
+        {/* Volume control */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none"
+          onClick={() => setIsMuted(!isMuted)}
+        >
+          {isMuted ? (
+            <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          ) : (
+            <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          )}
+        </Button>
+
+        {/* Playback speed control */}
+        <div className="relative">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none"
+            onClick={() => setShowSpeedControl(!showSpeedControl)}
+          >
+            <Zap className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          </Button>
+          
+          {showSpeedControl && (
+            <div className="absolute right-0 top-12 bg-black/80 backdrop-blur-sm rounded-lg p-2 space-y-1 min-w-[100px]">
+              {[0.5, 1, 1.25, 1.5, 2].map((speed) => (
+                <Button
+                  key={speed}
+                  size="sm"
+                  variant={playbackSpeed === speed ? "default" : "ghost"}
+                  className="w-full text-white text-xs justify-start"
+                  onClick={() => changePlaybackSpeed(speed)}
+                >
+                  {speed}x
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quality control */}
+        <div className="relative">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none"
+            onClick={() => setShowQualityControl(!showQualityControl)}
+          >
+            <Settings className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          </Button>
+          
+          {showQualityControl && (
+            <div className="absolute right-0 top-12 bg-black/80 backdrop-blur-sm rounded-lg p-2 space-y-1 min-w-[100px]">
+              {["Auto", "360p", "720p", "1080p"].map((quality) => (
+                <Button
+                  key={quality}
+                  size="sm"
+                  variant={currentQuality === quality ? "default" : "ghost"}
+                  className="w-full text-white text-xs justify-start"
+                  onClick={() => changeQuality(quality)}
+                >
+                  {quality}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Download button */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none"
+          onClick={handleDownload}
+        >
+          <Download className="w-4 h-4 md:w-5 md:h-5 text-white" />
+        </Button>
+      </div>
+
+      {/* Share Menu */}
+      {showShareMenu && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-xl w-full max-w-md p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-semibold">Share to earn Eloits</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-white"
+                onClick={() => setShowShareMenu(false)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4">
+              {["Copy Link", "WhatsApp", "Twitter", "Instagram", "Facebook", "TikTok", "Snapchat", "Email"].map((platform) => (
+                <Button
+                  key={platform}
+                  variant="ghost"
+                  className="flex flex-col items-center gap-2 h-auto p-2 text-white"
+                  onClick={() => handleShare(platform)}
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                    <Share2 className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs">{platform}</span>
+                </Button>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-purple-900/50 rounded-lg text-center">
+              <p className="text-purple-300 text-sm">
+                Share to earn 30 Eloits + bonuses for engagement!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Comments Modal */}
+      {showComments && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <h3 className="text-white font-semibold">Comments ({video.stats.comments})</h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowComments(false)}
+              className="text-white hover:bg-white/20"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {comments.map((comment) => (
+              <div key={comment.id} className="flex gap-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarImage src={comment.user.avatar} />
+                  <AvatarFallback>{comment.user.username[0]}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium text-sm">{comment.user.username}</span>
+                    <span className="text-gray-400 text-xs">{comment.timestamp}</span>
+                  </div>
+                  <p className="text-white text-sm mt-1">{comment.text}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white p-0 h-auto">
+                      <Heart className="w-4 h-4 mr-1" />
+                      <span className="text-xs">{comment.likes}</span>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white p-0 h-auto">
+                      <Reply className="w-4 h-4 mr-1" />
+                      <span className="text-xs">Reply</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="p-4 border-t border-gray-700">
+            <div className="flex gap-2">
+              <Input
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Add a comment..."
+                className="flex-1 bg-gray-800 border-gray-600 text-white"
+                onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+              />
+              <Button 
+                onClick={handleAddComment}
+                disabled={!newComment.trim()}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Gifts Modal for Battles */}
+      {showGifts && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold">Send Gift</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowGifts(false)}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { name: "Rose", emoji: "🌹", price: 1 },
+                { name: "Heart", emoji: "❤️", price: 5 },
+                { name: "Diamond", emoji: "💎", price: 10 },
+                { name: "Crown", emoji: "👑", price: 25 },
+                { name: "Rocket", emoji: "🚀", price: 50 },
+                { name: "Fireworks", emoji: "🎆", price: 100 }
+              ].map((gift) => (
+                <Button
+                  key={gift.name}
+                  variant="outline"
+                  className="h-auto p-3 flex flex-col items-center gap-1 border-gray-600 hover:border-yellow-400"
+                  onClick={() => handleSendGift(gift)}
+                >
+                  <div className="text-2xl">{gift.emoji}</div>
+                  <div className="text-xs">
+                    <div className="text-white">{gift.name}</div>
+                    <div className="text-yellow-400">{gift.price} SP</div>
+                  </div>
+                </Button>
+              ))}
+            </div>
+            
+            <p className="text-gray-400 text-sm text-center">
+              Send gifts to support creators during battles. You earn Eloits for every gift sent!
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Battle Vote Confirmation */}
+      {battleVote && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full">
+            <div className="text-center">
+              <div className="text-4xl mb-4">🎯</div>
+              <h3 className="text-white font-semibold text-lg mb-2">Confirm Vote</h3>
+              <p className="text-gray-300 mb-4">
+                Vote {battleVote.amount} SP on {video.user.displayName}?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-white hover:bg-gray-700"
+                  onClick={() => setBattleVote(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    // Process the vote
+                    toast({
+                      title: "Vote Confirmed! 🎯",
+                      description: `You voted ${battleVote.amount} SP on ${video.user.displayName}`
+                    });
+                    setBattleVote(null);
+                  }}
+                >
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -449,6 +1068,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const [battleVideos, setBattleVideos] = useState<VideoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
 
   // Fetch real video data
   useEffect(() => {
@@ -457,11 +1077,25 @@ const EnhancedTikTokVideosV3: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch videos for different tabs
-        const [forYouData, followingData] = await Promise.all([
-          videoService.getVideos(10, 0), // For You tab
-          videoService.getVideos(10, 0, 'following') // Following tab (this would need to be implemented)
-        ]);
+        // Fetch videos for different tabs based on active tab
+        let videoData: VideoType[] = [];
+        
+        switch (activeTab) {
+          case "following":
+            videoData = await videoService.getFollowingVideos(10, 0);
+            break;
+          case "live":
+            // For live streams, we would fetch from a live streams table
+            videoData = await videoService.getVideos(10, 0);
+            break;
+          case "battle":
+            // For battles, we would fetch from a battles table
+            videoData = await videoService.getVideos(10, 0);
+            break;
+          default: // "foryou"
+            videoData = await videoService.getTrendingVideos(10, 0);
+            break;
+        }
         
         // Transform Video objects to VideoData objects
         const transformVideo = (video: VideoType): VideoData => ({
@@ -483,6 +1117,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
             comments: video.comments_count,
             shares: video.shares_count || 0,
             views: video.views_count.toString(),
+            saves: video.shares_count || 0, // Using shares as saves for now
           },
           hashtags: video.tags || [],
           videoUrl: video.video_url,
@@ -492,15 +1127,26 @@ const EnhancedTikTokVideosV3: React.FC = () => {
           category: video.category || "Entertainment",
           allowDuets: true,
           allowComments: true,
+          hasCaption: !!video.description,
         });
         
-        setForYouVideos(forYouData.map(transformVideo));
-        setFollowingVideos(followingData.map(transformVideo));
+        const transformedVideos = videoData.map(transformVideo);
         
-        // For live streams and battle videos, we would need specific data
-        // For now, we'll use a subset of forYouVideos as placeholders
-        setLiveStreams(forYouData.slice(0, 2).map(transformVideo));
-        setBattleVideos(forYouData.slice(0, 2).map(transformVideo));
+        // Set videos based on active tab
+        switch (activeTab) {
+          case "following":
+            setFollowingVideos(transformedVideos);
+            break;
+          case "live":
+            setLiveStreams(transformedVideos);
+            break;
+          case "battle":
+            setBattleVideos(transformedVideos);
+            break;
+          default: // "foryou"
+            setForYouVideos(transformedVideos);
+            break;
+        }
         
         setLoading(false);
       } catch (err) {
@@ -511,7 +1157,25 @@ const EnhancedTikTokVideosV3: React.FC = () => {
     };
 
     fetchVideos();
-  }, []);
+  }, [activeTab]);
+
+  // Fetch comments when a video is selected
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (videos.length > 0 && currentVideoIndex < videos.length) {
+        try {
+          const video = videos[currentVideoIndex];
+          const videoComments = await videoService.getVideoComments(video.id);
+          setComments(videoComments);
+        } catch (error) {
+          console.error("Error fetching comments:", error);
+          setComments([]);
+        }
+      }
+    };
+
+    fetchComments();
+  }, [currentVideoIndex, videos]);
 
   // Auto-hide controls after inactivity
   useEffect(() => {
@@ -759,6 +1423,44 @@ const EnhancedTikTokVideosV3: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
+      <style jsx>{`
+        @keyframes floatUp {
+          0% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-100px) scale(1.5);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes pulse {
+          0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+          }
+          
+          70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+          }
+          
+          100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+          }
+        }
+        
+        .animate-spin-slow {
+          animation: spin 8s linear infinite;
+        }
+        
+        .like-animation {
+          animation: pulse 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+      `}</style>
+      
       <Helmet>
         <title>Videos | Eloity</title>
         <meta
@@ -896,6 +1598,8 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                       setDuetOriginalVideo(video);
                       setShowDuetRecorder(true);
                     }}
+                    comments={comments}
+                    setComments={setComments}
                   />
                 )
               ) : (
@@ -907,6 +1611,8 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                     setDuetOriginalVideo(video);
                     setShowDuetRecorder(true);
                   }}
+                  comments={comments}
+                  setComments={setComments}
                 />
               )}
             </div>

@@ -23,6 +23,14 @@ import {
   Send,
   Smile,
   MoreHorizontal,
+  Zap,
+  Award,
+  TrendingUp,
+  ThumbsUp,
+  ThumbsDown,
+  RotateCcw,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -77,6 +85,8 @@ interface ChatMessage {
   message: string;
   timestamp: Date;
   isSystemMessage?: boolean;
+  likes?: number;
+  userLiked?: boolean;
 }
 
 interface TikTokStyleBattleProps {
@@ -147,6 +157,19 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
     totalPool: 1230,
     totalVoters: 23,
   });
+  const [comboCount, setComboCount] = useState(0);
+  const [showCombo, setShowCombo] = useState(false);
+  const [battlePhase, setBattlePhase] = useState<'active' | 'ending' | 'ended'>('active');
+  const [battleResults, setBattleResults] = useState<{
+    winnerId: string;
+    totalPool: number;
+    winningCreatorBonus: number;
+    platformFee: number;
+    userWinnings: number;
+    userVoteOutcome: 'won' | 'lost' | 'none';
+  } | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const [chatMessageLikes, setChatMessageLikes] = useState<Record<string, { likes: number; userLiked: boolean }>>({});
 
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -158,10 +181,45 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
       setTimeLeft(prev => {
         if (prev <= 1) {
           // Battle ended
-          toast({
-            title: "Battle Ended! 🏆",
-            description: `${scores.creator1 > scores.creator2 ? creator1.displayName : creator2.displayName} wins!`,
-          });
+          setBattlePhase('ending');
+          setTimeout(() => {
+            setBattlePhase('ended');
+            const winnerId = scores.creator1 > scores.creator2 ? creator1.id : creator2.id;
+
+            // Calculate battle results
+            const totalPool = votingPool.totalPool;
+            const platformFee = totalPool * 0.1;
+            const winningCreatorBonus = totalPool * 0.2;
+            const winnersPool = totalPool * 0.7;
+
+            // Calculate user winnings
+            const userWinningVotes = userVotes.filter(vote => vote.creatorId === winnerId);
+            const totalWinningVotes = winnerId === creator1.id ? votingPool.creator1Total : votingPool.creator2Total;
+            const userWinnings = totalWinningVotes > 0
+              ? userWinningVotes.reduce((sum, vote) => sum + vote.amount, 0) * (winnersPool / totalWinningVotes)
+              : 0;
+
+            const userVoteOutcome = userVotes.length === 0 ? 'none' :
+              userWinningVotes.length > 0 ? 'won' : 'lost';
+
+            setBattleResults({
+              winnerId,
+              totalPool,
+              winningCreatorBonus,
+              platformFee,
+              userWinnings,
+              userVoteOutcome,
+            });
+
+            setTimeout(() => {
+              setShowResults(true);
+            }, 1000);
+
+            toast({
+              title: "Battle Ended! 🏆",
+              description: `${scores.creator1 > scores.creator2 ? creator1.displayName : creator2.displayName} wins!`,
+            });
+          }, 3000);
           return 0;
         }
         return prev - 1;
@@ -169,7 +227,7 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, scores, creator1.displayName, creator2.displayName, toast]);
+  }, [timeLeft, scores, creator1.displayName, creator2.displayName, toast, votingPool, userVotes]);
 
   // Simulate live updates
   useEffect(() => {
@@ -197,7 +255,7 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
           "Team Red! ❤️",
           "Team Blue! 💙",
           "Epic moves! 🚀",
-          "Who's winning? ���",
+          "Who's winning? 🤔",
           "Send more gifts! 🎁",
         ];
         
@@ -264,6 +322,11 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
         prev[selectedCreator === creator1.id ? 'creator1' : 'creator2'] + gift.value
     }));
     
+    // Combo system
+    setComboCount(prev => prev + 1);
+    setShowCombo(true);
+    setTimeout(() => setShowCombo(false), 2000);
+    
     setShowGifts(false);
     setSelectedCreator(null);
     
@@ -288,10 +351,34 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
       },
       message: newMessage,
       timestamp: new Date(),
+      likes: 0,
+      userLiked: false,
     };
 
     setChatMessages(prev => [...prev, message]);
     setNewMessage('');
+  };
+
+  const handleLikeMessage = (messageId: string) => {
+    setChatMessages(prev => 
+      prev.map(msg => 
+        msg.id === messageId 
+          ? { 
+              ...msg, 
+              likes: (msg.likes || 0) + 1,
+              userLiked: true
+            } 
+          : msg
+      )
+    );
+    
+    setChatMessageLikes(prev => ({
+      ...prev,
+      [messageId]: {
+        likes: (prev[messageId]?.likes || 0) + 1,
+        userLiked: true
+      }
+    }));
   };
 
   const handleLike = () => {
@@ -569,7 +656,45 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
 
         {/* Center divider line */}
         <div className="absolute inset-y-0 left-1/2 transform -translate-x-0.5 w-1 bg-gradient-to-b from-red-500 via-white to-blue-500 opacity-60" />
+        
+        {/* Combo Display */}
+        {showCombo && comboCount > 1 && (
+          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="bg-yellow-400 text-black px-6 py-3 rounded-full font-bold text-xl animate-bounce">
+              🔥 COMBO x{comboCount}!
+            </div>
+          </div>
+        )}
+        
+        {/* Battle End Animation */}
+        {battlePhase === 'ending' && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40">
+            <div className="text-center text-white">
+              <div className="text-6xl mb-4 animate-pulse">⏰</div>
+              <div className="text-2xl font-bold">Time's Up!</div>
+              <div className="text-lg">Calculating results...</div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Gift Effects */}
+      {giftEffects.map((effect) => (
+        <div
+          key={effect.id}
+          className={cn(
+            "absolute top-1/2 transform -translate-y-1/2 z-30 pointer-events-none animate-bounce",
+            effect.creatorId === creator1.id ? "left-1/4" : "right-1/4"
+          )}
+        >
+          <div className="text-6xl animate-pulse">
+            {effect.gift.icon}
+          </div>
+          <div className="text-center text-white font-bold text-sm mt-2">
+            +{effect.gift.value} SP
+          </div>
+        </div>
+      ))}
 
       {/* Floating Action Buttons (Right Side) */}
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-4 z-30">
@@ -658,6 +783,33 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
                     <span className="text-yellow-400 font-medium">{msg.user.username}: </span>
                   )}
                   <span className="text-white">{msg.message}</span>
+                  {!msg.isSystemMessage && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 p-1 text-gray-400 hover:text-white"
+                        onClick={() => handleLikeMessage(msg.id)}
+                      >
+                        <ThumbsUp className="w-3 h-3" />
+                        <span className="text-xs ml-1">{msg.likes || 0}</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 p-1 text-gray-400 hover:text-white"
+                      >
+                        <ThumbsDown className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 p-1 text-gray-400 hover:text-white"
+                      >
+                        <Reply className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -877,23 +1029,96 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
         </div>
       )}
 
-      {/* Gift Effects */}
-      {giftEffects.map((effect) => (
-        <div
-          key={effect.id}
-          className={cn(
-            "absolute top-1/2 transform -translate-y-1/2 z-30 pointer-events-none animate-bounce",
-            effect.creatorId === creator1.id ? "left-1/4" : "right-1/4"
-          )}
-        >
-          <div className="text-6xl animate-pulse">
-            {effect.gift.icon}
-          </div>
-          <div className="text-center text-white font-bold text-sm mt-2">
-            +{effect.gift.value} SP
+      {/* Battle Results Modal */}
+      {showResults && battleResults && (
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full">
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto mb-4">
+                <Avatar className="w-full h-full">
+                  <AvatarImage
+                    src={battleResults.winnerId === creator1.id ? creator1.avatar : creator2.avatar}
+                  />
+                  <AvatarFallback className="text-2xl">
+                    {battleResults.winnerId === creator1.id ? creator1.displayName[0] : creator2.displayName[0]}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <h3 className="text-2xl font-bold mb-2">
+                {battleResults.winnerId === creator1.id ? creator1.displayName : creator2.displayName} Wins!
+              </h3>
+              <div className="text-gray-400 mb-4">
+                +{battleResults.winningCreatorBonus.toFixed(0)} SP Creator Bonus
+              </div>
+              
+              <div className="bg-gray-800/50 rounded-lg p-4 space-y-3 mb-6">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Total Pool</span>
+                  <span className="text-white font-bold">{battleResults.totalPool} SP</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Platform Fee (10%)</span>
+                  <span className="text-gray-400">{battleResults.platformFee.toFixed(0)} SP</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Winners Share (70%)</span>
+                  <span className="text-green-400">{(battleResults.totalPool * 0.7).toFixed(0)} SP</span>
+                </div>
+              </div>
+
+              <div className="text-center mb-6">
+                {battleResults.userVoteOutcome === 'won' ? (
+                  <div className="space-y-2">
+                    <div className="text-6xl">🎉</div>
+                    <h4 className="text-xl font-bold text-green-400">You Won!</h4>
+                    <div className="text-2xl font-bold text-yellow-400">
+                      +{battleResults.userWinnings.toFixed(0)} SP
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      Your winnings have been added to your balance
+                    </p>
+                  </div>
+                ) : battleResults.userVoteOutcome === 'lost' ? (
+                  <div className="space-y-2">
+                    <div className="text-6xl">❌</div>
+                    <h4 className="text-xl font-bold text-red-400">You Lost</h4>
+                    <p className="text-gray-400 text-sm">
+                      Better luck next time!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-6xl">👀</div>
+                    <h4 className="text-xl font-bold text-gray-400">You Watched</h4>
+                    <p className="text-gray-400 text-sm">
+                      Join the voting next time for a chance to win!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-white hover:bg-gray-700"
+                  onClick={() => setShowResults(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  onClick={() => {
+                    setShowResults(false);
+                    // Could navigate to another battle or creator economy
+                  }}
+                >
+                  Next Battle
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 };

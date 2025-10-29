@@ -251,7 +251,14 @@ export const videoService = {
         content,
         parent_id: parentId || null
       })
-      .select()
+      .select(`
+        *,
+        user:profiles!user_id(
+          username,
+          full_name,
+          avatar_url
+        )
+      `)
       .single();
 
     if (error) throw error;
@@ -270,6 +277,123 @@ export const videoService = {
         .eq('id', videoId);
     }
 
-    return data;
+    return {
+      ...data,
+      user: data.user || undefined
+    };
+  },
+
+  // New method for following a user
+  async followUser(userId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('follows')
+      .insert({
+        follower_id: user.id,
+        following_id: userId
+      });
+
+    if (error) throw error;
+  },
+
+  // New method for unfollowing a user
+  async unfollowUser(userId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('follows')
+      .delete()
+      .eq('follower_id', user.id)
+      .eq('following_id', userId);
+
+    if (error) throw error;
+  },
+
+  // New method for getting user's following status
+  async isFollowingUser(userId: string): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data, error } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('following_id', userId)
+      .single();
+
+    if (error) return false;
+    return !!data;
+  },
+
+  // New method for getting trending videos
+  async getTrendingVideos(limit: number = 20, offset: number = 0): Promise<Video[]> {
+    const { data, error } = await supabase
+      .from('videos')
+      .select(`
+        *,
+        user:profiles!user_id(
+          username,
+          full_name,
+          avatar_url,
+          is_verified
+        )
+      `)
+      .eq('is_public', true)
+      .order('views_count', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    return data.map((video: any) => ({
+      ...video,
+      user: video.user || undefined
+    }));
+  },
+
+  // New method for getting videos from followed users
+  async getFollowingVideos(limit: number = 20, offset: number = 0): Promise<Video[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // First get the list of followed users
+    const { data: following, error: followingError } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', user.id);
+
+    if (followingError) throw followingError;
+
+    if (!following || following.length === 0) return [];
+
+    const followingIds = following.map((f: any) => f.following_id);
+
+    // Then get videos from those users
+    const { data, error } = await supabase
+      .from('videos')
+      .select(`
+        *,
+        user:profiles!user_id(
+          username,
+          full_name,
+          avatar_url,
+          is_verified
+        )
+      `)
+      .in('user_id', followingIds)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    return data.map((video: any) => ({
+      ...video,
+      user: video.user || undefined
+    }));
   }
 };
