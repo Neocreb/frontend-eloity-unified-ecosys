@@ -494,14 +494,14 @@ class UnifiedAnalyticsService {
 
       // Calculate metrics
       const totalPosts = postsData?.length || 0;
-      const avgLikes = totalPosts > 0 ? postsData.reduce((sum, post) => sum + (post.like_count || 0), 0) / totalPosts : 0;
-      const avgComments = totalPosts > 0 ? postsData.reduce((sum, post) => sum + (post.comment_count || 0), 0) / totalPosts : 0;
-      const avgShares = totalPosts > 0 ? postsData.reduce((sum, post) => sum + (post.share_count || 0), 0) / totalPosts : 0;
+      const avgLikes = totalPosts > 0 ? postsData.reduce((sum: number, post: any) => sum + (post.like_count || 0), 0) / totalPosts : 0;
+      const avgComments = totalPosts > 0 ? postsData.reduce((sum: number, post: any) => sum + (post.comment_count || 0), 0) / totalPosts : 0;
+      const avgShares = totalPosts > 0 ? postsData.reduce((sum: number, post: any) => sum + (post.share_count || 0), 0) / totalPosts : 0;
       const engagementRate = totalPosts > 0 ? ((avgLikes + avgComments + avgShares) / totalPosts) * 100 : 0;
       const reach = totalPosts * 100; // Simplified reach calculation
       const impressions = totalPosts * 500; // Simplified impressions calculation
 
-      const topPerformingPosts = (postsData || []).slice(0, 2).map(post => ({
+      const topPerformingPosts = (postsData || []).slice(0, 2).map((post: any) => ({
         id: post.id,
         content: post.content || '',
         likes: post.like_count || 0,
@@ -514,12 +514,12 @@ class UnifiedAnalyticsService {
 
       // Video metrics
       const totalVideos = videosData?.length || 0;
-      const avgViews = totalVideos > 0 ? videosData.reduce((sum, video) => sum + (video.view_count || 0), 0) / totalVideos : 0;
-      const avgWatchTime = totalVideos > 0 ? videosData.reduce((sum, video) => sum + (video.duration || 0), 0) / totalVideos : 0;
+      const avgViews = totalVideos > 0 ? videosData.reduce((sum: number, video: any) => sum + (video.view_count || 0), 0) / totalVideos : 0;
+      const avgWatchTime = totalVideos > 0 ? videosData.reduce((sum: number, video: any) => sum + (video.duration || 0), 0) / totalVideos : 0;
       const retentionRate = 75; // Simplified retention rate
       const monetizationRevenue = totalVideos * 2.5; // Simplified revenue calculation
 
-      const topPerformingVideos = (videosData || []).slice(0, 1).map(video => ({
+      const topPerformingVideos = (videosData || []).slice(0, 1).map((video: any) => ({
         id: video.id,
         title: video.title || '',
         views: video.view_count || 0,
@@ -649,18 +649,18 @@ class UnifiedAnalyticsService {
 
       // Calculate metrics
       const totalProducts = productsData?.length || 0;
-      const activeListings = productsData?.filter(p => p.price > 0).length || 0;
-      const avgRating = totalProducts > 0 ? productsData.reduce((sum, product) => sum + (product.rating || 0), 0) / totalProducts : 0;
+      const activeListings = productsData?.filter((p: any) => p.price > 0).length || 0;
+      const avgRating = totalProducts > 0 ? productsData.reduce((sum: number, product: any) => sum + (product.rating || 0), 0) / totalProducts : 0;
       const totalReviews = totalProducts; // Simplified
 
       const totalOrders = ordersData?.length || 0;
-      const completedOrders = ordersData?.filter(order => order.status === 'completed').length || 0;
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0) || 0;
+      const completedOrders = ordersData?.filter((order: any) => order.status === 'completed').length || 0;
+      const totalRevenue = ordersData?.reduce((sum: number, order: any) => sum + (parseFloat(order.total) || 0), 0) || 0;
       const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
       const conversionRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
       const returnCustomerRate = 25; // Simplified
 
-      const topSellingProducts = (productsData || []).slice(0, 2).map(product => ({
+      const topSellingProducts = (productsData || []).slice(0, 2).map((product: any) => ({
         id: product.id,
         name: product.name || '',
         sales: 5, // Simplified
@@ -755,9 +755,9 @@ class UnifiedAnalyticsService {
 
       // Calculate metrics
       const totalProjects = projectsData?.length || 0;
-      const completedProjects = projectsData?.filter(p => p.status === 'completed').length || 0;
-      const activeProjects = projectsData?.filter(p => p.status === 'active').length || 0;
-      const avgProjectValue = totalProjects > 0 ? projectsData.reduce((sum, project) => sum + (parseFloat(project.budget) || 0), 0) / totalProjects : 0;
+      const completedProjects = projectsData?.filter((p: any) => p.status === 'completed').length || 0;
+      const activeProjects = projectsData?.filter((p: any) => p.status === 'active').length || 0;
+      const avgProjectValue = totalProjects > 0 ? projectsData.reduce((sum: number, project: any) => sum + (parseFloat(project.budget) || 0), 0) / totalProjects : 0;
       const completionRate = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
       const onTimeDelivery = 95; // Simplified
       const overallRating = 4.8; // Simplified
@@ -781,7 +781,7 @@ class UnifiedAnalyticsService {
           clientGrowth: 0
         },
         earnings: {
-          totalEarnings: projectsData?.reduce((sum, project) => sum + (parseFloat(project.budget) || 0), 0) || 0,
+          totalEarnings: projectsData?.reduce((sum: number, project: any) => sum + (parseFloat(project.budget) || 0), 0) || 0,
           avgHourlyRate: 0,
           monthlyRecurring: 0,
           earningsGrowth: 0,
@@ -967,9 +967,9 @@ class UnifiedAnalyticsService {
 
       // Calculate metrics
       const contentCreated = videosData?.length || 0;
-      const totalViews = videosData?.reduce((sum, video) => sum + (video.view_count || 0), 0) || 0;
-      const totalLikes = videosData?.reduce((sum, video) => sum + (video.like_count || 0), 0) || 0;
-      const totalComments = videosData?.reduce((sum, video) => sum + (video.comment_count || 0), 0) || 0;
+      const totalViews = videosData?.reduce((sum: number, video: any) => sum + (video.view_count || 0), 0) || 0;
+      const totalLikes = videosData?.reduce((sum: number, video: any) => sum + (video.like_count || 0), 0) || 0;
+      const totalComments = videosData?.reduce((sum: number, video: any) => sum + (video.comment_count || 0), 0) || 0;
 
       return {
         revenue: {
@@ -994,8 +994,8 @@ class UnifiedAnalyticsService {
           monetizedContent: 0,
           fanbase: 0,
           superfans: 0,
-          engagementValue: (totalLikes + totalComments) / (contentCreated || 1),
-          creatorScore: 85
+          engagementValue: 0,
+          creatorScore: 0
         },
         partnerships: {
           activePartnerships: 0,
