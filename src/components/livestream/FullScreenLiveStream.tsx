@@ -45,10 +45,10 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { requestCameraAccess } from '@/utils/media';
+import { requestCameraAccess } from '@/utils/cameraPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import VirtualGiftsAndTips from '@/components/premium/VirtualGiftsAndTips';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface LiveReaction {
@@ -128,7 +128,7 @@ const mockReactions: LiveReaction[] = [
 const mockChatMessages: ChatMessage[] = [
   {
     id: '1',
-    user: { username: 'stream_fan', avatar: 'https://i.pravatar.cc/32?img=1', verified: true, tier: 'gold' },
+    user: { username: 'stream_fan', avatar: 'https://i.pravatar.cc/332?img=1', verified: true, tier: 'gold' },
     message: 'Amazing stream! 🔥',
     timestamp: new Date(Date.now() - 10000),
   },
@@ -202,7 +202,14 @@ const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
   // Start camera if user owns this stream
   useEffect(() => {
     if (isUserOwned && isActive && videoRef.current) {
-      requestCameraAccess({ video: true, audio: true })
+      requestCameraAccess({ 
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }, 
+        audio: true 
+      })
         .then(result => {
           if (result.error) {
             throw new Error(result.error.message);
@@ -246,7 +253,7 @@ const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
       id: Date.now().toString(),
       user: {
         username: user.username || 'you',
-        avatar: user.avatar_url || 'https://i.pravatar.cc/32?u=you',
+        avatar: user.avatar || 'https://i.pravatar.cc/32?u=you',
       },
       message: chatMessage,
       timestamp: new Date(),
@@ -419,7 +426,7 @@ const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
               </>
             ) : (
               <>
-                <Radio className="w-3 h-3 mr-1" />
+                <Play className="w-3 h-3 mr-1" />
                 LIVE
               </>
             )}
@@ -766,7 +773,7 @@ const FullScreenLiveStream: React.FC<FullScreenLiveStreamProps> = ({
       )}
 
       {/* Custom CSS for animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float-up {
           0% {
             opacity: 1;
