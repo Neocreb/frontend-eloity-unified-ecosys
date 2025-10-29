@@ -96,6 +96,8 @@ import { useVideoPlayback } from "@/hooks/use-video-playback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
+import { videoService, Video as VideoType } from "@/services/videoService";
+import { useEffect, useState } from "react";
 
 interface VideoData {
   id: string;
@@ -165,150 +167,6 @@ interface VideoData {
   aiGenerated?: boolean;
   transcription?: string;
 }
-
-// Mock data for battle videos
-const battleVideos: VideoData[] = [
-  {
-    id: "battle1",
-    user: {
-      id: "battle1",
-      username: "dance_master",
-      displayName: "Dance Master",
-      avatar: "https://i.pravatar.cc/150?img=3",
-      verified: true,
-      followerCount: 892000,
-    },
-    description: "⚔️ LIVE BATTLE: Epic Dance Battle vs @melody_queen! Vote with gifts! ⚡",
-    music: { title: "Battle Theme", artist: "Epic Beats" },
-    stats: { likes: 3240, comments: 890, shares: 234, views: "24.8K watching" },
-    hashtags: ["livebattle", "dance", "epic", "compete"],
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    thumbnail: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400",
-    duration: 0,
-    timestamp: "BATTLE",
-    isLiveStream: true,
-    allowDuets: false,
-    allowComments: true,
-  },
-  {
-    id: "battle2",
-    user: {
-      id: "battle2",
-      username: "rap_king",
-      displayName: "Rap King",
-      avatar: "https://i.pravatar.cc/150?img=8",
-      verified: true,
-      followerCount: 567000,
-    },
-    description: "🎤 LIVE RAP BATTLE: Freestyle showdown! Drop bars and win Eloity Points! ����",
-    music: { title: "Hip Hop Battle", artist: "Street Beats" },
-    stats: { likes: 1890, comments: 567, shares: 123, views: "15.2K watching" },
-    hashtags: ["rapbattle", "freestyle", "hiphop", "bars"],
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-    thumbnail: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400",
-    duration: 0,
-    timestamp: "BATTLE",
-    isLiveStream: true,
-    allowDuets: false,
-    allowComments: true,
-  },
-];
-
-// Mock data for different tabs
-const forYouVideos: VideoData[] = [
-  {
-    id: "1",
-    user: {
-      id: "1",
-      username: "crypto_king",
-      displayName: "Crypto King",
-      avatar: "https://i.pravatar.cc/150?img=1",
-      verified: true,
-      followerCount: 234567,
-    },
-    description: "Bitcoin to the moon! 🚀 Who else is holding? #crypto #bitcoin #hodl",
-    music: { title: "Crypto Anthem", artist: "Digital Dreams" },
-    stats: { likes: 15400, comments: 892, shares: 445, views: "2.1M" },
-    hashtags: ["crypto", "bitcoin", "hodl"],
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    thumbnail: "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=400",
-    duration: 30,
-    timestamp: "2h",
-    allowDuets: true,
-    allowComments: true,
-  },
-  {
-    id: "2",
-    user: {
-      id: "2",
-      username: "tech_trader",
-      displayName: "Tech Trader",
-      avatar: "https://i.pravatar.cc/150?img=2",
-      verified: false,
-      followerCount: 89456,
-    },
-    description: "Day trading tips that actually work! Follow for more 💰 #trading #stocks",
-    music: { title: "Success Vibes", artist: "Motivation Mix" },
-    stats: { likes: 8900, comments: 567, shares: 234, views: "890K" },
-    hashtags: ["trading", "stocks", "daytrading"],
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-    thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400",
-    duration: 45,
-    timestamp: "5h",
-    allowDuets: true,
-    allowComments: true,
-  },
-];
-
-const followingVideos: VideoData[] = [
-  {
-    id: "fl1",
-    user: {
-      id: "4",
-      username: "photo_pro",
-      displayName: "Photo Pro",
-      avatar: "https://i.pravatar.cc/150?img=15",
-      verified: true,
-      followerCount: 15600,
-      isFollowing: true,
-    },
-    description: "Testing my new camera setup! What do you think? 📸 #photography #newgear",
-    music: { title: "Camera Click", artist: "Sound Effects" },
-    stats: { likes: 450, comments: 78, shares: 12, views: "2.3K" },
-    hashtags: ["photography", "newgear", "test"],
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    thumbnail: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400",
-    duration: 25,
-    timestamp: "1h",
-    allowDuets: true,
-    allowComments: true,
-  },
-];
-
-const liveStreams: VideoData[] = [
-  {
-    id: "live1",
-    user: {
-      id: "live1",
-      username: "crypto_guru",
-      displayName: "Crypto Guru",
-      avatar: "https://i.pravatar.cc/150?img=10",
-      verified: true,
-      followerCount: 50000,
-    },
-    description: "LIVE: Bitcoin analysis and market predictions! ��� Join the discussion",
-    music: { title: "Live Stream", artist: "Real Time" },
-    stats: { likes: 1250, comments: 345, shares: 89, views: "12.5K watching" },
-    hashtags: ["live", "crypto", "bitcoin", "analysis"],
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    thumbnail: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400",
-    duration: 0, // Live streams don't have fixed duration
-    timestamp: "LIVE",
-    isLiveStream: true,
-    allowDuets: false,
-    allowComments: true,
-  },
-];
 
 const VideoCard: React.FC<{
   video: VideoData;
@@ -583,44 +441,77 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showDuetRecorder, setShowDuetRecorder] = useState(false);
   const [duetOriginalVideo, setDuetOriginalVideo] = useState<any>(null);
-  const [selectedDuetStyle, setSelectedDuetStyle] = useState<'side-by-side' | 'react-respond' | 'picture-in-picture'>('side-by-side');
-  const [showBattleSetup, setShowBattleSetup] = useState(false);
-  const [showLiveBattle, setShowLiveBattle] = useState(false);
 
-  // Auto-hide footer navigation states
-  const [showFooterNav, setShowFooterNav] = useState(true);
-  const [footerHideTimeout, setFooterHideTimeout] = useState<NodeJS.Timeout | null>(null);
+  // State for real video data
+  const [forYouVideos, setForYouVideos] = useState<VideoData[]>([]);
+  const [followingVideos, setFollowingVideos] = useState<VideoData[]>([]);
+  const [liveStreams, setLiveStreams] = useState<VideoData[]>([]);
+  const [battleVideos, setBattleVideos] = useState<VideoData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [userBalance] = useState(2500); // Mock user balance
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-  const { allLiveContent, addLiveStream, addBattle, removeLiveContent } = useLiveContentContext();
+  // Fetch real video data
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch videos for different tabs
+        const [forYouData, followingData] = await Promise.all([
+          videoService.getVideos(10, 0), // For You tab
+          videoService.getVideos(10, 0, 'following') // Following tab (this would need to be implemented)
+        ]);
+        
+        // Transform Video objects to VideoData objects
+        const transformVideo = (video: VideoType): VideoData => ({
+          id: video.id,
+          user: {
+            id: video.user_id,
+            username: video.user?.username || "unknown",
+            displayName: video.user?.full_name || "Unknown User",
+            avatar: video.user?.avatar_url || "https://i.pravatar.cc/150",
+            verified: video.user?.is_verified || false,
+          },
+          description: video.description || "",
+          music: {
+            title: "Original Sound",
+            artist: video.user?.username || "Unknown",
+          },
+          stats: {
+            likes: video.likes_count,
+            comments: video.comments_count,
+            shares: video.shares_count || 0,
+            views: video.views_count.toString(),
+          },
+          hashtags: video.tags || [],
+          videoUrl: video.video_url,
+          thumbnail: video.thumbnail_url || "https://picsum.photos/400/600",
+          duration: video.duration || 0,
+          timestamp: new Date(video.created_at).toLocaleDateString(),
+          category: video.category || "Entertainment",
+          allowDuets: true,
+          allowComments: true,
+        });
+        
+        setForYouVideos(forYouData.map(transformVideo));
+        setFollowingVideos(followingData.map(transformVideo));
+        
+        // For live streams and battle videos, we would need specific data
+        // For now, we'll use a subset of forYouVideos as placeholders
+        setLiveStreams(forYouData.slice(0, 2).map(transformVideo));
+        setBattleVideos(forYouData.slice(0, 2).map(transformVideo));
+        
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching videos:", err);
+        setError("Failed to load videos");
+        setLoading(false);
+      }
+    };
 
-  // Get current videos based on active tab
-  const getCurrentVideos = () => {
-    switch (activeTab) {
-      case "live":
-        const liveContentVideos = allLiveContent.filter(content => !content.battleData).map(liveContentToVideoData);
-        // Filter out duplicates and ensure unique IDs
-        const filteredLiveStreams = liveStreams.filter(stream =>
-          !liveContentVideos.some(video => video.id === stream.id)
-        );
-        return [...liveContentVideos, ...filteredLiveStreams];
-      case "battle":
-        const battleContentVideos = allLiveContent.filter(content => content.battleData).map(liveContentToVideoData);
-        // Filter out duplicates and ensure unique IDs
-        const filteredBattleVideos = battleVideos.filter(battle =>
-          !battleContentVideos.some(video => video.id === battle.id)
-        );
-        return [...battleContentVideos, ...filteredBattleVideos];
-      case "following":
-        return followingVideos;
-      default:
-        return forYouVideos;
-    }
-  };
-
-  const currentVideos = getCurrentVideos();
+    fetchVideos();
+  }, []);
 
   // Auto-hide controls after inactivity
   useEffect(() => {
@@ -828,6 +719,44 @@ const EnhancedTikTokVideosV3: React.FC = () => {
     });
   };
 
+  // Determine which videos to display based on active tab
+  const getCurrentVideos = () => {
+    switch (activeTab) {
+      case "following":
+        return followingVideos;
+      case "live":
+        return liveStreams;
+      case "battle":
+        return battleVideos;
+      default: // "foryou"
+        return forYouVideos;
+    }
+  };
+
+  const videos = getCurrentVideos();
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black text-white flex items-center justify-center z-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading videos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-black text-white flex items-center justify-center z-50">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Error: {error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
       <Helmet>
@@ -858,389 +787,148 @@ const EnhancedTikTokVideosV3: React.FC = () => {
             <div className="col-span-4 flex justify-center">
               <Tabs
                 value={activeTab}
-                onValueChange={(value) =>
-                  setActiveTab(value as "live" | "battle" | "foryou" | "following")
-                }
-                className="w-full max-w-md"
+                onValueChange={(value) => {
+                  setActiveTab(value as any);
+                  setCurrentVideoIndex(0);
+                }}
+                className="w-full"
               >
-                <TabsList className="bg-transparent border-0 h-auto p-0 grid grid-cols-4 gap-1 sm:gap-2 w-full">
+                <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-white/10 rounded-full p-1">
                   <TabsTrigger
                     value="live"
-                    className={cn(
-                      "bg-transparent border-0 text-xs sm:text-sm font-semibold px-1 pb-2 data-[state=active]:bg-transparent flex items-center gap-1 justify-center whitespace-nowrap",
-                      "data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-red-500",
-                      "text-white/60 hover:text-white transition-colors"
-                    )}
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
                   >
-                    <Radio className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="hidden xs:inline">Live</span>
+                    <Radio className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Live
                   </TabsTrigger>
                   <TabsTrigger
                     value="battle"
-                    className={cn(
-                      "bg-transparent border-0 text-xs sm:text-sm font-semibold px-1 pb-2 data-[state=active]:bg-transparent flex items-center gap-1 justify-center whitespace-nowrap",
-                      "data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-orange-500",
-                      "text-white/60 hover:text-white transition-colors"
-                    )}
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
                   >
-                    <Swords className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="hidden xs:inline">Battle</span>
+                    <Swords className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Battle
                   </TabsTrigger>
                   <TabsTrigger
                     value="foryou"
-                    className={cn(
-                      "bg-transparent border-0 text-xs sm:text-sm font-semibold px-1 pb-2 data-[state=active]:bg-transparent justify-center whitespace-nowrap",
-                      "data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white",
-                      "text-white/60 hover:text-white transition-colors"
-                    )}
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
                   >
-                    <span className="hidden sm:inline">For You</span>
-                    <span className="sm:hidden">You</span>
+                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    For You
                   </TabsTrigger>
                   <TabsTrigger
                     value="following"
-                    className={cn(
-                      "bg-transparent border-0 text-xs sm:text-sm font-semibold px-1 pb-2 data-[state=active]:bg-transparent justify-center whitespace-nowrap",
-                      "data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white",
-                      "text-white/60 hover:text-white transition-colors"
-                    )}
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
                   >
-                    <span className="hidden sm:inline">Following</span>
-                    <span className="sm:hidden">Follow</span>
+                    <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Following
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
 
-            {/* 6. Create Button + More options (right side) */}
-            <div className="flex justify-end items-center gap-1">
-              <DropdownMenu open={showCreateMenu} onOpenChange={setShowCreateMenu}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 border-0 text-white flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all duration-200 hover:scale-105"
-                  >
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline text-xs font-semibold">Create</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="bg-gray-900 border-gray-700 text-white mb-2"
-                >
-                  <DropdownMenuItem onClick={handleRecordVideo} className="hover:bg-gray-800">
-                    <Camera className="w-4 h-4 mr-2" />
-                    Record Video
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleUploadVideo} className="hover:bg-gray-800">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Video
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleGoLive} className="hover:bg-gray-800">
-                    <Radio className="w-4 h-4 mr-2" />
-                    Go Live
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleStartBattle} className="hover:bg-gray-800">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Start Battle
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20 w-6 h-6 sm:w-8 sm:h-8 rounded-full"
-                  >
-                    <MoreHorizontal className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="bg-gray-900 border-gray-700 text-white"
-                >
-                  <DropdownMenuItem
-                    onClick={() => navigate('/app/unified-creator-studio')}
-                    className="hover:bg-gray-800"
-                  >
-                    <Award className="w-4 h-4 mr-2" />
-                    Creator Analytics
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigate('/app/rewards')}
-                    className="hover:bg-gray-800"
-                  >
-                    <DollarSign className="w-4 h-4 mr-2" />
-                    Creator Economy
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="hover:bg-gray-800"
-                    onClick={() => navigate('/app/settings')}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Accessibility
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="hover:bg-gray-800"
-                    onClick={() => navigate('/app/settings')}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="hover:bg-gray-800"
-                    onClick={() => navigate('/app/settings')}
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    Content Filters
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* 6. User Profile/Notifications (right side) */}
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/app/profile")}
+                className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+              >
+                <User className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Video content area */}
+      {/* Video container with snap-scrolling */}
       <div
-        ref={containerRef}
-        className="h-full w-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
+        className="h-full w-full overflow-y-auto snap-y snap-mandatory"
         style={{
           scrollBehavior: "smooth",
-          paddingBottom: isMobile ? "80px" : "20px",
-        }}
-        onClick={() => {
-          setShowControls(!showControls);
-          toggleFooterNav();
+          paddingTop: showControls ? "120px" : "0",
+          paddingBottom: "80px",
         }}
       >
-        <Tabs value={activeTab} className="h-full">
-          <TabsContent value="live" className="h-full mt-0">
-            {allLiveContent.filter(content => !content.battleData).length > 0 ? (
-              allLiveContent.filter(content => !content.battleData).map((liveContent, index) => {
-                return (
-                  <MobileLiveStreamLayout
-                    key={`live-stream-${liveContent.id}`}
-                    content={liveContent}
-                    isActive={index === currentVideoIndex && activeTab === "live"}
-                    isUserOwned={liveContent.isUserOwned}
-                    onEndStream={() => {
-                      removeLiveContent(liveContent.id);
+        {videos.length > 0 ? (
+          videos.map((video, index) => (
+            <div
+              key={`${activeTab}-${video.id}`}
+              className="h-screen w-full snap-start snap-always relative"
+            >
+              {activeTab === "battle" ? (
+                index === currentVideoIndex ? (
+                  <TikTokStyleBattle
+                    key={`tiktok-battle-${video.id}`}
+                    creator1={{
+                      id: video.user.id,
+                      username: video.user.username,
+                      displayName: video.user.displayName,
+                      avatar: video.user.avatar,
+                      verified: video.user.verified,
+                      score: Math.floor(Math.random() * 50) + 10,
+                      wins: Math.floor(Math.random() * 15) + 5,
+                      followers: video.user.followerCount || '11.5K',
+                    }}
+                    creator2={{
+                      id: "opponent_" + video.id,
+                      username: video.id === "battle1" ? "melody_queen" : "freestyle_master",
+                      displayName: video.id === "battle1" ? "Melody Queen" : "Freestyle Master",
+                      avatar: `https://i.pravatar.cc/150?img=${video.id === "battle1" ? "9" : "10"}`,
+                      verified: true,
+                      score: Math.floor(Math.random() * 50) + 10,
+                      wins: Math.floor(Math.random() * 15) + 5,
+                      followers: '8.2K',
+                    }}
+                    onBattleEnd={(winnerId) => {
                       toast({
-                        title: "Stream Ended",
-                        description: "Your live stream has been ended",
+                        title: "Battle Ended! 🏆",
+                        description: `${winnerId === video.user.id ? 'You' : 'Opponent'} won the battle!`,
                       });
                     }}
                   />
-                );
-              })
-            ) : liveStreams.length > 0 ? (
-              liveStreams.map((video, index) => (
-                <VideoCard
-                  key={`mock-live-${video.id}`}
-                  video={video}
-                  isActive={index === currentVideoIndex && activeTab === "live"}
-                  showControls={showControls}
-                  onDuetCreate={handleDuetCreate}
-                />
-              ))
-            ) : (
-              <div className="h-screen flex items-center justify-center">
-                <div className="text-center text-white/60">
-                  <Radio className="w-12 h-12 mx-auto mb-4 text-red-500" />
-                  <p className="text-lg font-medium mb-2">No live content right now</p>
-                  <p className="text-sm">Start a live stream to see content here!</p>
-                  <div className="mt-4">
-                    <Button
-                      onClick={() => setIsLiveStreamOpen(true)}
-                      className="bg-red-500 hover:bg-red-600 text-white"
-                    >
-                      <Radio className="w-4 h-4 mr-2" />
-                      Go Live
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="battle" className="h-full mt-0">
-            {allLiveContent.filter(content => content.battleData).length > 0 ? (
-              allLiveContent.filter(content => content.battleData).map((liveContent, index) => {
-                if (index === currentVideoIndex && activeTab === "battle") {
-                  // Show TikTok-style battle interface for active battle
-                  return (
-                    <TikTokStyleBattle
-                      key={`tiktok-battle-${liveContent.id}`}
-                      creator1={{
-                        id: liveContent.user.id,
-                        username: liveContent.user.username,
-                        displayName: liveContent.user.displayName,
-                        avatar: liveContent.user.avatar,
-                        verified: liveContent.user.verified || false,
-                        score: liveContent.battleData?.scores?.user1 || 0,
-                        wins: Math.floor(Math.random() * 15) + 5,
-                        followers: liveContent.user.followerCount || '11.5K',
-                      }}
-                      creator2={{
-                        id: liveContent.battleData?.opponent?.id || 'opponent',
-                        username: liveContent.battleData?.opponent?.username || 'anonymous_battler',
-                        displayName: liveContent.battleData?.opponent?.displayName || 'Anonymous Battler',
-                        avatar: liveContent.battleData?.opponent?.avatar || 'https://i.pravatar.cc/150?img=9',
-                        verified: true,
-                        score: liveContent.battleData?.scores?.user2 || 0,
-                        wins: Math.floor(Math.random() * 12) + 8,
-                        followers: '10.1K',
-                      }}
-                      timeRemaining={liveContent.battleData?.timeRemaining || 300}
-                      viewerCount={Math.floor(Math.random() * 2000) + 500}
-                      onExit={() => {
-                        // Switch back to For You tab or handle navigation
-                        setActiveTab("foryou");
-                      }}
-                      onVote={(creatorId, amount) => {
-                        toast({
-                          title: "Vote Placed! 🎯",
-                          description: `${amount} SP voted for creator`,
-                        });
-                      }}
-                      onGift={(creatorId, gift) => {
-                        // Handle gift sending
-                        console.log('Gift sent:', { creatorId, gift });
-                      }}
-                    />
-                  );
-                }
-
-                // Show regular mobile layout for non-active battles
-                return (
-                  <MobileLiveStreamLayout
-                    key={`live-battle-${liveContent.id}`}
-                    content={liveContent}
-                    isActive={false}
-                    isUserOwned={liveContent.isUserOwned}
-                    onEndStream={() => {
-                      removeLiveContent(liveContent.id);
-                      toast({
-                        title: "Battle Ended",
-                        description: "The battle has been ended",
-                      });
-                    }}
-                  />
-                );
-              })
-            ) : battleVideos.length > 0 ? (
-              battleVideos.map((video, index) => {
-                if (index === currentVideoIndex && activeTab === "battle") {
-                  // Show TikTok-style battle interface for active mock battles
-                  return (
-                    <TikTokStyleBattle
-                      key={`tiktok-mock-battle-${video.id}`}
-                      creator1={{
-                        id: video.user.id,
-                        username: video.user.username,
-                        displayName: video.user.displayName,
-                        avatar: video.user.avatar,
-                        verified: video.user.verified,
-                        score: Math.floor(Math.random() * 50) + 10,
-                        wins: Math.floor(Math.random() * 15) + 5,
-                        followers: video.user.followerCount ? `${Math.floor(video.user.followerCount / 1000)}K` : '11.5K',
-                      }}
-                      creator2={{
-                        id: video.id === "battle1" ? "melody_queen" : "freestyle_master",
-                        username: video.id === "battle1" ? "melody_queen" : "freestyle_master",
-                        displayName: video.id === "battle1" ? "Melody Queen" : "Freestyle Master",
-                        avatar: video.id === "battle1" ? "https://i.pravatar.cc/150?img=9" : "https://i.pravatar.cc/150?img=10",
-                        verified: true,
-                        score: Math.floor(Math.random() * 45) + 15,
-                        wins: Math.floor(Math.random() * 12) + 8,
-                        followers: '10.1K',
-                      }}
-                      timeRemaining={Math.floor(Math.random() * 240) + 60}
-                      viewerCount={parseInt(video.stats.views.replace('K watching', '').replace('.', '')) * 1000 || 2500}
-                      onExit={() => {
-                        // Switch back to For You tab or handle navigation
-                        setActiveTab("foryou");
-                      }}
-                      onVote={(creatorId, amount) => {
-                        toast({
-                          title: "Vote Placed! ���",
-                          description: `${amount} SP voted for ${creatorId === video.user.id ? video.user.displayName : 'opponent'}`,
-                        });
-                      }}
-                      onGift={(creatorId, gift) => {
-                        // Handle gift sending
-                        console.log('Gift sent:', { creatorId, gift });
-                      }}
-                    />
-                  );
-                }
-
-                // Show regular video card for non-active battles
-                return (
+                ) : (
                   <VideoCard
-                    key={`mock-battle-${video.id}`}
                     video={video}
-                    isActive={false}
+                    isActive={index === currentVideoIndex}
                     showControls={showControls}
-                    onDuetCreate={handleDuetCreate}
+                    onDuetCreate={(video) => {
+                      setDuetOriginalVideo(video);
+                      setShowDuetRecorder(true);
+                    }}
                   />
-                );
-              })
-            ) : (
-              <div className="h-screen flex items-center justify-center">
-                <div className="text-center text-white/60">
-                  <Swords className="w-12 h-12 mx-auto mb-4 text-orange-500" />
-                  <p className="text-lg font-medium mb-2">No battles right now</p>
-                  <p className="text-sm">Start a battle or challenge someone!</p>
-                  <div className="mt-4">
-                    <Button
-                      onClick={() => setShowBattleSetup(true)}
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
-                    >
-                      <Swords className="w-4 h-4 mr-2" />
-                      Start Battle
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="foryou" className="h-full mt-0">
-            {forYouVideos.map((video, index) => (
-              <VideoCard
-                key={`foryou-${video.id}`}
-                video={video}
-                isActive={index === currentVideoIndex && activeTab === "foryou"}
-                showControls={showControls}
-                onDuetCreate={handleDuetCreate}
-              />
-            ))}
-          </TabsContent>
-          <TabsContent value="following" className="h-full mt-0">
-            {followingVideos.length > 0 ? (
-              followingVideos.map((video, index) => (
+                )
+              ) : (
                 <VideoCard
-                  key={`following-${video.id}`}
                   video={video}
-                  isActive={index === currentVideoIndex && activeTab === "following"}
+                  isActive={index === currentVideoIndex}
                   showControls={showControls}
-                  onDuetCreate={handleDuetCreate}
+                  onDuetCreate={(video) => {
+                    setDuetOriginalVideo(video);
+                    setShowDuetRecorder(true);
+                  }}
                 />
-              ))
-            ) : (
-              <div className="h-screen flex items-center justify-center">
-                <div className="text-center text-white/60">
-                  <Users className="w-12 h-12 mx-auto mb-4" />
-                  <p className="text-lg font-medium mb-2">No videos yet</p>
-                  <p className="text-sm">Follow creators to see their content here!</p>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="h-screen w-full flex items-center justify-center">
+            <div className="text-center">
+              <Video className="w-16 h-16 mx-auto text-gray-500 mb-4" />
+              <p className="text-white text-lg">No videos available</p>
+              <p className="text-gray-400 text-sm mt-2">
+                Be the first to create content in this category!
+              </p>
+              <Button
+                className="mt-4 bg-purple-600 hover:bg-purple-700"
+                onClick={() => setIsAdvancedRecorderOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Video
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Back to Feed Button - Shows when footer nav is hidden */}

@@ -38,7 +38,7 @@ async function testBybitConnection() {
     console.log('📡 Test 1: Getting server time...');
     try {
       const timeResponse = await axios.get('https://api.bybit.com/v5/market/time', { 
-        timeout: 10000,
+        timeout: 15000,
         headers: {
           'User-Agent': 'Eloity-Crypto-Client/1.0'
         }
@@ -49,7 +49,8 @@ async function testBybitConnection() {
       console.log('   Error code:', error.code);
       if (error.response) {
         console.log('   Response status:', error.response.status);
-        console.log('   Response data:', error.response.data);
+        console.log('   Response headers:', error.response.headers);
+        console.log('   Response data:', JSON.stringify(error.response.data, null, 2));
       }
     }
 
@@ -57,7 +58,7 @@ async function testBybitConnection() {
     console.log('\n📈 Test 2: Getting BTC/USDT ticker...');
     try {
       const tickerResponse = await axios.get('https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT', { 
-        timeout: 10000,
+        timeout: 15000,
         headers: {
           'User-Agent': 'Eloity-Crypto-Client/1.0'
         }
@@ -68,13 +69,20 @@ async function testBybitConnection() {
         console.log('✅ 24h Change:', ticker.price24hPcnt, '%');
       } else {
         console.log('❌ Failed to get ticker:', tickerResponse.data.retMsg);
+        console.log('   Return code:', tickerResponse.data.retCode);
       }
     } catch (error) {
       console.log('❌ Failed to get ticker:', error.message);
       console.log('   Error code:', error.code);
       if (error.response) {
         console.log('   Response status:', error.response.status);
-        console.log('   Response data:', error.response.data);
+        console.log('   Response headers:', error.response.headers);
+        try {
+          const data = error.response.data;
+          console.log('   Response data:', typeof data === 'string' ? data.substring(0, 500) : JSON.stringify(data, null, 2));
+        } catch (parseError) {
+          console.log('   Response data (raw):', String(error.response.data).substring(0, 500));
+        }
       }
     }
 
@@ -94,7 +102,7 @@ async function testBybitConnection() {
           'X-BAPI-RECV-WINDOW': '5000',
           'User-Agent': 'Eloity-Crypto-Client/1.0'
         },
-        timeout: 10000
+        timeout: 15000
       });
 
       if (balanceResponse.data.retCode === 0) {
@@ -107,13 +115,20 @@ async function testBybitConnection() {
         });
       } else {
         console.log('❌ Failed to get wallet balance:', balanceResponse.data.retMsg);
+        console.log('   Return code:', balanceResponse.data.retCode);
       }
     } catch (error) {
       console.log('❌ Failed to get wallet balance:', error.message);
       console.log('   Error code:', error.code);
       if (error.response) {
         console.log('   Response status:', error.response.status);
-        console.log('   Response data:', error.response.data);
+        console.log('   Response headers:', error.response.headers);
+        try {
+          const data = error.response.data;
+          console.log('   Response data:', typeof data === 'string' ? data.substring(0, 500) : JSON.stringify(data, null, 2));
+        } catch (parseError) {
+          console.log('   Response data (raw):', String(error.response.data).substring(0, 500));
+        }
       }
     }
 

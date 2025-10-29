@@ -29,18 +29,10 @@ const fetchRealAdData = async () => {
     }
   } catch (error) {
     console.error("Error fetching real ad data:", error);
+    // According to project policy, we should not use mock data
+    // Return null to indicate no ad data is available
+    return null;
   }
-  
-  // Fallback to mock ad if database fetch fails
-  return {
-    id: "ad-1",
-    title: "Special Offer",
-    description: "Check out our amazing products!",
-    cta: "Learn More",
-    image: "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=400",
-    url: "#",
-    sponsor: "Sponsored"
-  };
 };
 
 export const useVideos = () => {
@@ -104,11 +96,13 @@ export const useVideos = () => {
   }, []);
 
   // Combine videos and ads into a single content feed
-  const allItems: ContentItem[] = videos.length > 0 && adData ? [
+  // Only include ads if adData is not null
+  const allItems: ContentItem[] = videos.length > 0 ? 
+  (adData ? [
     ...videos.slice(0, 2),
     { isAd: true, ad: adData } as AdItem,
     ...videos.slice(2)
-  ] : [];
+  ] : [...videos]) : [];
 
   const handleNextVideo = useCallback(() => {
     setCurrentIndex((prev) =>
