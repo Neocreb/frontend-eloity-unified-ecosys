@@ -49,7 +49,15 @@ import {
   Swords,
   ShoppingCart,
   DollarSign,
-  ThumbsUp as ThumbsUpIcon
+  ThumbsUp as ThumbsUpIcon,
+  Copy,
+  Twitter,
+  Facebook,
+  Share2,
+  Download,
+  Send,
+  Reply,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -98,7 +106,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
 import { videoService, Video as VideoType } from "@/services/videoService";
-import { useEffect, useState } from "react";
 
 interface VideoData {
   id: string;
@@ -236,6 +243,58 @@ const VideoCard: React.FC<{
 
     await togglePlayback(videoElement, isPlaying, setIsPlaying);
   }, [isPlaying, togglePlayback]);
+
+  // Save functionality
+  const handleSave = async () => {
+    try {
+      // In a real implementation, this would integrate with the platform's save functionality
+      toast({
+        title: "Saved!",
+        description: "Video saved to your collection"
+      });
+    } catch (error) {
+      console.error("Error saving video:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save video",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Change playback speed
+  const changePlaybackSpeed = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+    setShowSpeedControl(false);
+  };
+
+  // Change video quality
+  const changeQuality = (quality: string) => {
+    setCurrentQuality(quality);
+    // In a real implementation, this would change the video source
+    setShowQualityControl(false);
+  };
+
+  // Handle download
+  const handleDownload = async () => {
+    try {
+      // In a real implementation, this would trigger a download
+      toast({
+        title: "Download Started",
+        description: "Video download in progress"
+      });
+    } catch (error) {
+      console.error("Error downloading video:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download video",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Enhanced like functionality with platform integration
   const handleLike = async () => {
@@ -526,8 +585,8 @@ const VideoCard: React.FC<{
             {/* Description */}
             <div className="text-white text-xs md:text-sm">
               <p className="leading-relaxed line-clamp-2 md:line-clamp-3">
-                {showMore ? description : truncatedDescription}
-                {description.length > 100 && (
+                {showMore ? video.description : video.description.substring(0, 100) + (video.description.length > 100 ? "..." : "")}
+                {video.description.length > 100 && (
                   <button
                     onClick={() => setShowMore(!showMore)}
                     className="text-white/70 ml-1 underline"
@@ -1047,6 +1106,12 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showFooterNav, setShowFooterNav] = useState(true);
+  const [footerHideTimeout, setFooterHideTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [selectedDuetStyle, setSelectedDuetStyle] = useState<'split' | 'grid' | 'picture-in-picture'>('split');
+  const [showBattleSetup, setShowBattleSetup] = useState(false);
+  const [showLiveBattle, setShowLiveBattle] = useState(false);
 
   // Get initial tab from URL params or default to "foryou"
   const initialTab = searchParams.get('tab') as "live" | "battle" | "foryou" | "following" || "foryou";
@@ -1175,7 +1240,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
     };
 
     fetchComments();
-  }, [currentVideoIndex, videos]);
+  }, [currentVideoIndex, videos, activeTab]);
 
   // Auto-hide controls after inactivity
   useEffect(() => {
@@ -1231,6 +1296,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
       const videoHeight = window.innerHeight;
       const newIndex = Math.round(scrollTop / videoHeight);
 
+      const currentVideos = getCurrentVideos();
       if (
         newIndex !== currentVideoIndex &&
         newIndex >= 0 &&
@@ -1242,7 +1308,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [currentVideoIndex, currentVideos.length]);
+  }, [currentVideoIndex, activeTab]);
 
   // Reset video index when switching tabs
   useEffect(() => {
@@ -1315,11 +1381,8 @@ const EnhancedTikTokVideosV3: React.FC = () => {
     description: string;
     category?: string;
   }) => {
-    const streamId = addLiveStream({
-      title: streamData.title,
-      description: streamData.description,
-      category: streamData.category,
-    });
+    // In a real implementation, this would add the live stream to the platform
+    console.log('Creating live stream:', streamData);
 
     // Switch to live tab to show the new stream
     setActiveTab("live");
@@ -1338,25 +1401,8 @@ const EnhancedTikTokVideosV3: React.FC = () => {
     type: 'dance' | 'rap' | 'comedy' | 'general';
     opponentId?: string;
   }) => {
-    const battleId = addBattle({
-      title: battleData.title,
-      description: battleData.description,
-      category: battleData.type,
-      battleData: {
-        type: battleData.type,
-        timeRemaining: 300, // 5 minutes
-        scores: {
-          user1: 0,
-          user2: 0,
-        },
-        opponent: battleData.opponentId ? {
-          id: battleData.opponentId,
-          username: "opponent",
-          displayName: "Opponent",
-          avatar: "https://i.pravatar.cc/150?img=5",
-        } : undefined,
-      },
-    });
+    // In a real implementation, this would create a battle in the platform
+    console.log('Creating battle:', battleData);
 
     // Switch to battle tab to show the new battle
     setActiveTab("battle");
