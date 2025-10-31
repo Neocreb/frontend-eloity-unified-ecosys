@@ -68,7 +68,7 @@ export const useVideos = () => {
           description: video.description || "",
           likes: video.likes_count,
           comments: video.comments_count,
-          shares: video.shares_count || 0,
+          shares: video.shares_count,
           views: video.views_count,
           author: {
             name: video.user?.full_name || "Unknown User",
@@ -77,10 +77,10 @@ export const useVideos = () => {
             verified: video.user?.is_verified || false
           },
           isFollowing: false, // This would need to be fetched from a following service
-          duration: video.duration || 0,
+          duration: video.duration || undefined,
           timestamp: video.created_at,
-          tags: video.tags || [],
-          category: video.category || "Entertainment"
+          tags: video.tags || undefined,
+          category: video.category || undefined
         }));
         
         setVideos(transformedVideos);

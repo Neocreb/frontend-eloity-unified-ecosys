@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { UserProfile } from "../types/user";
 
 export interface Video {
   id: string;
@@ -18,12 +19,7 @@ export interface Video {
   is_public: boolean;
   created_at: string;
   updated_at: string;
-  user?: {
-    username: string;
-    full_name: string;
-    avatar_url: string;
-    is_verified: boolean;
-  };
+  user?: UserProfile;
 }
 
 export interface VideoComment {
@@ -35,20 +31,10 @@ export interface VideoComment {
   likes_count: number;
   created_at: string;
   updated_at: string;
-  user?: {
-    username: string;
-    full_name: string;
-    avatar_url: string;
-  };
+  user?: UserProfile;
 }
 
-interface UserProfile {
-  user_id: string;
-  username: string;
-  full_name: string;
-  avatar_url: string;
-  is_verified?: boolean;
-}
+
 
 export const videoService = {
   async getVideos(limit: number = 20, offset: number = 0, category?: string): Promise<Video[]> {
