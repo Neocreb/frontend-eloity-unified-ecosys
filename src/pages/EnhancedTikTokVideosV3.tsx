@@ -1138,11 +1138,72 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [comments, setComments] = useState<any[]>([]);
 
+  // Function to load videos
+  const loadVideos = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Load initial videos for all tabs
+      const [forYouData, followingData, liveData, battleData] = await Promise.all([
+        videoService.getTrendingVideos(10, 0),
+        videoService.getFollowingVideos(10, 0),
+        videoService.getVideos(10, 0),
+        videoService.getVideos(10, 0)
+      ]);
+      
+      // Transform and set videos for each tab
+      const transformVideo = (video: VideoType): VideoData => ({
+        id: video.id,
+        user: {
+          id: video.user_id,
+          username: video.user?.username || "unknown",
+          displayName: video.user?.full_name || "Unknown User",
+          avatar: video.user?.avatar_url || "",
+          verified: video.user?.is_verified || false,
+        },
+        description: video.description || "",
+        music: {
+          title: "Original Sound",
+          artist: video.user?.username || "Unknown",
+        },
+        stats: {
+          likes: video.likes_count,
+          comments: video.comments_count,
+          shares: video.shares_count,
+          views: video.views_count.toString(),
+        },
+        hashtags: video.tags || [],
+        videoUrl: video.video_url,
+        thumbnail: video.thumbnail_url || "",
+        duration: video.duration || 0,
+        category: video.category || "Entertainment",
+        allowDuets: true,
+        allowComments: true,
+        hasCaption: !!video.description,
+      });
+      
+      setForYouVideos(forYouData.map(transformVideo));
+      setFollowingVideos(followingData.map(transformVideo));
+      setLiveStreams(liveData.map(transformVideo));
+      setBattleVideos(battleData.map(transformVideo));
+      
+      setLoading(false);
+    } catch (err) {
+      console.error("Error loading videos:", err);
+      setError("Failed to load videos. Please try again later.");
+      setLoading(false);
+    }
+  };
+
   // Add a simple useEffect to log when the component mounts
   useEffect(() => {
     console.log("EnhancedTikTokVideosV3 component mounted");
     console.log("[Fix Applied] Rt initialization issue resolved in EnhancedTikTokVideosV3 ✅");
     console.log("[Qoder Fix] Supabase videos endpoint verified ✅");
+    
+    // Load videos when component mounts
+    loadVideos();
   }, []);
 
   // Determine which videos to display based on active tab
@@ -1608,7 +1669,26 @@ const EnhancedTikTokVideosV3: React.FC = () => {
           paddingBottom: "80px",
         }}
       >
-        {getCurrentVideos().length > 0 ? (
+        {loading ? (
+        <div className="h-screen w-full flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Loading videos...</p>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="h-screen w-full flex items-center justify-center">
+          <div className="text-center p-4">
+            <p className="text-red-500 mb-4">{error}</p>
+            <Button 
+              onClick={loadVideos}
+              className="bg-white text-black hover:bg-gray-200"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      ) : getCurrentVideos().length > 0 ? (
           getCurrentVideos().map((video, index) => (
             <div
               key={`${activeTab}-${video.id}`}
@@ -1676,10 +1756,8 @@ const EnhancedTikTokVideosV3: React.FC = () => {
           <div className="h-screen w-full flex items-center justify-center">
             <div className="text-center">
               <Video className="w-16 h-16 mx-auto text-gray-500 mb-4" />
-              <p className="text-white text-lg">No videos available</p>
-              <p className="text-gray-400 text-sm mt-2">
-                Be the first to create content in this category!
-              </p>
+              <p className="text-white text-lg mb-2">No videos available</p>
+              <p className="text-gray-400 mb-4">Be the first to create content in this category!</p>
               <Button
                 className="mt-4 bg-purple-600 hover:bg-purple-700"
                 onClick={() => setIsAdvancedRecorderOpen(true)}
