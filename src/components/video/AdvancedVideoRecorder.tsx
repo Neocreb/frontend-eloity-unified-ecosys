@@ -19,22 +19,10 @@ import {
   Mic,
   MicOff,
   FlashOff,
-  Flash,
+  Zap,
   Grid3X3,
   Maximize,
   Minimize,
-  Zap,
-  Palette,
-  Smile,
-  Heart,
-  Star,
-  X,
-  Check,
-  ArrowLeft,
-  MoreHorizontal,
-  Settings,
-  VideoIcon,
-  StopCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -497,7 +485,7 @@ const AdvancedVideoRecorder: React.FC<AdvancedVideoRecorderProps> = ({
               onClick={() => setFlashOn(!flashOn)}
             >
               {flashOn ? (
-                <Flash className="w-5 h-5" />
+                <Zap className="w-5 h-5" />
               ) : (
                 <FlashOff className="w-5 h-5" />
               )}
