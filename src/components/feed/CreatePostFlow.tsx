@@ -31,7 +31,6 @@ import {
   Calendar as CalendarIcon,
   MessageCircle,
   Crown,
-  Zap,
   Target,
   Sparkles
 } from "lucide-react";
