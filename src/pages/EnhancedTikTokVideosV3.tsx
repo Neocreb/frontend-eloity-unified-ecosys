@@ -1141,6 +1141,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   // Add a simple useEffect to log when the component mounts
   useEffect(() => {
     console.log("EnhancedTikTokVideosV3 component mounted");
+    console.log("[Fix Applied] Rt initialization issue resolved in EnhancedTikTokVideosV3 ✅");
   }, []);
 
   // Determine which videos to display based on active tab
@@ -1156,9 +1157,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
         return forYouVideos;
     }
   };
-
-  // Define videos variable after getCurrentVideos function
-  const videos = getCurrentVideos();
 
   // Fetch real video data
   useEffect(() => {
@@ -1252,9 +1250,10 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   // Fetch comments when a video is selected
   useEffect(() => {
     const fetchComments = async () => {
-      if (videos.length > 0 && currentVideoIndex < videos.length) {
+      const currentVideos = getCurrentVideos();
+      if (currentVideos.length > 0 && currentVideoIndex < currentVideos.length) {
         try {
-          const video = videos[currentVideoIndex];
+          const video = currentVideos[currentVideoIndex];
           const videoComments = await videoService.getVideoComments(video.id);
           setComments(videoComments);
         } catch (error) {
@@ -1265,7 +1264,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
     };
 
     fetchComments();
-  }, [currentVideoIndex, videos, activeTab]);
+  }, [currentVideoIndex, activeTab]);
 
   // Auto-hide controls after inactivity
   useEffect(() => {
@@ -1608,8 +1607,8 @@ const EnhancedTikTokVideosV3: React.FC = () => {
           paddingBottom: "80px",
         }}
       >
-        {videos.length > 0 ? (
-          videos.map((video, index) => (
+        {getCurrentVideos().length > 0 ? (
+          getCurrentVideos().map((video, index) => (
             <div
               key={`${activeTab}-${video.id}`}
               className="h-screen w-full snap-start snap-always relative"
