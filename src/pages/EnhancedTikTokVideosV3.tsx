@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Heart,
@@ -1112,6 +1113,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const [selectedDuetStyle, setSelectedDuetStyle] = useState<'split' | 'grid' | 'picture-in-picture'>('split');
   const [showBattleSetup, setShowBattleSetup] = useState(false);
   const [showLiveBattle, setShowLiveBattle] = useState(false);
+  const isMobile = useIsMobile(); // This should be properly used
 
   // Get initial tab from URL params or default to "foryou"
   const initialTab = searchParams.get('tab') as "live" | "battle" | "foryou" | "following" || "foryou";
@@ -1134,6 +1136,11 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comments, setComments] = useState<any[]>([]);
+
+  // Add a simple useEffect to log when the component mounts
+  useEffect(() => {
+    console.log("EnhancedTikTokVideosV3 component mounted");
+  }, []);
 
   // Fetch real video data
   useEffect(() => {
@@ -1591,6 +1598,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
 
       {/* Video container with snap-scrolling */}
       <div
+        ref={containerRef}
         className="h-full w-full overflow-y-auto snap-y snap-mandatory"
         style={{
           scrollBehavior: "smooth",
@@ -1628,11 +1636,16 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                       wins: Math.floor(Math.random() * 15) + 5,
                       followers: '8.2K',
                     }}
-                    onBattleEnd={(winnerId) => {
-                      toast({
-                        title: "Battle Ended! 🏆",
-                        description: `${winnerId === video.user.id ? 'You' : 'Opponent'} won the battle!`,
-                      });
+                    timeRemaining={300}
+                    viewerCount={Math.floor(Math.random() * 1000) + 500}
+                    onExit={() => {
+                      // Handle exit
+                    }}
+                    onVote={(creatorId, amount) => {
+                      // Handle vote
+                    }}
+                    onGift={(creatorId, gift) => {
+                      // Handle gift
                     }}
                   />
                 ) : (
@@ -1640,10 +1653,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                     video={video}
                     isActive={index === currentVideoIndex}
                     showControls={showControls}
-                    onDuetCreate={(video) => {
-                      setDuetOriginalVideo(video);
-                      setShowDuetRecorder(true);
-                    }}
+                    onDuetCreate={handleDuetCreate}
                     comments={comments}
                     setComments={setComments}
                   />
@@ -1653,10 +1663,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
                   video={video}
                   isActive={index === currentVideoIndex}
                   showControls={showControls}
-                  onDuetCreate={(video) => {
-                    setDuetOriginalVideo(video);
-                    setShowDuetRecorder(true);
-                  }}
+                  onDuetCreate={handleDuetCreate}
                   comments={comments}
                   setComments={setComments}
                 />
@@ -1910,8 +1917,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
           />
         </DialogContent>
       </Dialog>
-
-
     </div>
   );
 };
