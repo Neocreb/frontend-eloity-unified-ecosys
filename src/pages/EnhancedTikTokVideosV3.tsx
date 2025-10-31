@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Heart,
@@ -1142,6 +1143,23 @@ const EnhancedTikTokVideosV3: React.FC = () => {
     console.log("EnhancedTikTokVideosV3 component mounted");
   }, []);
 
+  // Determine which videos to display based on active tab
+  const getCurrentVideos = () => {
+    switch (activeTab) {
+      case "following":
+        return followingVideos;
+      case "live":
+        return liveStreams;
+      case "battle":
+        return battleVideos;
+      default: // "foryou"
+        return forYouVideos;
+    }
+  };
+
+  // Define videos variable after getCurrentVideos function
+  const videos = getCurrentVideos();
+
   // Fetch real video data
   useEffect(() => {
     const fetchVideos = async () => {
@@ -1435,22 +1453,6 @@ const EnhancedTikTokVideosV3: React.FC = () => {
       description: "Set up your live battle challenge",
     });
   };
-
-  // Determine which videos to display based on active tab
-  const getCurrentVideos = () => {
-    switch (activeTab) {
-      case "following":
-        return followingVideos;
-      case "live":
-        return liveStreams;
-      case "battle":
-        return battleVideos;
-      default: // "foryou"
-        return forYouVideos;
-    }
-  };
-
-  const videos = getCurrentVideos();
 
   if (loading) {
     return (

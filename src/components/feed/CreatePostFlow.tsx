@@ -33,8 +33,7 @@ import {
   Crown,
   Zap,
   Target,
-  Sparkles,
-  Upload
+  Sparkles
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
