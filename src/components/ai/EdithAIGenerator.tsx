@@ -92,7 +92,8 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
         description: "Your AI-generated content is ready. Click 'Use Content' to add it to your post.",
       });
     } catch (err) {
-      setError(err.message || "Failed to generate content. Please try again.");
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || "Failed to generate content. Please try again.");
       toast({
         title: "Generation Failed",
         description: "Failed to generate content. Please try again.",
@@ -129,7 +130,8 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
         description: "Your image has been upscaled for better quality.",
       });
     } catch (err) {
-      setError(err.message || "Failed to upscale image. Please try again.");
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || "Failed to upscale image. Please try again.");
       toast({
         title: "Upscaling Failed",
         description: "Failed to upscale image. Please try again.",
