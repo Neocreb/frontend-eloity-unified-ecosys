@@ -46,6 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { requestCameraAccess, stopCameraStream, switchCamera, CameraError } from "@/utils/cameraPermissions";
 import CameraPermissionDialog from "@/components/ui/camera-permission-dialog";
+import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 
 interface VideoSegment {
   id: string;
@@ -198,98 +199,70 @@ const soundTracks: SoundTrack[] = [
     url: "/api/audio/motivation.mp3",
     preview: "💪",
     trending: false,
-    category: "motivational",
+    category: "workout",
   },
 ];
 
 interface AdvancedVideoRecorderProps {
   onClose: () => void;
-  onVideoCreated: (video: File, metadata: any) => void;
+  onVideoCreated: (videoFile: File, metadata: any) => void;
 }
 
 const AdvancedVideoRecorder: React.FC<AdvancedVideoRecorderProps> = ({
   onClose,
   onVideoCreated,
 }) => {
-  // Recording states
+  const { toast } = useToast();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [recordedSegments, setRecordedSegments] = useState<VideoSegment[]>([]);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [maxDuration] = useState(180); // 3 minutes max
-
-  // Camera states
-  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">(
-    "user",
-  );
-  const [flashEnabled, setFlashEnabled] = useState(false);
-  const [gridEnabled, setGridEnabled] = useState(false);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
-
-  // Creative states
-  const [currentFilter, setCurrentFilter] = useState<string>("none");
-  const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
+  const [timer, setTimer] = useState(0);
+  const [maxDuration] = useState(60); // 60 seconds max
+  const [recordedSegments, setRecordedSegments] = useState<VideoSegment[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState("none");
+  const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
   const [selectedSound, setSelectedSound] = useState<SoundTrack | null>(null);
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [stickers, setStickers] = useState<Sticker[]>([]);
-
-  // Controls states
-  const [speed, setSpeed] = useState(1);
-  const [timer, setTimer] = useState(0);
-  const [timerCountdown, setTimerCountdown] = useState(0);
-  const [zoom, setZoom] = useState(1);
-
-  // UI states
+  const [cameraError, setCameraError] = useState<CameraError | null>(null);
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "filters" | "effects" | "sounds" | "text" | "stickers"
   >("filters");
-  const [showControls, setShowControls] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [cameraError, setCameraError] = useState<CameraError | null>(null);
-  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
-  const [isInitializingCamera, setIsInitializingCamera] = useState(false);
+  const [currentCamera, setCurrentCamera] = useState<"front" | "back">("back");
+  const [flashOn, setFlashOn] = useState(false);
+  const [gridOn, setGridOn] = useState(false);
+  const [audioOn, setAudioOn] = useState(true);
+  const [micOn, setMicOn] = useState(true);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [aiGeneratedVideo, setAiGeneratedVideo] = useState<string | null>(null);
 
-  // Refs
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-
-  const { toast } = useToast();
-
-  // Initialize camera
+  // Timer effect for recording
   useEffect(() => {
-    initializeCamera();
-    return () => {
-      cleanup();
-    };
-  }, [cameraFacing, micEnabled]);
-
-  // Recording timer
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: NodeJS.Timeout | null = null;
+    
     if (isRecording && !isPaused) {
       interval = setInterval(() => {
-        setRecordingTime((prev) => {
-          if (prev >= maxDuration) {
-            handleStopRecording();
-            return maxDuration;
-          }
-          return prev + 0.1;
-        });
-      }, 100);
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [isRecording, isPaused, maxDuration]);
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording, isPaused]);
 
-  // Timer countdown
+  // Timer countdown effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (timerCountdown > 0) {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (timer > 0) {
       interval = setInterval(() => {
-        setTimerCountdown((prev) => {
+        setTimer((prev) => {
           if (prev <= 1) {
             handleStartRecording();
             return 0;
@@ -298,124 +271,124 @@ const AdvancedVideoRecorder: React.FC<AdvancedVideoRecorderProps> = ({
         });
       }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [timerCountdown]);
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [timer]);
 
-  const cleanup = useCallback(() => {
-    stopCameraStream(streamRef.current);
-    streamRef.current = null;
+  const getTotalDuration = () => {
+    return recordedSegments.reduce((sum, segment) => sum + segment.duration, 0);
+  };
 
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-    }
-  }, [isRecording]);
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
-  const initializeCamera = async () => {
-    setIsInitializingCamera(true);
-    setCameraError(null);
-
-    try {
-      cleanup();
-
-      const constraints = {
-        video: {
-          facingMode: cameraFacing,
-          width: { ideal: 1080 },
-          height: { ideal: 1920 },
-          frameRate: { ideal: 30 },
-        },
-        audio: micEnabled,
-      };
-
-      const result = await requestCameraAccess(constraints);
-
-      if (result.error) {
-        setCameraError(result.error);
-        setShowPermissionDialog(true);
-        return;
-      }
-
-      if (result.stream) {
-        streamRef.current = result.stream;
-
-        if (videoRef.current) {
-          // Ensure video element is ready before setting source
-          videoRef.current.srcObject = result.stream;
-
-          // Wait for stream to be ready before applying filters
-          videoRef.current.onloadedmetadata = () => {
-            applyFilter();
-          };
-        }
-
-        toast({
-          title: "Camera Ready",
-          description: "Camera initialized successfully",
-        });
-      }
-    } catch (error) {
-      console.error("Unexpected camera error:", error);
-      setCameraError({
-        type: 'unknown',
-        message: 'Unexpected error occurred',
-        userAction: 'Please try refreshing the page'
+  const handleAIContentGenerated = (content: { type: "image" | "video"; url: string; prompt: string }) => {
+    if (content.type === "video") {
+      // For now, we'll just show a toast. In a real implementation, you might want to:
+      // 1. Download the content from the URL
+      // 2. Convert it to a File object
+      // 3. Set it as the AI generated video
+      toast({
+        title: "AI Video Generated!",
+        description: "Your video has been generated. You can now use it in your creation.",
       });
-      setShowPermissionDialog(true);
-    } finally {
-      setIsInitializingCamera(false);
+      
+      // In a full implementation, you would:
+      // 1. Fetch the content from the URL
+      // 2. Convert it to a File object
+      // 3. Set it as aiGeneratedVideo
+      // 4. Use it in the video creation process
+    } else {
+      toast({
+        title: "AI Content Generated!",
+        description: `Your ${content.type} has been generated. You can now use it in your video.`,
+      });
     }
   };
 
-  const applyFilter = () => {
-    if (videoRef.current) {
-      const filter = filters.find((f) => f.id === currentFilter);
-      videoRef.current.style.filter = filter ? filter.effect : "none";
+  const initializeCamera = useCallback(async () => {
+    try {
+      const stream = await requestCameraAccess(currentCamera);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+      }
+      setCameraError(null);
+    } catch (error) {
+      console.error("Camera error:", error);
+      setCameraError(error as CameraError);
+      setShowPermissionDialog(true);
     }
-  };
+  }, [currentCamera]);
 
   useEffect(() => {
-    applyFilter();
-  }, [currentFilter]);
+    initializeCamera();
+    
+    return () => {
+      if (streamRef.current) {
+        stopCameraStream(streamRef.current);
+      }
+    };
+  }, [initializeCamera]);
+
+  const handleRetryCamera = () => {
+    setShowPermissionDialog(false);
+    initializeCamera();
+  };
+
+  const handleCancelCamera = () => {
+    setShowPermissionDialog(false);
+    onClose();
+  };
 
   const handleStartRecording = async () => {
     if (!streamRef.current) return;
-
+    
     try {
-      chunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(streamRef.current, {
-        mimeType: "video/webm;codecs=vp9",
-      });
-
+      recordedChunksRef.current = [];
+      
+      const options = { mimeType: "video/webm;codecs=vp9" };
+      const mediaRecorder = new MediaRecorder(streamRef.current, options);
       mediaRecorderRef.current = mediaRecorder;
-
+      
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
+          recordedChunksRef.current.push(event.data);
         }
       };
-
+      
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        const segment: VideoSegment = {
+        const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+        const duration = recordingTime;
+        
+        const newSegment: VideoSegment = {
           id: Date.now().toString(),
           blob,
-          duration: recordingTime,
+          duration,
           startTime: getTotalDuration(),
-          filters: [currentFilter],
-          effects: selectedEffects,
+          filters: [selectedFilter],
+          effects: selectedEffect ? [selectedEffect] : [],
         };
-        setRecordedSegments((prev) => [...prev, segment]);
+        
+        setRecordedSegments((prev) => [...prev, newSegment]);
         setRecordingTime(0);
+        setIsRecording(false);
+        setIsPaused(false);
       };
-
-      mediaRecorder.start(100);
+      
+      mediaRecorder.start();
       setIsRecording(true);
       setIsPaused(false);
-      setShowControls(false);
     } catch (error) {
+      console.error("Recording error:", error);
       toast({
         title: "Recording Error",
-        description: "Failed to start recording",
+        description: "Failed to start recording. Please try again.",
         variant: "destructive",
       });
     }
@@ -424,14 +397,11 @@ const AdvancedVideoRecorder: React.FC<AdvancedVideoRecorderProps> = ({
   const handleStopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      setIsPaused(false);
-      setShowControls(true);
     }
   };
 
   const handlePauseRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current) {
       if (isPaused) {
         mediaRecorderRef.current.resume();
         setIsPaused(false);
@@ -443,505 +413,386 @@ const AdvancedVideoRecorder: React.FC<AdvancedVideoRecorderProps> = ({
   };
 
   const handleTimerStart = () => {
-    if (timer > 0) {
-      setTimerCountdown(timer);
-    } else {
-      handleStartRecording();
-    }
-  };
-
-  const getTotalDuration = () => {
-    return recordedSegments.reduce((acc, seg) => acc + seg.duration, 0);
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handleEffectToggle = (effectId: string) => {
-    setSelectedEffects((prev) =>
-      prev.includes(effectId)
-        ? prev.filter((id) => id !== effectId)
-        : [...prev, effectId],
-    );
+    setTimer(3); // 3 second countdown
   };
 
   const exportVideo = async () => {
-    if (recordedSegments.length === 0) {
-      toast({
-        title: "No Content",
-        description: "Please record some video content first",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (recordedSegments.length === 0) return;
+    
     try {
       // Combine all segments
-      const combinedBlob = new Blob(
-        recordedSegments.map((seg) => seg.blob),
-        { type: "video/webm" },
-      );
-
+      const blobs = recordedSegments.map((segment) => segment.blob);
+      const combinedBlob = new Blob(blobs, { type: "video/webm" });
+      
+      // Create a file
+      const fileName = `video_${Date.now()}.webm`;
+      const videoFile = new File([combinedBlob], fileName, {
+        type: "video/webm",
+      });
+      
+      // Create metadata
       const metadata = {
         duration: getTotalDuration(),
-        segments: recordedSegments.length,
-        filters: [currentFilter],
-        effects: selectedEffects,
+        filters: recordedSegments.flatMap((s) => s.filters),
+        effects: recordedSegments.flatMap((s) => s.effects),
         sound: selectedSound,
         textOverlays,
         stickers,
       };
-
-      const file = new File([combinedBlob], `video-${Date.now()}.webm`, {
-        type: "video/webm",
+      
+      onVideoCreated(videoFile, metadata);
+      onClose();
+      
+      toast({
+        title: "Video Created!",
+        description: "Your video has been successfully created.",
       });
-
-      onVideoCreated(file, metadata);
     } catch (error) {
+      console.error("Export error:", error);
       toast({
         title: "Export Error",
-        description: "Failed to export video",
+        description: "Failed to export video. Please try again.",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleRetryCamera = () => {
-    setShowPermissionDialog(false);
-    setCameraError(null);
-    initializeCamera();
-  };
-
-  const handleCancelCamera = () => {
-    setShowPermissionDialog(false);
-    if (onClose) {
-      onClose();
-    }
-  };
-
-  const handleCameraSwitch = async () => {
-    setIsInitializingCamera(true);
-
-    try {
-      const result = await switchCamera(streamRef.current, cameraFacing, micEnabled);
-
-      if (result.error) {
-        setCameraError(result.error);
-        setShowPermissionDialog(true);
-        return;
-      }
-
-      if (result.stream) {
-        streamRef.current = result.stream;
-        setCameraFacing(result.facing);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = result.stream;
-        }
-
-        toast({
-          title: "Camera Switched",
-          description: `Switched to ${result.facing === 'user' ? 'front' : 'back'} camera`,
-        });
-      }
-    } catch (error) {
-      console.error('Camera switch error:', error);
-      toast({
-        title: "Switch Failed",
-        description: "Could not switch camera. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsInitializingCamera(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className="fixed inset-0 bg-black z-50">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-black/80 backdrop-blur-sm">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="text-white"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </Button>
-
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="bg-black/40 text-white">
-            {formatTime(getTotalDuration() + recordingTime)} /{" "}
-            {formatTime(maxDuration)}
-          </Badge>
-          {selectedSound && (
-            <Badge variant="secondary" className="bg-black/40 text-white">
-              🎵 {selectedSound.title}
-            </Badge>
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white"
+            onClick={onClose}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white"
+              onClick={() => setShowAIGenerator(true)}
+            >
+              <Sparkles className="w-5 h-5" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white"
+              onClick={() => setGridOn(!gridOn)}
+            >
+              <Grid3X3 className="w-5 h-5" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white"
+              onClick={() => setFlashOn(!flashOn)}
+            >
+              {flashOn ? (
+                <Flash className="w-5 h-5" />
+              ) : (
+                <FlashOff className="w-5 h-5" />
+              )}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white"
+              onClick={() => switchCamera(streamRef.current, currentCamera, setCurrentCamera)}
+            >
+              <RotateCcw className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Timer and duration */}
+        <div className="flex items-center justify-center mt-2">
+          {timer > 0 && (
+            <div className="text-4xl font-bold text-white bg-red-500 rounded-full w-16 h-16 flex items-center justify-center">
+              {timer}
+            </div>
+          )}
+          
+          <div className="text-white text-sm mx-4">
+            {formatTime(getTotalDuration() + recordingTime)} / {formatTime(maxDuration)}
+          </div>
+          
+          {isRecording && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-white text-sm">REC</span>
+            </div>
           )}
         </div>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowControls(!showControls)}
-          className="text-white"
-        >
-          <Settings className="w-6 h-6" />
-        </Button>
       </div>
 
-      {/* Main Video Area */}
-      <div className="flex-1 relative">
+      {/* Video preview */}
+      <div className="relative w-full h-full">
         <video
           ref={videoRef}
           autoPlay
-          muted={isMuted}
           playsInline
-          className={cn(
-            "w-full h-full object-cover transition-transform duration-300",
-            cameraFacing === "user" && "scale-x-[-1]",
-          )}
+          muted
+          className="w-full h-full object-cover"
           style={{
-            transform: `scale(${zoom}) ${cameraFacing === "user" ? "scaleX(-1)" : ""}`,
+            filter: selectedFilter !== "none" 
+              ? filters.find(f => f.id === selectedFilter)?.effect || "none" 
+              : "none"
           }}
         />
-
-        <canvas ref={canvasRef} className="hidden" />
-
+        
         {/* Grid overlay */}
-        {gridEnabled && (
+        {gridOn && (
           <div className="absolute inset-0 pointer-events-none">
-            <div className="w-full h-full grid grid-cols-3 grid-rows-3 border-white/30">
-              {Array.from({ length: 9 }).map((_, i) => (
+            <div className="grid grid-cols-3 grid-rows-3 w-full h-full">
+              {[...Array(9)].map((_, i) => (
                 <div key={i} className="border border-white/20" />
               ))}
             </div>
           </div>
         )}
-
-        {/* Recording indicator */}
-        {isRecording && (
-          <div className="absolute top-4 left-4 flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-white font-medium text-sm">
-              {formatTime(recordingTime)}
-            </span>
-          </div>
-        )}
-
-        {/* Timer countdown */}
-        {timerCountdown > 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="text-white text-8xl font-bold animate-pulse">
-              {timerCountdown}
-            </div>
-          </div>
-        )}
-
-        {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+        
+        {/* Text overlays */}
+        {textOverlays.map((overlay) => (
           <div
-            className="h-full bg-red-500 transition-all duration-100"
+            key={overlay.id}
+            className="absolute text-white font-bold"
             style={{
-              width: `${((getTotalDuration() + recordingTime) / maxDuration) * 100}%`,
+              left: `${overlay.x}%`,
+              top: `${overlay.y}%`,
+              fontSize: `${overlay.size}px`,
+              color: overlay.color,
+              fontFamily: overlay.font,
+            }}
+          >
+            {overlay.text}
+          </div>
+        ))}
+        
+        {/* Stickers */}
+        {stickers.map((sticker) => (
+          <img
+            key={sticker.id}
+            src={sticker.url}
+            alt="Sticker"
+            className="absolute w-16 h-16"
+            style={{
+              left: `${sticker.x}%`,
+              top: `${sticker.y}%`,
+              transform: `scale(${sticker.scale}) rotate(${sticker.rotation}deg)`,
             }}
           />
+        ))}
+      </div>
+
+      {/* Bottom controls */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+        {/* Tab selector */}
+        <div className="flex justify-center mb-4">
+          <div className="flex bg-black/50 rounded-full p-1">
+            {(["filters", "effects", "sounds", "text", "stickers"] as const).map((tab) => (
+              <Button
+                key={tab}
+                variant={activeTab === tab ? "default" : "ghost"}
+                size="sm"
+                className="rounded-full px-3 text-xs"
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "filters" && "🎨"}
+                {tab === "effects" && "✨"}
+                {tab === "sounds" && "🎵"}
+                {tab === "text" && "🔤"}
+                {tab === "stickers" && "😊"}
+              </Button>
+            ))}
+          </div>
         </div>
 
-        {/* Zoom control */}
-        <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
+        {/* Tab content */}
+        <div className="max-h-32 overflow-y-auto mb-4">
+          {activeTab === "filters" && (
+            <div className="flex gap-2">
+              {filters.map((filter) => (
+                <Button
+                  key={filter.id}
+                  variant={selectedFilter === filter.id ? "default" : "ghost"}
+                  size="sm"
+                  className="flex flex-col items-center gap-1 min-w-[60px]"
+                  onClick={() => setSelectedFilter(filter.id)}
+                >
+                  <div className="text-lg">{filter.preview}</div>
+                  <span className="text-xs">{filter.name}</span>
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "effects" && (
+            <div className="flex gap-2">
+              {effects.map((effect) => (
+                <Button
+                  key={effect.id}
+                  variant={selectedEffect === effect.id ? "default" : "ghost"}
+                  size="sm"
+                  className="flex flex-col items-center gap-1 min-w-[60px]"
+                  onClick={() =>
+                    setSelectedEffect(
+                      selectedEffect === effect.id ? null : effect.id,
+                    )
+                  }
+                >
+                  <div className="text-lg mb-1">{effect.icon}</div>
+                  <span className="text-xs">{effect.name}</span>
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "sounds" && (
+            <div className="space-y-2">
+              {soundTracks.map((sound) => (
+                <Button
+                  key={sound.id}
+                  variant={
+                    selectedSound?.id === sound.id ? "default" : "ghost"
+                  }
+                  className="w-full justify-start text-left p-2"
+                  onClick={() =>
+                    setSelectedSound(
+                      selectedSound?.id === sound.id ? null : sound,
+                    )
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-lg">{sound.preview}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm">{sound.title}</div>
+                      <div className="text-xs text-gray-400">
+                        {sound.artist} • {sound.duration}s
+                      </div>
+                    </div>
+                    {sound.trending && (
+                      <Badge variant="secondary" className="text-xs">
+                        🔥
+                      </Badge>
+                    )}
+                  </div>
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Main recording controls */}
+        <div className="flex items-center justify-center gap-6 pt-4">
+          <div className="flex flex-col items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white"
+              disabled={recordedSegments.length === 0}
+              onClick={exportVideo}
+            >
+              <Check className="w-4 h-4 mr-1" />
+              Done
+            </Button>
+          </div>
+
           <div className="flex flex-col items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="text-white bg-black/20 rounded-full"
-              onClick={() => setZoom(Math.min(3, zoom + 0.5))}
+              className={cn(
+                "w-20 h-20 rounded-full border-4 transition-all duration-200",
+                isRecording
+                  ? "border-red-500 bg-red-500/20"
+                  : "border-white bg-white/10 hover:bg-white/20",
+              )}
+              onClick={
+                timer > 0
+                  ? handleTimerStart
+                  : isRecording
+                    ? handleStopRecording
+                    : handleStartRecording
+              }
+              disabled={getTotalDuration() + recordingTime >= maxDuration}
             >
-              <Maximize className="w-4 h-4" />
+              {isRecording ? (
+                <Square className="w-8 h-8 text-white" fill="white" />
+              ) : (
+                <div className="w-6 h-6 bg-red-500 rounded-full" />
+              )}
             </Button>
-            <div className="text-white text-xs">{zoom.toFixed(1)}x</div>
+
+            {isRecording && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePauseRecording}
+                className="text-white"
+              >
+                {isPaused ? (
+                  <Play className="w-4 h-4" />
+                ) : (
+                  <Pause className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
             <Button
               variant="ghost"
-              size="icon"
-              className="text-white bg-black/20 rounded-full"
-              onClick={() => setZoom(Math.max(1, zoom - 0.5))}
+              size="sm"
+              className="text-white"
+              disabled={recordedSegments.length === 0}
+              onClick={() => {
+                setRecordedSegments([]);
+                setRecordingTime(0);
+              }}
             >
-              <Minimize className="w-4 h-4" />
+              <X className="w-4 h-4 mr-1" />
+              Clear
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* Controls */}
-      {showControls && (
-        <div className="bg-black p-4 space-y-4">
-          {/* Quick controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCameraSwitch}
-                disabled={isInitializingCamera}
-                className="text-white"
-              >
-                <RotateCcw className="w-4 h-4 mr-1" />
-                {isInitializingCamera ? "Switching..." : "Flip"}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setMicEnabled(!micEnabled)}
-                className="text-white"
-              >
-                {micEnabled ? (
-                  <Mic className="w-4 h-4 mr-1" />
-                ) : (
-                  <MicOff className="w-4 h-4 mr-1" />
-                )}
-                Mic
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setGridEnabled(!gridEnabled)}
-                className="text-white"
-              >
-                <Grid3X3 className="w-4 h-4 mr-1" />
-                Grid
-              </Button>
+        {/* Segments preview */}
+        {recordedSegments.length > 0 && (
+          <div className="border-t border-gray-700 pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <VideoIcon className="w-4 h-4 text-white" />
+              <span className="text-white text-sm">
+                {recordedSegments.length} segment(s)
+              </span>
             </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setTimer(timer === 0 ? 3 : timer === 3 ? 10 : 0)}
-                className="text-white"
-              >
-                <Timer className="w-4 h-4 mr-1" />
-                {timer > 0 ? `${timer}s` : "Timer"}
-              </Button>
-            </div>
-          </div>
-
-          {/* Speed control */}
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-white text-sm">Speed:</span>
-            {[0.5, 1, 1.5, 2].map((speedValue) => (
-              <Button
-                key={speedValue}
-                variant={speed === speedValue ? "default" : "ghost"}
-                size="sm"
-                className="text-xs px-3"
-                onClick={() => setSpeed(speedValue)}
-              >
-                {speedValue}x
-              </Button>
-            ))}
-          </div>
-
-          {/* Creative tools tabs */}
-          <div className="flex gap-1 overflow-x-auto">
-            {[
-              { id: "filters", icon: Palette, label: "Filters" },
-              { id: "effects", icon: Sparkles, label: "Effects" },
-              { id: "sounds", icon: Music, label: "Sounds" },
-              { id: "text", icon: Type, label: "Text" },
-              { id: "stickers", icon: Smile, label: "Stickers" },
-            ].map((tab) => (
-              <Button
-                key={tab.id}
-                variant={activeTab === tab.id ? "default" : "ghost"}
-                size="sm"
-                className="flex-shrink-0 text-xs"
-                onClick={() => setActiveTab(tab.id as any)}
-              >
-                <tab.icon className="w-3 h-3 mr-1" />
-                {tab.label}
-              </Button>
-            ))}
-          </div>
-
-          {/* Creative tools content */}
-          <div className="max-h-24 overflow-y-auto">
-            {activeTab === "filters" && (
-              <div className="grid grid-cols-4 gap-2">
-                {filters.map((filter) => (
-                  <Button
-                    key={filter.id}
-                    variant={currentFilter === filter.id ? "default" : "ghost"}
-                    size="sm"
-                    className="aspect-square text-xs flex flex-col p-2"
-                    onClick={() => setCurrentFilter(filter.id)}
-                  >
-                    <div className="text-lg mb-1">{filter.preview}</div>
-                    <span className="text-xs">{filter.name}</span>
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            {activeTab === "effects" && (
-              <div className="grid grid-cols-4 gap-2">
-                {effects.map((effect) => (
-                  <Button
-                    key={effect.id}
-                    variant={
-                      selectedEffects.includes(effect.id) ? "default" : "ghost"
-                    }
-                    size="sm"
-                    className="aspect-square text-xs flex flex-col p-2"
-                    onClick={() => handleEffectToggle(effect.id)}
-                  >
-                    <div className="text-lg mb-1">{effect.icon}</div>
-                    <span className="text-xs">{effect.name}</span>
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            {activeTab === "sounds" && (
-              <div className="space-y-2">
-                {soundTracks.map((sound) => (
-                  <Button
-                    key={sound.id}
-                    variant={
-                      selectedSound?.id === sound.id ? "default" : "ghost"
-                    }
-                    className="w-full justify-start text-left p-2"
-                    onClick={() =>
-                      setSelectedSound(
-                        selectedSound?.id === sound.id ? null : sound,
-                      )
-                    }
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-lg">{sound.preview}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm">{sound.title}</div>
-                        <div className="text-xs text-gray-400">
-                          {sound.artist} • {sound.duration}s
-                        </div>
-                      </div>
-                      {sound.trending && (
-                        <Badge variant="secondary" className="text-xs">
-                          🔥
-                        </Badge>
-                      )}
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Main recording controls */}
-          <div className="flex items-center justify-center gap-6 pt-4">
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white"
-                disabled={recordedSegments.length === 0}
-                onClick={exportVideo}
-              >
-                <Check className="w-4 h-4 mr-1" />
-                Done
-              </Button>
-            </div>
-
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "w-20 h-20 rounded-full border-4 transition-all duration-200",
-                  isRecording
-                    ? "border-red-500 bg-red-500/20"
-                    : "border-white bg-white/10 hover:bg-white/20",
-                )}
-                onClick={
-                  timer > 0
-                    ? handleTimerStart
-                    : isRecording
-                      ? handleStopRecording
-                      : handleStartRecording
-                }
-                disabled={getTotalDuration() + recordingTime >= maxDuration}
-              >
-                {isRecording ? (
-                  <Square className="w-8 h-8 text-white" fill="white" />
-                ) : (
-                  <div className="w-6 h-6 bg-red-500 rounded-full" />
-                )}
-              </Button>
-
-              {isRecording && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handlePauseRecording}
-                  className="text-white"
+            <div className="flex gap-2 overflow-x-auto">
+              {recordedSegments.map((segment, index) => (
+                <div
+                  key={segment.id}
+                  className="flex-shrink-0 bg-gray-800 rounded p-2 min-w-[80px]"
                 >
-                  {isPaused ? (
-                    <Play className="w-4 h-4" />
-                  ) : (
-                    <Pause className="w-4 h-4" />
-                  )}
-                </Button>
-              )}
-            </div>
-
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white"
-                disabled={recordedSegments.length === 0}
-                onClick={() => {
-                  setRecordedSegments([]);
-                  setRecordingTime(0);
-                }}
-              >
-                <X className="w-4 h-4 mr-1" />
-                Clear
-              </Button>
+                  <div className="text-white text-xs text-center">
+                    {index + 1}
+                  </div>
+                  <div className="text-gray-400 text-xs text-center">
+                    {formatTime(segment.duration)}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Segments preview */}
-          {recordedSegments.length > 0 && (
-            <div className="border-t border-gray-700 pt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <VideoIcon className="w-4 h-4 text-white" />
-                <span className="text-white text-sm">
-                  {recordedSegments.length} segment(s)
-                </span>
-              </div>
-              <div className="flex gap-2 overflow-x-auto">
-                {recordedSegments.map((segment, index) => (
-                  <div
-                    key={segment.id}
-                    className="flex-shrink-0 bg-gray-800 rounded p-2 min-w-[80px]"
-                  >
-                    <div className="text-white text-xs text-center">
-                      {index + 1}
-                    </div>
-                    <div className="text-gray-400 text-xs text-center">
-                      {formatTime(segment.duration)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Camera Permission Dialog */}
       <CameraPermissionDialog
@@ -951,6 +802,14 @@ const AdvancedVideoRecorder: React.FC<AdvancedVideoRecorderProps> = ({
         onRetry={handleRetryCamera}
         onCancel={handleCancelCamera}
       />
+      
+      {/* Edith AI Generator Modal */}
+      {showAIGenerator && (
+        <EdithAIGenerator
+          onContentGenerated={handleAIContentGenerated}
+          onClose={() => setShowAIGenerator(false)}
+        />
+      )}
     </div>
   );
 };

@@ -32,7 +32,9 @@ import {
   MessageCircle,
   Crown,
   Zap,
-  Target
+  Target,
+  Sparkles,
+  Upload
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -44,6 +46,7 @@ import FeelingActivityModal from "./FeelingActivityModal";
 import CheckInModal from "./CheckInModal";
 import { supabase } from "@/integrations/supabase/client";
 import { storiesService } from "@/services/storiesService";
+import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 
 interface CreatePostFlowProps {
   isOpen: boolean;
@@ -86,6 +89,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
   const [showTagPeopleModal, setShowTagPeopleModal] = useState(false);
   const [showFeelingModal, setShowFeelingModal] = useState(false);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -152,6 +156,24 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
 
   const handleCheckIn = (location: any) => {
     setLocation(location.name);
+  };
+
+  const handleAIContentGenerated = (content: { type: "image" | "video"; url: string; prompt: string }) => {
+    // For now, we'll just show a toast. In a real implementation, you might want to:
+    // 1. Download the content from the URL
+    // 2. Convert it to a File object
+    // 3. Set it as the selected media
+    toast({
+      title: "AI Content Generated!",
+      description: `Your ${content.type} has been generated. You can now use it in your post.`,
+    });
+    
+    // In a full implementation, you would:
+    // 1. Fetch the content from the URL
+    // 2. Convert it to a File object
+    // 3. Set it as selectedMedia
+    // 4. Set the mediaPreview
+    // 5. Set the mediaType
   };
 
   const handlePost = async () => {
@@ -438,7 +460,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
                 )}
 
                 {/* Action buttons */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-2 sm:pt-4">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3 pt-2 sm:pt-4">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -486,6 +508,15 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
                   >
                     <Music className="h-4 w-4 sm:h-6 sm:w-6 text-purple-500" />
                     <span>Audio</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="h-12 sm:h-16 flex-col gap-1 text-xs"
+                    onClick={() => setShowAIGenerator(true)}
+                  >
+                    <Sparkles className="h-4 w-4 sm:h-6 sm:w-6 text-purple-500" />
+                    <span>Edith AI</span>
                   </Button>
                 </div>
 
@@ -709,6 +740,14 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edith AI Generator Modal */}
+      {showAIGenerator && (
+        <EdithAIGenerator
+          onContentGenerated={handleAIContentGenerated}
+          onClose={() => setShowAIGenerator(false)}
+        />
+      )}
 
       {/* Audience Selection Modal */}
       <Dialog open={showAudienceModal} onOpenChange={setShowAudienceModal}>

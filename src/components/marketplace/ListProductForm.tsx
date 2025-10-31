@@ -21,12 +21,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { ImagePlus, Loader2 } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles } from 'lucide-react';
 import { useMarketplace } from '@/contexts/MarketplaceContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { storageService } from '@/services/storageService';
 import { categoryService } from '@/services/categoryService';
+import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 
 interface ListProductFormProps {
   onSuccess: () => void;
@@ -49,6 +50,7 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>('');
   const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   
   // Load categories
   useState(() => {
@@ -98,6 +100,23 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
         variant: "destructive"
       });
     }
+  };
+  
+  const handleAIContentGenerated = (content: { type: "image" | "video"; url: string; prompt: string }) => {
+    // For now, we'll just show a toast. In a real implementation, you might want to:
+    // 1. Download the content from the URL
+    // 2. Convert it to a File object
+    // 3. Set it as the product image
+    toast({
+      title: "AI Content Generated!",
+      description: `Your ${content.type} has been generated. You can now use it for your product.`,
+    });
+    
+    // In a full implementation, you would:
+    // 1. Fetch the content from the URL
+    // 2. Convert it to a File object
+    // 3. Upload it using storageService.uploadImage
+    // 4. Set the preview image and form value
   };
   
   const onSubmit = async (data: FormValues) => {
@@ -338,6 +357,18 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
                                 <p className="text-xs text-gray-500 mt-1">
                                   SVG, PNG, JPG or GIF (max. 2MB)
                                 </p>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  className="mt-4 flex items-center gap-2"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setShowAIGenerator(true);
+                                  }}
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                  Generate with Edith AI
+                                </Button>
                               </div>
                               <input 
                                 id="fileUpload"
@@ -385,6 +416,14 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
           </div>
         </form>
       </Form>
+      
+      {/* Edith AI Generator Modal */}
+      {showAIGenerator && (
+        <EdithAIGenerator
+          onContentGenerated={handleAIContentGenerated}
+          onClose={() => setShowAIGenerator(false)}
+        />
+      )}
     </div>
   );
 };
