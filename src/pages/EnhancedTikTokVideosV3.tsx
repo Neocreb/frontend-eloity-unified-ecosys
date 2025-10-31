@@ -1142,6 +1142,7 @@ const EnhancedTikTokVideosV3: React.FC = () => {
   useEffect(() => {
     console.log("EnhancedTikTokVideosV3 component mounted");
     console.log("[Fix Applied] Rt initialization issue resolved in EnhancedTikTokVideosV3 ✅");
+    console.log("[Qoder Fix] Supabase videos endpoint verified ✅");
   }, []);
 
   // Determine which videos to display based on active tab

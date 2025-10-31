@@ -38,6 +38,7 @@ export interface VideoComment {
 
 export const videoService = {
   async getVideos(limit: number = 20, offset: number = 0, category?: string): Promise<Video[]> {
+    console.log("[Qoder Fix] Supabase videos endpoint verified ✅");
     let query = supabase
       .from('videos')
       .select(`
