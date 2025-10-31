@@ -1,28 +1,28 @@
 // @ts-nocheck
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
+  ArrowLeft,
   Camera,
-  Square,
-  Play,
-  Pause,
-  RotateCcw,
-  Scissors,
-  Music,
-  Type,
-  Sparkles,
-  Users,
-  Timer,
-  Download,
-  Upload,
-  Volume2,
-  VolumeX,
-  Mic,
-  MicOff,
-  FlashOff,
-  Zap,
+  Check,
+  FlashlightOff,
   Grid3X3,
   Maximize,
+  Mic,
+  MicOff,
   Minimize,
+  Pause,
+  Play,
+  RotateCcw,
+  Scissors,
+  Sparkles,
+  Square,
+  Timer,
+  Upload,
+  Video,
+  Volume2,
+  VolumeX,
+  X,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -487,7 +487,7 @@ const AdvancedVideoRecorder: React.FC<AdvancedVideoRecorderProps> = ({
               {flashOn ? (
                 <Zap className="w-5 h-5" />
               ) : (
-                <FlashOff className="w-5 h-5" />
+                <FlashlightOff className="w-5 h-5" />
               )}
             </Button>
             
