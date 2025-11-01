@@ -1,180 +1,321 @@
+import { supabase } from "@/integrations/supabase/client";
 
-type RewardAction = 
-  | "login" 
-  | "post_created" 
-  | "post_liked" 
-  | "product_purchased" 
-  | "crypto_traded"
-  | "friend_referred"
-  | "profile_completed"
-  | "daily_visit";
+interface Reward {
+  id: string;
+  user_id: string;
+  action_type: string;
+  amount: number;
+  description: string;
+  metadata: Record<string, any> | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
 
-type RewardConfig = {
-  [key in RewardAction]: {
-    points: number;
-    description: string;
-  }
-};
+interface RewardRule {
+  id: string;
+  action: string;
+  base_reward: number;
+  multiplier: number | null;
+  conditions: Record<string, any> | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
-// Points configuration for different actions
-const rewardConfig: RewardConfig = {
-  login: {
-    points: 5,
-    description: "Daily login"
+interface UserReward {
+  id: string;
+  user_id: string;
+  total_earned: number;
+  today_earned: number;
+  streak: number;
+  level: number;
+  next_level_requirement: number;
+  available_balance: number;
+  pending_rewards: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DailyActionCount {
+  id: string;
+  user_id: string;
+  action: string;
+  count: number;
+  date: string;
+}
+
+interface VirtualGift {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  category: string;
+  rarity: string;
+  animation: string | null;
+  sound: string | null;
+  effects: Record<string, any> | null;
+  available: boolean;
+  seasonal_start: string | null;
+  seasonal_end: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface GiftTransaction {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  gift_id: string;
+  quantity: number;
+  total_amount: number;
+  message: string | null;
+  is_anonymous: boolean;
+  status: string;
+  content_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface TipTransaction {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  amount: number;
+  currency: string;
+  message: string | null;
+  content_id: string | null;
+  is_anonymous: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserGiftInventory {
+  id: string;
+  user_id: string;
+  gift_id: string;
+  quantity: number;
+  acquired_at: string;
+}
+
+interface CreatorTipSetting {
+  id: string;
+  user_id: string;
+  is_enabled: boolean;
+  min_tip_amount: number;
+  max_tip_amount: number;
+  suggested_amounts: Record<string, any> | null;
+  thank_you_message: string | null;
+  allow_anonymous: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RewardsData {
+  userRewards: UserReward | null;
+  recentRewards: Reward[];
+  rewardRules: RewardRule[];
+  dailyActions: DailyActionCount[];
+  virtualGifts: VirtualGift[];
+  giftTransactions: GiftTransaction[];
+  tipTransactions: TipTransaction[];
+  giftInventory: UserGiftInventory[];
+  tipSettings: CreatorTipSetting | null;
+}
+
+export const rewardsService = {
+  // Fetch user rewards summary
+  async getUserRewards(userId: string): Promise<UserReward | null> {
+    const { data, error } = await supabase
+      .from('user_rewards')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user rewards:', error);
+      return null;
+    }
+
+    return data;
   },
-  post_created: {
-    points: 10,
-    description: "Created a post"
-  },
-  post_liked: {
-    points: 2,
-    description: "Liked a post"
-  },
-  product_purchased: {
-    points: 50,
-    description: "Made a purchase"
-  },
-  crypto_traded: {
-    points: 25,
-    description: "Traded cryptocurrency"
-  },
-  friend_referred: {
-    points: 200,
-    description: "Referred a friend"
-  },
-  profile_completed: {
-    points: 100,
-    description: "Completed profile"
-  },
-  daily_visit: {
-    points: 5,
-    description: "Daily visit"
-  }
-};
 
-// Level thresholds
-const levelThresholds = {
-  bronze: 0,
-  silver: 5000,
-  gold: 15000,
-  platinum: 50000
-};
+  // Fetch recent rewards for user
+  async getRecentRewards(userId: string, limit: number = 10): Promise<Reward[]> {
+    const { data, error } = await supabase
+      .from('rewards')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-type UserLevel = "bronze" | "silver" | "gold" | "platinum";
+    if (error) {
+      console.error('Error fetching recent rewards:', error);
+      return [];
+    }
 
-// Calculate user level based on points
-export const calculateLevel = (points: number): UserLevel => {
-  if (points >= levelThresholds.platinum) return "platinum";
-  if (points >= levelThresholds.gold) return "gold";
-  if (points >= levelThresholds.silver) return "silver";
-  return "bronze";
-};
+    return data || [];
+  },
 
-// Get points for an action
-export const getPointsForAction = (action: RewardAction): number => {
-  return rewardConfig[action].points;
-};
+  // Fetch reward rules
+  async getRewardRules(): Promise<RewardRule[]> {
+    const { data, error } = await supabase
+      .from('reward_rules')
+      .select('*')
+      .eq('is_active', true)
+      .order('action');
 
-// Get description for an action
-export const getDescriptionForAction = (action: RewardAction): string => {
-  return rewardConfig[action].description;
-};
+    if (error) {
+      console.error('Error fetching reward rules:', error);
+      return [];
+    }
 
-// Calculate progress to next level
-export const calculateNextLevelProgress = (
-  points: number
-): { currentLevel: UserLevel; nextLevel: UserLevel | null; progress: number } => {
-  const currentLevel = calculateLevel(points);
-  
-  // If user is already at platinum level
-  if (currentLevel === "platinum") {
+    return data || [];
+  },
+
+  // Fetch daily action counts for user
+  async getDailyActions(userId: string, days: number = 7): Promise<DailyActionCount[]> {
+    const { data, error } = await supabase
+      .from('daily_action_counts')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching daily actions:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+
+  // Fetch virtual gifts
+  async getVirtualGifts(): Promise<VirtualGift[]> {
+    const { data, error } = await supabase
+      .from('virtual_gifts')
+      .select('*')
+      .eq('available', true)
+      .order('category', { ascending: true })
+      .order('rarity', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching virtual gifts:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+
+  // Fetch gift transactions for user
+  async getGiftTransactions(userId: string, limit: number = 20): Promise<GiftTransaction[]> {
+    const { data, error } = await supabase
+      .from('gift_transactions')
+      .select(`
+        *,
+        gift:virtual_gifts(name, emoji)
+      `)
+      .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching gift transactions:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+
+  // Fetch tip transactions for user
+  async getTipTransactions(userId: string, limit: number = 20): Promise<TipTransaction[]> {
+    const { data, error } = await supabase
+      .from('tip_transactions')
+      .select('*')
+      .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching tip transactions:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+
+  // Fetch user's gift inventory
+  async getGiftInventory(userId: string): Promise<UserGiftInventory[]> {
+    const { data, error } = await supabase
+      .from('user_gift_inventory')
+      .select(`
+        *,
+        gift:virtual_gifts(name, emoji, price)
+      `)
+      .eq('user_id', userId)
+      .gt('quantity', 0);
+
+    if (error) {
+      console.error('Error fetching gift inventory:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+
+  // Fetch creator tip settings
+  async getTipSettings(userId: string): Promise<CreatorTipSetting | null> {
+    const { data, error } = await supabase
+      .from('creator_tip_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching tip settings:', error);
+      return null;
+    }
+
+    return data;
+  },
+
+  // Fetch all rewards data for a user
+  async getAllRewardsData(userId: string): Promise<RewardsData> {
+    const [
+      userRewards,
+      recentRewards,
+      rewardRules,
+      dailyActions,
+      virtualGifts,
+      giftTransactions,
+      tipTransactions,
+      giftInventory,
+      tipSettings
+    ] = await Promise.all([
+      this.getUserRewards(userId),
+      this.getRecentRewards(userId),
+      this.getRewardRules(),
+      this.getDailyActions(userId),
+      this.getVirtualGifts(),
+      this.getGiftTransactions(userId),
+      this.getTipTransactions(userId),
+      this.getGiftInventory(userId),
+      this.getTipSettings(userId)
+    ]);
+
     return {
-      currentLevel,
-      nextLevel: null,
-      progress: 100,
+      userRewards,
+      recentRewards,
+      rewardRules,
+      dailyActions,
+      virtualGifts,
+      giftTransactions,
+      tipTransactions,
+      giftInventory,
+      tipSettings
     };
   }
-  
-  // Determine next level
-  let nextLevel: UserLevel;
-  let currentThreshold: number;
-  let nextThreshold: number;
-  
-  switch (currentLevel) {
-    case "bronze":
-      nextLevel = "silver";
-      currentThreshold = levelThresholds.bronze;
-      nextThreshold = levelThresholds.silver;
-      break;
-    case "silver":
-      nextLevel = "gold";
-      currentThreshold = levelThresholds.silver;
-      nextThreshold = levelThresholds.gold;
-      break;
-    case "gold":
-      nextLevel = "platinum";
-      currentThreshold = levelThresholds.gold;
-      nextThreshold = levelThresholds.platinum;
-      break;
-    default:
-      // This should never happen but TypeScript needs it
-      nextLevel = "silver";
-      currentThreshold = 0;
-      nextThreshold = 5000;
-  }
-  
-  // Calculate progress percentage
-  const pointsAboveCurrentThreshold = points - currentThreshold;
-  const pointsNeededForNextLevel = nextThreshold - currentThreshold;
-  const progress = Math.min(
-    Math.round((pointsAboveCurrentThreshold / pointsNeededForNextLevel) * 100),
-    100
-  );
-  
-  return {
-    currentLevel,
-    nextLevel,
-    progress,
-  };
 };
-
-// Get available rewards to redeem
-export const getAvailableRewards = (userLevel: UserLevel) => {
-  const baseRewards = [
-    { id: "discount_10", name: "10% Discount", points: 500, level: "bronze" },
-    { id: "premium_week", name: "1 Week Premium", points: 1000, level: "bronze" },
-  ];
-  
-  const silverRewards = [
-    { id: "discount_25", name: "25% Discount", points: 2000, level: "silver" },
-    { id: "free_shipping", name: "Free Shipping", points: 1500, level: "silver" },
-  ];
-  
-  const goldRewards = [
-    { id: "discount_50", name: "50% Discount", points: 5000, level: "gold" },
-    { id: "premium_month", name: "1 Month Premium", points: 7500, level: "gold" },
-  ];
-  
-  const platinumRewards = [
-    { id: "discount_75", name: "75% Discount", points: 10000, level: "platinum" },
-    { id: "premium_year", name: "1 Year Premium", points: 25000, level: "platinum" },
-  ];
-  
-  let availableRewards = [...baseRewards];
-  
-  if (userLevel === "silver" || userLevel === "gold" || userLevel === "platinum") {
-    availableRewards = [...availableRewards, ...silverRewards];
-  }
-  
-  if (userLevel === "gold" || userLevel === "platinum") {
-    availableRewards = [...availableRewards, ...goldRewards];
-  }
-  
-  if (userLevel === "platinum") {
-    availableRewards = [...availableRewards, ...platinumRewards];
-  }
-  
-  return availableRewards;
-};
-
-export const REWARD_ACTIONS = Object.keys(rewardConfig) as RewardAction[];

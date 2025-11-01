@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRewards } from "@/hooks/use-rewards";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +21,6 @@ import {
   ArrowRight
 } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/utils/formatters";
-import { fetchWithAuth } from "@/lib/fetch-utils";
 import { cn } from "@/lib/utils";
 
 // Test integration (only in development)
@@ -87,126 +87,70 @@ interface RewardData {
   };
 }
 
-
-// Demo data function to avoid duplication
-const getDemoData = (): RewardData => ({
-  totalEarnings: 3592.90, // Updated to include education earnings
-  availableToWithdraw: 3312.03, // Match centralized rewards balance
-  currentEloits: 18642,
-  trustScore: {
-    current: 78,
-    level: "Silver",
-    multiplier: 1.5,
-    nextLevelAt: 90
-  },
-  activityStats: {
-    totalActivities: 1456,
-    contentCreated: 89,
-    qualityScore: 1.8,
-    streakDays: 12
-  },
-  earningsByType: {
-    contentCreation: 1068.75, // 31.6%
-    engagement: 355.94,       // 10.5%
-    marketplace: 711.88,      // 21.0%
-    freelance: 533.91,        // 15.8%
-    p2pTrading: 106.78,       // 3.2%
-    referrals: 71.19,         // 2.1%
-    challenges: 0,            // 0%
-    battleVoting: 285.50,     // 8.4% - earnings from voting on battles
-    battleRewards: 178.25,    // 5.3% - rewards from battle participation
-    giftsAndTips: 213.80,     // 6.3% - earnings from gifts and tips
-    education: 67.85          // 2.0% - learning rewards from courses and articles
-  },
-  recentActivity: [
-    { id: "1", type: "post_creation", description: "Quality post with media", amount: 15.5, timestamp: "2024-01-20T10:00:00Z" },
-    { id: "2", type: "marketplace_sale", description: "Product sold", amount: 25.0, timestamp: "2024-01-20T09:30:00Z" },
-    { id: "3", type: "referral_bonus", description: "Validated referral (7-day activity check)", amount: 20.0, timestamp: "2024-01-19T18:15:00Z" },
-    { id: "4", type: "battle_voting_win", description: "Won battle vote on Alex Dance vs Music Mike", amount: 87.50, timestamp: "2024-01-20T08:45:00Z" },
-    { id: "5", type: "battle_participation", description: "Battle performance bonus", amount: 32.25, timestamp: "2024-01-20T08:30:00Z" },
-    { id: "6", type: "gift_received", description: "Received Crown gift from user123", amount: 25.0, timestamp: "2024-01-19T20:10:00Z" },
-    { id: "7", type: "tip_received", description: "Video tip from premium viewer", amount: 12.75, timestamp: "2024-01-19T17:20:00Z" },
-    { id: "8", type: "education_reward", description: "Completed Cryptocurrency Basics course", amount: 3.25, timestamp: "2024-01-19T15:30:00Z" },
-    { id: "9", type: "education_reward", description: "Perfect score on DeFi quiz", amount: 2.0, timestamp: "2024-01-19T14:45:00Z" }
-  ],
-  referralStats: {
-    totalReferrals: 23,
-    totalEarnings: 340.50,
-    activeReferrals: 18
-  }
-});
-
 export default function EnhancedRewards() {
   const { user } = useAuth();
+  const { data: rewardsData, isLoading, error, refresh } = useRewards();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [rewardData, setRewardData] = useState<RewardData | null>(null);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
+  // Transform rewards data to match the expected format
+  const rewardData: RewardData | null = rewardsData?.userRewards ? {
+    totalEarnings: rewardsData.userRewards.total_earned,
+    availableToWithdraw: rewardsData.userRewards.available_balance,
+    currentEloits: rewardsData.userRewards.total_earned,
+    trustScore: {
+      current: Math.min(100, rewardsData.userRewards.level * 20), // Simple calculation
+      level: `Level ${rewardsData.userRewards.level}`,
+      multiplier: 1 + (rewardsData.userRewards.level * 0.1),
+      nextLevelAt: rewardsData.userRewards.next_level_requirement
+    },
+    activityStats: {
+      totalActivities: rewardsData.dailyActions?.reduce((sum, action) => sum + action.count, 0) || 0,
+      contentCreated: 0, // Would need to calculate from user posts
+      qualityScore: rewardsData.userRewards.level,
+      streakDays: rewardsData.userRewards.streak
+    },
+    earningsByType: {
+      contentCreation: 0,
+      engagement: 0,
+      marketplace: 0,
+      freelance: 0,
+      p2pTrading: 0,
+      referrals: 0,
+      challenges: 0,
+      battleVoting: 0,
+      battleRewards: 0,
+      giftsAndTips: rewardsData.tipTransactions?.reduce((sum, tip) => sum + tip.amount, 0) || 0,
+      education: 0
+    },
+    recentActivity: rewardsData.recentRewards?.map(reward => ({
+      id: reward.id,
+      type: reward.action_type,
+      description: reward.description || `Reward for ${reward.action_type}`,
+      amount: reward.amount,
+      timestamp: reward.created_at
+    })) || [],
+    referralStats: {
+      totalReferrals: 0,
+      totalEarnings: 0,
+      activeReferrals: 0
+    }
+  } : null;
+
   useEffect(() => {
-    if (user) {
-      loadRewardData();
-    }
-  }, [user]);
-
-  const loadRewardData = async () => {
-    try {
-      setIsLoading(true);
-
-      // Check if user is authenticated
-      if (!user) {
-        setRewardData(getDemoData());
-        toast({
-          title: "Demo Mode",
-          description: "Please sign in to view your actual rewards data",
-          variant: "default"
-        });
-        return;
-      }
-
-      const response = await fetchWithAuth("/api/creator/reward-summary");
-
-      if (response.ok) {
-        const text = await response.text();
-
-        if (!text.trim()) {
-          setRewardData(getDemoData());
-          return;
-        }
-
-        try {
-          const data = JSON.parse(text);
-          setRewardData(data.data || data);
-          return; // Success - exit early
-        } catch (jsonError) {
-          console.warn("JSON parse error:", jsonError);
-          setRewardData(getDemoData());
-          return;
-        }
-      } else {
-        console.warn("API request failed:", response.status, response.statusText);
-        setRewardData(getDemoData());
-        return;
-      }
-    } catch (error) {
-      console.error("Failed to load reward data:", error);
-      setRewardData(getDemoData());
+    if (error) {
       toast({
-        title: "Connection Issue",
-        description: "Using demo data. Please check your connection and try refreshing.",
-        variant: "default"
+        title: "Error loading rewards data",
+        description: error.message,
+        variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [error, toast]);
 
-  const refreshData = async () => {
-    setIsRefreshing(true);
+  const handleRefresh = async () => {
     try {
-      await loadRewardData();
+      await refresh();
       toast({
         title: "Data Updated",
         description: "Your rewards data has been refreshed"
@@ -218,8 +162,6 @@ export default function EnhancedRewards() {
         description: "Could not refresh data. Please try again later.",
         variant: "destructive"
       });
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -229,7 +171,7 @@ export default function EnhancedRewards() {
       description: `${formatCurrency(amount)} has been added to your ${method}`,
     });
     // Refresh data to show updated balance
-    refreshData();
+    handleRefresh();
   };
 
   if (!user) {
@@ -294,16 +236,20 @@ export default function EnhancedRewards() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          {/* Notifications are handled by the main platform notification system */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            Refresh
+          </Button>
         </div>
       </div>
 
       {/* Rewards Credit Card */}
-      {isLoading ? (
-        <div className="animate-pulse">
-          <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl"></div>
-        </div>
-      ) : rewardData ? (
+      {rewardData ? (
         <RewardsCard
           currentEloits={rewardData.currentEloits}
           availableToWithdraw={rewardData.availableToWithdraw}
@@ -312,8 +258,17 @@ export default function EnhancedRewards() {
           onWithdraw={() => setShowWithdrawalModal(true)}
           className="mb-8"
         />
-      ) : null}
-
+      ) : (
+        <div className="bg-muted rounded-xl p-8 text-center">
+          <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">
+            No Rewards Data Available
+          </h3>
+          <p className="text-muted-foreground">
+            Start earning rewards by participating in platform activities.
+          </p>
+        </div>
+      )}
 
       {/* Tabbed Content */}
       <Tabs key="rewards-tabs" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -359,13 +314,7 @@ export default function EnhancedRewards() {
         </div>
 
         <TabsContent value="dashboard" className="mt-6">
-          {isLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-              ))}
-            </div>
-          ) : rewardData ? (
+          {rewardData ? (
             <div className="space-y-8">
               <RewardsErrorBoundary>
                 <SeasonalEvents />
@@ -403,15 +352,7 @@ export default function EnhancedRewards() {
         </TabsContent>
 
         <TabsContent value="activities" className="mt-6">
-          {isLoading ? (
-            <div className="animate-pulse space-y-6">
-              <div className="h-12 bg-gray-200 rounded-xl"></div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-96 bg-gray-200 rounded-xl"></div>
-                <div className="h-96 bg-gray-200 rounded-xl"></div>
-              </div>
-            </div>
-          ) : rewardData ? (
+          {rewardData ? (
             <div className="space-y-8">
               <RewardsErrorBoundary>
                 <AdvancedAnalytics earningsByType={rewardData.earningsByType} />
@@ -445,41 +386,29 @@ export default function EnhancedRewards() {
         </TabsContent>
 
         <TabsContent value="referrals" className="mt-6">
-          {isLoading ? (
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-                ))}
-              </div>
-              <div className="h-64 bg-gray-200 rounded-xl"></div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Reward Sharing Notice */}
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-purple-100 rounded-full">
-                    <Gift className="w-4 h-4 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-purple-900">
-                      Community Sharing Active
-                    </h3>
-                    <p className="text-sm text-purple-700">
-                      0.5% of creator earnings automatically shared with referrals.
-                      <a href="/terms" className="underline hover:text-purple-800 ml-1">Terms</a>
-                    </p>
-                  </div>
+          <div className="space-y-6">
+            {/* Reward Sharing Notice */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-3">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-purple-100 rounded-full">
+                  <Gift className="w-4 h-4 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-purple-900">
+                    Community Sharing Active
+                  </h3>
+                  <p className="text-sm text-purple-700">
+                    0.5% of creator earnings automatically shared with referrals.
+                    <a href="/terms" className="underline hover:text-purple-800 ml-1">Terms</a>
+                  </p>
                 </div>
               </div>
-
-              <RewardsErrorBoundary>
-                <SafeReferralManager />
-              </RewardsErrorBoundary>
             </div>
-          )}
+
+            <RewardsErrorBoundary>
+              <SafeReferralManager />
+            </RewardsErrorBoundary>
+          </div>
         </TabsContent>
       </Tabs>
 

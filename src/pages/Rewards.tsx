@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useRewards } from "@/hooks/use-rewards";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import CreatorEconomyHeader from "@/components/rewards/CreatorEconomyHeader";
@@ -11,7 +11,6 @@ import BoostManager from "@/components/rewards/BoostManager";
 import Subscribers from "@/components/rewards/Subscribers";
 import WithdrawEarnings from "@/components/rewards/WithdrawEarnings";
 import { PartnershipSystem } from "@/components/rewards/PartnershipSystem";
-import { fetchWithAuth } from "@/lib/fetch-utils";
 
 interface CreatorRevenueData {
   totalEarnings: number;
@@ -28,60 +27,33 @@ interface CreatorRevenueData {
 
 const CreatorEconomy = () => {
   const { user } = useAuth();
+  const { data: rewardsData, isLoading, error, refresh } = useRewards();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  const [isLoading, setIsLoading] = useState(true);
-  const [revenueData, setRevenueData] = useState<CreatorRevenueData | null>(
-    null,
-  );
+
+  // Transform rewards data to match the expected format
+  const revenueData: CreatorRevenueData | null = rewardsData?.userRewards ? {
+    totalEarnings: rewardsData.userRewards.total_earned,
+    earningsByType: {
+      tips: 0, // Would need to calculate from tip transactions
+      subscriptions: 0,
+      views: 0,
+      boosts: 0,
+      services: 0,
+    },
+    eloityPointsEarned: rewardsData.userRewards.total_earned,
+    availableToWithdraw: rewardsData.userRewards.available_balance,
+  } : null;
 
   useEffect(() => {
-    if (user) {
-      loadRevenueData();
-    }
-  }, [user]);
-
-  const loadRevenueData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetchWithAuth("/api/creator/revenue/summary");
-      if (response.ok) {
-        const data = await response.json();
-        setRevenueData(data.data);
-      } else {
-        // Fallback to demo data if API not available
-        setRevenueData({
-          totalEarnings: 15200,
-          earningsByType: {
-            tips: 4800,
-            subscriptions: 5000,
-            views: 2100,
-            boosts: 0,
-            services: 1300,
-          },
-          eloityPointsEarned: 630,
-          availableToWithdraw: 9700,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to load revenue data:", error);
-      // Use demo data as fallback
-      setRevenueData({
-        totalEarnings: 15200,
-        earningsByType: {
-          tips: 4800,
-          subscriptions: 5000,
-          views: 2100,
-          boosts: 0,
-          services: 1300,
-        },
-        eloityPointsEarned: 630,
-        availableToWithdraw: 9700,
+    if (error) {
+      toast({
+        title: "Error loading rewards data",
+        description: error.message,
+        variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [error, toast]);
 
   if (!user) return null;
 
@@ -129,7 +101,7 @@ const CreatorEconomy = () => {
             revenueData={revenueData}
             user={user}
             setActiveTab={setActiveTab}
-            onRefresh={loadRevenueData}
+            onRefresh={refresh}
           />
         </TabsContent>
 
@@ -149,7 +121,7 @@ const CreatorEconomy = () => {
           <WithdrawEarnings
             availableBalance={revenueData?.availableToWithdraw || 0}
             userId={user.id}
-            onWithdraw={loadRevenueData}
+            onWithdraw={refresh}
           />
         </TabsContent>
 

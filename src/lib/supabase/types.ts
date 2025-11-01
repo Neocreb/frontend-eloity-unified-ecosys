@@ -346,6 +346,432 @@ export type Database = {
         }
         Relationships: []
       }
+      rewards: {
+        Row: {
+          id: string
+          user_id: string
+          action_type: string
+          amount: number
+          description: string | null
+          metadata: Json | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          action_type: string
+          amount: number
+          description?: string | null
+          metadata?: Json | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          action_type?: string
+          amount?: number
+          description?: string | null
+          metadata?: Json | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      reward_rules: {
+        Row: {
+          id: string
+          action: string
+          base_reward: number
+          multiplier: number | null
+          conditions: Json | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          action: string
+          base_reward: number
+          multiplier?: number | null
+          conditions?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          action?: string
+          base_reward?: number
+          multiplier?: number | null
+          conditions?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_rewards: {
+        Row: {
+          id: string
+          user_id: string
+          total_earned: number
+          today_earned: number
+          streak: number
+          level: number
+          next_level_requirement: number
+          available_balance: number
+          pending_rewards: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          total_earned?: number
+          today_earned?: number
+          streak?: number
+          level?: number
+          next_level_requirement?: number
+          available_balance?: number
+          pending_rewards?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          total_earned?: number
+          today_earned?: number
+          streak?: number
+          level?: number
+          next_level_requirement?: number
+          available_balance?: number
+          pending_rewards?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      daily_action_counts: {
+        Row: {
+          id: string
+          user_id: string
+          action: string
+          count: number
+          date: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          action: string
+          count?: number
+          date?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          action?: string
+          count?: number
+          date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_action_counts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      virtual_gifts: {
+        Row: {
+          id: string
+          name: string
+          emoji: string
+          description: string | null
+          price: number
+          currency: string
+          category: string
+          rarity: string
+          animation: string | null
+          sound: string | null
+          effects: Json | null
+          available: boolean
+          seasonal_start: string | null
+          seasonal_end: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          emoji: string
+          description?: string | null
+          price: number
+          currency?: string
+          category: string
+          rarity: string
+          animation?: string | null
+          sound?: string | null
+          effects?: Json | null
+          available?: boolean
+          seasonal_start?: string | null
+          seasonal_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          emoji?: string
+          description?: string | null
+          price?: number
+          currency?: string
+          category?: string
+          rarity?: string
+          animation?: string | null
+          sound?: string | null
+          effects?: Json | null
+          available?: boolean
+          seasonal_start?: string | null
+          seasonal_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gift_transactions: {
+        Row: {
+          id: string
+          from_user_id: string
+          to_user_id: string
+          gift_id: string
+          quantity: number
+          total_amount: number
+          message: string | null
+          is_anonymous: boolean
+          status: string
+          content_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          from_user_id: string
+          to_user_id: string
+          gift_id: string
+          quantity?: number
+          total_amount: number
+          message?: string | null
+          is_anonymous?: boolean
+          status?: string
+          content_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          from_user_id?: string
+          to_user_id?: string
+          gift_id?: string
+          quantity?: number
+          total_amount?: number
+          message?: string | null
+          is_anonymous?: boolean
+          status?: string
+          content_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_transactions_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_transactions_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_transactions_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_gifts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tip_transactions: {
+        Row: {
+          id: string
+          from_user_id: string
+          to_user_id: string
+          amount: number
+          currency: string
+          message: string | null
+          content_id: string | null
+          is_anonymous: boolean
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          from_user_id: string
+          to_user_id: string
+          amount: number
+          currency?: string
+          message?: string | null
+          content_id?: string | null
+          is_anonymous?: boolean
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          from_user_id?: string
+          to_user_id?: string
+          amount?: number
+          currency?: string
+          message?: string | null
+          content_id?: string | null
+          is_anonymous?: boolean
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tip_transactions_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tip_transactions_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_gift_inventory: {
+        Row: {
+          id: string
+          user_id: string
+          gift_id: string
+          quantity: number
+          acquired_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          gift_id: string
+          quantity?: number
+          acquired_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          gift_id?: string
+          quantity?: number
+          acquired_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gift_inventory_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_gift_inventory_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_gifts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      creator_tip_settings: {
+        Row: {
+          id: string
+          user_id: string
+          is_enabled: boolean
+          min_tip_amount: number
+          max_tip_amount: number
+          suggested_amounts: Json | null
+          thank_you_message: string | null
+          allow_anonymous: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          is_enabled?: boolean
+          min_tip_amount?: number
+          max_tip_amount?: number
+          suggested_amounts?: Json | null
+          thank_you_message?: string | null
+          allow_anonymous?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          is_enabled?: boolean
+          min_tip_amount?: number
+          max_tip_amount?: number
+          suggested_amounts?: Json | null
+          thank_you_message?: string | null
+          allow_anonymous?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_tip_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           avatar: string | null
