@@ -9,11 +9,11 @@ dotenv.config();
 
 // Validate environment variables
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase credentials. Please check your environment variables.');
-  console.error('Required: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_PUBLISHABLE_KEY');
+  console.error('Required: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY');
   process.exit(1);
 }
 
@@ -24,7 +24,7 @@ async function testRewardsTables() {
   try {
     console.log('Testing rewards tables...');
     
-    // Test if reward_rules table exists and has data
+    // Test if reward_rules table exists and has data (using actual column names)
     console.log('Checking reward_rules table...');
     const { data: rules, error: rulesError } = await supabase
       .from('reward_rules')
