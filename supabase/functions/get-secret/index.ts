@@ -1,6 +1,7 @@
 // Supabase Edge Function to retrieve secrets
 // This function allows authorized clients to retrieve specific secrets
 
+// @ts-nocheck - Supabase Edge Functions use Deno runtime, not Node.js
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 

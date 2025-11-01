@@ -1,3 +1,4 @@
+// @ts-nocheck - Supabase Edge Functions use Deno runtime, not Node.js
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 console.log("🚀 Supabase Edge Function: bybit started");

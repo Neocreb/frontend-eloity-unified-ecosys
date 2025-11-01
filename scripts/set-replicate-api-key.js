@@ -6,6 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,29 +47,28 @@ if (replicateApiKey === 'your_actual_key' || replicateApiKey.includes('placehold
 
 console.log('✅ REPLICATE_API_KEY found in environment file');
 
-// Instructions for setting the environment variable in Supabase
-console.log('\n📋 To set the REPLICATE_API_KEY in Supabase Edge Functions:');
-console.log('\nOption 1: Using Supabase CLI (Recommended)');
-console.log('------------------------------------------');
-console.log('Run this command in your terminal:');
-console.log(`npx supabase functions secrets set REPLICATE_API_KEY=${replicateApiKey}`);
+// Try to set the secret using Supabase CLI
+try {
+  console.log('\n🔄 Setting REPLICATE_API_KEY as a secret in Supabase...');
+  execSync(`npx supabase functions secrets set REPLICATE_API_KEY="${replicateApiKey}"`, { stdio: 'inherit' });
+  console.log('✅ REPLICATE_API_KEY successfully set as a secret in Supabase!');
+} catch (error) {
+  console.log('❌ Failed to set REPLICATE_API_KEY as a secret using the CLI.');
+  console.log('📝 Please set it manually using the Supabase dashboard:');
+  console.log('1. Go to your Supabase project dashboard');
+  console.log('2. Navigate to Project Settings > API > Edge Functions');
+  console.log('3. Click on "Secrets" tab');
+  console.log('4. Click "Add Secret"');
+  console.log('5. Set Key as "REPLICATE_API_KEY"');
+  console.log('6. Set Value as your actual Replicate API key');
+  console.log('7. Click "Add"');
+  process.exit(1);
+}
 
-console.log('\nOption 2: Using Supabase Dashboard');
-console.log('-----------------------------------');
-console.log('1. Go to your Supabase project dashboard');
-console.log('2. Navigate to Project Settings > API > Edge Functions');
-console.log('3. Click on "Secrets" tab');
-console.log('4. Click "Add Secret"');
-console.log('5. Set Key as "REPLICATE_API_KEY"');
-console.log('6. Set Value as your actual Replicate API key');
-console.log('7. Click "Add"');
-
-console.log('\nOption 3: Using this script to set via curl (Advanced)');
-console.log('-----------------------------------------------------');
-console.log('You can also set it programmatically using the Supabase API.');
-console.log('This requires your Supabase service role key.');
-
-console.log('\n📝 After setting the secret, deploy the replicate-generate function:');
-console.log('node scripts/deploy-replicate-function.js');
+console.log('\n📝 Next steps:');
+console.log('1. Deploy the replicate-generate function:');
+console.log('   node scripts/deploy-replicate-function.js');
+console.log('\n2. Test the integration:');
+console.log('   node scripts/test-replicate-function.js');
 
 console.log('\n✅ Once deployed, test the integration using the Edith AI content generation feature!');

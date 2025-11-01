@@ -23,11 +23,8 @@ import {
   Wallet,
   BarChart3,
   PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
   Target,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,

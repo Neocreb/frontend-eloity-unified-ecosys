@@ -54,6 +54,7 @@ async function testReplicateFunction() {
       console.log('❌ Error calling replicate-generate function:');
       console.log('   Status:', error.status);
       console.log('   Message:', error.message);
+      console.log('   Error details:', JSON.stringify(error, null, 2));
       
       if (error.status === 404) {
         console.log('   📝 The function may not be deployed yet. Deploy it using:');
@@ -61,6 +62,8 @@ async function testReplicateFunction() {
       } else if (error.status === 500) {
         console.log('   📝 The function may be missing the REPLICATE_API_KEY. Set it using:');
         console.log('      node scripts/set-replicate-api-key.js');
+      } else if (error.status === 400) {
+        console.log('   📝 There may be an issue with the request parameters.');
       }
       
       return false;
@@ -80,6 +83,7 @@ async function testReplicateFunction() {
     
   } catch (error) {
     console.error('❌ Unexpected error testing replicate-generate function:', error.message);
+    console.error('Error stack:', error.stack);
     return false;
   }
 }
@@ -102,6 +106,8 @@ async function main() {
     console.log('   node scripts/set-replicate-api-key.js');
     console.log('3. Check that your Replicate API key is valid:');
     console.log('   Visit https://replicate.com/account/api-tokens');
+    console.log('4. Check the Supabase function logs in the dashboard:');
+    console.log('   https://supabase.com/dashboard/project/hjebzdekquczudhrygns/functions');
   }
 }
 
