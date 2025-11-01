@@ -311,6 +311,56 @@ The improvements will make DeFi applications faster and cheaper to use...
     difficulty: "INTERMEDIATE",
     relatedAssets: ["ETH"],
   },
+  {
+    id: "7",
+    title: "NFT Market Trends: What's Hot in 2025",
+    slug: "nft-market-trends-2025",
+    excerpt:
+      "Discover the latest trends shaping the NFT market, from utility-focused projects to dynamic digital art.",
+    content: `
+# NFT Market Trends: What's Hot in 2025
+
+The NFT market has evolved significantly, moving beyond simple collectibles to real-world utility and innovative use cases.
+
+## Emerging Trends
+
+### Utility NFTs
+Projects focusing on real-world benefits and membership perks are gaining traction...
+
+### Dynamic NFTs
+NFTs that change based on external data or user interactions are revolutionizing digital ownership...
+
+### Gaming Integration
+Play-to-earn models continue to evolve with sustainable tokenomics...
+
+## Investment Opportunities
+
+Understanding which projects have long-term potential versus short-term hype...
+
+## Risks to Consider
+
+Market volatility, liquidity concerns, and project sustainability remain key factors...
+    `,
+    author: {
+      id: "3",
+      name: "Emma Thompson",
+      avatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150",
+      bio: "DeFi researcher and protocol analyst",
+    },
+    publishedAt: "2025-01-01T10:00:00Z",
+    updatedAt: "2025-01-01T10:00:00Z",
+    tags: ["NFT", "Digital Art", "Gaming", "Web3", "Trends"],
+    category: mockCategories[3],
+    featuredImage:
+      "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?auto=format&fit=crop&q=80&w=800",
+    readingTime: 7,
+    likes: 156,
+    views: 842,
+    status: "published",
+    difficulty: "BEGINNER",
+    relatedAssets: ["ETH", "SOL"],
+  },
 ];
 
 const BLOG_STORAGE_KEY = "eloity_blog_posts_extra";
