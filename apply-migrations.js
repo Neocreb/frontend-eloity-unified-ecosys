@@ -1,107 +1,70 @@
-#!/usr/bin/env node
+const { Client } = require('pg');
+const fs = require('fs');
+const path = require('path');
 
-// Script to apply database migrations to Supabase
-// This script will run all SQL migrations in the supabase/migrations directory
+// Get database URL from .env.local
+const envLocal = fs.readFileSync('.env.local', 'utf8');
+const dbUrlMatch = envLocal.match(/DATABASE_URL=(.*)/);
+const databaseUrl = dbUrlMatch ? dbUrlMatch[1] : null;
 
-import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+if (!databaseUrl) {
+  console.error('DATABASE_URL not found in .env.local');
+  process.exit(1);
+}
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+console.log('Connecting to database...');
 
-// Load environment variables
-import dotenv from 'dotenv';
-dotenv.config();
+const client = new Client({
+  connectionString: databaseUrl,
+});
 
 async function applyMigrations() {
   try {
-    // Check if required environment variables are set
-    if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-      console.error('❌ Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file');
-      process.exit(1);
-    }
+    await client.connect();
+    console.log('Connected to database successfully!');
 
-    // Create Supabase client
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-    );
+    // List of migration files in order
+    const migrationFiles = [
+      'migrations/0011_fix_videos_storage_and_policies.sql',
+      'migrations/0012_fix_groups_policies.sql',
+      'migrations/0013_fix_posts_storage_conflicts.sql'
+    ];
 
-    console.log('🚀 Connecting to Supabase...');
-    
-    // Test connection
-    const { data, error } = await supabase
-      .from('users')
-      .select('count')
-      .limit(1);
-    
-    if (error && error.message !== 'The resource was not found') {
-      console.error('❌ Supabase connection failed:', error.message);
-      process.exit(1);
-    }
-    
-    console.log('✅ Connected to Supabase successfully');
-
-    // Get migration files
-    const migrationsDir = path.join(__dirname, 'supabase', 'migrations');
-    if (!fs.existsSync(migrationsDir)) {
-      console.error('❌ Migrations directory not found:', migrationsDir);
-      process.exit(1);
-    }
-
-    const migrationFiles = fs.readdirSync(migrationsDir)
-      .filter(file => file.endsWith('.sql'))
-      .sort();
-
-    if (migrationFiles.length === 0) {
-      console.log('ℹ️  No migration files found');
-      return;
-    }
-
-    console.log(`📋 Found ${migrationFiles.length} migration files`);
-
-    // Apply each migration
     for (const file of migrationFiles) {
-      console.log(`\n📝 Applying migration: ${file}`);
+      console.log(`Applying migration: ${file}`);
+      const sql = fs.readFileSync(file, 'utf8');
       
-      const filePath = path.join(migrationsDir, file);
-      const sql = fs.readFileSync(filePath, 'utf8');
-      
-      // Split SQL into statements (simple approach)
-      const statements = sql
-        .split(';')
-        .map(stmt => stmt.trim())
-        .filter(stmt => stmt.length > 0);
+      // Split the SQL into individual statements (handling NOTIFY separately)
+      const statements = sql.split(';').filter(stmt => stmt.trim() !== '');
       
       for (const statement of statements) {
-        if (statement.trim().length === 0) continue;
-        
-        try {
-          // Execute the statement
-          const { error } = await supabase.rpc('execute_sql', { sql: statement });
-          
-          if (error) {
-            // Some statements might not be supported by rpc, so we'll log and continue
-            console.warn(`⚠️  Warning executing statement: ${error.message}`);
+        const trimmedStatement = statement.trim();
+        if (trimmedStatement) {
+          try {
+            await client.query(trimmedStatement);
+            console.log(`Executed: ${trimmedStatement.substring(0, 50)}...`);
+          } catch (error) {
+            // Skip NOTIFY errors as they're just notifications
+            if (!trimmedStatement.startsWith('NOTIFY')) {
+              console.error(`Error executing statement: ${trimmedStatement}`);
+              console.error(error.message);
+              throw error;
+            } else {
+              console.log(`Notification sent: ${trimmedStatement}`);
+            }
           }
-        } catch (stmtError) {
-          console.warn(`⚠️  Warning executing statement: ${stmtError.message}`);
         }
       }
       
-      console.log(`✅ Migration ${file} applied successfully`);
+      console.log(`Migration ${file} applied successfully!\n`);
     }
 
-    console.log('\n🎉 All migrations applied successfully!');
-    console.log('\n📋 Next steps:');
-    console.log('1. Test the connection: node test-supabase-connection.js');
-    console.log('2. Start the development server: npm run dev');
-
+    console.log('All migrations applied successfully!');
   } catch (error) {
-    console.error('❌ Error applying migrations:', error.message);
-    process.exit(1);
+    console.error('Error applying migrations:', error);
+  } finally {
+    await client.end();
+    console.log('Database connection closed.');
   }
 }
 

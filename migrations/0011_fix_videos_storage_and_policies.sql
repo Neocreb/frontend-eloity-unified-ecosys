@@ -42,14 +42,14 @@ CREATE POLICY "allow_owner_update_videos"
 ON storage.objects FOR UPDATE 
 USING (
   bucket_id = 'videos' 
-  AND owner_id = auth.uid()
+  AND owner_id = auth.uid()::text
 );
 
 CREATE POLICY "allow_owner_delete_videos" 
 ON storage.objects FOR DELETE 
 USING (
   bucket_id = 'videos' 
-  AND owner_id = auth.uid()
+  AND owner_id = auth.uid()::text
 );
 
 -- Create proper policies for thumbnails bucket (public read, authenticated write)
@@ -68,14 +68,14 @@ CREATE POLICY "allow_owner_update_thumbnails"
 ON storage.objects FOR UPDATE 
 USING (
   bucket_id = 'thumbnails' 
-  AND owner_id = auth.uid()
+  AND owner_id = auth.uid()::text
 );
 
 CREATE POLICY "allow_owner_delete_thumbnails" 
 ON storage.objects FOR DELETE 
 USING (
   bucket_id = 'thumbnails' 
-  AND owner_id = auth.uid()
+  AND owner_id = auth.uid()::text
 );
 
 -- Ensure RLS is enabled on storage.objects

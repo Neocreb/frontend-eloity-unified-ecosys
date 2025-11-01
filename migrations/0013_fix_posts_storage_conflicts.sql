@@ -23,14 +23,14 @@ CREATE POLICY "allow_owner_update_posts"
 ON storage.objects FOR UPDATE 
 USING (
   bucket_id = 'posts' 
-  AND owner_id = auth.uid()
+  AND owner_id = auth.uid()::text
 );
 
 CREATE POLICY "allow_owner_delete_posts" 
 ON storage.objects FOR DELETE 
 USING (
   bucket_id = 'posts' 
-  AND owner_id = auth.uid()
+  AND owner_id = auth.uid()::text
 );
 
 -- Refresh the PostgREST schema cache
