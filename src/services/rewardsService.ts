@@ -222,6 +222,8 @@ export const rewardsService = {
   async getDailyActions(userId: string, days: number = 7): Promise<DailyActionCount[]> {
     // Since there's no daily_action_counts table, we'll return an empty array
     // In a real implementation, this would come from an analytics or activity table
+    // The 'days' parameter would be used to limit the date range of the query
+    console.log(`Fetching daily actions for user ${userId} for the last ${days} days`);
     return [];
   },
 

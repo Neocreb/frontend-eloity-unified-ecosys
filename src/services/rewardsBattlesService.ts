@@ -1,6 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Define interfaces based on the actual database schema
+interface Profile {
+  user_id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  is_verified: boolean | null;
+}
+
 export interface Battle {
   id: string;
   live_stream_id: string;
@@ -200,7 +208,7 @@ export const rewardsBattlesService = {
       }
 
       // Mock some additional data since it's not in the profiles table
-      const creators: Creator[] = (data || []).map(profile => ({
+      const creators: Creator[] = (data || []).map((profile: Profile) => ({
         id: profile.user_id,
         username: profile.username || 'Unknown',
         full_name: profile.full_name || 'Unknown User',

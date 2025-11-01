@@ -9,21 +9,29 @@ import {
   Play,
   Clock,
   Trophy,
-  Users,
   Flame,
   Target,
   Star,
   DollarSign,
   TrendingUp,
-  ArrowRight,
   Crown,
-  Zap,
   Eye
 } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import BattleVoting from "@/components/voting/BattleVoting";
 import { rewardsNotificationService } from "@/services/rewardsNotificationService";
 import { rewardsBattlesService, LiveBattle, BattleVote } from "@/services/rewardsBattlesService";
+
+// Helper function to convert BattleVote to Vote
+const convertBattleVoteToVote = (battleVote: BattleVote): any => ({
+  id: battleVote.id,
+  amount: battleVote.amount,
+  creatorId: battleVote.creator_id,
+  odds: battleVote.odds,
+  potentialWinning: battleVote.potential_winning,
+  timestamp: new Date(battleVote.created_at),
+  status: battleVote.status as 'active' | 'won' | 'lost' | 'refunded'
+});
 
 interface Creator {
   id: string;
@@ -111,15 +119,6 @@ const RewardsBattleTab = () => {
         return 'bg-gray-500 text-white';
       default:
         return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getTierIcon = (tier: string) => {
-    switch (tier) {
-      case 'legend': return <Crown className="w-4 h-4 text-yellow-400" />;
-      case 'pro_creator': return <Trophy className="w-4 h-4 text-purple-400" />;
-      case 'rising_star': return <Star className="w-4 h-4 text-blue-400" />;
-      default: return null;
     }
   };
 
@@ -316,7 +315,7 @@ const RewardsBattleTab = () => {
       {/* Battle List */}
       {filteredBattles.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredBattles.map(({ battle, userVotes }) => (
+          {filteredBattles.map(({ battle }) => (
             <Card key={battle.id} className="relative">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -490,7 +489,7 @@ const RewardsBattleTab = () => {
                 timeRemaining={selectedBattle.duration || 0}
                 userBalance={userBalance}
                 onPlaceVote={handlePlaceVote}
-                userVotes={battlesWithVotes.find(b => b.battle.id === selectedBattle.id)?.userVotes || []}
+                userVotes={battlesWithVotes.find(b => b.battle.id === selectedBattle.id)?.userVotes.map(convertBattleVoteToVote) || []}
                 votingPool={{
                   creator1Total: selectedBattle.creator1_score,
                   creator2Total: selectedBattle.creator2_score,

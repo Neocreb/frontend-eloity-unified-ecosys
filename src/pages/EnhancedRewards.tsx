@@ -9,10 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Trophy,
   RefreshCw,
-  Star,
   UserPlus,
   BarChart3,
-  Settings,
   Activity,
   Gift,
   Target,
@@ -41,7 +39,6 @@ import GoalTracking from "@/components/rewards/GoalTracking";
 import AdvancedAnalytics from "@/components/rewards/AdvancedAnalytics";
 import RewardsErrorBoundary from "@/components/rewards/RewardsErrorBoundary";
 import SeasonalEvents from "@/components/rewards/SeasonalEvents";
-import EnhancedLoadingStates from "@/components/rewards/EnhancedLoadingStates";
 import PioneerBadgeWidget from "@/components/rewards/PioneerBadgeWidget";
 
 interface RewardData {
