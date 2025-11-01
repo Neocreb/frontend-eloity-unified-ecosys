@@ -95,21 +95,21 @@ export default function EnhancedRewards() {
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
   // Transform rewards data to match the expected format
-  const rewardData: RewardData | null = rewardsData?.userRewards ? {
-    totalEarnings: rewardsData.userRewards.total_earned,
-    availableToWithdraw: rewardsData.userRewards.available_balance,
-    currentEloits: rewardsData.userRewards.total_earned,
+  const rewardData: RewardData | null = rewardsData?.calculatedUserRewards ? {
+    totalEarnings: rewardsData.calculatedUserRewards.total_earned,
+    availableToWithdraw: rewardsData.calculatedUserRewards.available_balance,
+    currentEloits: rewardsData.calculatedUserRewards.total_earned,
     trustScore: {
-      current: Math.min(100, rewardsData.userRewards.level * 20), // Simple calculation
-      level: `Level ${rewardsData.userRewards.level}`,
-      multiplier: 1 + (rewardsData.userRewards.level * 0.1),
-      nextLevelAt: rewardsData.userRewards.next_level_requirement
+      current: Math.min(100, rewardsData.calculatedUserRewards.level * 20), // Simple calculation
+      level: `Level ${rewardsData.calculatedUserRewards.level}`,
+      multiplier: 1 + (rewardsData.calculatedUserRewards.level * 0.1),
+      nextLevelAt: rewardsData.calculatedUserRewards.next_level_requirement
     },
     activityStats: {
-      totalActivities: rewardsData.dailyActions?.reduce((sum, action) => sum + action.count, 0) || 0,
+      totalActivities: rewardsData.dailyActions?.reduce((sum: number, action: { count: number }) => sum + action.count, 0) || 0,
       contentCreated: 0, // Would need to calculate from user posts
-      qualityScore: rewardsData.userRewards.level,
-      streakDays: rewardsData.userRewards.streak
+      qualityScore: rewardsData.calculatedUserRewards.level,
+      streakDays: rewardsData.calculatedUserRewards.streak
     },
     earningsByType: {
       contentCreation: 0,
@@ -121,13 +121,13 @@ export default function EnhancedRewards() {
       challenges: 0,
       battleVoting: 0,
       battleRewards: 0,
-      giftsAndTips: rewardsData.tipTransactions?.reduce((sum, tip) => sum + tip.amount, 0) || 0,
+      giftsAndTips: rewardsData.tipTransactions?.reduce((sum: number, tip: { amount: number }) => sum + tip.amount, 0) || 0,
       education: 0
     },
     recentActivity: rewardsData.recentRewards?.map(reward => ({
       id: reward.id,
-      type: reward.action_type,
-      description: reward.description || `Reward for ${reward.action_type}`,
+      type: reward.type,
+      description: reward.description || `Reward for ${reward.type}`,
       amount: reward.amount,
       timestamp: reward.created_at
     })) || [],

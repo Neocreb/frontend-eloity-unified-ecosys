@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRewards } from "@/hooks/use-rewards";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import CreatorEconomyHeader from "@/components/rewards/CreatorEconomyHeader";
 import EarningsOverview from "@/components/rewards/EarningsOverview";
 import RevenueHistory from "@/components/rewards/RevenueHistory";
@@ -32,8 +33,8 @@ const CreatorEconomy = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   // Transform rewards data to match the expected format
-  const revenueData: CreatorRevenueData | null = rewardsData?.userRewards ? {
-    totalEarnings: rewardsData.userRewards.total_earned,
+  const revenueData: CreatorRevenueData | null = rewardsData?.calculatedUserRewards ? {
+    totalEarnings: rewardsData.calculatedUserRewards.total_earned,
     earningsByType: {
       tips: 0, // Would need to calculate from tip transactions
       subscriptions: 0,
@@ -41,8 +42,8 @@ const CreatorEconomy = () => {
       boosts: 0,
       services: 0,
     },
-    eloityPointsEarned: rewardsData.userRewards.total_earned,
-    availableToWithdraw: rewardsData.userRewards.available_balance,
+    eloityPointsEarned: rewardsData.calculatedUserRewards.total_earned,
+    availableToWithdraw: rewardsData.calculatedUserRewards.available_balance,
   } : null;
 
   useEffect(() => {
