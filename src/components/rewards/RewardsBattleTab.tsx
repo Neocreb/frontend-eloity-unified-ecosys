@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
   Play,
@@ -11,10 +10,8 @@ import {
   Trophy,
   Flame,
   Target,
-  Star,
   DollarSign,
   TrendingUp,
-  Crown,
   Eye
 } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";

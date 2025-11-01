@@ -14,7 +14,6 @@ import {
   Activity,
   Gift,
   Target,
-  Wallet,
   Swords,
   ArrowRight
 } from "lucide-react";
