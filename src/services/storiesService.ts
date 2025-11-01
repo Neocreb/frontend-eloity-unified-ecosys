@@ -174,11 +174,19 @@ class StoriesService {
 
       if (error) throw error;
 
-      // Update view count
-      await this.supabase
+      // Update view count using read-modify-write
+      const { data: story } = await this.supabase
         .from('user_stories')
-        .update({ views_count: this.supabase.rpc('increment_story_views', { story_id: storyId }) })
-        .eq('id', storyId);
+        .select('views_count')
+        .eq('id', storyId)
+        .single();
+
+      if (story) {
+        await this.supabase
+          .from('user_stories')
+          .update({ views_count: story.views_count + 1 })
+          .eq('id', storyId);
+      }
 
       return data;
     } catch (error) {
@@ -207,14 +215,21 @@ class StoriesService {
   // Like a story
   async likeStory(storyId: string, userId: string): Promise<void> {
     try {
-      // Check if already liked (would need a story_likes table for this)
-      // For now, we'll just increment the likes count
-      const { error } = await this.supabase
+      // Get current likes count
+      const { data: story } = await this.supabase
         .from('user_stories')
-        .update({ likes_count: this.supabase.rpc('increment_story_likes', { story_id: storyId }) })
-        .eq('id', storyId);
+        .select('likes_count')
+        .eq('id', storyId)
+        .single();
 
-      if (error) throw error;
+      if (story) {
+        const { error } = await this.supabase
+          .from('user_stories')
+          .update({ likes_count: story.likes_count + 1 })
+          .eq('id', storyId);
+
+        if (error) throw error;
+      }
     } catch (error) {
       console.error('Error liking story:', error);
       throw error;
@@ -224,13 +239,21 @@ class StoriesService {
   // Unlike a story
   async unlikeStory(storyId: string, userId: string): Promise<void> {
     try {
-      // Decrement the likes count
-      const { error } = await this.supabase
+      // Get current likes count
+      const { data: story } = await this.supabase
         .from('user_stories')
-        .update({ likes_count: this.supabase.rpc('decrement_story_likes', { story_id: storyId }) })
-        .eq('id', storyId);
+        .select('likes_count')
+        .eq('id', storyId)
+        .single();
 
-      if (error) throw error;
+      if (story && story.likes_count > 0) {
+        const { error } = await this.supabase
+          .from('user_stories')
+          .update({ likes_count: story.likes_count - 1 })
+          .eq('id', storyId);
+
+        if (error) throw error;
+      }
     } catch (error) {
       console.error('Error unliking story:', error);
       throw error;

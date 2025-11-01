@@ -452,11 +452,19 @@ class GroupService {
         return null;
       }
 
-      // Update post count for the group
-      await supabase
+      // Update post count for the group using read-modify-write
+      const { data: group } = await supabase
         .from("groups")
-        .update({ post_count: supabase.rpc('groups.post_count + 1') })
-        .eq("id", groupId);
+        .select("post_count")
+        .eq("id", groupId)
+        .single();
+
+      if (group) {
+        await supabase
+          .from("groups")
+          .update({ post_count: (group.post_count || 0) + 1 })
+          .eq("id", groupId);
+      }
 
       // Fetch user profile for the author
       const { data: profile, error: profileError } = await supabase
@@ -528,11 +536,19 @@ class GroupService {
           return false;
         }
 
-        // Decrement like count
-        await supabase
+        // Decrement like count using read-modify-write
+        const { data: post } = await supabase
           .from("posts")
-          .update({ like_count: supabase.rpc('posts.like_count - 1') })
-          .eq("id", postId);
+          .select("like_count")
+          .eq("id", postId)
+          .single();
+
+        if (post && post.like_count > 0) {
+          await supabase
+            .from("posts")
+            .update({ like_count: post.like_count - 1 })
+            .eq("id", postId);
+        }
 
         return false; // Indicates unliked
       } else {
@@ -550,11 +566,19 @@ class GroupService {
           return false;
         }
 
-        // Increment like count
-        await supabase
+        // Increment like count using read-modify-write
+        const { data: post } = await supabase
           .from("posts")
-          .update({ like_count: supabase.rpc('posts.like_count + 1') })
-          .eq("id", postId);
+          .select("like_count")
+          .eq("id", postId)
+          .single();
+
+        if (post) {
+          await supabase
+            .from("posts")
+            .update({ like_count: (post.like_count || 0) + 1 })
+            .eq("id", postId);
+        }
 
         return true; // Indicates liked
       }

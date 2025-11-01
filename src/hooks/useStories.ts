@@ -50,7 +50,8 @@ export const useStories = () => {
       setStories(formattedStories);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch stories');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stories';
+      setError(errorMessage);
       console.error('Error fetching stories:', err);
     } finally {
       setLoading(false);
