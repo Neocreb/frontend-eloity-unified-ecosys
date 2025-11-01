@@ -18,6 +18,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:supabase": "node test-supabase-integration.js",
+    "test:replicate": "node scripts/test-replicate-function.js",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
     "migrate": "npx drizzle-kit generate:pg",
@@ -26,6 +27,8 @@
     "db:push": "npx drizzle-kit push:pg",
     "setup:supabase": "node scripts/setup-supabase-integration.js",
     "setup:env": "node scripts/setup-supabase-credentials.js",
+    "setup:replicate": "node scripts/set-replicate-api-key.js",
+    "deploy:replicate": "node scripts/deploy-replicate-function.js",
     "init:env": "node scripts/init-env.js",
     "get:supabase-credentials": "node scripts/get-supabase-credentials.js",
     "verify:setup": "node scripts/verify-secure-setup.js"

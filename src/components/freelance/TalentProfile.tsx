@@ -142,37 +142,24 @@ export const TalentProfile: React.FC<TalentProfileProps> = ({
             hourlyRate: freelancerProfile.hourlyRate || 0,
             rating: freelancerProfile.rating || 0,
             reviewCount: freelancerProfile.reviewCount || 0,
-            location: "Remote", // This isn't in the profile data, keeping default
+            location: freelancerProfile.location || "Remote",
             availability: freelancerProfile.availability === "unavailable" ? "offline" : (freelancerProfile.availability || "available"),
-            verified: false, // This isn't in the profile data, keeping default
+            verified: freelancerProfile.is_verified || false,
             completedJobs: freelancerProfile.completedProjects || 0,
-            responseTime: "24 hours", // This isn't in the profile data, keeping default
-            successRate: 90, // This isn't in the profile data, keeping default
+            responseTime: freelancerProfile.response_time ? `${freelancerProfile.response_time} hours` : "N/A",
+            successRate: freelancerProfile.success_rate || 0,
             portfolio: (freelancerProfile.portfolio || []).map((url: string, index: number) => ({
               id: index.toString(),
               title: `Project ${index + 1}`,
               image: url,
               category: "Web Development"
             })),
-            badges: [], // This isn't in the profile data, keeping default
+            badges: freelancerProfile.badges || [],
             languages: freelancerProfile.languages || [],
             joinedDate: freelancerProfile.createdAt?.toISOString() || new Date().toISOString(),
-            lastSeen: "Recently online", // This isn't in the profile data, keeping default
-            employmentHistory: Array.isArray(freelancerProfile.education) ? freelancerProfile.education.map((item: string, index: number) => ({
-              id: index.toString(),
-              company: item,
-              position: "Position",
-              duration: "Duration",
-              description: "Description",
-              type: "Full-time"
-            })) : [],
-            certifications: Array.isArray(freelancerProfile.certifications) ? freelancerProfile.certifications.map((item: string, index: number) => ({
-              id: index.toString(),
-              name: item,
-              issuer: "Issuer",
-              date: new Date().toISOString(),
-              verified: false
-            })) : [],
+            lastSeen: freelancerProfile.last_seen || "Recently online",
+            employmentHistory: Array.isArray(freelancerProfile.employment_history) ? freelancerProfile.employment_history : [],
+            certifications: Array.isArray(freelancerProfile.certifications) ? freelancerProfile.certifications : [],
           };
           
           setTalent(transformedTalent);

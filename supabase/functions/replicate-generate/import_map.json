@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "replicate": "https://esm.sh/replicate@0.7.0",
+    "replicate/": "https://esm.sh/replicate@0.7.0/",
+    "https://deno.land/std@0.168.0/http/server.ts": "https://deno.land/std@0.168.0/http/server.ts"
+  }
+}
