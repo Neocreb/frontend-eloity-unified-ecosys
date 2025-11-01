@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Insert Freelance Stats</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Insert Freelance Stats</h1>
+    <button onclick="insertStats()">Insert Sample Stats</button>
+    <div id="result"></div>
+
+    <script>
+        // Supabase configuration
+        const supabaseUrl = 'https://hjebzdekquczudhrygns.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqZWJ6ZGVrcXVjenVkaHJ5Z25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2MjIzMjksImV4cCI6MjA2MDE5ODMyOX0.bUXtDIV-QReFFgv6UoOGovH2zi2q68HKe2E4Kkbhc7U';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function insertStats() {
+            try {
+                const result = document.getElementById('result');
+                result.innerHTML = 'Inserting sample freelance stats...';
+
+                // Insert sample freelance stats for a test user
+                const testUserId = '00000000-0000-0000-0000-000000000000'; // Placeholder user ID
+                
+                const { data, error } = await supabase
+                    .from('freelance_stats')
+                    .upsert({
+                        user_id: testUserId,
+                        total_projects: 42,
+                        completed_projects: 38,
+                        total_earnings: 21500.00,
+                        average_rating: 4.8,
+                        response_time: 1, // hours
+                        success_rate: 92.00,
+                        repeat_clients: 15,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
+                    })
+                    .select()
+                    .single();
+                    
+                if (error) {
+                    result.innerHTML = 'Error: ' + JSON.stringify(error);
+                } else {
+                    result.innerHTML = 'Success! Stats inserted: ' + JSON.stringify(data);
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

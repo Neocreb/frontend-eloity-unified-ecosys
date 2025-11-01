@@ -5,6 +5,7 @@ import { db } from '../../server/enhanced-index.js';
 import { freelance_projects as freelance_jobs, freelance_profiles as profiles } from '../../shared/freelance-schema.js';
 import { freelance_proposals } from '../../shared/freelance-schema.js';
 import { eq, and, or, desc, asc, like, sql, count } from 'drizzle-orm';
+import { freelance_stats } from '../../shared/freelance-schema.js';
 
 const router = express.Router();
 
@@ -553,6 +554,65 @@ router.get('/proposals/job/:jobId', authenticateToken, async (req, res) => {
   } catch (error) {
     logger.error('Error fetching proposals:', error);
     res.status(500).json({ error: 'Failed to fetch proposals' });
+  }
+});
+
+// Get freelancer stats
+router.get('/stats/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Try to get stats from freelance_stats table first
+    const statsResult = await db.select().from(freelance_stats).where(eq(freelance_stats.user_id, userId)).execute();
+    
+    if (statsResult.length > 0) {
+      const stats = statsResult[0];
+      return res.json({
+        data: {
+          totalProjects: stats.total_projects || 0,
+          completedProjects: stats.completed_projects || 0,
+          totalEarnings: parseFloat(stats.total_earnings?.toString() || "0"),
+          averageRating: parseFloat(stats.average_rating?.toString() || "0"),
+          responseTime: stats.response_time || 0,
+          successRate: parseFloat(stats.success_rate?.toString() || "0"),
+          repeatClients: stats.repeat_clients || 0
+        }
+      });
+    }
+
+    // Fallback: Calculate stats from projects if freelance_stats table is empty
+    logger.warn("Freelance stats not found in freelance_stats table, calculating from projects...");
+    
+    // Get freelancer's projects
+    const projectsResult = await db.select().from(freelance_jobs)
+      .where(eq(freelance_jobs.freelancer_id, userId))
+      .execute();
+
+    // Calculate stats
+    const completedProjects = projectsResult.filter(p => p.status === 'completed').length;
+    const totalProjects = projectsResult.length;
+    const totalEarnings = projectsResult.reduce((sum, project) => {
+      return sum + (project.budget_min ? parseFloat(project.budget_min.toString()) : 0);
+    }, 0);
+
+    // For now, we'll use placeholder values for other stats
+    // In a real implementation, these would come from the database
+    const result = {
+      data: {
+        totalProjects,
+        completedProjects,
+        totalEarnings,
+        averageRating: 4.5, // Placeholder
+        responseTime: 2, // Placeholder (hours)
+        successRate: totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0,
+        repeatClients: 0 // Placeholder
+      }
+    };
+
+    res.json(result);
+  } catch (error) {
+    logger.error('Error fetching freelancer stats:', error);
+    res.status(500).json({ error: 'Failed to fetch freelancer stats' });
   }
 });
 

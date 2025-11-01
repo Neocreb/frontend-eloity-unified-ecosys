@@ -570,46 +570,19 @@ export class FreelanceService {
   // Stats
   static async getFreelanceStats(freelancerId: string): Promise<FreelanceStats | null> {
     try {
-      // Check if the projects table exists
-      const { data: tableExists, error: tableError } = await supabase
-        .from('freelance_projects')
-        .select('id')
-        .limit(1);
+      // Fetch stats from the new API endpoint
+      const response = await fetch(`/api/freelance/stats/${freelancerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
 
-      if (tableError) {
-        console.warn("getFreelanceStats: Database table 'freelance_projects' does not exist yet. Returning null.");
-        return null;
+      if (response.ok) {
+        const data = await response.json();
+        return data.data;
       }
-
-      // Get freelancer's projects
-      const { data: projects, error: projectsError } = await supabase
-        .from('freelance_projects')
-        .select('*')
-        .eq('freelancer_id', freelancerId);
-
-      if (projectsError) {
-        console.error("Error fetching freelancer projects:", projectsError);
-        return null;
-      }
-
-      // Calculate stats
-      const completedProjects = projects.filter(p => p.status === 'completed').length;
-      const totalProjects = projects.length;
-      const totalEarnings = projects.reduce((sum, project) => {
-        return sum + (project.budget_min ? parseFloat(project.budget_min.toString()) : 0);
-      }, 0);
-
-      // For now, we'll use placeholder values for other stats
-      // In a real implementation, these would come from the database
-      return {
-        totalProjects,
-        completedProjects,
-        totalEarnings,
-        averageRating: 4.5, // Placeholder
-        responseTime: 2, // Placeholder (hours)
-        successRate: totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0,
-        repeatClients: 0 // Placeholder
-      };
+      
+      console.error("Error fetching freelance stats from API:", response.statusText);
+      return null;
     } catch (error) {
       console.error("Error in getFreelanceStats:", error);
       return null;
