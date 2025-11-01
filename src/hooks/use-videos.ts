@@ -87,7 +87,8 @@ export const useVideos = () => {
         setLoading(false);
       } catch (err) {
         console.error("Error fetching videos:", err);
-        setError("Failed to load videos");
+        // Only set error if it's an actual error, not just empty data
+        setError(err instanceof Error ? err.message : "Failed to load videos");
         setLoading(false);
       }
     };
