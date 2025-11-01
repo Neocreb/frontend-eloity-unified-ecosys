@@ -216,6 +216,22 @@ export const freelance_messages = pgTable('freelance_messages', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// Freelance stats table
+export const freelance_stats = pgTable('freelance_stats', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  total_projects: integer('total_projects').default(0),
+  completed_projects: integer('completed_projects').default(0),
+  total_earnings: numeric('total_earnings', { precision: 12, scale: 2 }).default('0'),
+  average_rating: numeric('average_rating', { precision: 3, scale: 2 }).default('0'),
+  response_time: integer('response_time').default(0), // in hours
+  success_rate: numeric('success_rate', { precision: 5, scale: 2 }).default('0'),
+  repeat_clients: integer('repeat_clients').default(0),
+  last_updated: timestamp('last_updated').defaultNow(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // Relations
 export const freelanceProjectsRelations = relations(freelance_projects, ({ one, many }) => ({
   client: one(users, {
@@ -370,6 +386,14 @@ export const freelanceMessagesRelations = relations(freelance_messages, ({ one }
   }),
   sender: one(users, {
     fields: [freelance_messages.sender_id],
+    references: [users.id],
+  }),
+}));
+
+// Relations for freelance_stats
+export const freelanceStatsRelations = relations(freelance_stats, ({ one }) => ({
+  user: one(users, {
+    fields: [freelance_stats.user_id],
     references: [users.id],
   }),
 }));

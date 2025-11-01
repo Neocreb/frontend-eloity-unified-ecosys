@@ -1,11 +1,17 @@
+// @ts-ignore - Solana dependency issue in Supabase auth-js
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
 
-// Supabase connection
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Load environment variables from .env file
+config();
+
+// Supabase connection - use process.env for Node.js environments
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase credentials in environment variables');
+  console.error('Please set VITE_SUPABASE_URL and either VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY in your .env file');
   process.exit(1);
 }
 

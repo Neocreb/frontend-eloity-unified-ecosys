@@ -608,6 +608,46 @@ export class FreelanceService {
     }
   }
 
+  // Get freelancer's earnings records
+  static async getFreelancerEarnings(freelancerId: string): Promise<any[]> {
+    try {
+      // Fetch earnings from the transactions API
+      const response = await fetch(`/api/wallet/transactions?userId=${freelancerId}&type=freelance`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || [];
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching freelancer earnings:", error);
+      return [];
+    }
+  }
+
+  // Get freelancer's earnings statistics
+  static async getFreelancerEarningsStats(freelancerId: string): Promise<any> {
+    try {
+      // Fetch earnings stats from the wallet API
+      const response = await fetch(`/api/wallet/stats?userId=${freelancerId}&type=freelance`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || {};
+      }
+      return {};
+    } catch (error) {
+      console.error("Error fetching freelancer earnings stats:", error);
+      return {};
+    }
+  }
+
   // Categories and skills
   static async getCategories(): Promise<string[]> {
     try {

@@ -24,8 +24,11 @@
       "@/*": ["./src/*"]
     },
     
+    /* Node.js types */
+    "types": ["node"],
+    
     /* Silence deprecation warnings */
     "ignoreDeprecations": "5.0"
   },
-  "include": ["src"]
+  "include": ["src", "./*.ts", "./*.tsx"]
 }

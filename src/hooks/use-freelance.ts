@@ -147,6 +147,26 @@ export const useFreelance = () => {
       [handleAsync],
     ),
 
+    // New methods for earnings
+    getFreelancerEarnings: useCallback(
+      (freelancerId: string) =>
+        handleAsync(() => freelanceService.getFreelancerEarnings(freelancerId)),
+      [handleAsync],
+    ),
+
+    getFreelancerEarningsStats: useCallback(
+      (freelancerId: string) =>
+        handleAsync(() => freelanceService.getFreelancerEarningsStats(freelancerId)),
+      [handleAsync],
+    ),
+
+    // Get freelancer balance
+    getFreelancerBalance: useCallback(
+      (freelancerId: string) =>
+        handleAsync(() => freelanceService.getFreelancerBalance(freelancerId)),
+      [handleAsync],
+    ),
+
     // Categories and skills
     getCategories: useCallback(
       () => handleAsync(() => freelanceService.getCategories()),

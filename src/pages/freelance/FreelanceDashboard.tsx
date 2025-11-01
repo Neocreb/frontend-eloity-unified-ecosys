@@ -204,6 +204,7 @@ export const FreelanceDashboard: React.FC = () => {
   };
 
   const getUrgentTasks = () => {
+    // TODO: Fetch real urgent tasks from the backend
     return [
       {
         id: "1",
@@ -223,6 +224,7 @@ export const FreelanceDashboard: React.FC = () => {
   };
 
   const getRecentActivities = () => {
+    // TODO: Fetch real recent activities from the backend
     return [
       {
         id: "1",
@@ -528,7 +530,7 @@ export const FreelanceDashboard: React.FC = () => {
                 />
                 <StatCard
                   title="Active Projects"
-                  value={stats.activeProjects}
+                  value={stats.totalProjects - stats.completedProjects}
                   icon={<Briefcase className="w-6 h-6 text-white" />}
                   color="bg-gradient-to-br from-blue-500 to-cyan-600"
                 />
@@ -673,22 +675,30 @@ export const FreelanceDashboard: React.FC = () => {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600 dark:text-gray-400">Response Time</span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">&lt; 2 hours</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {stats ? `${stats.responseTime} hours` : "< 2 hours"}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600 dark:text-gray-400">Client Rating</span>
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">4.9</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {stats ? stats.averageRating.toFixed(1) : "4.9"}
+                        </span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600 dark:text-gray-400">On-time Delivery</span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">98%</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {stats ? `${stats.successRate}%` : "98%"}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600 dark:text-gray-400">Repeat Clients</span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">67%</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {stats ? `${stats.repeatClients}` : "67%"}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +15,7 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Calendar,
   Download,
-  Eye,
   Clock,
   CheckCircle,
   AlertCircle,
@@ -39,6 +37,8 @@ import {
 import FreelanceWithdrawalMethods from "./FreelanceWithdrawalMethods";
 import FreelanceTaxDocuments from "./FreelanceTaxDocuments";
 import FreelanceInvoicing from "./FreelanceInvoicing";
+import { useFreelance } from "@/hooks/use-freelance";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EarningRecord {
   id: string;
@@ -65,78 +65,39 @@ interface EarningsStats {
   growthRate: number;
 }
 
-const mockEarnings: EarningRecord[] = [
-  {
-    id: "1",
-    projectTitle: "E-commerce Website Development",
-    client: { name: "Sarah Johnson", avatar: "/api/placeholder/40/40" },
-    amount: 1500,
-    type: "milestone",
-    status: "completed",
-    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    description: "Milestone 3: Frontend Development",
-    invoiceId: "INV-001",
-  },
-  {
-    id: "2",
-    projectTitle: "Mobile App UI/UX Design",
-    client: { name: "Marcus Chen", avatar: "/api/placeholder/40/40" },
-    amount: 800,
-    type: "fixed",
-    status: "pending",
-    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    description: "Final payment upon project completion",
-  },
-  {
-    id: "3",
-    projectTitle: "WordPress Website Redesign",
-    client: { name: "Emily Davis", avatar: "/api/placeholder/40/40" },
-    amount: 1200,
-    type: "milestone",
-    status: "completed",
-    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    description: "Milestone 2: Design Implementation",
-    invoiceId: "INV-002",
-  },
-  {
-    id: "4",
-    projectTitle: "Logo Design",
-    client: { name: "David Wilson", avatar: "/api/placeholder/40/40" },
-    amount: 500,
-    type: "bonus",
-    status: "completed",
-    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    description: "Performance bonus for early delivery",
-    invoiceId: "INV-003",
-  },
-  {
-    id: "5",
-    projectTitle: "Consulting Services",
-    client: { name: "Alice Thompson", avatar: "/api/placeholder/40/40" },
-    amount: 360,
-    type: "hourly",
-    status: "processing",
-    date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    description: "6 hours × $60/hour",
-  },
-];
-
-const mockStats: EarningsStats = {
-  totalEarnings: 12890.67, // Match centralized freelance balance
-  thisMonth: 4360,
-  lastMonth: 3890,
-  pending: 1200,
-  averageProject: 1580,
-  topClient: "Sarah Johnson",
-  growthRate: 12.1,
-};
-
 export const FreelancerEarnings: React.FC = () => {
-  const [earnings, setEarnings] = useState<EarningRecord[]>(mockEarnings);
-  const [stats, setStats] = useState<EarningsStats>(mockStats);
+  const [earnings, setEarnings] = useState<EarningRecord[]>([]);
+  const [stats, setStats] = useState<EarningsStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeModal, setActiveModal] = useState<"withdrawal" | "tax" | "invoicing" | null>(null);
+  
+  const { getFreelancerEarnings, getFreelancerEarningsStats } = useFreelance();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+      
+      setLoading(true);
+      try {
+        const [earningsData, statsData] = await Promise.all([
+          getFreelancerEarnings(user.id),
+          getFreelancerEarningsStats(user.id)
+        ]);
+        
+        setEarnings(earningsData || []);
+        setStats(statsData || null);
+      } catch (error) {
+        console.error("Error loading earnings data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [user, getFreelancerEarnings, getFreelancerEarningsStats]);
 
   const getStatusColor = (status: EarningRecord["status"]) => {
     switch (status) {
@@ -200,341 +161,308 @@ export const FreelancerEarnings: React.FC = () => {
     } else if (timeFilter === "lastMonth") {
       const lastMonth = new Date().getMonth() - 1;
       matchesTime = earning.date.getMonth() === lastMonth;
-    } else if (timeFilter === "thisYear") {
-      const thisYear = new Date().getFullYear();
-      matchesTime = earning.date.getFullYear() === thisYear;
     }
     
     return matchesStatus && matchesTime;
   });
 
-  const EarningCard: React.FC<{ earning: EarningRecord }> = ({ earning }) => (
-    <Card className="hover:shadow-md transition-all duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">
-              {earning.projectTitle}
-            </h3>
-            <div className="flex items-center gap-3 mb-2">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={earning.client.avatar} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm">
-                  {earning.client.name[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium text-sm text-gray-900 dark:text-white">
-                  {earning.client.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatDate(earning.date)}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="text-right">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                ${earning.amount.toLocaleString()}
-              </p>
-              <Badge className={`${getTypeColor(earning.type)} text-xs`}>
-                {earning.type}
-              </Badge>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Badge className={`${getStatusColor(earning.status)} flex items-center gap-1`}>
-              {getStatusIcon(earning.status)}
-              {earning.status}
-            </Badge>
-            {earning.invoiceId && (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                {earning.invoiceId}
-              </span>
-            )}
-          </div>
-
-          {earning.description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-              {earning.description}
-            </p>
-          )}
-
-          <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-700">
-            <Button variant="outline" size="sm">
-              <Eye className="w-4 h-4 mr-2" />
-              View Details
-            </Button>
-            {earning.invoiceId && (
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const monthlyProgress = (stats.thisMonth / (stats.thisMonth + 1000)) * 100;
-
-  return (
-    <div className="space-y-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Earnings</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  ${stats.totalEarnings.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">This Month</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  ${stats.thisMonth.toLocaleString()}
-                </p>
-                <div className="flex items-center text-sm mt-1">
-                  {stats.growthRate > 0 ? (
-                    <ArrowUpRight className="w-4 h-4 mr-1 text-green-500" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4 mr-1 text-red-500" />
-                  )}
-                  <span className={stats.growthRate > 0 ? "text-green-600" : "text-red-600"}>
-                    {Math.abs(stats.growthRate)}% vs last month
-                  </span>
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
                 </div>
-              </div>
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-full">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Pending</p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  ${stats.pending.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
-                <Clock className="w-6 h-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Avg Project</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  ${stats.averageProject.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-full">
-                <Target className="w-6 h-6 text-purple-600" />
-              </div>
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
+    );
+  }
 
-      {/* Monthly Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-blue-600" />
-            Monthly Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Current month earnings</span>
-              <span className="font-semibold">${stats.thisMonth.toLocaleString()} / $5,500 goal</span>
-            </div>
-            <Progress value={monthlyProgress} className="h-3" />
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-lg font-bold text-green-600">{Math.round(monthlyProgress)}%</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Goal Progress</p>
-              </div>
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-lg font-bold text-blue-600">
-                  ${(5500 - stats.thisMonth).toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Remaining</p>
-              </div>
-              <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <p className="text-lg font-bold text-purple-600">12</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Days Left</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Filters and Controls */}
+  return (
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Earnings History</h2>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Earnings</h1>
           <p className="text-gray-600 dark:text-gray-400">Track your income and payment history</p>
         </div>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <Select value={timeFilter} onValueChange={setTimeFilter}>
-            <SelectTrigger className="w-40">
-              <Calendar className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="thisMonth">This Month</SelectItem>
-              <SelectItem value="lastMonth">Last Month</SelectItem>
-              <SelectItem value="thisYear">This Year</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
-              <Wallet className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* Earnings Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredEarnings.map((earning) => (
-          <EarningCard key={earning.id} earning={earning} />
-        ))}
-      </div>
-
-      {filteredEarnings.length === 0 && (
-        <Card className="border-dashed border-2">
-          <CardContent className="p-12 text-center">
-            <DollarSign className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No earnings found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {timeFilter !== "all" || statusFilter !== "all" 
-                ? "Try adjusting your filter criteria"
-                : "Complete your first project to start earning"
-              }
-            </p>
-            <Button>
-              Browse Available Jobs
-            </Button>
-          </CardContent>
-        </Card>
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Earnings</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    ${stats.totalEarnings.toLocaleString()}
+                  </p>
+                </div>
+                <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
+                  <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">This Month</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    ${stats.thisMonth.toLocaleString()}
+                  </p>
+                  <div className="flex items-center mt-1">
+                    {stats.growthRate >= 0 ? (
+                      <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+                    )}
+                    <span className={stats.growthRate >= 0 ? "text-green-600 text-sm" : "text-red-600 text-sm"}>
+                      {stats.growthRate >= 0 ? '+' : ''}{stats.growthRate.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                  <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    ${stats.pending.toLocaleString()}
+                  </p>
+                </div>
+                <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
+                  <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Project</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    ${stats.averageProject.toLocaleString()}
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-full">
+                  <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-green-600" />
-            Payment Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              className="justify-start h-auto p-4"
-              onClick={() => setActiveModal("withdrawal")}
-            >
-              <div className="text-left">
-                <p className="font-medium">Withdrawal Methods</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Manage payment methods</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <CardTitle>Earning History</CardTitle>
+                <div className="flex gap-2">
+                  <Select value={timeFilter} onValueChange={setTimeFilter}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="thisMonth">This Month</SelectItem>
+                      <SelectItem value="lastMonth">Last Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="processing">Processing</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-auto p-4"
-              onClick={() => setActiveModal("tax")}
-            >
-              <div className="text-left">
-                <p className="font-medium">Tax Documents</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Download tax forms</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredEarnings.length > 0 ? (
+                  filteredEarnings.map((earning) => (
+                    <div key={earning.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-10 h-10">
+                          <AvatarImage src={earning.client.avatar} />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                            {earning.client.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{earning.projectTitle}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{earning.client.name}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <Badge className={getTypeColor(earning.type)}>
+                          {earning.type}
+                        </Badge>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900 dark:text-white">${earning.amount.toFixed(2)}</p>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getStatusColor(earning.status)}>
+                              <span className="flex items-center gap-1">
+                                {getStatusIcon(earning.status)}
+                                {earning.status}
+                              </span>
+                            </Badge>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatDate(earning.date)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <DollarSign className="w-12 h-12 mx-auto text-gray-400" />
+                    <h3 className="mt-4 font-medium text-gray-900 dark:text-white">No earnings found</h3>
+                    <p className="mt-1 text-gray-600 dark:text-gray-400">Complete projects to start earning</p>
+                  </div>
+                )}
               </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start h-auto p-4"
-              onClick={() => setActiveModal("invoicing")}
-            >
-              <div className="text-left">
-                <p className="font-medium">Invoicing</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Create and send invoices</p>
-              </div>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => setActiveModal("withdrawal")}
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Withdraw Funds
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => setActiveModal("invoicing")}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Create Invoice
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => setActiveModal("tax")}
+              >
+                <PieChart className="w-4 h-4 mr-2" />
+                Tax Documents
+              </Button>
+            </CardContent>
+          </Card>
+          
+          {stats && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Client</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Client</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{stats.topClient}</span>
+                </div>
+                <div className="mt-4">
+                  <Progress value={85} className="h-2" />
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <span>85% of earnings</span>
+                    <span>${(stats.totalEarnings * 0.85).toFixed(2)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
 
-      {/* Payment Settings Modals */}
-      <Dialog open={activeModal === "withdrawal"} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Withdrawal Methods</DialogTitle>
-          </DialogHeader>
-          <FreelanceWithdrawalMethods />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={activeModal === "tax"} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Tax Documents</DialogTitle>
-          </DialogHeader>
-          <FreelanceTaxDocuments />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={activeModal === "invoicing"} onOpenChange={() => setActiveModal(null)}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Invoicing</DialogTitle>
-          </DialogHeader>
-          <FreelanceInvoicing />
-        </DialogContent>
-      </Dialog>
+      {activeModal === "withdrawal" && (
+        <Dialog open onOpenChange={() => setActiveModal(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Withdraw Funds</DialogTitle>
+            </DialogHeader>
+            <FreelanceWithdrawalMethods />
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {activeModal === "tax" && (
+        <Dialog open onOpenChange={() => setActiveModal(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Tax Documents</DialogTitle>
+            </DialogHeader>
+            <FreelanceTaxDocuments />
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {activeModal === "invoicing" && (
+        <Dialog open onOpenChange={() => setActiveModal(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Invoice</DialogTitle>
+            </DialogHeader>
+            <FreelanceInvoicing />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
