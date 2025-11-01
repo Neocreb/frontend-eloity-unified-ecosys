@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 /* Insert test data into rewards tables for development and testing */
 
-import dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
-
-// Load environment variables
-dotenv.config();
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
 
 // Validate environment variables
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -149,8 +146,8 @@ async function main() {
 }
 
 // Run the script
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
   main();
 }
 
-export { insertTestRewardRules, insertTestVirtualGifts };
+module.exports = { insertTestRewardRules, insertTestVirtualGifts };
