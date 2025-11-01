@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ import {
 import { formatCurrency } from "@/utils/formatters";
 import BattleVoting from "@/components/voting/BattleVoting";
 import { rewardsNotificationService } from "@/services/rewardsNotificationService";
+import { rewardsBattlesService, LiveBattle, BattleVote } from "@/services/rewardsBattlesService";
 
 interface Creator {
   id: string;
@@ -37,170 +39,55 @@ interface Creator {
   followers: string;
 }
 
-interface Battle {
-  id: string;
-  title: string;
-  status: 'live' | 'upcoming' | 'ended';
-  timeRemaining: number;
-  viewerCount: number;
-  creator1: Creator;
-  creator2: Creator;
-  votingPool: {
-    creator1Total: number;
-    creator2Total: number;
-    totalPool: number;
-    totalVoters: number;
-  };
-  potentialEarnings: number;
-  featured?: boolean;
-}
-
-interface Vote {
-  id: string;
-  amount: number;
-  creatorId: string;
-  odds: number;
-  potentialWinning: number;
-  timestamp: Date;
-  status: 'active' | 'won' | 'lost' | 'refunded';
+interface BattleWithVotes {
+  battle: LiveBattle;
+  userVotes: BattleVote[];
 }
 
 const RewardsBattleTab = () => {
-  const [selectedBattle, setSelectedBattle] = useState<Battle | null>(null);
+  const { user } = useAuth();
+  const [selectedBattle, setSelectedBattle] = useState<LiveBattle | null>(null);
   const [showVotingModal, setShowVotingModal] = useState(false);
-  const [userVotes, setUserVotes] = useState<Vote[]>([]);
-  const [userBalance] = useState(2500); // Mock user balance
+  const [battlesWithVotes, setBattlesWithVotes] = useState<BattleWithVotes[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'live' | 'upcoming'>('all');
 
-  const mockBattles: Battle[] = [
-    {
-      id: "battle-1",
-      title: "Creator Showdown #1",
-      status: "live",
-      timeRemaining: 1847, // 30 minutes
-      viewerCount: 15420,
-      creator1: {
-        id: "creator-1",
-        username: "alexdance",
-        displayName: "Alex Dance",
-        avatar: "https://i.pravatar.cc/150?u=alex",
-        verified: true,
-        tier: "pro_creator",
-        winRate: 78,
-        totalVotes: 145,
-        isLeading: true,
-        currentScore: 2340,
-        followers: "125K"
-      },
-      creator2: {
-        id: "creator-2",
-        username: "musicmike",
-        displayName: "Music Mike",
-        avatar: "https://i.pravatar.cc/150?u=mike",
-        verified: false,
-        tier: "rising_star",
-        winRate: 65,
-        totalVotes: 98,
-        isLeading: false,
-        currentScore: 1890,
-        followers: "89K"
-      },
-      votingPool: {
-        creator1Total: 850,
-        creator2Total: 620,
-        totalPool: 1470,
-        totalVoters: 42
-      },
-      potentialEarnings: 125,
-      featured: true
-    },
-    {
-      id: "battle-2",
-      title: "Comedy Battle Royale",
-      status: "live",
-      timeRemaining: 892,
-      viewerCount: 8930,
-      creator1: {
-        id: "creator-3",
-        username: "funnygirl",
-        displayName: "Sarah Comedy",
-        avatar: "https://i.pravatar.cc/150?u=sarah",
-        verified: true,
-        tier: "legend",
-        winRate: 85,
-        totalVotes: 201,
-        isLeading: false,
-        currentScore: 1560,
-        followers: "340K"
-      },
-      creator2: {
-        id: "creator-4",
-        username: "jokester",
-        displayName: "Jake Jokes",
-        avatar: "https://i.pravatar.cc/150?u=jake",
-        verified: true,
-        tier: "pro_creator",
-        winRate: 72,
-        totalVotes: 156,
-        isLeading: true,
-        currentScore: 1680,
-        followers: "201K"
-      },
-      votingPool: {
-        creator1Total: 420,
-        creator2Total: 590,
-        totalPool: 1010,
-        totalVoters: 28
-      },
-      potentialEarnings: 95
-    },
-    {
-      id: "battle-3",
-      title: "Talent vs Experience",
-      status: "upcoming",
-      timeRemaining: 3600, // 1 hour
-      viewerCount: 0,
-      creator1: {
-        id: "creator-5",
-        username: "newtalent",
-        displayName: "Rising Star",
-        avatar: "https://i.pravatar.cc/150?u=rising",
-        verified: false,
-        tier: "rising_star",
-        winRate: 55,
-        totalVotes: 45,
-        isLeading: false,
-        currentScore: 0,
-        followers: "12K"
-      },
-      creator2: {
-        id: "creator-6",
-        username: "veteran",
-        displayName: "Pro Creator",
-        avatar: "https://i.pravatar.cc/150?u=veteran",
-        verified: true,
-        tier: "legend",
-        winRate: 92,
-        totalVotes: 389,
-        isLeading: false,
-        currentScore: 0,
-        followers: "567K"
-      },
-      votingPool: {
-        creator1Total: 150,
-        creator2Total: 340,
-        totalPool: 490,
-        totalVoters: 12
-      },
-      potentialEarnings: 75
-    }
-  ];
+  // Fetch battles data
+  useEffect(() => {
+    const fetchBattles = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        const data = await rewardsBattlesService.getBattlesWithVotes(user.id);
+        setBattlesWithVotes(data);
+      } catch (err) {
+        console.error("Error fetching battles:", err);
+        setError("Failed to load battles");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBattles();
+  }, [user?.id]);
 
   const filteredBattles = filter === 'all' 
-    ? mockBattles 
-    : mockBattles.filter(battle => battle.status === filter);
+    ? battlesWithVotes 
+    : battlesWithVotes.filter(battle => {
+        if (filter === 'live') {
+          return battle.battle.status === 'live' || battle.battle.status === 'active';
+        }
+        if (filter === 'upcoming') {
+          return battle.battle.status === 'pending';
+        }
+        return true;
+      });
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return '0s';
+    
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -213,10 +100,17 @@ const RewardsBattleTab = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'live': return 'bg-red-500 text-white animate-pulse';
-      case 'upcoming': return 'bg-blue-500 text-white';
-      case 'ended': return 'bg-gray-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'live':
+      case 'active':
+        return 'bg-red-500 text-white animate-pulse';
+      case 'pending':
+      case 'upcoming':
+        return 'bg-blue-500 text-white';
+      case 'ended':
+      case 'completed':
+        return 'bg-gray-500 text-white';
+      default:
+        return 'bg-gray-500 text-white';
     }
   };
 
@@ -229,43 +123,118 @@ const RewardsBattleTab = () => {
     }
   };
 
-  const handleVoteBattle = (battle: Battle) => {
+  const handleVoteBattle = (battle: LiveBattle) => {
     setSelectedBattle(battle);
     setShowVotingModal(true);
   };
 
-  const handlePlaceVote = (vote: Omit<Vote, 'id' | 'timestamp' | 'status'>) => {
-    const newVote: Vote = {
-      ...vote,
-      id: Date.now().toString(),
-      timestamp: new Date(),
-      status: 'active',
-    };
-
-    setUserVotes(prev => [...prev, newVote]);
-    setShowVotingModal(false);
-
-    // Trigger notification for vote placed
-    const battle = selectedBattle;
-    if (battle) {
-      const creatorName = vote.creatorId === battle.creator1.id ? battle.creator1.displayName : battle.creator2.displayName;
-      rewardsNotificationService.addRewardsNotification({
-        type: 'battle',
-        title: 'Battle Vote Placed! 🎯',
-        message: `Voted ${formatCurrency(vote.amount)} on ${creatorName} - Potential win: ${formatCurrency(vote.potentialWinning)}`,
-        amount: vote.amount,
-        priority: 'medium',
-        actionUrl: '/app/rewards?tab=battles',
-        actionLabel: 'View Battle'
-      });
+  const handlePlaceVote = async (voteData: { 
+    amount: number; 
+    creatorId: string; 
+    odds: number; 
+    potentialWinning: number 
+  }) => {
+    if (!user?.id || !selectedBattle) return;
+    
+    try {
+      const vote = await rewardsBattlesService.placeBattleVote(
+        user.id,
+        selectedBattle.id,
+        voteData.creatorId,
+        voteData.amount,
+        voteData.odds,
+        voteData.potentialWinning
+      );
+      
+      if (vote) {
+        // Update local state
+        setBattlesWithVotes(prev => prev.map(battleWithVotes => {
+          if (battleWithVotes.battle.id === selectedBattle.id) {
+            return {
+              ...battleWithVotes,
+              userVotes: [...battleWithVotes.userVotes, vote]
+            };
+          }
+          return battleWithVotes;
+        }));
+        
+        setShowVotingModal(false);
+        
+        // Trigger notification for vote placed
+        rewardsNotificationService.addRewardsNotification({
+          type: 'battle',
+          title: 'Battle Vote Placed! 🎯',
+          message: `Voted ${formatCurrency(voteData.amount)} - Potential win: ${formatCurrency(voteData.potentialWinning)}`,
+          amount: voteData.amount,
+          priority: 'medium',
+          actionUrl: '/app/rewards?tab=battles',
+          actionLabel: 'View Battle'
+        });
+      }
+    } catch (err) {
+      console.error("Error placing vote:", err);
     }
   };
 
-  const totalEarnings = userVotes
+  const totalEarnings = battlesWithVotes
+    .flatMap(b => b.userVotes)
     .filter(vote => vote.status === 'won')
-    .reduce((sum, vote) => sum + vote.potentialWinning, 0);
+    .reduce((sum, vote) => sum + vote.potential_winning, 0);
 
-  const activeVotes = userVotes.filter(vote => vote.status === 'active').length;
+  const activeVotes = battlesWithVotes
+    .flatMap(b => b.userVotes)
+    .filter(vote => vote.status === 'active').length;
+
+  // Mock user balance - in a real app this would come from user's wallet
+  const userBalance = 2500;
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {[1, 2].map((i) => (
+                  <Card key={i} className="h-64">
+                    <CardContent className="p-4">
+                      <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                      <div className="h-2 bg-gray-200 rounded w-full mb-2"></div>
+                      <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 mb-2">Error loading battles</div>
+        <div className="text-sm text-gray-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -276,7 +245,7 @@ const RewardsBattleTab = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Live Battles</p>
-                <p className="text-2xl font-bold">{mockBattles.filter(b => b.status === 'live').length}</p>
+                <p className="text-2xl font-bold">{battlesWithVotes.filter(b => b.battle.status === 'live' || b.battle.status === 'active').length}</p>
               </div>
               <Flame className="h-8 w-8 text-red-500" />
             </div>
@@ -345,158 +314,93 @@ const RewardsBattleTab = () => {
       </Card>
 
       {/* Battle List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredBattles.map((battle) => (
-          <Card key={battle.id} className={`relative ${battle.featured ? 'ring-2 ring-yellow-500' : ''}`}>
-            {battle.featured && (
-              <Badge className="absolute -top-2 left-4 bg-yellow-500">
-                <Star className="h-3 w-3 mr-1" />
-                Featured
-              </Badge>
-            )}
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{battle.title}</CardTitle>
-                <Badge className={getStatusColor(battle.status)}>
-                  {battle.status === 'live' && <Flame className="h-3 w-3 mr-1" />}
-                  {battle.status.toUpperCase()}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  {battle.status === 'upcoming' ? `Starts in ${formatTime(battle.timeRemaining)}` : 
-                   battle.status === 'live' ? `${formatTime(battle.timeRemaining)} left` : 'Ended'}
+      {filteredBattles.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredBattles.map(({ battle, userVotes }) => (
+            <Card key={battle.id} className="relative">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{battle.title}</CardTitle>
+                  <Badge className={getStatusColor(battle.status)}>
+                    {battle.status === 'live' || battle.status === 'active' ? (
+                      <Flame className="h-3 w-3 mr-1" />
+                    ) : null}
+                    {battle.status.toUpperCase()}
+                  </Badge>
                 </div>
-                {battle.status !== 'upcoming' && (
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    {battle.viewerCount.toLocaleString()} viewers
+                    <Clock className="h-4 w-4" />
+                    {battle.status === 'pending' ? `Starts soon` : 
+                     battle.status === 'live' || battle.status === 'active' ? 
+                     `${formatTime(battle.duration)} left` : 'Ended'}
                   </div>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {/* Creators Comparison */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Creator 1 */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={battle.creator1.avatar} />
-                      <AvatarFallback>{battle.creator1.displayName[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium text-sm truncate">{battle.creator1.displayName}</span>
-                        {battle.creator1.verified && <Badge variant="secondary" className="h-4 w-4 p-0">✓</Badge>}
-                        {getTierIcon(battle.creator1.tier)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{battle.creator1.followers}</div>
+                  {(battle.status === 'live' || battle.status === 'active') && (
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-4 w-4" />
+                      {battle.total_viewers.toLocaleString()} viewers
                     </div>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                {/* Voting Pool Info */}
+                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Total Voting Pool</span>
+                    <span className="font-bold text-green-600">
+                      {formatCurrency(battle.bet_pool)}
+                    </span>
                   </div>
-                  <div className="text-xs space-y-1">
-                    <div className="flex justify-between">
-                      <span>Win Rate:</span>
-                      <span className="font-medium">{battle.creator1.winRate}%</span>
-                    </div>
-                    {battle.status === 'live' && (
-                      <div className="flex justify-between">
-                        <span>Score:</span>
-                        <span className="font-medium">{battle.creator1.currentScore}</span>
-                      </div>
-                    )}
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{battle.total_bets} voters</span>
+                    <span>Potential: +{formatCurrency(battle.bet_pool * 0.9)}</span>
                   </div>
+                  {battle.status !== 'ended' && battle.status !== 'completed' && (
+                    <Progress 
+                      value={50} 
+                      className="h-2"
+                    />
+                  )}
                 </div>
 
-                {/* VS Divider */}
-                <div className="flex items-center justify-center">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-xs font-bold">VS</span>
-                  </div>
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  {(battle.status === 'live' || battle.status === 'active') && (
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Play className="h-4 w-4 mr-2" />
+                      Watch Live
+                    </Button>
+                  )}
+                  {battle.status !== 'ended' && battle.status !== 'completed' && (
+                    <Button 
+                      size="sm" 
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => handleVoteBattle(battle)}
+                    >
+                      <Target className="h-4 w-4 mr-2" />
+                      Vote & Earn
+                    </Button>
+                  )}
+                  {(battle.status === 'ended' || battle.status === 'completed') && (
+                    <Button size="sm" variant="secondary" className="flex-1" disabled>
+                      <Trophy className="h-4 w-4 mr-2" />
+                      Battle Ended
+                    </Button>
+                  )}
                 </div>
-
-                {/* Creator 2 */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={battle.creator2.avatar} />
-                      <AvatarFallback>{battle.creator2.displayName[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium text-sm truncate">{battle.creator2.displayName}</span>
-                        {battle.creator2.verified && <Badge variant="secondary" className="h-4 w-4 p-0">✓</Badge>}
-                        {getTierIcon(battle.creator2.tier)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{battle.creator2.followers}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs space-y-1">
-                    <div className="flex justify-between">
-                      <span>Win Rate:</span>
-                      <span className="font-medium">{battle.creator2.winRate}%</span>
-                    </div>
-                    {battle.status === 'live' && (
-                      <div className="flex justify-between">
-                        <span>Score:</span>
-                        <span className="font-medium">{battle.creator2.currentScore}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Voting Pool Info */}
-              <div className="bg-gray-50 p-3 rounded-lg space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Total Voting Pool</span>
-                  <span className="font-bold text-green-600">
-                    {formatCurrency(battle.votingPool.totalPool)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{battle.votingPool.totalVoters} voters</span>
-                  <span>Potential: +{formatCurrency(battle.potentialEarnings)}</span>
-                </div>
-                {battle.status !== 'ended' && (
-                  <Progress 
-                    value={(battle.votingPool.creator1Total / battle.votingPool.totalPool) * 100} 
-                    className="h-2"
-                  />
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                {battle.status === 'live' && (
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Play className="h-4 w-4 mr-2" />
-                    Watch Live
-                  </Button>
-                )}
-                {battle.status !== 'ended' && (
-                  <Button 
-                    size="sm" 
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => handleVoteBattle(battle)}
-                  >
-                    <Target className="h-4 w-4 mr-2" />
-                    Vote & Earn
-                  </Button>
-                )}
-                {battle.status === 'ended' && (
-                  <Button size="sm" variant="secondary" className="flex-1" disabled>
-                    <Trophy className="h-4 w-4 mr-2" />
-                    Battle Ended
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-8 text-muted-foreground">
+            No battles found in this category
+          </CardContent>
+        </Card>
+      )}
 
       {/* How Battle Voting Works */}
       <Card>
@@ -558,17 +462,41 @@ const RewardsBattleTab = () => {
             <div className="bg-gray-900 rounded-lg p-4">
               <BattleVoting
                 battleId={selectedBattle.id}
-                creator1={selectedBattle.creator1}
-                creator2={selectedBattle.creator2}
-                isLive={selectedBattle.status === 'live'}
-                timeRemaining={selectedBattle.timeRemaining}
+                creator1={{
+                  id: selectedBattle.creator1_id,
+                  username: "creator1",
+                  displayName: "Creator 1",
+                  avatar: "",
+                  tier: "rising_star",
+                  verified: false,
+                  currentScore: selectedBattle.creator1_score,
+                  winRate: 0,
+                  totalVotes: 0,
+                  isLeading: selectedBattle.creator1_score > selectedBattle.creator2_score
+                }}
+                creator2={{
+                  id: selectedBattle.creator2_id || "",
+                  username: "creator2",
+                  displayName: "Creator 2",
+                  avatar: "",
+                  tier: "rising_star",
+                  verified: false,
+                  currentScore: selectedBattle.creator2_score,
+                  winRate: 0,
+                  totalVotes: 0,
+                  isLeading: selectedBattle.creator2_score > selectedBattle.creator1_score
+                }}
+                isLive={selectedBattle.status === 'live' || selectedBattle.status === 'active'}
+                timeRemaining={selectedBattle.duration || 0}
                 userBalance={userBalance}
                 onPlaceVote={handlePlaceVote}
-                userVotes={userVotes.filter(vote => 
-                  vote.creatorId === selectedBattle.creator1.id || 
-                  vote.creatorId === selectedBattle.creator2.id
-                )}
-                votingPool={selectedBattle.votingPool}
+                userVotes={battlesWithVotes.find(b => b.battle.id === selectedBattle.id)?.userVotes || []}
+                votingPool={{
+                  creator1Total: selectedBattle.creator1_score,
+                  creator2Total: selectedBattle.creator2_score,
+                  totalPool: selectedBattle.bet_pool,
+                  totalVoters: selectedBattle.total_bets
+                }}
               />
             </div>
           </div>
