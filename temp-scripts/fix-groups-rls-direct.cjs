@@ -1,0 +1,88 @@
+const { Client } = require('pg');
+const fs = require('fs');
+
+// Get database URL from .env.local
+let databaseUrl;
+try {
+  const envLocal = fs.readFileSync('.env.local', 'utf8');
+  const dbUrlMatch = envLocal.match(/DATABASE_URL=(.*)/);
+  databaseUrl = dbUrlMatch ? dbUrlMatch[1] : null;
+} catch (err) {
+  console.log('Note: .env.local not found, trying environment variables');
+  databaseUrl = process.env.DATABASE_URL;
+}
+
+if (!databaseUrl) {
+  console.error('DATABASE_URL not found in .env.local or environment variables');
+  process.exit(1);
+}
+
+console.log('🔧 Fixing groups RLS policies with correct column names...');
+
+const client = new Client({
+  connectionString: databaseUrl,
+});
+
+async function fixGroupsRLSPolicies() {
+  try {
+    await client.connect();
+    console.log('✅ Connected to database successfully!');
+
+    // Drop existing policies that reference the wrong column name
+    console.log('🗑️  Dropping existing policies...');
+    const dropPolicies = [
+      `DROP POLICY IF EXISTS "Users can view public groups" ON public.groups`,
+      `DROP POLICY IF EXISTS "Users can view group members" ON public.group_members`,
+      `DROP POLICY IF EXISTS "Users can join groups" ON public.group_members`
+    ];
+    
+    for (const policy of dropPolicies) {
+      try {
+        await client.query(policy);
+        console.log(`✅ Dropped policy: ${policy.split('"')[1]}`);
+      } catch (error) {
+        console.warn(`Warning dropping policy: ${error.message}`);
+      }
+    }
+    
+    // Create proper policies for groups table with correct column name
+    console.log('🔧 Creating new policies with correct column names...');
+    const createPolicies = [
+      `CREATE POLICY "Users can view public groups" ON public.groups FOR SELECT USING (privacy = 'public')`,
+      `CREATE POLICY "Users can view group members" ON public.group_members FOR SELECT USING (EXISTS (SELECT 1 FROM public.groups WHERE groups.id = group_members.group_id AND (groups.privacy = 'public' OR groups.created_by = auth.uid())))`,
+      `CREATE POLICY "Users can join groups" ON public.group_members FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS (SELECT 1 FROM public.groups WHERE groups.id = group_members.group_id AND groups.privacy IN ('public', 'unlisted')))`
+    ];
+    
+    for (const policy of createPolicies) {
+      try {
+        await client.query(policy);
+        console.log(`✅ Created policy: ${policy.split('"')[1]}`);
+      } catch (error) {
+        console.error(`❌ Error creating policy: ${error.message}`);
+        console.error(`Policy: ${policy}`);
+      }
+    }
+    
+    console.log('✅ Groups RLS policies fixed successfully!');
+    console.log('🔄 Refreshing PostgREST schema cache...');
+    
+    // Refresh the PostgREST schema cache
+    try {
+      await client.query("NOTIFY pgrst, 'reload schema'");
+      console.log('✅ PostgREST schema cache refreshed');
+    } catch (error) {
+      console.warn(`Warning refreshing schema: ${error.message}`);
+    }
+    
+    console.log('🎉 All fixes applied successfully!');
+    
+  } catch (error) {
+    console.error('❌ Error fixing groups RLS policies:', error.message);
+    process.exit(1);
+  } finally {
+    await client.end();
+    console.log('🔒 Database connection closed.');
+  }
+}
+
+fixGroupsRLSPolicies();
