@@ -39,6 +39,27 @@ export class ProfileService {
           "User not found in database:",
           error.message
         );
+        
+        // If the error is related to missing tables, try a simpler query
+        if (error.message.includes("marketplace_profiles") || 
+            error.message.includes("freelance_profiles") || 
+            error.message.includes("crypto_profiles") ||
+            error.message.includes("400")) {
+          console.log("Attempting fallback query without extension tables...");
+          const { data: simpleData, error: simpleError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("username", username)
+            .single();
+          
+          if (simpleError) {
+            console.warn("Simple profile query also failed:", simpleError.message);
+            return null;
+          }
+          
+          return this.formatUserProfile(simpleData);
+        }
+        
         return null;
       }
 
@@ -73,6 +94,27 @@ export class ProfileService {
 
       if (error) {
         console.warn("User not found in database:", error.message);
+        
+        // If the error is related to missing tables, try a simpler query
+        if (error.message.includes("marketplace_profiles") || 
+            error.message.includes("freelance_profiles") || 
+            error.message.includes("crypto_profiles") ||
+            error.message.includes("400")) {
+          console.log("Attempting fallback query without extension tables...");
+          const { data: simpleData, error: simpleError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", userId)
+            .single();
+          
+          if (simpleError) {
+            console.warn("Simple profile query also failed:", simpleError.message);
+            return null;
+          }
+          
+          return this.formatUserProfile(simpleData);
+        }
+        
         return null;
       }
 

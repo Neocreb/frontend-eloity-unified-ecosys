@@ -70,7 +70,7 @@ const ProfileViews: React.FC = () => {
         // Get user profile first
         const userProfile = await profileService.getUserByUsername(username);
         if (!userProfile) {
-          setError("User not found");
+          setError("User not found or profile data is temporarily unavailable. Please try again later.");
           return;
         }
         
@@ -91,9 +91,14 @@ const ProfileViews: React.FC = () => {
             tablet: 0,
           },
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching viewers:", err);
-        setError("Failed to load viewer data");
+        // Check if this is a Supabase 400 error related to missing tables
+        if (err.message && (err.message.includes("400") || err.message.includes("marketplace_profiles"))) {
+          setError("Profile data is temporarily unavailable due to system maintenance. Please try again later.");
+        } else {
+          setError("Failed to load viewer data. Please try again later.");
+        }
       } finally {
         setLoading(false);
       }
@@ -140,14 +145,25 @@ const ProfileViews: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Profile Views</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load Profile Views</h2>
             <p className="text-gray-600 mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Try Again
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => navigate(`/app/profile/${username}`)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Back to Profile
+              </button>
+            </div>
+            <div className="mt-4 text-sm text-gray-500">
+              <p>This issue is being resolved automatically. Please try again in a few minutes.</p>
+            </div>
           </div>
         </div>
       </div>
