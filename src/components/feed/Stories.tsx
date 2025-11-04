@@ -21,11 +21,6 @@ export type Story = {
   isUser?: boolean;
 };
 
-interface StoriesProps {
-  onViewStory?: (storyId: string) => void;
-  onCreateStory?: () => void;
-}
-
 const Stories = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
@@ -39,7 +34,6 @@ const Stories = () => {
   useEffect(() => {
     const createStoriesWithAds = () => {
       const storyItems = [];
-      let sponsoredAdCounter = 0;
       let nativeAdCounter = 0;
 
       // Add Eloity sponsored story as first item if ads are enabled
