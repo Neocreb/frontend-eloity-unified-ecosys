@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Search, X, Check } from "lucide-react";
+import { UserService } from "@/services/userService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface User {
   id: string;
@@ -29,51 +31,42 @@ const TagPeopleModal: React.FC<TagPeopleModalProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<User[]>(currentlyTagged);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user: currentUser } = useAuth();
 
-  // Mock users data
-  const mockUsers: User[] = [
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      username: "sarahj",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b5bb?w=150&h=150&fit=crop&crop=face",
-      verified: true,
-    },
-    {
-      id: "2",
-      name: "Mike Chen",
-      username: "mikechen",
-      avatar: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=150&h=150&fit=crop&crop=face",
-    },
-    {
-      id: "3",
-      name: "Emma Wilson",
-      username: "emmaw",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-      verified: true,
-    },
-    {
-      id: "4",
-      name: "David Kim",
-      username: "davidk",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-    },
-    {
-      id: "5",
-      name: "Lisa Park",
-      username: "lisap",
-      avatar: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop&crop=face",
-    },
-    {
-      id: "6",
-      name: "James Wilson",
-      username: "jamesw",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      verified: true,
-    },
-  ];
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen, searchTerm]);
 
-  const filteredUsers = mockUsers.filter(user =>
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const fetchedUsers = await UserService.searchUsers(searchTerm || "", 50);
+      
+      // Transform to User interface
+      const transformedUsers: User[] = fetchedUsers.map(u => ({
+        id: u.id,
+        name: u.full_name || u.username || "Unknown",
+        username: u.username || "",
+        avatar: u.avatar_url || u.avatar || "/placeholder.svg",
+        verified: u.is_verified || false
+      }));
+
+      // Filter out current user
+      const filteredUsers = transformedUsers.filter(u => u.id !== currentUser?.id);
+      setUsers(filteredUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -144,9 +137,13 @@ const TagPeopleModal: React.FC<TagPeopleModalProps> = ({
 
         {/* Users list */}
         <div className="flex-1 overflow-y-auto">
-          {filteredUsers.length === 0 ? (
+          {loading ? (
             <div className="p-4 text-center text-gray-500">
-              <p>No users found</p>
+              <p>Loading users...</p>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              <p>{searchTerm ? "No users found" : "Start typing to search users"}</p>
             </div>
           ) : (
             <div className="space-y-1">

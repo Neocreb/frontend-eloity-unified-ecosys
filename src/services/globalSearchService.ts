@@ -494,20 +494,20 @@ class GlobalSearchService {
   // Real API search methods
   private async searchUsers(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/users/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Users search API failed');
-
-      const data = await response.json();
-      return data.users?.map((user: any) => ({
+      // Use UserService to search for real users
+      const { UserService } = await import('@/services/userService');
+      const users = await UserService.searchUsers(query, 20);
+      
+      return users.map((user) => ({
         id: user.id,
         type: 'user' as const,
-        title: user.name || user.username,
-        description: user.bio || `${user.name} - ${user.location || 'User'}`,
-        image: user.avatar,
-        location: user.location,
-        tags: user.skills || [],
-        author: { name: user.name, verified: user.verified },
-        stats: { views: user.profileViews },
+        title: user.full_name || user.username || 'Unknown User',
+        description: user.bio || `@${user.username || 'user'}`,
+        image: user.avatar_url || user.avatar || '/placeholder.svg',
+        location: '',
+        tags: [],
+        author: { name: user.full_name || user.username || 'Unknown', verified: user.is_verified || false },
+        stats: { views: 0 },
       })) || [];
     } catch (error) {
       console.warn('Users search failed:', error);

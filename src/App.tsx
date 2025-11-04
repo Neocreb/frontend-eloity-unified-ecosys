@@ -47,7 +47,7 @@ import Home from "./pages/Home";
 import EnhancedFeedWithTabs from "./pages/EnhancedFeedWithTabs";
 import EnhancedFreelance from "./pages/EnhancedFreelance";
 import FreelanceJobs from "./pages/freelance/FreelanceJobs";
-import RoleSwitcherDashboard from "./pages/freelance/RoleSwitcherDashboard";
+// import RoleSwitcherDashboard from "./pages/freelance/RoleSwitcherDashboard";
 import UnifiedFreelanceDashboard from "./pages/freelance/UnifiedFreelanceDashboard";
 import { DashboardRouteGuard } from "./components/freelance/DashboardRouteGuard";
 import UpdateProfile from "./pages/freelance/UpdateProfile";
@@ -59,8 +59,8 @@ import FindFreelancers from "./pages/freelance/FindFreelancers";
 import ManageProjects from "./pages/freelance/ManageProjects";
 import FreelancerManageProjects from "./pages/freelance/FreelancerManageProjects";
 import ApproveWork from "./pages/freelance/ApproveWork";
-import JobDetailPage from "./pages/freelance/JobDetailPage";
-import Inbox from "./chat/Inbox";
+// import JobDetailPage from "./pages/freelance/JobDetailPage";
+// import Inbox from "./chat/Inbox";
 import ChatRoom from "./pages/ChatRoom";
 import SimpleChatRoom from "./pages/SimpleChatRoom";
 import EnhancedProfile from "./pages/EnhancedProfile";
@@ -78,7 +78,7 @@ import WalletTransactions from "./pages/wallet/WalletTransactions";
 import WalletIntegrations from "./pages/wallet/WalletIntegrations";
 import WalletCards from "./pages/wallet/WalletCards";
 import GiftCards from "./pages/wallet/GiftCards";
-import Marketplace from "./pages/Marketplace";
+// import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
 import MarketplaceCheckout from "./pages/marketplace/MarketplaceCheckout";
@@ -90,7 +90,7 @@ import MarketplaceDashboard from "./pages/marketplace/MarketplaceDashboard";
 import MarketplaceOrders from "./pages/marketplace/MarketplaceOrders";
 
 // Delivery system imports
-import DeliveryHub from "./pages/DeliveryHub";
+// import DeliveryHub from "./pages/DeliveryHub";
 import DeliveryProviderRegistration from "./components/delivery/DeliveryProviderRegistration";
 import DeliveryProviderDashboard from "./components/delivery/DeliveryProviderDashboard";
 import Overview from "./pages/delivery/provider/Overview";
@@ -106,8 +106,8 @@ import DeliveryTrackingAdmin from "./components/admin/DeliveryTrackingAdmin";
 import DeliveryTrackingPublic from "./pages/DeliveryTrackingPublic";
 import DriverApplicationPublic from "./pages/DriverApplicationPublic";
 
-import CryptoMarket from "./pages/CryptoMarket";
-import EnhancedCrypto from "./pages/EnhancedCrypto";
+// import CryptoMarket from "./pages/CryptoMarket";
+// import EnhancedCrypto from "./pages/EnhancedCrypto";
 import ProfessionalCrypto from "./pages/ProfessionalCrypto";
 import CryptoTrading from "./pages/CryptoTrading";
 import CryptoP2P from "./pages/CryptoP2P";
@@ -118,9 +118,9 @@ import CourseDetail from "./pages/CourseDetail";
 import LessonViewer from "./pages/LessonViewer";
 import ArticleViewer from "./pages/ArticleViewer";
 import NotFound from "./pages/NotFound";
-import Rewards from "./pages/Rewards";
+// import Rewards from "./pages/Rewards";
 import EnhancedSettings from "./pages/EnhancedSettings";
-import AdminDashboard from "./pages/admin/AdminDashboard";
+// import AdminDashboard from "./pages/admin/AdminDashboard";
 import ComprehensiveAdminDashboard from "./pages/admin/ComprehensiveAdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import AdminLogin from "./pages/AdminLogin";
@@ -158,15 +158,15 @@ import EnhancedDashboardDemo from "./components/freelance/EnhancedDashboardDemo"
 import UnifiedCreatorStudio from "./pages/UnifiedCreatorStudio";
 import Chat from "./pages/Chat";
 import ChatTest from "./pages/ChatTest";
-import Messages from "./pages/Messages";
+// import Messages from "./pages/Messages";
 import Explore from "./pages/Explore";
 import GlobalSearch from "./pages/GlobalSearch";
 import LandingPage from "./pages/LandingPage";
 import TestComponent from "./pages/TestComponent";
 import SupabaseDebug from "./pages/SupabaseDebug";
 import UnifiedNotifications from "./pages/UnifiedNotifications";
-import Create from "./pages/Create";
-import EnhancedPlatform from "./pages/EnhancedPlatform";
+// import Create from "./pages/Create";
+// import EnhancedPlatform from "./pages/EnhancedPlatform";
 import EnhancedRewards from "./pages/EnhancedRewards";
 import ProfileDemo from "./components/profile/ProfileDemo";
 import AnalyticsDashboard from "./components/analytics/AnalyticsDashboard";
@@ -179,10 +179,10 @@ import Blog from "./pages/Blog";
 import SimpleBlog from "./pages/SimpleBlog";
 import BlogPost from "./pages/BlogPost";
 import CommunityEvents from "./pages/CommunityEvents";
-import SubscriptionManager from "./components/premium/SubscriptionManager";
-import VirtualGiftsAndTips from "./components/premium/VirtualGiftsAndTips";
+// import SubscriptionManager from "./components/premium/SubscriptionManager";
+// import VirtualGiftsAndTips from "./components/premium/VirtualGiftsAndTips";
 import EnhancedKYCVerification from "./components/kyc/EnhancedKYCVerification";
-import { LiveStreamCreator } from "./components/livestream/LiveStreamCreator";
+// import { LiveStreamCreator } from "./components/livestream/LiveStreamCreator";
 import Groups from "./pages/Groups";
 import Pages from "./pages/Pages";
 import GroupDetailView from "./components/groups/GroupDetailView";
@@ -268,17 +268,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
-// Legacy admin route component for backward compatibility
-interface LegacyAdminRouteProps {
-  children: React.ReactNode;
-}
-
 // Messages redirect component to handle threadId parameter
 const MessagesRedirect = () => {
   const { threadId } = useParams();
   return <Navigate to={`/app/chat/${threadId}`} replace />;
 };
 
+// Legacy admin route - currently unused
+/*
 const LegacyAdminRoute = ({ children }: LegacyAdminRouteProps) => {
   const { isAuthenticated, isLoading, isAdmin } = useAuth();
 
@@ -303,6 +300,7 @@ const LegacyAdminRoute = ({ children }: LegacyAdminRouteProps) => {
 
   return <>{children}</>;
 };
+*/
 
 // Global call state component (simplified - no incoming call simulation)
 const GlobalCallProvider = ({ children }: { children: React.ReactNode }) => {
@@ -764,29 +762,29 @@ const App = () => {
                 <AuthProvider>
                   <UserCollectionsProvider>
                     <UnifiedNotificationProvider>
-                    <AdminProvider>
-                    <AccessibilityProvider>
-                      <TooltipProvider>
-                        <GlobalCallProvider>
-                          <AppRoutes />
+                      <AdminProvider>
+                        <AccessibilityProvider>
+                          <TooltipProvider>
+                            <GlobalCallProvider>
+                              <AppRoutes />
 
-                          {/* Global Components */}
-                          <OnboardingTour />
-                          <NotificationSystem />
-                          <RewardNotificationContainer />
-                          <AccessibilityControlPanel />
-                          <KeyboardNavigationHelper />
-                          <ReadingGuide />
-                          <ConnectionStatus />
-                          <PWAInstallPrompt />
+                              {/* Global Components */}
+                              <OnboardingTour />
+                              <NotificationSystem />
+                              <RewardNotificationContainer />
+                              <AccessibilityControlPanel />
+                              <KeyboardNavigationHelper />
+                              <ReadingGuide />
+                              <ConnectionStatus />
+                              <PWAInstallPrompt />
 
-                          {/* Toasters */}
-                          <Toaster />
-                          <Sonner />
-                        </GlobalCallProvider>
-                      </TooltipProvider>
-                    </AccessibilityProvider>
-                    </AdminProvider>
+                              {/* Toasters */}
+                              <Toaster />
+                              <Sonner />
+                            </GlobalCallProvider>
+                          </TooltipProvider>
+                        </AccessibilityProvider>
+                      </AdminProvider>
                     </UnifiedNotificationProvider>
                   </UserCollectionsProvider>
                 </AuthProvider>
