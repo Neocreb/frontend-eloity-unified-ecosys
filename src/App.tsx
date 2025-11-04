@@ -268,15 +268,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
-// Legacy admin route component for backward compatibility
-interface LegacyAdminRouteProps {
-  children: React.ReactNode;
-}
-
 // Messages redirect component to handle threadId parameter
 const MessagesRedirect = () => {
   const { threadId } = useParams();
   return <Navigate to={`/app/chat/${threadId}`} replace />;
+};
+
 // Legacy admin route - currently unused
 /*
 const LegacyAdminRoute = ({ children }: LegacyAdminRouteProps) => {
@@ -765,29 +762,29 @@ const App = () => {
                 <AuthProvider>
                   <UserCollectionsProvider>
                     <UnifiedNotificationProvider>
-                    <AdminProvider>
-                    <AccessibilityProvider>
-                      <TooltipProvider>
-                        <GlobalCallProvider>
-                          <AppRoutes />
+                      <AdminProvider>
+                        <AccessibilityProvider>
+                          <TooltipProvider>
+                            <GlobalCallProvider>
+                              <AppRoutes />
 
-                          {/* Global Components */}
-                          <OnboardingTour />
-                          <NotificationSystem />
-                          <RewardNotificationContainer />
-                          <AccessibilityControlPanel />
-                          <KeyboardNavigationHelper />
-                          <ReadingGuide />
-                          <ConnectionStatus />
-                          <PWAInstallPrompt />
+                              {/* Global Components */}
+                              <OnboardingTour />
+                              <NotificationSystem />
+                              <RewardNotificationContainer />
+                              <AccessibilityControlPanel />
+                              <KeyboardNavigationHelper />
+                              <ReadingGuide />
+                              <ConnectionStatus />
+                              <PWAInstallPrompt />
 
-                          {/* Toasters */}
-                          <Toaster />
-                          <Sonner />
-                        </GlobalCallProvider>
-                      </TooltipProvider>
-                    </AccessibilityProvider>
-                    </AdminProvider>
+                              {/* Toasters */}
+                              <Toaster />
+                              <Sonner />
+                            </GlobalCallProvider>
+                          </TooltipProvider>
+                        </AccessibilityProvider>
+                      </AdminProvider>
                     </UnifiedNotificationProvider>
                   </UserCollectionsProvider>
                 </AuthProvider>

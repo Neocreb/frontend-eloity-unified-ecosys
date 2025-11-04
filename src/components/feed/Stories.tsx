@@ -73,19 +73,47 @@ const Stories = ({ onViewStory, onCreateStory }: StoriesProps) => {
     type: 'audio' | 'video' | 'image' | null
   }) => {
     try {
-      // Here you would upload the file to your storage (e.g., Firebase, S3)
-      // and create the story in your database
-      const formData = new FormData();
-      if (content.text) formData.append('text', content.text);
-      if (content.file) formData.append('file', content.file);
-      if (content.type) formData.append('type', content.type);
+      if (!user) {
+        notification.error("Please log in to create stories");
+        return;
+      }
 
-      // Example API call:
-      // const response = await fetch('/api/stories', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      // const data = await response.json();
+      if (!content.file || !content.type) {
+        notification.error("Please select a file for your story");
+        return;
+      }
+
+      notification.info("Uploading story...");
+
+      // Upload file to Supabase storage
+      const fileExt = content.file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('stories')
+        .upload(fileName, content.file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        notification.error("Failed to upload media. Please try again.");
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('stories')
+        .getPublicUrl(fileName);
+
+      // Create story record
+      await storiesService.createStory({
+        media_url: publicUrl,
+        media_type: content.type as 'image' | 'video',
+        caption: content.text,
+        expires_in_hours: 24
+      }, user.id);
 
       notification.success("Story created successfully!");
 
