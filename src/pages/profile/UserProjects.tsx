@@ -76,18 +76,22 @@ const UserProjects: React.FC = () => {
   // Check if this is the user's own profile (in real app, check authentication)
   const isOwnProfile = true; // Mock - in real app: currentUser?.username === username
 
-  // Mock data for stats (in real app, fetch from API)
+  // Stats will be fetched from API in real implementation
   const freelanceStats = {
-    totalProjects: 89,
-    completedProjects: 85,
-    averageRating: 4.9,
-    totalReviews: 76,
-    responseRate: 99,
-    responseTime: "< 1 hour",
-    memberSince: "2022",
-    totalEarnings: 145750,
-    repeatClients: 45,
-    successRate: 98,
+    totalProjects: projects.length,
+    completedProjects: projects.filter(p => p.status === "completed").length,
+    averageRating: projects.length > 0 
+      ? projects.reduce((sum, p) => sum + (p.rating || 0), 0) / projects.length
+      : 0,
+    totalReviews: 0, // Would be fetched from API
+    responseRate: 0, // Would be fetched from API
+    responseTime: "", // Would be fetched from API
+    memberSince: "", // Would be fetched from API
+    totalEarnings: 0, // Would be fetched from API
+    repeatClients: 0, // Would be fetched from API
+    successRate: projects.length > 0 
+      ? Math.round((projects.filter(p => p.status === "completed").length / projects.length) * 100)
+      : 0,
   };
 
   const skills = [
@@ -138,43 +142,6 @@ const UserProjects: React.FC = () => {
             projectsData = projectsResponse;
           } else if (projectsResponse && typeof projectsResponse === 'object' && 'jobs' in projectsResponse) {
             projectsData = projectsResponse.jobs as Project[];
-          } else {
-            // Fallback to mock data if API response is unexpected
-            projectsData = [
-              {
-                id: "1",
-                title: "E-commerce Platform Redesign",
-                description: "Complete redesign and development of a modern e-commerce platform with improved UX and performance optimization.",
-                category: "web_development",
-                tags: ["React", "Node.js", "MongoDB", "Stripe"],
-                images: ["/placeholder.svg", "/placeholder.svg"],
-                external_link: "https://demo-ecommerce.com",
-                github_link: "https://github.com/alexrivera/ecommerce",
-                live_demo: "https://demo-ecommerce.com",
-                client: "TechStore Inc.",
-                duration: "8 weeks",
-                budget: 15000,
-                rating: 5.0,
-                completed_at: "2024-01-15",
-                type: "platform",
-                status: "completed",
-              },
-              {
-                id: "2",
-                title: "Mobile Banking App",
-                description: "Secure mobile banking application with biometric authentication and real-time notifications.",
-                category: "mobile_app",
-                tags: ["React Native", "Firebase", "Biometrics"],
-                images: ["/placeholder.svg"],
-                client: "FinTech Solutions",
-                duration: "12 weeks",
-                budget: 25000,
-                rating: 4.8,
-                completed_at: "2023-12-20",
-                type: "platform",
-                status: "completed",
-              },
-            ];
           }
           setProjects(projectsData);
         } catch (projectError) {
@@ -193,44 +160,10 @@ const UserProjects: React.FC = () => {
   }, [username]);
 
   useEffect(() => {
-    setExternalWorks(externalWorksData);
+    // In a real app, fetch external works from API
+    // For now, we'll initialize with empty array
+    setExternalWorks([]);
   }, []);
-
-  const externalWorksData: ExternalWork[] = [
-    {
-      id: "1",
-      title: "Personal Portfolio Website",
-      description: "My personal portfolio showcasing latest projects and skills",
-      type: "link",
-      url: "https://alexrivera.dev",
-      thumbnail: "/placeholder.svg",
-      category: "web_development",
-      tags: ["Portfolio", "React", "Next.js"],
-      created_at: "2024-01-10",
-    },
-    {
-      id: "2",
-      title: "Design System Documentation",
-      description: "Complete design system with components and guidelines",
-      type: "document",
-      url: "https://docs.alexrivera.dev/design-system",
-      thumbnail: "/placeholder.svg",
-      category: "ui_ux",
-      tags: ["Design System", "Figma", "Documentation"],
-      created_at: "2023-12-15",
-    },
-    {
-      id: "3",
-      title: "App Demo Video",
-      description: "Demonstration of mobile app features and functionality",
-      type: "video",
-      url: "https://vimeo.com/demo-video",
-      thumbnail: "/placeholder.svg",
-      category: "mobile_app",
-      tags: ["Demo", "Mobile", "Video"],
-      created_at: "2023-11-20",
-    },
-  ];
 
   const certifications = [
     {
@@ -472,66 +405,86 @@ const UserProjects: React.FC = () => {
 
               {/* Portfolio Tab */}
               <TabsContent value="portfolio" className="mt-6">
+                {/* Category Filter */}
+                <div className="mb-6 flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <Button
+                      key={category.id}
+                      variant={selectedCategory === category.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory(category.id)}
+                      className="capitalize"
+                    >
+                      {category.name}
+                      <span className="ml-2 bg-background/20 px-2 py-0.5 rounded-full text-xs">
+                        {category.count}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {projects.map((project) => (
-                    <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-0">
-                        <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
-                          <img 
-                            src={project.images[0]} 
-                            alt={project.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-6">
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge variant="secondary">{project.category.replace('_', ' ')}</Badge>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                              <span className="text-sm font-medium">{project.rating}</span>
+                  {projects
+                    .filter(project => selectedCategory === "all" || project.category === selectedCategory)
+                    .map((project) => (
+                      <Card key={project.id} className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-0">
+                          <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
+                            <img 
+                              src={project.images[0]} 
+                              alt={project.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="p-6">
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge variant="secondary">{project.category.replace('_', ' ')}</Badge>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                                <span className="text-sm font-medium">{project.rating}</span>
+                              </div>
+                            </div>
+                            <h3 className="font-semibold text-lg mb-2">{project.title}</h3>
+                            <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                              {project.description}
+                            </p>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {project.tags.slice(0, 3).map((tag, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                              <span>{project.duration}</span>
+                              {project.budget && (
+                                <span className="font-medium text-green-600">
+                                  ${project.budget.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {project.live_demo && (
+                                <Button size="sm" variant="outline" asChild>
+                                  <a href={project.live_demo} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-4 w-4 mr-1" />
+                                    Demo
+                                  </a>
+                                </Button>
+                              )}
+                              {project.github_link && (
+                                <Button size="sm" variant="outline" asChild>
+                                  <a href={project.github_link} target="_blank" rel="noopener noreferrer">
+                                    <Github className="h-4 w-4 mr-1" />
+                                    Code
+                                  </a>
+                                </Button>
+                              )}
                             </div>
                           </div>
-                          <h3 className="font-semibold text-lg mb-2">{project.title}</h3>
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                            {project.description}
-                          </p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {project.tags.slice(0, 3).map((tag, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                            <span>{project.duration}</span>
-                            {project.budget && (
-                              <span className="font-medium text-green-600">
-                                ${project.budget.toLocaleString()}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {project.live_demo && (
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={project.live_demo} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-4 w-4 mr-1" />
-                                  Demo
-                                </a>
-                              </Button>
-                            )}
-                            {project.github_link && (
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={project.github_link} target="_blank" rel="noopener noreferrer">
-                                  <Github className="h-4 w-4 mr-1" />
-                                  Code
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))}
                 </div>
               </TabsContent>
 

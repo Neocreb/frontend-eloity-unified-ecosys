@@ -70,7 +70,6 @@ const UserTrades: React.FC = () => {
   const { username } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("active_orders");
-  const [tradeFilter, setTradeFilter] = useState("all");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
