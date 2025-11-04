@@ -138,7 +138,7 @@ class FeedService {
       const mediaTypes = postData.media?.map(m => m.type) || [];
 
       const { data, error } = await supabase
-        .from('feed_posts')
+        .from('posts')
         .insert({
           user_id: userId,
           content: postData.content,
@@ -209,7 +209,7 @@ class FeedService {
       if (currentlyLiked) {
         // Unlike
         const { error: deleteError } = await supabase
-          .from('feed_post_likes')
+          .from('post_likes')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', userId);
@@ -218,8 +218,8 @@ class FeedService {
 
         // Decrement likes count
         const { data: updatedPost, error: updateError } = await supabase
-          .from('feed_posts')
-          .update({ likes_count: supabase.rpc('feed_posts.likes_count - 1') })
+          .from('posts')
+          .update({ likes_count: supabase.rpc('posts.likes_count - 1') })
           .eq('id', postId)
           .select('likes_count')
           .single();
@@ -233,7 +233,7 @@ class FeedService {
       } else {
         // Like
         const { error: insertError } = await supabase
-          .from('feed_post_likes')
+          .from('post_likes')
           .insert({
             post_id: postId,
             user_id: userId,
@@ -244,8 +244,8 @@ class FeedService {
 
         // Increment likes count
         const { data: updatedPost, error: updateError } = await supabase
-          .from('feed_posts')
-          .update({ likes_count: supabase.rpc('feed_posts.likes_count + 1') })
+          .from('posts')
+          .update({ likes_count: supabase.rpc('posts.likes_count + 1') })
           .eq('id', postId)
           .select('likes_count')
           .single();
@@ -274,7 +274,7 @@ class FeedService {
       if (currentlySaved) {
         // Unsave
         const { error: deleteError } = await supabase
-          .from('user_saved_posts')
+          .from('saved_posts')
           .delete()
           .eq('user_id', userId)
           .eq('post_id', postId);
@@ -285,7 +285,7 @@ class FeedService {
       } else {
         // Save
         const { error: insertError } = await supabase
-          .from('user_saved_posts')
+          .from('saved_posts')
           .insert({
             user_id: userId,
             post_id: postId,
@@ -311,7 +311,7 @@ class FeedService {
     try {
       // Add share record
       const { error: insertError } = await supabase
-        .from('user_post_shares')
+        .from('post_shares')
         .insert({
           user_id: userId,
           post_id: postId,
@@ -323,8 +323,8 @@ class FeedService {
 
       // Increment shares count on post
       const { data: updatedPost, error: updateError } = await supabase
-        .from('feed_posts')
-        .update({ shares_count: supabase.rpc('feed_posts.shares_count + 1') })
+        .from('posts')
+        .update({ shares_count: supabase.rpc('posts.shares_count + 1') })
         .eq('id', postId)
         .select('shares_count')
         .single();
@@ -345,7 +345,7 @@ class FeedService {
   async getComments(postId: string, signal?: AbortSignal): Promise<Comment[]> {
     try {
       const { data, error } = await supabase
-        .from('feed_post_comments')
+        .from('post_comments')
         .select(`
           *,
           profiles:user_id (
@@ -385,7 +385,7 @@ class FeedService {
   ): Promise<Comment> {
     try {
       const { data, error } = await supabase
-        .from('feed_post_comments')
+        .from('post_comments')
         .insert({
           post_id: postId,
           user_id: userId,
@@ -410,8 +410,8 @@ class FeedService {
 
       // Increment comments count on post
       await supabase
-        .from('feed_posts')
-        .update({ comments_count: supabase.rpc('feed_posts.comments_count + 1') })
+        .from('posts')
+        .update({ comments_count: supabase.rpc('posts.comments_count + 1') })
         .eq('id', postId);
 
       return {

@@ -237,9 +237,9 @@ export function StoryCreationModal({
       const newStory = await storiesService.createStory(storyDataPayload, user.id);
 
       // Safely extract user properties
-      const userName = user.name || user.profile?.full_name || "You";
-      const userUsername = user.username || user.profile?.username || "you";
-      const userAvatar = user.avatar || user.profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user";
+      const userName = user.user_metadata?.name || user.profile?.full_name || user.email || "User";
+      const userUsername = user.user_metadata?.username || user.profile?.username || user.email?.split('@')[0] || "user";
+      const userAvatar = user.user_metadata?.avatar_url || user.profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=random`;
 
       const storyResponse = {
         id: newStory.id,

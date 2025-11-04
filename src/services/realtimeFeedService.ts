@@ -62,7 +62,7 @@ class RealtimeFeedService {
   async createPost(postData: PostCreationData, userId: string): Promise<RealtimePost | null> {
     try {
       const { data, error } = await supabase
-        .from('feed_posts')
+        .from('posts')
         .insert({
           user_id: userId,
           content: postData.content,
@@ -100,7 +100,7 @@ class RealtimeFeedService {
       const to = from + limit - 1;
 
       const { data, error } = await supabase
-        .from('feed_posts')
+        .from('posts')
         .select(`
           *,
           profiles:user_id (
@@ -155,7 +155,7 @@ class RealtimeFeedService {
     try {
       // Check if already liked
       const { data: existingLike, error: checkError } = await supabase
-        .from('feed_post_likes')
+        .from('post_likes')
         .select('id')
         .eq('post_id', postId)
         .eq('user_id', userId)
@@ -171,7 +171,7 @@ class RealtimeFeedService {
       if (existingLike) {
         // Unlike
         const { error: deleteError } = await supabase
-          .from('feed_post_likes')
+          .from('post_likes')
           .delete()
           .eq('id', existingLike.id);
 
@@ -182,8 +182,8 @@ class RealtimeFeedService {
 
         // Decrement likes count
         const { data: updatedPost, error: updateError } = await supabase
-          .from('feed_posts')
-          .update({ likes_count: supabase.rpc('feed_posts.likes_count - 1') })
+          .from('posts')
+          .update({ likes_count: supabase.rpc('posts.likes_count - 1') })
           .eq('id', postId)
           .select('likes_count')
           .single();
@@ -198,7 +198,7 @@ class RealtimeFeedService {
       } else {
         // Like
         const { data: newLike, error: insertError } = await supabase
-          .from('feed_post_likes')
+          .from('post_likes')
           .insert({
             post_id: postId,
             user_id: userId,
@@ -214,8 +214,8 @@ class RealtimeFeedService {
 
         // Increment likes count
         const { data: updatedPost, error: updateError } = await supabase
-          .from('feed_posts')
-          .update({ likes_count: supabase.rpc('feed_posts.likes_count + 1') })
+          .from('posts')
+          .update({ likes_count: supabase.rpc('posts.likes_count + 1') })
           .eq('id', postId)
           .select('likes_count')
           .single();
@@ -238,7 +238,7 @@ class RealtimeFeedService {
   async addComment(postId: string, userId: string, content: string): Promise<RealtimeComment | null> {
     try {
       const { data, error } = await supabase
-        .from('feed_post_comments')
+        .from('post_comments')
         .insert({
           post_id: postId,
           user_id: userId,
@@ -266,8 +266,8 @@ class RealtimeFeedService {
 
       // Increment comments count on post
       await supabase
-        .from('feed_posts')
-        .update({ comments_count: supabase.rpc('feed_posts.comments_count + 1') })
+        .from('posts')
+        .update({ comments_count: supabase.rpc('posts.comments_count + 1') })
         .eq('id', postId);
 
       return {
@@ -297,7 +297,7 @@ class RealtimeFeedService {
   async getComments(postId: string): Promise<RealtimeComment[]> {
     try {
       const { data, error } = await supabase
-        .from('feed_post_comments')
+        .from('post_comments')
         .select(`
           *,
           profiles:user_id (
@@ -343,7 +343,7 @@ class RealtimeFeedService {
     try {
       // Check if already following
       const { data: existingFollow, error: checkError } = await supabase
-        .from('user_follows')
+        .from('follows')
         .select('id')
         .eq('follower_id', followerId)
         .eq('following_id', followingId)
@@ -357,7 +357,7 @@ class RealtimeFeedService {
       if (existingFollow) {
         // Unfollow
         const { error: deleteError } = await supabase
-          .from('user_follows')
+          .from('follows')
           .delete()
           .eq('id', existingFollow.id);
 
@@ -370,7 +370,7 @@ class RealtimeFeedService {
       } else {
         // Follow
         const { error: insertError } = await supabase
-          .from('user_follows')
+          .from('follows')
           .insert({
             follower_id: followerId,
             following_id: followingId,
@@ -394,7 +394,7 @@ class RealtimeFeedService {
   async getFollowers(userId: string): Promise<UserFollow[]> {
     try {
       const { data, error } = await supabase
-        .from('user_follows')
+        .from('follows')
         .select('*')
         .eq('following_id', userId);
 
@@ -414,7 +414,7 @@ class RealtimeFeedService {
   async getFollowing(userId: string): Promise<UserFollow[]> {
     try {
       const { data, error } = await supabase
-        .from('user_follows')
+        .from('follows')
         .select('*')
         .eq('follower_id', userId);
 
@@ -435,7 +435,7 @@ class RealtimeFeedService {
     try {
       // Check if already saved
       const { data: existingSave, error: checkError } = await supabase
-        .from('user_saved_posts')
+        .from('saved_posts')
         .select('id')
         .eq('user_id', userId)
         .eq('post_id', postId)
@@ -449,7 +449,7 @@ class RealtimeFeedService {
       if (existingSave) {
         // Unsave
         const { error: deleteError } = await supabase
-          .from('user_saved_posts')
+          .from('saved_posts')
           .delete()
           .eq('id', existingSave.id);
 
@@ -462,7 +462,7 @@ class RealtimeFeedService {
       } else {
         // Save
         const { error: insertError } = await supabase
-          .from('user_saved_posts')
+          .from('saved_posts')
           .insert({
             user_id: userId,
             post_id: postId,
@@ -487,7 +487,7 @@ class RealtimeFeedService {
     try {
       // Add share record
       const { error: insertError } = await supabase
-        .from('user_post_shares')
+        .from('post_shares')
         .insert({
           user_id: userId,
           post_id: postId,
@@ -502,8 +502,8 @@ class RealtimeFeedService {
 
       // Increment shares count on post
       const { data: updatedPost, error: updateError } = await supabase
-        .from('feed_posts')
-        .update({ shares_count: supabase.rpc('feed_posts.shares_count + 1') })
+        .from('posts')
+        .update({ shares_count: supabase.rpc('posts.shares_count + 1') })
         .eq('id', postId)
         .select('shares_count')
         .single();
