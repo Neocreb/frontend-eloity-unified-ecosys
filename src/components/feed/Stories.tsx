@@ -9,14 +9,16 @@ import { SponsoredStory } from "@/components/ads/SponsoredStory";
 import { adSettings } from "../../../config/adSettings";
 import { useStories } from "@/hooks/use-stories";
 import StoryViewer from "./StoryViewer";
+import { supabase } from '@/integrations/supabase/client';
+import { storiesService } from '@/services/storiesService';
 
 
 export type Story = {
-  isUser: any;
   id: string;
   username: string;
   avatar: string;
   hasNewStory?: boolean;
+  isUser?: boolean;
 };
 
 interface StoriesProps {
@@ -24,7 +26,7 @@ interface StoriesProps {
   onCreateStory?: () => void;
 }
 
-const Stories = ({ onViewStory, onCreateStory }: StoriesProps) => {
+const Stories = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
