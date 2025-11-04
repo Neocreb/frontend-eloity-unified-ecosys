@@ -191,98 +191,12 @@ const UserProjects: React.FC = () => {
           }
           setProjects(projectsData);
         } catch (projectError) {
-          console.warn("Failed to fetch projects, using mock data:", projectError);
-          // Mock projects data as fallback
-          setProjects([
-            {
-              id: "1",
-              title: "E-commerce Platform Redesign",
-              description: "Complete redesign and development of a modern e-commerce platform with improved UX and performance optimization.",
-              category: "web_development",
-              tags: ["React", "Node.js", "MongoDB", "Stripe"],
-              images: ["/placeholder.svg", "/placeholder.svg"],
-              external_link: "https://demo-ecommerce.com",
-              github_link: "https://github.com/alexrivera/ecommerce",
-              live_demo: "https://demo-ecommerce.com",
-              client: "TechStore Inc.",
-              duration: "8 weeks",
-              budget: 15000,
-              rating: 5.0,
-              completed_at: "2024-01-15",
-              type: "platform",
-              status: "completed",
-            },
-            {
-              id: "2",
-              title: "Mobile Banking App",
-              description: "Secure mobile banking application with biometric authentication and real-time notifications.",
-              category: "mobile_app",
-              tags: ["React Native", "Firebase", "Biometrics"],
-              images: ["/placeholder.svg"],
-              client: "FinTech Solutions",
-              duration: "12 weeks",
-              budget: 25000,
-              rating: 4.8,
-              completed_at: "2023-12-20",
-              type: "platform",
-              status: "completed",
-            },
-          ]);
+          console.error("Failed to fetch projects:", projectError);
+          setError("Failed to load projects");
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
         setError("Failed to load user data");
-        // Set mock data as fallback
-        setUserProfile({
-          id: "1",
-          username: username || "",
-          full_name: "Alex Rivera",
-          avatar_url: "/placeholder.svg",
-          banner_url: "/placeholder.svg",
-          bio: "Full-stack developer & UI/UX designer with 5+ years experience creating digital solutions.",
-          location: "San Francisco, CA",
-          website: "https://alexrivera.dev",
-          is_verified: true,
-          created_at: "2022-03-15",
-          followers_count: 8420,
-          following_count: 1240,
-          posts_count: 186,
-        } as UserProfile);
-        setProjects([
-          {
-            id: "1",
-            title: "E-commerce Platform Redesign",
-            description: "Complete redesign and development of a modern e-commerce platform with improved UX and performance optimization.",
-            category: "web_development",
-            tags: ["React", "Node.js", "MongoDB", "Stripe"],
-            images: ["/placeholder.svg", "/placeholder.svg"],
-            external_link: "https://demo-ecommerce.com",
-            github_link: "https://github.com/alexrivera/ecommerce",
-            live_demo: "https://demo-ecommerce.com",
-            client: "TechStore Inc.",
-            duration: "8 weeks",
-            budget: 15000,
-            rating: 5.0,
-            completed_at: "2024-01-15",
-            type: "platform",
-            status: "completed",
-          },
-          {
-            id: "2",
-            title: "Mobile Banking App",
-            description: "Secure mobile banking application with biometric authentication and real-time notifications.",
-            category: "mobile_app",
-            tags: ["React Native", "Firebase", "Biometrics"],
-            images: ["/placeholder.svg"],
-            client: "FinTech Solutions",
-            duration: "12 weeks",
-            budget: 25000,
-            rating: 4.8,
-            completed_at: "2023-12-20",
-            type: "platform",
-            status: "completed",
-          },
-        ]);
       } finally {
         setLoading(false);
       }

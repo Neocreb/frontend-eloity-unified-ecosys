@@ -20,6 +20,7 @@ import {
   Monitor,
   Tablet,
 } from "lucide-react";
+import { profileService } from "@/services/profileService";
 
 interface Viewer {
   id: string;
@@ -56,97 +57,69 @@ const ProfileViews: React.FC = () => {
   const [filteredViewers, setFilteredViewers] = useState<Viewer[]>([]);
   const [filter, setFilter] = useState<"all" | "verified" | "recent">("all");
 
-  // Mock viewers data with more detailed analytics
-  const mockViewers: Viewer[] = [
-    {
-      id: "1",
-      username: "tech_enthusiast",
-      displayName: "Alex Chen",
-      avatar: "/placeholder.svg",
-      verified: true,
-      isOnline: true,
-      lastViewed: "2 minutes ago",
-      viewCount: 12,
-      location: "San Francisco, CA",
-      device: "Mobile",
-      referrer: "Direct",
-      timeSpent: "3m 24s",
-    },
-    {
-      id: "2",
-      username: "design_lover",
-      displayName: "Sarah Johnson",
-      avatar: "/placeholder.svg",
-      verified: false,
-      isOnline: false,
-      lastViewed: "1 hour ago",
-      viewCount: 3,
-      location: "New York, NY",
-      device: "Desktop",
-      referrer: "Search",
-      timeSpent: "1m 45s",
-    },
-    {
-      id: "3",
-      username: "startup_founder",
-      displayName: "Mike Rodriguez",
-      avatar: "/placeholder.svg",
-      verified: true,
-      isOnline: true,
-      lastViewed: "5 minutes ago",
-      viewCount: 8,
-      location: "Austin, TX",
-      device: "Tablet",
-      referrer: "Social Media",
-      timeSpent: "4m 12s",
-    },
-    {
-      id: "4",
-      username: "crypto_trader",
-      displayName: "Emma Davis",
-      avatar: "/placeholder.svg",
-      verified: false,
-      isOnline: false,
-      lastViewed: "3 hours ago",
-      viewCount: 15,
-      location: "Miami, FL",
-      device: "Mobile",
-      referrer: "Freelance Platform",
-      timeSpent: "2m 08s",
-    },
-    {
-      id: "5",
-      username: "freelance_dev",
-      displayName: "David Kim",
-      avatar: "/placeholder.svg",
-      verified: true,
-      isOnline: true,
-      lastViewed: "30 minutes ago",
-      viewCount: 6,
-      location: "Seattle, WA",
-      device: "Desktop",
-      referrer: "Marketplace",
-      timeSpent: "5m 33s",
-    },
-  ];
-
-  // Mock analytics stats
-  const viewStats: ViewStats = {
-    totalViews: 1247,
-    uniqueViewers: mockViewers.length,
-    avgViewTime: "3m 12s",
-    topLocation: "San Francisco, CA",
-    peakHour: "2-3 PM",
-    deviceBreakdown: {
-      mobile: 52,
-      desktop: 35,
-      tablet: 13,
-    },
-  };
+  const [viewers, setViewers] = useState<Viewer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let filtered = mockViewers.filter(
-      (viewer) =>
+    const fetchViewers = async () => {
+      if (!username) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get user profile first
+        const userProfile = await profileService.getUserByUsername(username);
+        if (!userProfile) {
+          setError("User not found");
+          return;
+        }
+        
+        // TODO: Fetch real viewer data from analytics service
+        // For now, we'll set empty data since we don't have a real analytics service
+        setViewers([]);
+        
+        // Set initial view stats
+        setViewStats({
+          totalViews: 0,
+          uniqueViewers: 0,
+          avgViewTime: "0m 0s",
+          topLocation: "",
+          peakHour: "",
+          deviceBreakdown: {
+            mobile: 0,
+            desktop: 0,
+            tablet: 0,
+          },
+        });
+      } catch (err) {
+        console.error("Error fetching viewers:", err);
+        setError("Failed to load viewer data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchViewers();
+  }, [username]);
+
+  const [viewStats, setViewStats] = useState<ViewStats>({
+    totalViews: 0,
+    uniqueViewers: 0,
+    avgViewTime: "0m 0s",
+    topLocation: "",
+    peakHour: "",
+    deviceBreakdown: {
+      mobile: 0,
+      desktop: 0,
+      tablet: 0,
+    },
+  });
+
+  useEffect(() => {
+    let filtered = viewers.filter(
+      (viewer: Viewer) =>
         viewer.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         viewer.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (viewer.location && viewer.location.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -154,16 +127,16 @@ const ProfileViews: React.FC = () => {
 
     // Apply filters
     if (filter === "verified") {
-      filtered = filtered.filter(viewer => viewer.verified);
+      filtered = filtered.filter((viewer: Viewer) => viewer.verified);
     } else if (filter === "recent") {
-      filtered = filtered.filter(viewer => {
-        const viewedTime = viewer.lastViewed;
-        return viewedTime?.includes("minute") || (viewedTime?.includes("hour") && parseInt(viewedTime) <= 1);
+      filtered = filtered.filter((viewer: Viewer) => {
+        const viewedTime = viewer.lastViewed || "";
+        return viewedTime.includes("minute") || (viewedTime.includes("hour") && parseInt(viewedTime) <= 1);
       });
     }
 
     setFilteredViewers(filtered);
-  }, [searchQuery, filter]);
+  }, [searchQuery, filter, viewers]);
 
   const handleUserClick = (userUsername: string) => {
     navigate(`/app/profile/${userUsername}`);

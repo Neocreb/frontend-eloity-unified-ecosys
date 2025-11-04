@@ -145,104 +145,12 @@ const UserStore: React.FC<UserStoreProps> = () => {
           }
           setProducts(productsData);
         } catch (productError) {
-          console.warn("Failed to fetch products, using mock data:", productError);
-          // Mock products data as fallback
-          setProducts([
-            {
-              id: "1",
-              name: "Premium Leather Handbag",
-              description: "Handcrafted premium leather handbag with gold accents",
-              price: 189.99,
-              image: "/placeholder.svg",
-              images: ["/placeholder.svg"],
-              category: "bags",
-              rating: 4.9,
-              reviewCount: 34,
-              inStock: true,
-              sellerId: profile.id,
-              sellerName: profile.full_name || profile.username || "Unknown Seller",
-              sellerAvatar: profile.avatar_url || "/placeholder.svg",
-              condition: "new",
-              createdAt: "2024-01-15",
-              updatedAt: "2024-01-15",
-            },
-            {
-              id: "2",
-              name: "Vintage Gold Chain Necklace",
-              description: "Elegant vintage-style gold chain necklace, perfect for any occasion",
-              price: 89.99,
-              image: "/placeholder.svg",
-              images: ["/placeholder.svg"],
-              category: "jewelry",
-              rating: 4.7,
-              reviewCount: 28,
-              inStock: true,
-              sellerId: profile.id,
-              sellerName: profile.full_name || profile.username || "Unknown Seller",
-              sellerAvatar: profile.avatar_url || "/placeholder.svg",
-              condition: "new",
-              createdAt: "2024-01-12",
-              updatedAt: "2024-01-12",
-            },
-          ]);
+          console.error("Failed to fetch products:", productError);
+          setError("Failed to load products");
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
         setError("Failed to load user data");
-        // Set mock data as fallback
-        setUserProfile({
-          id: "1",
-          username: username || "",
-          full_name: "Sarah Johnson",
-          avatar_url: "/placeholder.svg",
-          banner_url: "/placeholder.svg",
-          bio: "Premium fashion designer & entrepreneur. Creating unique pieces for modern lifestyle.",
-          location: "New York, USA",
-          website: "https://sarahdesigns.com",
-          is_verified: true,
-          join_date: "2023-01-15",
-          followers_count: 15240,
-          following_count: 890,
-          posts_count: 324,
-        } as UserProfile);
-        setProducts([
-          {
-            id: "1",
-            name: "Premium Leather Handbag",
-            description: "Handcrafted premium leather handbag with gold accents",
-            price: 189.99,
-            image: "/placeholder.svg",
-            images: ["/placeholder.svg"],
-            category: "bags",
-            rating: 4.9,
-            reviewCount: 34,
-            inStock: true,
-            sellerId: "1",
-            sellerName: "Sarah Johnson",
-            sellerAvatar: "/placeholder.svg",
-            condition: "new",
-            createdAt: "2024-01-15",
-            updatedAt: "2024-01-15",
-          },
-          {
-            id: "2",
-            name: "Vintage Gold Chain Necklace",
-            description: "Elegant vintage-style gold chain necklace, perfect for any occasion",
-            price: 89.99,
-            image: "/placeholder.svg",
-            images: ["/placeholder.svg"],
-            category: "jewelry",
-            rating: 4.7,
-            reviewCount: 28,
-            inStock: true,
-            sellerId: "1",
-            sellerName: "Sarah Johnson",
-            sellerAvatar: "/placeholder.svg",
-            condition: "new",
-            createdAt: "2024-01-12",
-            updatedAt: "2024-01-12",
-          },
-        ]);
       } finally {
         setLoading(false);
       }

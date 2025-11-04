@@ -18,6 +18,7 @@ import {
   Heart,
   Share,
 } from "lucide-react";
+import { profileService } from "@/services/profileService";
 
 interface StatCardProps {
   title: string;
@@ -61,31 +62,35 @@ const ProfileStats: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
 
-  // Mock profile data
-  const mockProfile = {
-    username: username || "sarah_johnson",
-    displayName: "Sarah Johnson",
-    avatar: "/placeholder.svg",
-    verified: true,
-    bio: "UI/UX Designer passionate about creating beautiful experiences",
-    posts: 247,
-    followers: 12400,
-    following: 892,
-    profileViews: 45200,
-    walletBalance: 1250.75,
-    trustLevel: 4.8,
-    marketplaceSales: 89,
-    freelanceProjects: 23,
-    cryptoTrades: 156,
-    deliveryRating: 4.9,
-    likes: 89400,
-    shares: 12300,
-  };
+  const [profile, setProfile] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      if (!username) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const userProfile = await profileService.getUserByUsername(username);
+        setProfile(userProfile);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [username]);
 
   const stats = [
     {
       title: "Posts",
-      value: mockProfile.posts,
+      value: profile?.posts_count || 0,
       description: "Content shared",
       icon: <MessageSquare className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
@@ -93,7 +98,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Followers",
-      value: mockProfile.followers.toLocaleString(),
+      value: profile?.followers_count?.toLocaleString() || 0,
       description: "People following you",
       icon: <Users className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
@@ -101,7 +106,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Following",
-      value: mockProfile.following.toLocaleString(),
+      value: profile?.following_count?.toLocaleString() || 0,
       description: "People you follow",
       icon: <Users className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-indigo-500 to-indigo-600",
@@ -109,7 +114,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Profile Views",
-      value: mockProfile.profileViews.toLocaleString(),
+      value: profile?.profile_views?.toLocaleString() || 0,
       description: "Times viewed",
       icon: <Eye className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-emerald-500 to-emerald-600",
@@ -117,7 +122,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Wallet Balance",
-      value: `$${mockProfile.walletBalance}`,
+      value: `$${profile?.wallet_balance || 0}`,
       description: "Available funds",
       icon: <DollarSign className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-amber-500 to-amber-600",
@@ -125,7 +130,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Trust Level",
-      value: `${mockProfile.trustLevel}/5`,
+      value: `${profile?.trust_level || 0}/5`,
       description: "Community rating",
       icon: <Star className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
@@ -133,7 +138,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Marketplace Sales",
-      value: mockProfile.marketplaceSales,
+      value: profile?.marketplace_sales || 0,
       description: "Items sold",
       icon: <ShoppingBag className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-pink-500 to-pink-600",
@@ -141,7 +146,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Freelance Projects",
-      value: mockProfile.freelanceProjects,
+      value: profile?.freelance_projects || 0,
       description: "Completed projects",
       icon: <Briefcase className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-violet-500 to-violet-600",
@@ -149,7 +154,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Crypto Trades",
-      value: mockProfile.cryptoTrades,
+      value: profile?.crypto_trades || 0,
       description: "Successful trades",
       icon: <TrendingUp className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-cyan-500 to-cyan-600",
@@ -157,7 +162,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Delivery Rating",
-      value: `${mockProfile.deliveryRating}/5`,
+      value: `${profile?.delivery_rating || 0}/5`,
       description: "Service quality",
       icon: <Truck className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-teal-500 to-teal-600",
@@ -165,7 +170,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Total Likes",
-      value: mockProfile.likes.toLocaleString(),
+      value: profile?.likes_count?.toLocaleString() || 0,
       description: "Across all content",
       icon: <Heart className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-rose-500 to-rose-600",
@@ -173,7 +178,7 @@ const ProfileStats: React.FC = () => {
     },
     {
       title: "Shares",
-      value: mockProfile.shares.toLocaleString(),
+      value: profile?.shares_count?.toLocaleString() || 0,
       description: "Content shared by others",
       icon: <Share className="h-5 w-5" />,
       gradient: "bg-gradient-to-br from-slate-500 to-slate-600",
@@ -198,22 +203,22 @@ const ProfileStats: React.FC = () => {
             
             <div className="flex items-center gap-3 flex-1">
               <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                <AvatarImage src={mockProfile.avatar} alt={mockProfile.displayName} />
+                <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} alt={profile?.full_name || profile?.username || "User"} />
                 <AvatarFallback>
-                  {mockProfile.displayName.split(" ").map(n => n[0]).join("")}
+                  {profile?.full_name ? profile.full_name.split(" ").map((n: string) => n[0]).join("") : (profile?.username ? profile.username.substring(0, 2).toUpperCase() : "U")}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-lg sm:text-xl font-bold">{mockProfile.displayName}</h1>
-                  {mockProfile.verified && (
+                  <h1 className="text-lg sm:text-xl font-bold">{profile?.full_name || profile?.username || "User"}</h1>
+                  {profile?.is_verified && (
                     <Badge variant="secondary" className="text-xs">
                       Verified
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-600">@{mockProfile.username}</p>
+                <p className="text-sm text-gray-600">@{profile?.username || "unknown"}</p>
               </div>
             </div>
           </div>
@@ -241,19 +246,19 @@ const ProfileStats: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-blue-600">{mockProfile.posts + mockProfile.marketplaceSales}</div>
+                <div className="text-2xl font-bold text-blue-600">{(profile?.posts_count || 0) + (profile?.marketplace_sales || 0)}</div>
                 <div className="text-sm text-gray-600">Total Content</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-purple-600">{(mockProfile.followers + mockProfile.following).toLocaleString()}</div>
+                <div className="text-2xl font-bold text-purple-600">{((profile?.followers_count || 0) + (profile?.following_count || 0)).toLocaleString()}</div>
                 <div className="text-sm text-gray-600">Network Size</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-emerald-600">{(mockProfile.likes + mockProfile.shares).toLocaleString()}</div>
+                <div className="text-2xl font-bold text-emerald-600">{((profile?.likes_count || 0) + (profile?.shares_count || 0)).toLocaleString()}</div>
                 <div className="text-sm text-gray-600">Engagement</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-amber-600">{mockProfile.freelanceProjects + mockProfile.cryptoTrades}</div>
+                <div className="text-2xl font-bold text-amber-600">{(profile?.freelance_projects || 0) + (profile?.crypto_trades || 0)}</div>
                 <div className="text-sm text-gray-600">Transactions</div>
               </div>
             </div>

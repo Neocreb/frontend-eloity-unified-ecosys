@@ -14,6 +14,8 @@ import {
   Send,
   Users,
 } from "lucide-react";
+import { FollowService } from "@/services/followService";
+import { profileService } from "@/services/profileService";
 
 interface User {
   id: string;
@@ -36,73 +38,57 @@ const ProfileFollowing: React.FC = () => {
   const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState<"all" | "mutual" | "verified">("all");
 
-  // Mock following data
-  const mockFollowing: User[] = [
-    {
-      id: "1",
-      username: "tech_guru",
-      displayName: "Tech Guru",
-      avatar: "/placeholder.svg",
-      verified: true,
-      followsBack: true,
-      isOnline: true,
-      bio: "Tech industry insights and trends",
-      followers: 45600,
-      followedDate: "6 months ago",
-    },
-    {
-      id: "2",
-      username: "design_master",
-      displayName: "Design Master",
-      avatar: "/placeholder.svg",
-      verified: true,
-      followsBack: false,
-      isOnline: false,
-      bio: "Creating beautiful user experiences",
-      followers: 23400,
-      followedDate: "3 months ago",
-    },
-    {
-      id: "3",
-      username: "crypto_expert",
-      displayName: "Crypto Expert",
-      avatar: "/placeholder.svg",
-      verified: false,
-      followsBack: true,
-      isOnline: true,
-      bio: "Cryptocurrency analysis and trading tips",
-      followers: 12800,
-      followedDate: "1 month ago",
-    },
-    {
-      id: "4",
-      username: "startup_founder",
-      displayName: "Startup Founder",
-      avatar: "/placeholder.svg",
-      verified: true,
-      followsBack: true,
-      isOnline: false,
-      bio: "Building the next unicorn",
-      followers: 67900,
-      followedDate: "2 weeks ago",
-    },
-    {
-      id: "5",
-      username: "marketing_pro",
-      displayName: "Marketing Pro",
-      avatar: "/placeholder.svg",
-      verified: false,
-      followsBack: false,
-      isOnline: true,
-      bio: "Digital marketing strategies that work",
-      followers: 8900,
-      followedDate: "1 week ago",
-    },
-  ];
+  const [following, setFollowing] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let filtered = mockFollowing.filter(
-      (user) =>
+    const fetchFollowing = async () => {
+      if (!username) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get user profile first
+        const userProfile = await profileService.getUserByUsername(username);
+        if (!userProfile) {
+          setError("User not found");
+          return;
+        }
+        
+        // Get following
+        const followingData = await FollowService.getUserFollowing(userProfile.id);
+        
+        // Transform to User interface
+        const transformedFollowing: User[] = followingData.map((followedUser: any) => ({
+          id: followedUser.id,
+          username: followedUser.username,
+          displayName: followedUser.full_name || followedUser.username,
+          avatar: followedUser.avatar_url || "/placeholder.svg",
+          verified: followedUser.is_verified || false,
+          followsBack: false, // Would need to check mutual follows
+          isOnline: followedUser.is_online || false,
+          bio: followedUser.bio || "",
+          followers: followedUser.followers_count || 0,
+          followedDate: "", // Would need to calculate
+        }));
+        
+        setFollowing(transformedFollowing);
+      } catch (err) {
+        console.error("Error fetching following:", err);
+        setError("Failed to load following");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFollowing();
+  }, [username]);
+
+  useEffect(() => {
+    let filtered = following.filter(
+      (user: User) =>
         user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (user.bio && user.bio.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -110,22 +96,22 @@ const ProfileFollowing: React.FC = () => {
 
     // Apply filters
     if (filter === "mutual") {
-      filtered = filtered.filter(user => user.followsBack);
+      filtered = filtered.filter((user: User) => user.followsBack);
     } else if (filter === "verified") {
-      filtered = filtered.filter(user => user.verified);
+      filtered = filtered.filter((user: User) => user.verified);
     }
 
     setFilteredUsers(filtered);
-  }, [searchQuery, filter]);
+  }, [searchQuery, filter, following]);
 
   useEffect(() => {
-    // Initialize following states (all are true since we're following them)
+    // Initialize following states
     const states: Record<string, boolean> = {};
-    mockFollowing.forEach((user) => {
+    following.forEach((user) => {
       states[user.id] = true;
     });
     setFollowingStates(states);
-  }, []);
+  }, [following]);
 
   const handleUnfollow = (userId: string) => {
     setFollowingStates((prev) => ({
