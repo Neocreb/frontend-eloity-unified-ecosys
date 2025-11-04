@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { PageLoading } from "@/components/ui/loading-states";
 import {
   ArrowLeft,
   Users,
@@ -86,6 +87,15 @@ const ProfileStats: React.FC = () => {
 
     fetchProfile();
   }, [username]);
+
+  // Show loading state while fetching data
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PageLoading message="Loading profile statistics..." />
+      </div>
+    );
+  }
 
   const stats = [
     {

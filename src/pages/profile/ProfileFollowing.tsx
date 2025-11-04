@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Send,
   Users,
+  Loader2,
 } from "lucide-react";
 import { FollowService } from "@/services/followService";
 import { profileService } from "@/services/profileService";
@@ -200,7 +201,20 @@ const ProfileFollowing: React.FC = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-        {filteredUsers.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          </div>
+        ) : error ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="text-red-500 mb-4">{error}</div>
+              <Button onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        ) : filteredUsers.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

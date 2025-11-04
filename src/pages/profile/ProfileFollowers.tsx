@@ -216,6 +216,19 @@ const ProfileFollowers: React.FC = () => {
             </CardContent>
           </Card>
         ) : filteredUsers.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">
+                {searchQuery ? "No followers match your search" : "No followers yet"}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {searchQuery ? "Try adjusting your search terms" : "Start connecting with people!"}
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-3">
             {filteredUsers.map((user) => (
