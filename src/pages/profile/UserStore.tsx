@@ -3,27 +3,18 @@ import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Store,
   Star,
   MapPin,
   Clock,
-  ShoppingCart,
   Heart,
   MessageSquare,
-  TrendingUp,
   Package,
-  Eye,
-  Filter,
   Grid,
   List,
   ArrowLeft,
   Share2,
-  Phone,
-  Mail,
   Globe,
-  Award,
   Verified,
   AlertCircle,
   User,

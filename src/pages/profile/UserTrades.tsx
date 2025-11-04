@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  TrendingUp,
-  TrendingDown,
   Star,
   MapPin,
   Clock,
@@ -15,25 +13,15 @@ import {
   Heart,
   ArrowLeft,
   Share2,
-  DollarSign,
   Verified,
   Calendar,
   Shield,
-  Award,
-  Activity,
-  BarChart3,
-  PieChart,
-  Coins,
   CreditCard,
   Banknote,
   Smartphone,
   Building,
   AlertCircle,
   CheckCircle,
-  Eye,
-  Filter,
-  RefreshCw,
-  Target,
   User,
 } from "lucide-react";
 import { UserProfile } from "@/types/user";

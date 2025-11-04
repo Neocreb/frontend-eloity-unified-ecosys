@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
   Search,
@@ -14,7 +13,7 @@ import {
   MessageCircle,
   Send,
   Users,
-  Filter,
+  Loader2,
 } from "lucide-react";
 import { FollowService } from "@/services/followService";
 import { profileService } from "@/services/profileService";
@@ -203,20 +202,20 @@ const ProfileFollowers: React.FC = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-        {filteredUsers.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+          </div>
+        ) : error ? (
           <Card className="text-center py-12">
             <CardContent>
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium mb-2">
-                {searchQuery ? "No followers match your search" : "No followers yet"}
-              </h3>
-              <p className="text-gray-600 text-sm">
-                {searchQuery ? "Try adjusting your search terms" : "Start connecting with people!"}
-              </p>
+              <div className="text-red-500 mb-4">{error}</div>
+              <Button onClick={() => window.location.reload()}>
+                Retry
+              </Button>
             </CardContent>
           </Card>
+        ) : filteredUsers.length === 0 ? (
         ) : (
           <div className="space-y-3">
             {filteredUsers.map((user) => (

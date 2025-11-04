@@ -14,8 +14,6 @@ import {
   Users,
   TrendingUp,
   MapPin,
-  Calendar,
-  Globe,
   Smartphone,
   Monitor,
   Tablet,
