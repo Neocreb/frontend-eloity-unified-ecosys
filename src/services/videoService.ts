@@ -38,12 +38,12 @@ export interface VideoComment {
 
 export const videoService = {
   async getVideos(limit: number = 20, offset: number = 0, category?: string): Promise<Video[]> {
-    console.log("[Qoder Fix] Supabase videos endpoint verified ✅");
     let query = supabase
       .from('videos')
       .select(`
         *,
-        user:profiles!user_id(
+        profiles!videos_user_id_profiles_fkey(
+          user_id,
           username,
           full_name,
           avatar_url,
@@ -65,7 +65,7 @@ export const videoService = {
 
     return data.map((video: any) => ({
       ...video,
-      user: video.user || undefined
+      user: video.profiles || undefined
     }));
   },
 
@@ -74,7 +74,8 @@ export const videoService = {
       .from('videos')
       .select(`
         *,
-        user:profiles!user_id(
+        profiles!videos_user_id_profiles_fkey(
+          user_id,
           username,
           full_name,
           avatar_url,
@@ -89,7 +90,7 @@ export const videoService = {
 
     return {
       ...data,
-      user: data.user || undefined
+      user: data.profiles || undefined
     };
   },
 
@@ -321,7 +322,8 @@ export const videoService = {
       .from('videos')
       .select(`
         *,
-        user:profiles!user_id(
+        profiles!videos_user_id_profiles_fkey(
+          user_id,
           username,
           full_name,
           avatar_url,
@@ -337,7 +339,7 @@ export const videoService = {
 
     return data.map((video: any) => ({
       ...video,
-      user: video.user || undefined
+      user: video.profiles || undefined
     }));
   },
 
@@ -363,7 +365,8 @@ export const videoService = {
       .from('videos')
       .select(`
         *,
-        user:profiles!user_id(
+        profiles!videos_user_id_profiles_fkey(
+          user_id,
           username,
           full_name,
           avatar_url,
@@ -380,7 +383,7 @@ export const videoService = {
 
     return data.map((video: any) => ({
       ...video,
-      user: video.user || undefined
+      user: video.profiles || undefined
     }));
   }
 };

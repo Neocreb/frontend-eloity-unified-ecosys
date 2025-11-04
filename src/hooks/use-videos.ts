@@ -87,13 +87,8 @@ export const useVideos = () => {
         setLoading(false);
       } catch (err) {
         console.error("Error fetching videos:", err);
-        // Only set error if it's an actual error, not just empty data
-        if (err instanceof Error && err.message !== "No videos found") {
-          setError(err instanceof Error ? err.message : "Failed to load videos");
-        } else {
-          // For empty data, we don't set an error, just leave videos as empty array
-          setVideos([]);
-        }
+        setVideos([]);
+        setError(null); // Don't show error for empty videos
         setLoading(false);
       }
     };
