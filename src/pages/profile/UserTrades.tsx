@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { UserProfile } from "@/types/user";
 import { profileService } from "@/services/profileService";
-import { apiClient } from "@/lib/api";
+import { apiClient, apiCall } from "@/lib/api";
 
 interface P2PTrade {
   id: string;
@@ -75,34 +75,10 @@ const UserTrades: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTrades, setActiveTrades] = useState<P2PTrade[]>([]);
   const [completedTrades, setCompletedTrades] = useState<P2PTrade[]>([]);
-
-  // Mock data for stats (in real app, fetch from API)
-  const tradingStats: TradingStats = {
-    totalTrades: 847,
-    completedTrades: 823,
-    averageRating: 4.8,
-    totalReviews: 234,
-    completionRate: 97.2,
-    responseTime: "< 5 minutes",
-    memberSince: "2021",
-    totalVolume: 2450000,
-    successfulTrades: 823,
-    disputeRate: 0.3,
-    favoritePayments: ["Bank Transfer", "PayPal", "Wise", "Cash"],
-  };
-
-  const paymentMethods = [
-    { name: "Bank Transfer", icon: Building, available: true },
-    { name: "PayPal", icon: CreditCard, available: true },
-    { name: "Wise", icon: Smartphone, available: true },
-    { name: "Cash", icon: Banknote, available: false },
-  ];
-
-  const cryptoPortfolio = [
-    { symbol: "BTC", name: "Bitcoin", amount: 2.45, value: 104125, change: 2.4 },
-    { symbol: "ETH", name: "Ethereum", amount: 15.8, value: 40764, change: -1.2 },
-    { symbol: "USDT", name: "Tether", amount: 5000, value: 5000, change: 0.1 },
-  ];
+  const [tradingStats, setTradingStats] = useState<TradingStats | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [cryptoPortfolio, setCryptoPortfolio] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
 
   const getTradeStatusColor = (status: string) => {
     switch (status) {
@@ -140,6 +116,42 @@ const UserTrades: React.FC = () => {
         
         setProfile(profileData);
         
+        // Fetch trading stats
+        try {
+          const statsResponse = await apiCall(`/trading-stats/${profileData.id}`);
+          setTradingStats(statsResponse.data);
+        } catch (statsError) {
+          console.error("Failed to fetch trading stats:", statsError);
+          setTradingStats(null);
+        }
+        
+        // Fetch payment methods
+        try {
+          const paymentsResponse = await apiCall(`/payment-methods/${profileData.id}`);
+          setPaymentMethods(paymentsResponse.data);
+        } catch (paymentsError) {
+          console.error("Failed to fetch payment methods:", paymentsError);
+          setPaymentMethods([]);
+        }
+        
+        // Fetch crypto portfolio
+        try {
+          const portfolioResponse = await apiCall(`/portfolio/${profileData.id}`);
+          setCryptoPortfolio(portfolioResponse.data);
+        } catch (portfolioError) {
+          console.error("Failed to fetch crypto portfolio:", portfolioError);
+          setCryptoPortfolio([]);
+        }
+        
+        // Fetch reviews
+        try {
+          const reviewsResponse = await apiCall(`/reviews/${profileData.id}`);
+          setReviews(reviewsResponse.data);
+        } catch (reviewsError) {
+          console.error("Failed to fetch reviews:", reviewsError);
+          setReviews([]);
+        }
+        
         // Fetch user's P2P trades
         try {
           const tradesResponse = await apiClient.getCryptoTrades();
@@ -152,49 +164,17 @@ const UserTrades: React.FC = () => {
               ...trade,
               status: trade.status as "active" | "completed" | "cancelled" | "in_progress"
             }));
-          } else {
-            // Fallback to mock data if API response is unexpected
-            tradesData = [
-              {
-                id: "1",
-                type: "sell",
-                crypto: "Bitcoin",
-                crypto_symbol: "BTC",
-                fiat_currency: "USD",
-                amount: 0.5,
-                price_per_unit: 42500,
-                total_amount: 21250,
-                payment_methods: ["Bank Transfer", "PayPal"],
-                min_limit: 1000,
-                max_limit: 5000,
-                status: "active",
-                created_at: "2024-01-18T10:30:00Z",
-                updated_at: "2024-01-18T10:30:00Z",
-              },
-              {
-                id: "2",
-                type: "buy",
-                crypto: "Ethereum",
-                crypto_symbol: "ETH",
-                fiat_currency: "USD",
-                amount: 10,
-                price_per_unit: 2580,
-                total_amount: 25800,
-                payment_methods: ["Wise", "Bank Transfer"],
-                min_limit: 500,
-                max_limit: 3000,
-                status: "active",
-                created_at: "2024-01-17T15:45:00Z",
-                updated_at: "2024-01-17T15:45:00Z",
-              },
-            ];
           }
+          // Removed mock data fallback to comply with no mock data policy
           
           setActiveTrades(tradesData.filter((t) => t.status === "active" || t.status === "in_progress"));
           setCompletedTrades(tradesData.filter((t) => t.status === "completed"));
         } catch (tradeError) {
           console.error("Failed to fetch trades:", tradeError);
           setError("Failed to load trading data");
+          // Clear trades state on error
+          setActiveTrades([]);
+          setCompletedTrades([]);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -258,6 +238,27 @@ const UserTrades: React.FC = () => {
     );
   }
 
+  // Show error if no trading stats are available
+  if (!tradingStats && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <AlertCircle className="h-12 w-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Data Unavailable</h2>
+          <p className="text-muted-foreground">Trading statistics are not available for this user.</p>
+          <Button 
+            className="mt-4" 
+            asChild
+          >
+            <Link to={`/app/profile/${username}`}>Back to Profile</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -313,9 +314,9 @@ const UserTrades: React.FC = () => {
                   <p className="text-muted-foreground text-sm mb-2">@{profile.username || "unknown"}</p>
                   <div className="flex items-center justify-center gap-1 mb-4">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="font-medium">{tradingStats.averageRating}</span>
+                    <span className="font-medium">{tradingStats ? tradingStats.averageRating : 0}</span>
                     <span className="text-muted-foreground text-sm">
-                      ({tradingStats.totalReviews} reviews)
+                      ({tradingStats ? tradingStats.totalReviews : 0} reviews)
                     </span>
                   </div>
                 </div>
@@ -324,36 +325,24 @@ const UserTrades: React.FC = () => {
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total Trades</span>
-                    <span className="font-semibold">{(activeTrades.length + completedTrades.length) || tradingStats.totalTrades}</span>
+                    <span className="font-semibold">{tradingStats ? tradingStats.totalTrades : 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Completion Rate</span>
-                    <span className="font-semibold text-green-600">{tradingStats.completionRate}%</span>
+                    <span className="font-semibold text-green-600">{tradingStats ? tradingStats.completionRate : 0}%</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Response Time</span>
-                    <span className="font-semibold">{tradingStats.responseTime}</span>
+                    <span className="font-semibold">{tradingStats ? tradingStats.responseTime : "N/A"}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total Volume</span>
-                    <span className="font-semibold">${tradingStats.totalVolume.toLocaleString()}</span>
+                    <span className="font-semibold">${tradingStats ? tradingStats.totalVolume.toLocaleString() : 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Dispute Rate</span>
-                    <span className="font-semibold text-green-600">{tradingStats.disputeRate}%</span>
+                    <span className="font-semibold text-green-600">{tradingStats ? tradingStats.disputeRate : 0}%</span>
                   </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-2 mb-6">
-                  <Button className="w-full">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Start Trade
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Add to Favorites
-                  </Button>
                 </div>
 
                 {/* Profile Info */}
@@ -364,11 +353,11 @@ const UserTrades: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Trading since {tradingStats.memberSince}</span>
+                    <span>Trading since {tradingStats ? tradingStats.memberSince : "N/A"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>Usually responds in {tradingStats.responseTime}</span>
+                    <span>Usually responds in {tradingStats ? tradingStats.responseTime : "N/A"}</span>
                   </div>
                 </div>
               </CardContent>
@@ -384,8 +373,13 @@ const UserTrades: React.FC = () => {
                   {paymentMethods.map((method, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <method.icon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{method.name}</span>
+                        {/* Use a default icon if method.icon is not available */}
+                        {method.icon ? (
+                          <method.icon className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <CreditCard className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <span className="text-sm">{method.name || method.type}</span>
                       </div>
                       {method.available ? (
                         <CheckCircle className="h-4 w-4 text-green-500" />
@@ -410,22 +404,22 @@ const UserTrades: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-xs font-bold text-blue-600">
-                            {crypto.symbol}
+                            {crypto.symbol || crypto.currency}
                           </span>
                         </div>
                         <div>
-                          <div className="font-medium text-sm">{crypto.name}</div>
+                          <div className="font-medium text-sm">{crypto.name || crypto.asset}</div>
                           <div className="text-xs text-muted-foreground">
-                            {crypto.amount} {crypto.symbol}
+                            {crypto.amount || crypto.balance} {crypto.symbol || crypto.currency}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-medium text-sm">
-                          ${crypto.value.toLocaleString()}
+                          ${typeof crypto.value === 'number' ? crypto.value.toLocaleString() : (crypto.amount * crypto.price).toLocaleString()}
                         </div>
                         <div className={`text-xs ${crypto.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {crypto.change >= 0 ? '+' : ''}{crypto.change}%
+                          {crypto.change >= 0 ? '+' : ''}{crypto.change || crypto.change24h || 0}%
                         </div>
                       </div>
                     </div>
@@ -592,55 +586,35 @@ const UserTrades: React.FC = () => {
               {/* Reviews Tab */}
               <TabsContent value="reviews" className="mt-6">
                 <div className="space-y-4">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <Avatar>
-                          <AvatarImage src="/placeholder.svg" alt="Reviewer" />
-                          <AvatarFallback>JD</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">John Doe</span>
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star key={star} className="h-4 w-4 text-yellow-500 fill-current" />
-                              ))}
+                  {reviews.map((review, index) => (
+                    <Card key={index}>
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4 mb-4">
+                          <Avatar>
+                            <AvatarImage src={review.avatar || "/placeholder.svg"} alt={review.reviewerName || "Reviewer"} />
+                            <AvatarFallback>{review.reviewerName ? review.reviewerName.substring(0, 2).toUpperCase() : "R"}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">{review.reviewerName || "Anonymous"}</span>
+                              <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star 
+                                    key={star} 
+                                    className={`h-4 w-4 ${star <= (review.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
+                                  />
+                                ))}
+                              </div>
                             </div>
+                            <p className="text-sm text-muted-foreground">{new Date(review.date || review.createdAt).toLocaleDateString() || "Recent"}</p>
                           </div>
-                          <p className="text-sm text-muted-foreground">2 days ago</p>
                         </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        "Excellent trader! Fast response time and smooth transaction. Highly recommended for Bitcoin trading."
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <Avatar>
-                          <AvatarImage src="/placeholder.svg" alt="Reviewer" />
-                          <AvatarFallback>SM</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">Sarah Miller</span>
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star key={star} className="h-4 w-4 text-yellow-500 fill-current" />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-sm text-muted-foreground">1 week ago</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        "Professional and reliable trader. The transaction was completed exactly as promised. Will trade again!"
-                      </p>
-                    </CardContent>
-                  </Card>
+                        <p className="text-sm text-muted-foreground">
+                          {review.comment || review.feedback || "No comment provided"}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </TabsContent>
 
@@ -653,7 +627,7 @@ const UserTrades: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold text-green-600 mb-2">
-                        ${tradingStats.totalVolume.toLocaleString()}
+                        ${tradingStats ? tradingStats.totalVolume.toLocaleString() : 0}
                       </div>
                       <p className="text-sm text-muted-foreground">Total trading volume</p>
                     </CardContent>
@@ -665,7 +639,7 @@ const UserTrades: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold text-blue-600 mb-2">
-                        {tradingStats.completionRate}%
+                        {tradingStats ? tradingStats.completionRate : 0}%
                       </div>
                       <p className="text-sm text-muted-foreground">Trade completion rate</p>
                     </CardContent>
@@ -677,7 +651,7 @@ const UserTrades: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold text-purple-600 mb-2">
-                        {tradingStats.totalTrades}
+                        {tradingStats ? tradingStats.totalTrades : 0}
                       </div>
                       <p className="text-sm text-muted-foreground">Completed transactions</p>
                     </CardContent>
