@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,38 +32,21 @@ import {
   RadialBar,
 } from "recharts";
 import {
-  BarChart3,
   TrendingUp,
-  TrendingDown,
-  Users,
   Eye,
   Heart,
   MessageSquare,
   Share2,
   DollarSign,
-  ShoppingCart,
-  Coins,
   Star,
-  Clock,
-  Calendar,
   Download,
-  Filter,
   RefreshCw,
   Target,
   Briefcase,
-  Award,
-  Zap,
-  Activity,
-  PieChart as PieChartIcon,
   LineChart as LineChartIcon,
-  BarChart as BarChartIcon,
-  Settings,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Plus,
-  Info,
-  AlertCircle,
   CheckCircle,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -362,9 +345,8 @@ const COLORS = [
 ];
 
 export const AnalyticsDashboard: React.FC = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [data, setData] = useState<AnalyticsData>(mockAnalyticsData);
+  const [data] = useState<AnalyticsData>(mockAnalyticsData);
   const [loading, setLoading] = useState(false);
   const [timeRange, setTimeRange] = useState("7d");
   const [activeTab, setActiveTab] = useState("overview");
@@ -795,7 +777,7 @@ export const AnalyticsDashboard: React.FC = () => {
                       outerRadius={80}
                       label={({ range, value }) => `${range}: ${value}%`}
                     >
-                      {data.demographics.age.map((entry, index) => (
+                      {data.demographics.age.map((_, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill={COLORS[index % COLORS.length]}

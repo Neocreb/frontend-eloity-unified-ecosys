@@ -6,18 +6,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sparkles,
   TrendingUp,
-  Users,
   Clock,
   Eye,
-  ThumbsUp,
-  Share2,
   MessageCircle,
   Star,
   Zap,
   Target,
   ArrowRight,
   RefreshCw,
-  Filter,
 } from "lucide-react";
 import { aiRecommendationService } from "@/services/aiRecommendationService";
 import { useAuth } from "@/contexts/AuthContext";

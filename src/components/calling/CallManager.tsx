@@ -22,7 +22,6 @@ const CallManager: React.FC<CallManagerProps> = ({ onCallStarted, onCallEnded })
   const {
     activeCall,
     callParticipants,
-    isCalling,
     isReceivingCall,
     callHistory,
     loading,

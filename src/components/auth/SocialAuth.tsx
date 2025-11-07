@@ -9,7 +9,7 @@ const SocialAuth = () => {
   const signInWithGithub = async () => {
     try {
       setLoading(true);
-      const { error, data } = await supabase.auth.signInWithOAuth({ provider: "github" });
+      const { error } = await supabase.auth.signInWithOAuth({ provider: "github" });
       if (error) {
         console.error("GitHub OAuth error:", error);
         alert("GitHub sign-in failed. Ensure GitHub is enabled in Supabase Auth > Providers.");
