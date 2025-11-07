@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Github } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";

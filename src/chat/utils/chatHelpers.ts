@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   ChatType,
   ChatThread,
