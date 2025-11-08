@@ -116,7 +116,7 @@ import EnhancedCreatorAnalytics from '@/components/video/EnhancedCreatorAnalytic
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 import { fetchContentPageSupabase } from '@/services/contentService';
-import { fetchUserDemographics } from '@/services/userDemographicsService';
+import { activateFeature, deactivateFeature, getFeatureActivationStatus } from '@/services/featureActivationService';
 import { UserDemographics } from '@/services/userDemographicsService';
 
 interface MetricCard {
@@ -171,6 +171,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showContentCreationModal, setShowContentCreationModal] = useState(false);
+  const [contentCreationType, setContentCreationType] = useState<'post' | 'product' | 'video' | 'live'>('post');
   const [filterType, setFilterType] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [showAudienceSegments, setShowAudienceSegments] = useState(false);
@@ -203,7 +205,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
     return num * (negative ? -1 : 1);
   };
 
-  // Fetch / compute paginated content (simulates server-side)
+  // Fetch paginated content from Supabase
     const fetchContentPage = async ({ types, range, sort, search, pageNum, size }:
     { types: string[]; range: string; sort: string; search: string; pageNum: number; size: number }) => {
     // Use cache key for identical queries
@@ -213,47 +215,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
       return { data: cached.data, total: cached.total };
     }
 
-    try {
-      const { data, total } = await fetchContentPageSupabase({ types, range, sort, search, page: pageNum, pageSize: size });
-      cacheRef.current.set(key, { ts: Date.now(), data, total });
-      return { data, total };
-    } catch (err) {
-      console.error('Supabase fetch failed, falling back to local mock', err);
-      // Fallback to local mock if supabase fails
-      // reuse existing in-memory topPerformingContent filter logic
-      const now = new Date();
-      const rangeMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
-      const filtered = topPerformingContent.filter(item => {
-        const typeMatch = types.length === 0 || types.includes(item.type.toLowerCase());
-        const dateMatch = (() => {
-          if (range === 'all') return true;
-          const pd = new Date(item.publishDate);
-          if (isNaN(pd.getTime())) return true;
-          const diffDays = Math.floor((now.getTime() - pd.getTime()) / (1000 * 60 * 60 * 24));
-          return typeof rangeMap[range] === 'number' ? diffDays <= rangeMap[range] : true;
-        })();
-        const searchMatch = !search || item.title.toLowerCase().includes(search.toLowerCase()) || (item.description || '').toLowerCase().includes(search.toLowerCase());
-        return typeMatch && dateMatch && searchMatch;
-      });
-      // basic sort same as before
-      const sorted = filtered.slice().sort((a, b) => {
-        switch (sort) {
-          case 'views':
-            return parseAbbrev(String(b.views)) - parseAbbrev(String(a.views));
-          case 'engagement':
-            return parseFloat(String(b.engagement).replace(/[^0-9.]/g,'')) - parseFloat(String(a.engagement).replace(/[^0-9.]/g,''));
-          case 'revenue':
-            return parseAbbrev(String(b.revenue)) - parseAbbrev(String(a.revenue));
-          default:
-            return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
-        }
-      });
-      const total = sorted.length;
-      const start = (pageNum - 1) * size;
-      const data = sorted.slice(start, start + size);
-      cacheRef.current.set(key, { ts: Date.now(), data, total });
-      return { data, total };
-    }
+    const { data, total } = await fetchContentPageSupabase({ types, range, sort, search, page: pageNum, pageSize: size });
+    cacheRef.current.set(key, { ts: Date.now(), data, total });
+    return { data, total };
   };
   const [setupComplete, setSetupComplete] = useState(() => {
     try {
@@ -554,6 +518,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
         }
       } catch (err) {
         console.error('Content fetch failed', err);
+        // Show error to user
+        alert('Failed to fetch content. Please try again later.');
       } finally {
         if (!cancelled) setContentLoading(false);
       }
@@ -645,10 +611,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const handleExport = async (format: 'csv' | 'pdf' | 'json' = 'csv') => {
     setIsExporting(true);
     try {
-      // Simulate export API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // In a real implementation, you would call an actual export API
+      // For now, we'll simulate a shorter delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Generate mock data for export
+      // In a real implementation, this data would come from actual API calls
       const exportData = {
         revenue: {
           total: totalRevenue,
@@ -712,8 +679,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     try {
-      // Simulate API refresh
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // In a real implementation, you would call an actual refresh API
+      // For now, we'll simulate a shorter delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       alert('Data refreshed successfully!');
     } catch (error) {
       console.error('Refresh failed:', error);
@@ -729,22 +697,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
     alert('Goal setting feature coming soon! You can set monthly revenue targets, follower goals, and engagement targets.');
   };
 
-  const handleCreateContent = (type: string) => {
-    const routes = {
-      'video': '/app/videos',
-      'post': '/app/feed',
-      'live': '/app/live',
-      'product': '/app/marketplace/list',
-      'stream': '/app/live',
-      'article': '/app/blog'
-    };
-
-    const route = routes[type as keyof typeof routes];
-    if (route) {
-      window.open(route, '_blank');
-    } else {
-      alert(`Creating ${type} content... Redirecting to creation tool.`);
-    }
+  const handleCreateContent = async (type: 'post' | 'product' | 'video' | 'live') => {
+    setContentCreationType(type);
+    setShowContentCreationModal(true);
   };
 
   const handleFilterContent = () => {
@@ -782,8 +737,31 @@ const EnhancedCreatorDashboard: React.FC = () => {
     alert('Opening content scheduler... You can plan your posts for optimal engagement times.');
   };
 
-  const handleToggleFeature = (featureName: string, currentState: boolean) => {
-    alert(`${currentState ? 'Disabling' : 'Enabling'} ${featureName}... Feature state will be updated.`);
+  const handleToggleFeature = async (featureName: string, currentState: boolean) => {
+    try {
+      // In a real implementation, you would get the actual user ID from context or auth
+      // For now, we'll use a more realistic placeholder
+      const userId = 'user-' + Math.random().toString(36).substr(2, 9);
+      
+      if (currentState) {
+        // Feature is currently enabled, so we're disabling it
+        await deactivateFeature(userId, featureName, 'User disabled feature');
+        // Update the UI to reflect the change
+        alert(`${featureName} has been disabled.`);
+        // In a real implementation, you would update the state to reflect the change
+        // For example: setPlatformFeatures(prev => prev.map(f => f.name === featureName ? {...f, active: false} : f));
+      } else {
+        // Feature is currently disabled, so we're enabling it
+        await activateFeature(userId, featureName, 'User enabled feature');
+        // Update the UI to reflect the change
+        alert(`${featureName} has been enabled.`);
+        // In a real implementation, you would update the state to reflect the change
+        // For example: setPlatformFeatures(prev => prev.map(f => f.name === featureName ? {...f, active: true} : f));
+      }
+    } catch (error) {
+      console.error('Error toggling feature:', error);
+      alert(`Failed to ${currentState ? 'disable' : 'enable'} ${featureName}. Please try again.`);
+    }
   };
 
   const handleConfigureFeature = (featureName: string) => {
@@ -3414,38 +3392,16 @@ const EnhancedCreatorDashboard: React.FC = () => {
         )}
 
         {/* Create Content Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-[90vw]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Create New Content</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => { handleCreateContent('video'); setShowCreateModal(false); }}>
-                  <Video className="w-6 h-6" />
-                  <span className="text-sm">Video</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => { handleCreateContent('post'); setShowCreateModal(false); }}>
-                  <FileText className="w-6 h-6" />
-                  <span className="text-sm">Post</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => { handleCreateContent('live'); setShowCreateModal(false); }}>
-                  <Radio className="w-6 h-6" />
-                  <span className="text-sm">Live Stream</span>
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => { handleCreateContent('product'); setShowCreateModal(false); }}>
-                  <ShoppingBag className="w-6 h-6" />
-                  <span className="text-sm">Product</span>
-                </Button>
-              </div>
-              <Button variant="outline" className="w-full mt-4" onClick={() => setShowCreateModal(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
+        {showContentCreationModal && (
+          <ContentCreationModal
+            type={contentCreationType}
+            isOpen={showContentCreationModal}
+            onClose={() => setShowContentCreationModal(false)}
+            onSuccess={() => {
+              // Refresh content or show success message
+              console.log(`${contentCreationType} created successfully`);
+            }}
+          />
         )}
       </div>
     </div>

@@ -212,34 +212,6 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
     };
   } catch (error) {
     console.error('Error processing user demographics:', error);
-    // Return default/fallback data in case of error
-    return {
-      age: [
-        { range: "18-24", percentage: 35, count: "15.8K" },
-        { range: "25-34", percentage: 40, count: "18.1K" },
-        { range: "35-44", percentage: 20, count: "9.0K" },
-        { range: "45-54", percentage: 4, count: "1.8K" },
-        { range: "55+", percentage: 1, count: "450" },
-      ],
-      gender: [
-        { gender: "Male", percentage: 58, count: "26.2K" },
-        { gender: "Female", percentage: 42, count: "19.0K" }
-      ],
-      location: [
-        { location: "United States", percentage: 42, count: "18.9K" },
-        { location: "United Kingdom", percentage: 18, count: "8.1K" },
-        { location: "Canada", percentage: 12, count: "5.4K" },
-        { location: "Australia", percentage: 8, count: "3.6K" },
-        { location: "Germany", percentage: 6, count: "2.7K" },
-        { location: "Others", percentage: 14, count: "6.3K" }
-      ],
-      interests: [
-        { interest: "Technology", percentage: 78 },
-        { interest: "Finance", percentage: 65 },
-        { interest: "Business", percentage: 52 },
-        { interest: "Education", percentage: 47 },
-        { interest: "Entertainment", percentage: 38 }
-      ]
-    };
+    throw error; // Propagate the error instead of returning fallback data
   }
 };
