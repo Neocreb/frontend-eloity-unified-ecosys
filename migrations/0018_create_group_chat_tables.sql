@@ -120,9 +120,13 @@ CREATE POLICY "Group creators can delete their group chat threads" ON public.gro
 CREATE POLICY "Users can view group participants for groups they belong to" ON public.group_participants
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM public.group_participants gp
-            WHERE gp.group_id = group_participants.group_id
-            AND gp.user_id = auth.uid()
+            SELECT 1 FROM public.group_chat_threads gt
+            WHERE gt.id = group_participants.group_id
+            AND EXISTS (
+                SELECT 1 FROM public.group_participants gp
+                WHERE gp.group_id = gt.id
+                AND gp.user_id = auth.uid()
+            )
         )
     );
 

@@ -64,15 +64,13 @@ CREATE POLICY "Users can leave groups" ON public.group_members
 CREATE POLICY "Group admins can manage members" ON public.group_members
   FOR ALL USING (
     EXISTS (
-      SELECT 1 FROM public.group_members gm 
-      WHERE gm.group_id = group_members.group_id 
-      AND gm.user_id = auth.uid()
-      AND gm.role IN ('admin', 'moderator')
-    )
-    OR EXISTS (
       SELECT 1 FROM public.groups g
       WHERE g.id = group_members.group_id 
-      AND g.creator_id = auth.uid()
+      AND (g.creator_id = auth.uid() OR
+           EXISTS (SELECT 1 FROM public.group_members gm 
+                   WHERE gm.group_id = g.id 
+                   AND gm.user_id = auth.uid()
+                   AND gm.role IN ('admin', 'moderator')))
     )
   );
 
