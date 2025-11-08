@@ -120,6 +120,8 @@ import { activateFeature, deactivateFeature, getFeatureActivationStatus } from '
 import { UserDemographics } from '@/services/userDemographicsService';
 import { fetchPlatformAnalytics, fetchTopPerformingContent, fetchFeatureDetails } from '@/services/analyticsService';
 import { activityService } from '@/services/taskService';
+import { useRealtimeAnalytics } from '@/hooks/useRealtimeAnalytics';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MetricCard {
   title: string;
@@ -155,6 +157,7 @@ interface DetailedCategory {
 
 const EnhancedCreatorDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState(() => {
     try {
       if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
@@ -187,19 +190,22 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [topPerformingContent, setTopPerformingContent] = useState<any[]>([]);
   const [userDemographics, setUserDemographics] = useState<UserDemographics | null>(null);
 
-  // Fetch platform analytics data
-  useEffect(() => {
-    const loadPlatformAnalytics = async () => {
-      try {
-        const data = await fetchPlatformAnalytics();
-        setPlatformFeatures(data);
-      } catch (error) {
-        console.error('Failed to fetch platform analytics:', error);
-      }
-    };
+  // Use real-time analytics hook
+  const { platformFeatures, topPerformingContent, userDemographics: realtimeUserDemographics, isLoading, error, refreshData } = useRealtimeAnalytics(user?.id || null);
 
-    loadPlatformAnalytics();
-  }, []);
+  // Update user demographics when real-time data changes
+  useEffect(() => {
+    if (realtimeUserDemographics) {
+      setUserDemographics(realtimeUserDemographics);
+    }
+  }, [realtimeUserDemographics]);
+
+  // Show error message to user
+  useEffect(() => {
+    if (error) {
+      alert(`Error: ${error.message}. Please try refreshing the page or check your connection.`);
+    }
+  }, [error]);
 
   // Fetch quick actions data
   useEffect(() => {
@@ -265,27 +271,21 @@ const EnhancedCreatorDashboard: React.FC = () => {
         setRecentActivities(formattedActivities);
       } catch (error) {
         console.error('Failed to fetch recent activities:', error);
+        // Log detailed error information for debugging
+        if (error instanceof Error) {
+          console.error('Error name:', error.name);
+          console.error('Error stack:', error.stack);
+        }
         // Set empty array if fetch fails
         setRecentActivities([]);
+        alert('Failed to load recent activities. Please try again later.');
       }
     };
 
     loadRecentActivities();
   }, []);
 
-  // Fetch top performing content data
-  useEffect(() => {
-    const loadTopPerformingContent = async () => {
-      try {
-        const data = await fetchTopPerformingContent();
-        setTopPerformingContent(data);
-      } catch (error) {
-        console.error('Failed to fetch top performing content:', error);
-      }
-    };
-
-    loadTopPerformingContent();
-  }, []);
+  // Top performing content is now handled by the real-time hook
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
@@ -367,8 +367,13 @@ const EnhancedCreatorDashboard: React.FC = () => {
         }
       } catch (err) {
         console.error('Content fetch failed', err);
+        // Log detailed error information for debugging
+        if (err instanceof Error) {
+          console.error('Error name:', err.name);
+          console.error('Error stack:', err.stack);
+        }
         // Show error to user
-        alert('Failed to fetch content. Please try again later.');
+        alert('Failed to fetch content. Please check your connection and try again later.');
       } finally {
         if (!cancelled) setContentLoading(false);
       }
@@ -395,19 +400,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  // Fetch user demographics data
-  useEffect(() => {
-    const loadUserDemographics = async () => {
-      try {
-        const data = await fetchUserDemographics();
-        setUserDemographics(data);
-      } catch (error) {
-        console.error('Failed to fetch user demographics:', error);
-      }
-    };
-
-    loadUserDemographics();
-  }, []);
+  // User demographics are now handled by the real-time hook
 
   // Reset page when filters change
   useEffect(() => {
@@ -528,17 +521,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     try {
-      // Refresh all data by re-fetching
-      const [analyticsData, contentData, demographicsData] = await Promise.all([
-        fetchPlatformAnalytics(),
-        fetchTopPerformingContent(),
-        fetchUserDemographics()
-      ]);
-      
-      setPlatformFeatures(analyticsData);
-      setTopPerformingContent(contentData);
-      setUserDemographics(demographicsData);
-      
+      // Refresh all data using the real-time hook
+      await refreshData();
       alert('Data refreshed successfully!');
     } catch (error) {
       console.error('Refresh failed:', error);
@@ -654,8 +638,14 @@ const EnhancedCreatorDashboard: React.FC = () => {
           setDetailedMetrics(metrics);
         } catch (error) {
           console.error(`Error fetching detailed metrics for ${featureName}:`, error);
+          // Log detailed error information for debugging
+          if (error instanceof Error) {
+            console.error('Error name:', error.name);
+            console.error('Error stack:', error.stack);
+          }
           // Set empty array if fetch fails
           setDetailedMetrics([]);
+          alert(`Failed to load detailed metrics for ${featureName}. Please try again later.`);
         } finally {
           setLoading(false);
         }

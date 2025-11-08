@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import cache from '@/utils/cache';
 
 // Utility functions for formatting
 const formatNumber = (num: number): string => {
@@ -275,6 +276,13 @@ export const transformContentAnalytics = (contentItems: any[]): ContentAnalytics
 
 // Fetch real analytics data for all platform features
 export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
+  // Check cache first
+  const cacheKey = 'platformAnalytics';
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   try {
     // Fetch data from various tables
     const [postsData, videosData, productsData, freelancesData, financesData, engagementsData] = await Promise.all([
@@ -286,7 +294,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       fetchEngagementAnalytics()
     ]);
 
-    return [
+    const result = [
       {
         name: "Feed & Social",
         icon: () => null, // Will be replaced by actual icon component
@@ -362,6 +370,11 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
         ]
       }
     ];
+
+    // Cache the result for 5 minutes
+    cache.set(cacheKey, result, 5 * 60 * 1000);
+
+    return result;
   } catch (error) {
     console.error('Error fetching platform analytics:', error);
     throw error;
@@ -737,6 +750,13 @@ const fetchEngagementAnalytics = async () => {
 
 // Fetch top performing content
 export const fetchTopPerformingContent = async (): Promise<ContentAnalytics[]> => {
+  // Check cache first
+  const cacheKey = 'topPerformingContent';
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   try {
     const { data, error } = await supabase
       .from('content_analytics')
@@ -746,7 +766,7 @@ export const fetchTopPerformingContent = async (): Promise<ContentAnalytics[]> =
     
     if (error) throw error;
     
-    return data.map((item: any) => ({
+    const result = data.map((item: any) => ({
       id: item.id,
       title: item.title,
       type: item.type,
@@ -759,6 +779,11 @@ export const fetchTopPerformingContent = async (): Promise<ContentAnalytics[]> =
       thumbnail: item.thumbnail || '/api/placeholder/300/200',
       analytics: item.analytics || {}
     }));
+
+    // Cache the result for 2 minutes
+    cache.set(cacheKey, result, 2 * 60 * 1000);
+
+    return result;
   } catch (error) {
     console.error('Error fetching top performing content:', error);
     return [];
