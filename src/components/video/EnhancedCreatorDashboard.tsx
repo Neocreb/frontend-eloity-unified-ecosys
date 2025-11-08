@@ -118,6 +118,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 import { fetchContentPageSupabase } from '@/services/contentService';
 import { activateFeature, deactivateFeature, getFeatureActivationStatus } from '@/services/featureActivationService';
 import { UserDemographics } from '@/services/userDemographicsService';
+import { fetchPlatformAnalytics, fetchTopPerformingContent } from '@/services/analyticsService';
 
 interface MetricCard {
   title: string;
@@ -156,69 +157,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
     } catch { return 'overview'; }
   });
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const sp = new URLSearchParams(window.location.search);
-      if (sp.get('tab') !== activeSection) {
-        sp.set('tab', activeSection);
-        navigate(`${window.location.pathname}?${sp.toString()}`, { replace: true });
-      }
-    } catch {}
-  }, [activeSection, navigate]);
-  const [selectedContent, setSelectedContent] = useState<any | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [showGoalModal, setShowGoalModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showContentCreationModal, setShowContentCreationModal] = useState(false);
-  const [contentCreationType, setContentCreationType] = useState<'post' | 'product' | 'video' | 'live'>('post');
-  const [filterType, setFilterType] = useState("all");
-  const [sortBy, setSortBy] = useState("recent");
-  const [showAudienceSegments, setShowAudienceSegments] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [userDemographics, setUserDemographics] = useState<UserDemographics | null>(null);
-
-  // Advanced content filtering/pagination states
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // multi-select types
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const [contentPageData, setContentPageData] = useState<any[]>([]);
-  const [contentTotal, setContentTotal] = useState(0);
-  const [contentLoading, setContentLoading] = useState(false);
-  const cacheRef = React.useRef(new Map<string, { ts: number; data: any; total: number }>());
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
-
-  // Helpers for parsing abbreviated numbers like 45.2K or $23.4K
-  const parseAbbrev = (v: string | number) => {
-    if (typeof v === 'number') return v;
-    const s = String(v).trim();
-    if (!s) return 0;
-    const negative = s.startsWith('-');
-    const cleaned = s.replace(/[^0-9.]/g, '');
-    const num = parseFloat(cleaned) || 0;
-    if (s.toLowerCase().endsWith('k')) return num * 1000 * (negative ? -1 : 1);
-    if (s.toLowerCase().endsWith('m')) return num * 1000000 * (negative ? -1 : 1);
-    return num * (negative ? -1 : 1);
-  };
-
-  // Fetch paginated content from Supabase
-    const fetchContentPage = async ({ types, range, sort, search, pageNum, size }:
-    { types: string[]; range: string; sort: string; search: string; pageNum: number; size: number }) => {
-    // Use cache key for identical queries
-    const key = JSON.stringify({ types: types.slice().sort(), range, sort, search, pageNum, size });
-    const cached = cacheRef.current.get(key);
-    if (cached && Date.now() - cached.ts < 1000 * 60) {
-      return { data: cached.data, total: cached.total };
-    }
-
-    const { data, total } = await fetchContentPageSupabase({ types, range, sort, search, page: pageNum, pageSize: size });
-    cacheRef.current.set(key, { ts: Date.now(), data, total });
-    return { data, total };
-  };
   const [setupComplete, setSetupComplete] = useState(() => {
     try {
       if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
@@ -229,232 +167,67 @@ const EnhancedCreatorDashboard: React.FC = () => {
   });
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [platformFeatures, setPlatformFeatures] = useState<FeatureAnalytics[]>([]);
+  const [quickActions, setQuickActions] = useState<any[]>([]);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [topPerformingContent, setTopPerformingContent] = useState<any[]>([]);
 
-  // Mock data for comprehensive analytics
-  const platformFeatures: FeatureAnalytics[] = [
-    {
-      name: "Feed & Social",
-      icon: House,
-      color: "bg-blue-500",
-      growth: 23.5,
-      active: true,
-      metrics: [
-        { title: "Total Posts", value: "1,247", change: 18.2, trend: "up", icon: FileText, color: "text-blue-600" },
-        { title: "Engagement Rate", value: "8.4%", change: 12.3, trend: "up", icon: Heart, color: "text-pink-600" },
-        { title: "Followers", value: "45.2K", change: 15.7, trend: "up", icon: Users, color: "text-green-600" },
-        { title: "Reach", value: "892K", change: 28.1, trend: "up", icon: Eye, color: "text-purple-600" },
-      ]
-    },
-    {
-      name: "Video",
-      icon: Video,
-      color: "bg-red-500",
-      growth: 31.8,
-      active: true,
-      metrics: [
-        { title: "Videos Created", value: "156", change: 22.4, trend: "up", icon: Film, color: "text-red-600" },
-        { title: "Total Views", value: "2.1M", change: 35.2, trend: "up", icon: Play, color: "text-blue-600" },
-        { title: "Watch Time", value: "45.2h", change: 18.9, trend: "up", icon: Clock, color: "text-green-600" },
-        { title: "Avg Duration", value: "3:24", change: 8.1, trend: "up", icon: Timer, color: "text-orange-600" },
-      ]
-    },
-    {
-      name: "Marketplace",
-      icon: ShoppingBag,
-      color: "bg-green-500",
-      growth: 45.2,
-      active: true,
-      metrics: [
-        { title: "Products Sold", value: "389", change: 52.1, trend: "up", icon: ShoppingBag, color: "text-green-600" },
-        { title: "Revenue", value: "$12,450", change: 38.7, trend: "up", icon: DollarSign, color: "text-emerald-600" },
-        { title: "Conversion Rate", value: "3.2%", change: 15.4, trend: "up", icon: Target, color: "text-blue-600" },
-        { title: "Avg Order Value", value: "$32", change: 8.9, trend: "up", icon: CreditCard, color: "text-purple-600" },
-      ]
-    },
-    {
-      name: "Freelance",
-      icon: Briefcase,
-      color: "bg-orange-500",
-      growth: 28.9,
-      active: true,
-      metrics: [
-        { title: "Projects Completed", value: "47", change: 31.2, trend: "up", icon: CheckCircle, color: "text-green-600" },
-        { title: "Client Rating", value: "4.9", change: 2.1, trend: "up", icon: Star, color: "text-yellow-600" },
-        { title: "Earnings", value: "$8,920", change: 25.3, trend: "up", icon: Wallet, color: "text-green-600" },
-        { title: "Response Time", value: "2.1h", change: -12.4, trend: "down", icon: Clock, color: "text-blue-600" },
-      ]
-    },
-    {
-      name: "Finance",
-      icon: Coins,
-      color: "bg-yellow-500",
-      growth: 18.7,
-      active: true,
-      metrics: [
-        { title: "Portfolio Value", value: "$24,567", change: 22.8, trend: "up", icon: TrendingUp, color: "text-green-600" },
-        { title: "Trading Volume", value: "$156K", change: 45.1, trend: "up", icon: BarChart3, color: "text-blue-600" },
-        { title: "Win Rate", value: "72%", change: 8.3, trend: "up", icon: Target, color: "text-emerald-600" },
-        { title: "P&L Today", value: "+$342", change: 0, trend: "up", icon: HandCoins, color: "text-green-600" },
-      ]
-    },
-    {
-      name: "Engagement",
-      icon: MessageSquare,
-      color: "bg-purple-500",
-      growth: 19.4,
-      active: true,
-      metrics: [
-        { title: "Messages Sent", value: "2,341", change: 15.6, trend: "up", icon: MessageCircle, color: "text-blue-600" },
-        { title: "Active Chats", value: "89", change: 12.8, trend: "up", icon: Users, color: "text-green-600" },
-        { title: "Response Rate", value: "94%", change: 3.2, trend: "up", icon: CheckCircle, color: "text-emerald-600" },
-        { title: "Avg Response", value: "5min", change: -8.1, trend: "down", icon: Timer, color: "text-orange-600" },
-      ]
-    },
-    {
-      name: "Live Streaming",
-      icon: Radio,
-      color: "bg-pink-500",
-      growth: 67.3,
-      active: false,
-      metrics: [
-        { title: "Live Sessions", value: "23", change: 83.2, trend: "up", icon: Radio, color: "text-pink-600" },
-        { title: "Peak Viewers", value: "1,247", change: 45.7, trend: "up", icon: Eye, color: "text-blue-600" },
-        { title: "Stream Time", value: "34.2h", change: 28.9, trend: "up", icon: Clock, color: "text-green-600" },
-        { title: "Super Chats", value: "$445", change: 92.1, trend: "up", icon: Gift, color: "text-yellow-600" },
-      ]
-    },
-    {
-      name: "Events & Calendar",
-      icon: Calendar,
-      color: "bg-indigo-500",
-      growth: 34.6,
-      active: true,
-      metrics: [
-        { title: "Events Created", value: "12", change: 50.0, trend: "up", icon: CalendarIcon, color: "text-indigo-600" },
-        { title: "Attendees", value: "2,134", change: 42.3, trend: "up", icon: Users, color: "text-blue-600" },
-        { title: "Event Revenue", value: "$3,240", change: 67.8, trend: "up", icon: DollarSign, color: "text-green-600" },
-        { title: "Avg Rating", value: "4.7", change: 8.7, trend: "up", icon: Star, color: "text-yellow-600" },
-      ]
-    },
-  ];
+  // Fetch platform analytics data
+  useEffect(() => {
+    const loadPlatformAnalytics = async () => {
+      try {
+        const data = await fetchPlatformAnalytics();
+        setPlatformFeatures(data);
+      } catch (error) {
+        console.error('Failed to fetch platform analytics:', error);
+      }
+    };
 
-  const quickActions = [
-    { name: "Create Post", icon: Plus, color: "bg-blue-500", href: "/app/feed" },
-    { name: "New Video", icon: Video, color: "bg-red-500", href: "/videos" },
-    { name: "List Product", icon: ShoppingBag, color: "bg-green-500", href: "/marketplace" },
-    { name: "Find Job", icon: Briefcase, color: "bg-orange-500", href: "/freelance" },
-    { name: "Trade Crypto", icon: Coins, color: "bg-yellow-500", href: "/app/crypto" },
-    { name: "Go Live", icon: Radio, color: "bg-pink-500", href: "/app/live-streaming" },
-    { name: "Create Event", icon: Calendar, color: "bg-indigo-500", href: "/events" },
-    { name: "Start Chat", icon: MessageSquare, color: "bg-purple-500", href: "/chat" },
-  ];
+    loadPlatformAnalytics();
+  }, []);
 
-  const recentActivities = [
-    { type: "video", content: "Your video 'How to Trade Crypto' reached 10K views", time: "2 hours ago", icon: Video, color: "text-red-500" },
-    { type: "marketplace", content: "Product 'Digital Art Collection' sold for $89", time: "4 hours ago", icon: ShoppingBag, color: "text-green-500" },
-    { type: "freelance", content: "New project proposal received from TechCorp", time: "6 hours ago", icon: Briefcase, color: "text-orange-500" },
-    { type: "social", content: "Your post received 500+ likes and 50 comments", time: "8 hours ago", icon: Heart, color: "text-pink-500" },
-    { type: "crypto", content: "Portfolio gained $234 from BTC trade", time: "12 hours ago", icon: TrendingUp, color: "text-green-500" },
-  ];
+  // Fetch quick actions data
+  useEffect(() => {
+    // In a real implementation, this would fetch from an API
+    const actions = [
+      { name: "Create Post", icon: Plus, color: "bg-blue-500", href: "/app/feed" },
+      { name: "New Video", icon: Video, color: "bg-red-500", href: "/videos" },
+      { name: "List Product", icon: ShoppingBag, color: "bg-green-500", href: "/marketplace" },
+      { name: "Find Job", icon: Briefcase, color: "bg-orange-500", href: "/freelance" },
+      { name: "Trade Crypto", icon: Coins, color: "bg-yellow-500", href: "/app/crypto" },
+      { name: "Go Live", icon: Radio, color: "bg-pink-500", href: "/app/live-streaming" },
+      { name: "Create Event", icon: Calendar, color: "bg-indigo-500", href: "/events" },
+      { name: "Start Chat", icon: MessageSquare, color: "bg-purple-500", href: "/chat" },
+    ];
+    setQuickActions(actions);
+  }, []);
 
-  const topPerformingContent = [
-    {
-      id: 1,
-      title: "Crypto Trading Tutorial",
-      type: "Video",
-      views: "45.2K",
-      engagement: "12.4%",
-      revenue: "$234",
-      description: "Complete beginner's guide to cryptocurrency trading with practical examples",
-      duration: "15:32",
-      likes: "3.2K",
-      comments: "567",
-      shares: "234",
-      publishDate: "2024-01-15",
-      platform: "Video",
-      thumbnail: "/api/placeholder/300/200",
-      analytics: {
-        watchTime: "92%",
-        clickThrough: "8.5%",
-        retention: "78%",
-        topCountries: ["US", "UK", "Canada"],
-        ageGroups: { "18-24": 35, "25-34": 40, "35-44": 20, "45+": 5 },
-        trafficSources: { "Search": 45, "Direct": 30, "Social": 25 }
+  // Fetch recent activities data
+  useEffect(() => {
+    // In a real implementation, this would fetch from an API
+    const activities = [
+      { type: "video", content: "Your video 'How to Trade Crypto' reached 10K views", time: "2 hours ago", icon: Video, color: "text-red-500" },
+      { type: "marketplace", content: "Product 'Digital Art Collection' sold for $89", time: "4 hours ago", icon: ShoppingBag, color: "text-green-500" },
+      { type: "freelance", content: "New project proposal received from TechCorp", time: "6 hours ago", icon: Briefcase, color: "text-orange-500" },
+      { type: "social", content: "Your post received 500+ likes and 50 comments", time: "8 hours ago", icon: Heart, color: "text-pink-500" },
+      { type: "crypto", content: "Portfolio gained $234 from BTC trade", time: "12 hours ago", icon: TrendingUp, color: "text-green-500" },
+    ];
+    setRecentActivities(activities);
+  }, []);
+
+  // Fetch top performing content data
+  useEffect(() => {
+    const loadTopPerformingContent = async () => {
+      try {
+        const data = await fetchTopPerformingContent();
+        setTopPerformingContent(data);
+      } catch (error) {
+        console.error('Failed to fetch top performing content:', error);
       }
-    },
-    {
-      id: 2,
-      title: "Digital Art Masterpiece",
-      type: "Product",
-      views: "23.1K",
-      engagement: "8.7%",
-      revenue: "$450",
-      description: "Exclusive NFT collection featuring abstract digital artwork",
-      price: "$45",
-      sales: 10,
-      rating: 4.9,
-      reviews: 23,
-      publishDate: "2024-01-10",
-      platform: "Marketplace",
-      thumbnail: "/api/placeholder/300/200",
-      analytics: {
-        conversionRate: "3.2%",
-        cartAdds: "156",
-        wishlistAdds: "89",
-        topBuyers: ["Premium Users", "Art Collectors"],
-        salesTrend: [5, 8, 12, 10, 15, 18, 10],
-        refundRate: "2%"
-      }
-    },
-    {
-      id: 3,
-      title: "Web Development Guide",
-      type: "Post",
-      views: "18.9K",
-      engagement: "15.2%",
-      revenue: "$89",
-      description: "Step-by-step tutorial for building responsive websites with modern frameworks",
-      readTime: "8 min",
-      likes: "2.8K",
-      comments: "412",
-      shares: "189",
-      publishDate: "2024-01-12",
-      platform: "Feed & Social",
-      thumbnail: "/api/placeholder/300/200",
-      analytics: {
-        avgReadTime: "6:32",
-        bounceRate: "25%",
-        shares: "189",
-        saves: "456",
-        demographics: { "Male": 65, "Female": 35 },
-        topReferrers: ["Google", "Twitter", "LinkedIn"]
-      }
-    },
-    {
-      id: 4,
-      title: "Live Q&A Session",
-      type: "Stream",
-      views: "12.7K",
-      engagement: "23.1%",
-      revenue: "$156",
-      description: "Interactive live session answering community questions about freelancing",
-      duration: "2:45:00",
-      peakViewers: "1,247",
-      totalMessages: "8,934",
-      superChats: "$156",
-      publishDate: "2024-01-18",
-      platform: "Live Streaming",
-      thumbnail: "/api/placeholder/300/200",
-      analytics: {
-        avgViewDuration: "45 min",
-        chatEngagement: "78%",
-        donations: "$89",
-        newFollowers: "234",
-        repeatViewers: "45%",
-        peakTime: "8:30 PM"
-      }
-    },
-  ];
+    };
+
+    loadTopPerformingContent();
+  }, []);
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
