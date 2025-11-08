@@ -447,6 +447,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
     (selectedFeatures.length === 0 || selectedFeatures.includes(feature.name))
   );
 
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <div className="relative">

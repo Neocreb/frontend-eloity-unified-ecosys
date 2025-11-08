@@ -47,7 +47,10 @@ export const useExplore = () => {
                 users.push({
                   id: result.id,
                   name: result.title,
-                  username: result.author?.name ? `@${result.author.name.toLowerCase().replace(/\s+/g, '')}` : '',
+                  username: result.description?.startsWith('@') ? result.description.substring(1) : result.author?.name ? result.author.name.toLowerCase().replace(/\s+/g, '') : '',
+                  avatar: result.image,
+                  bio: result.description,
+                  verified: result.author?.verified || false,
                   followers: result.stats?.views || 0
                 });
                 break;

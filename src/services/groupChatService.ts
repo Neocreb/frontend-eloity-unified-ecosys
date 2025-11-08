@@ -15,80 +15,301 @@ import type {
 export class GroupChatService {
   // Group CRUD Operations
   async createGroup(request: CreateGroupRequest): Promise<GroupChatThread> {
-    console.warn("createGroup: Database table 'group_chat_threads' does not exist yet. Returning mock data.");
-    // Return mock data instead of accessing non-existent database
-    return {
-      id: 'mock-group-id',
-      type: 'group',
-      name: request.name,
-      description: request.description || '',
-      avatar: request.avatar,
-      participants: [],
-      settings: request.settings,
-      createdBy: request.createdBy,
-      createdAt: new Date().toISOString(),
-      lastActivity: new Date().toISOString(),
-      totalMembers: 1,
-      onlineMembers: 0,
-      pinnedMessages: [],
-      inviteLinks: []
-    };
+    try {
+      // Create the group chat thread
+      const { data: groupThread, error: groupError } = await supabase
+        .from('group_chat_threads')
+        .insert({
+          name: request.name,
+          description: request.description || '',
+          avatar: request.avatar,
+          created_by: request.createdBy,
+          privacy: request.settings?.isPrivate ? 'private' : 'public',
+          member_count: 1, // Creator is the first member
+          last_activity: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (groupError) throw groupError;
+
+      // Add creator as the first participant
+      const { error: participantError } = await supabase
+        .from('group_participants')
+        .insert({
+          group_id: groupThread.id,
+          user_id: request.createdBy,
+          role: 'admin',
+          status: 'active',
+          joined_at: new Date().toISOString(),
+          permissions: this.getAdminPermissions()
+        });
+
+      if (participantError) throw participantError;
+
+      // Add other participants if provided
+      if (request.participants && request.participants.length > 0) {
+        const participantInserts = request.participants
+          .filter(userId => userId !== request.createdBy) // Exclude creator as they're already added
+          .map(userId => ({
+            group_id: groupThread.id,
+            user_id: userId,
+            role: 'member',
+            status: 'active',
+            joined_at: new Date().toISOString(),
+            permissions: this.getMemberPermissions()
+          }));
+
+        if (participantInserts.length > 0) {
+          const { error: participantsError } = await supabase
+            .from('group_participants')
+            .insert(participantInserts);
+
+          if (participantsError) throw participantsError;
+        }
+      }
+
+      return {
+        id: groupThread.id,
+        type: 'group',
+        groupName: groupThread.name,
+        groupDescription: groupThread.description,
+        groupAvatar: groupThread.avatar,
+        participants: [], // Will be populated when needed
+        settings: request.settings || {
+          isPrivate: groupThread.privacy === 'private',
+          allowInvites: true,
+          allowMessaging: true
+        },
+        createdBy: groupThread.created_by,
+        createdAt: groupThread.created_at,
+        lastActivity: groupThread.last_activity,
+        totalMembers: groupThread.member_count,
+        onlineMembers: 0,
+        pinnedMessages: [],
+        inviteLinks: [],
+        adminIds: [],
+        maxParticipants: 256,
+        groupType: groupThread.privacy === 'private' ? 'private' : 'public',
+        isGroup: true
+      };
+    } catch (error) {
+      console.error('Error creating group:', error);
+      throw error;
+    }
   }
 
   async getGroupById(groupId: string): Promise<GroupChatThread> {
-    console.warn("getGroupById: Database table 'group_chat_threads' does not exist yet. Returning mock data.");
-    // Return mock data instead of accessing non-existent database
-    return {
-      id: groupId,
-      type: 'group',
-      name: 'Mock Group',
-      description: 'This is a mock group for testing',
-      avatar: undefined,
-      participants: [],
-      settings: {
-        isPrivate: false,
-        allowInvites: true,
-        allowMessaging: true
-      },
-      createdBy: 'mock-user-id',
-      createdAt: new Date().toISOString(),
-      lastActivity: new Date().toISOString(),
-      totalMembers: 0,
-      onlineMembers: 0,
-      pinnedMessages: [],
-      inviteLinks: []
-    };
+    try {
+      const { data: groupThread, error: groupError } = await supabase
+        .from('group_chat_threads')
+        .select('*')
+        .eq('id', groupId)
+        .single();
+
+      if (groupError) throw groupError;
+
+      // Get participants count
+      const { count: memberCount, error: countError } = await supabase
+        .from('group_participants')
+        .select('*', { count: 'exact' })
+        .eq('group_id', groupId);
+
+      if (countError) throw countError;
+
+      return {
+        id: groupThread.id,
+        type: 'group',
+        groupName: groupThread.name,
+        groupDescription: groupThread.description,
+        groupAvatar: groupThread.avatar,
+        participants: [],
+        settings: {
+          isPrivate: groupThread.privacy === 'private',
+          allowInvites: true,
+          allowMessaging: true
+        },
+        createdBy: groupThread.created_by,
+        createdAt: groupThread.created_at,
+        lastActivity: groupThread.last_activity,
+        totalMembers: memberCount || 0,
+        onlineMembers: 0,
+        pinnedMessages: [],
+        inviteLinks: [],
+        adminIds: [],
+        maxParticipants: 256,
+        groupType: groupThread.privacy === 'private' ? 'private' : 'public',
+        isGroup: true
+      };
+    } catch (error) {
+      console.error('Error fetching group:', error);
+      throw error;
+    }
   }
 
   async getUserGroups(userId: string): Promise<GroupChatThread[]> {
-    console.warn("getUserGroups: Database table 'group_participants' does not exist yet. Returning empty array.");
-    // Return empty array instead of accessing non-existent database
-    return [];
+    try {
+      // Get all groups where the user is a participant
+      const { data: participantGroups, error: participantError } = await supabase
+        .from('group_participants')
+        .select('group_id')
+        .eq('user_id', userId);
+
+      if (participantError) throw participantError;
+
+      if (!participantGroups || participantGroups.length === 0) {
+        return [];
+      }
+
+      const groupIds = participantGroups.map(pg => pg.group_id);
+
+      // Get the actual group data
+      const { data: groups, error: groupsError } = await supabase
+        .from('group_chat_threads')
+        .select('*')
+        .in('id', groupIds);
+
+      if (groupsError) throw groupsError;
+
+      // Get member counts for each group
+      const groupMemberCounts = await Promise.all(
+        groups.map(async (group) => {
+          const { count, error } = await supabase
+            .from('group_participants')
+            .select('*', { count: 'exact' })
+            .eq('group_id', group.id);
+
+          if (error) return 0;
+          return count || 0;
+        })
+      );
+
+      return groups.map((group, index) => ({
+        id: group.id,
+        type: 'group',
+        groupName: group.name,
+        groupDescription: group.description,
+        groupAvatar: group.avatar,
+        participants: [],
+        settings: {
+          isPrivate: group.privacy === 'private',
+          allowInvites: true,
+          allowMessaging: true
+        },
+        createdBy: group.created_by,
+        createdAt: group.created_at,
+        lastActivity: group.last_activity,
+        totalMembers: groupMemberCounts[index],
+        onlineMembers: 0,
+        pinnedMessages: [],
+        inviteLinks: [],
+        adminIds: [],
+        maxParticipants: 256,
+        groupType: group.privacy === 'private' ? 'private' : 'public',
+        isGroup: true
+      }));
+    } catch (error) {
+      console.error('Error fetching user groups:', error);
+      throw error;
+    }
   }
 
   // Member Management
   async addMember(groupId: string, userId: string, addedBy: string): Promise<void> {
-    console.warn("addMember: Database table 'group_participants' does not exist yet. No operation performed.");
-    // No operation instead of accessing non-existent database
-    return Promise.resolve();
+    try {
+      // Check if user is already a member
+      const { data: existingMember } = await supabase
+        .from('group_participants')
+        .select('id')
+        .eq('group_id', groupId)
+        .eq('user_id', userId)
+        .single();
+
+      if (existingMember) {
+        throw new Error('User is already a member of this group');
+      }
+
+      // Add the user as a member
+      const { error } = await supabase
+        .from('group_participants')
+        .insert({
+          group_id: groupId,
+          user_id: userId,
+          role: 'member',
+          status: 'active',
+          joined_at: new Date().toISOString(),
+          permissions: this.getMemberPermissions()
+        });
+
+      if (error) throw error;
+
+      // Update group member count
+      await supabase
+        .from('group_chat_threads')
+        .update({ member_count: supabase.rpc('increment_group_member_count', { group_id: groupId }) })
+        .eq('id', groupId);
+    } catch (error) {
+      console.error('Error adding member:', error);
+      throw error;
+    }
   }
 
   async removeMember(groupId: string, userId: string, removedBy: string): Promise<void> {
-    console.warn("removeMember: Database table 'group_participants' does not exist yet. No operation performed.");
-    // No operation instead of accessing non-existent database
-    return Promise.resolve();
+    try {
+      // Remove the user from the group
+      const { error } = await supabase
+        .from('group_participants')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Update group member count
+      await supabase
+        .from('group_chat_threads')
+        .update({ member_count: supabase.rpc('decrement_group_member_count', { group_id: groupId }) })
+        .eq('id', groupId);
+    } catch (error) {
+      console.error('Error removing member:', error);
+      throw error;
+    }
   }
 
   async promoteToAdmin(groupId: string, userId: string, promotedBy: string): Promise<void> {
-    console.warn("promoteToAdmin: Database table 'group_participants' does not exist yet. No operation performed.");
-    // No operation instead of accessing non-existent database
-    return Promise.resolve();
+    try {
+      const { error } = await supabase
+        .from('group_participants')
+        .update({ 
+          role: 'admin',
+          permissions: this.getAdminPermissions()
+        })
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error promoting to admin:', error);
+      throw error;
+    }
   }
 
   async demoteFromAdmin(groupId: string, userId: string, demotedBy: string): Promise<void> {
-    console.warn("demoteFromAdmin: Database table 'group_participants' does not exist yet. No operation performed.");
-    // No operation instead of accessing non-existent database
-    return Promise.resolve();
+    try {
+      const { error } = await supabase
+        .from('group_participants')
+        .update({ 
+          role: 'member',
+          permissions: this.getMemberPermissions()
+        })
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error demoting from admin:', error);
+      throw error;
+    }
   }
 
   // Group Settings Management

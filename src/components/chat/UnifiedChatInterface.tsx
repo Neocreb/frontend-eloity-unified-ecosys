@@ -55,6 +55,10 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { TypingIndicator } from "./TypingIndicator";
 import { OnlineStatusIndicator } from "./OnlineStatusIndicator";
+import { CreateGroupModal } from "./group/CreateGroupModal";
+import { groupChatService } from "@/services/groupChatService";
+import { ChatParticipant } from "@/types/chat";
+import { CreateGroupRequest } from "@/types/group-chat";
 
 interface UnifiedChatInterfaceProps {
   className?: string;
@@ -82,6 +86,8 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
   const [loading, setLoading] = useState(true);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [typingUsers, setTypingUsers] = useState<{[chatId: string]: Array<{id: string, name: string, avatar?: string}>}>({});
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [contacts, setContacts] = useState<ChatParticipant[]>([]);
 
   // Voice/Video call state
   const [activeCall, setActiveCall] = useState<{
@@ -552,6 +558,89 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     }
   };
 
+  // Handle group creation
+  const handleCreateGroup = async (request: CreateGroupRequest) => {
+    try {
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      const groupRequest: CreateGroupRequest = {
+        ...request,
+        createdBy: user.id
+      };
+
+      const newGroup = await groupChatService.createGroup(groupRequest);
+      
+      toast({
+        title: "Group Created",
+        description: `Successfully created group "${newGroup.groupName}"!`,
+      });
+      
+      // Refresh conversations to show the new group
+      // This would typically trigger a refresh of the chat list
+      // For now, we'll just close the modal
+      setShowCreateGroupModal(false);
+      
+      // Navigate to the new group chat
+      navigate(`/chat/group/${newGroup.id}`);
+    } catch (error) {
+      console.error("Error creating group:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create group. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch contacts for group creation
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (!user?.id) return;
+      
+      try {
+        // This would typically fetch from a contacts/friends service
+        // For now, we'll use mock data or fetch from existing conversations
+        const mockContacts: ChatParticipant[] = [
+          {
+            id: "1",
+            name: "John Doe",
+            username: "johndoe",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+            status: "online",
+            lastSeen: new Date().toISOString()
+          },
+          {
+            id: "2",
+            name: "Jane Smith",
+            username: "janesmith",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
+            status: "away",
+            lastSeen: new Date(Date.now() - 3600000).toISOString()
+          },
+          {
+            id: "3",
+            name: "Bob Johnson",
+            username: "bobjohnson",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
+            status: "offline",
+            lastSeen: new Date(Date.now() - 86400000).toISOString()
+          }
+        ];
+        
+        setContacts(mockContacts);
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+        setContacts([]);
+      }
+    };
+
+    if (showCreateGroupModal) {
+      fetchContacts();
+    }
+  }, [showCreateGroupModal, user?.id]);
+
   const handleTabChange = (tab: UnifiedChatType) => {
     setActiveTab(tab);
     setSelectedChat(null);
@@ -882,12 +971,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate('/explore')}>Start Social Chat</DropdownMenuItem>
                       {activeTab === "social" && (
-                        <DropdownMenuItem onClick={() => {
-                          toast({
-                            title: "Create Group",
-                            description: "Group creation feature coming soon!",
-                          });
-                        }}>
+                        <DropdownMenuItem onClick={() => setShowCreateGroupModal(true)}>
                           <Users className="h-4 w-4 mr-2" />
                           Create Group
                         </DropdownMenuItem>
@@ -1552,6 +1636,15 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
           isHost={true}
         />
       )}
+
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        trigger={<></>}
+        contacts={contacts}
+        onCreateGroup={handleCreateGroup}
+        isOpen={showCreateGroupModal}
+        onOpenChange={setShowCreateGroupModal}
+      />
     </div>
   );
 };

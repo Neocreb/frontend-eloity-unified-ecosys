@@ -143,7 +143,7 @@ const Groups: React.FC = () => {
           privacy: groupForm.privacy,
           avatar_url: groupForm.avatar_url || null,
           cover_url: groupForm.cover_url || null,
-          creator_id: user.id,
+          created_by: user.id,
           member_count: 0,
         })
         .select()

@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS public.user_analytics (
 -- Create user stories table
 CREATE TABLE IF NOT EXISTS public.user_stories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.users(id),
+    user_id UUID NOT NULL REFERENCES auth.users(id),
     media_url TEXT NOT NULL,
     media_type VARCHAR(10) NOT NULL, -- 'image', 'video'
     caption TEXT,
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS public.user_stories (
 CREATE TABLE IF NOT EXISTS public.story_views (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     story_id UUID NOT NULL REFERENCES public.user_stories(id),
-    user_id UUID NOT NULL REFERENCES public.users(id),
+    user_id UUID NOT NULL REFERENCES auth.users(id),
     viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(story_id, user_id)
 );
@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS public.story_views (
 -- Create community events table
 CREATE TABLE IF NOT EXISTS public.community_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    creator_id UUID NOT NULL REFERENCES public.users(id),
+    creator_id UUID NOT NULL REFERENCES auth.users(id),
     title VARCHAR(255) NOT NULL,
     description TEXT,
     event_type VARCHAR(50) NOT NULL,
@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS public.community_events (
 CREATE TABLE IF NOT EXISTS public.event_attendees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id UUID NOT NULL REFERENCES public.community_events(id),
-    user_id UUID NOT NULL REFERENCES public.users(id),
+    user_id UUID NOT NULL REFERENCES auth.users(id),
     status VARCHAR(20) DEFAULT 'interested', -- 'interested', 'going', 'attended'
     registered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(event_id, user_id)
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS public.event_attendees (
 -- Create challenges table
 CREATE TABLE IF NOT EXISTS public.challenges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    creator_id UUID NOT NULL REFERENCES public.users(id),
+    creator_id UUID NOT NULL REFERENCES auth.users(id),
     title VARCHAR(255) NOT NULL,
     description TEXT,
     hashtag VARCHAR(100),
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS public.pages (
     profile_image_url TEXT,
     is_verified BOOLEAN DEFAULT false,
     followers_count INTEGER DEFAULT 0,
-    created_by UUID NOT NULL REFERENCES public.users(id),
+    created_by UUID NOT NULL REFERENCES auth.users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -227,7 +227,7 @@ CREATE TABLE IF NOT EXISTS public.groups (
     cover_image_url TEXT,
     profile_image_url TEXT,
     member_count INTEGER DEFAULT 0,
-    created_by UUID NOT NULL REFERENCES public.users(id),
+    created_by UUID NOT NULL REFERENCES auth.users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -313,6 +313,15 @@ CREATE POLICY "Users can view their own user analytics" ON public.user_analytics
 CREATE POLICY "Users can view their own stories" ON public.user_stories
     FOR SELECT USING (user_id = auth.uid());
 
+CREATE POLICY "Users can insert their own stories" ON public.user_stories
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own stories" ON public.user_stories
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own stories" ON public.user_stories
+    FOR DELETE USING (auth.uid() = user_id);
+
 CREATE POLICY "Users can view their own story views" ON public.story_views
     FOR SELECT USING (user_id = auth.uid());
 
@@ -340,8 +349,8 @@ CREATE POLICY "Users can view event attendees for events they can see" ON public
                 community_events.is_private = false 
                 OR community_events.creator_id = auth.uid()
                 OR EXISTS (
-                    SELECT 1 FROM public.event_attendees ea 
-                    WHERE ea.event_id = community_events.id 
+                    SELECT 1 FROM public.event_attendees ea
+                    WHERE ea.event_id = event_attendees.event_id
                     AND ea.user_id = auth.uid()
                 )
             )
@@ -352,7 +361,7 @@ CREATE POLICY "Users can view challenges they created" ON public.challenges
     FOR SELECT USING (creator_id = auth.uid());
 
 CREATE POLICY "Users can view public pages" ON public.pages
-    FOR SELECT USING (true);
+    FOR SELECT USING (is_verified = true OR created_by = auth.uid());
 
 CREATE POLICY "Users can view groups they created" ON public.groups
     FOR SELECT USING (created_by = auth.uid());
