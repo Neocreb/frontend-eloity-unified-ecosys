@@ -191,7 +191,21 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [userDemographics, setUserDemographics] = useState<UserDemographics | null>(null);
 
   // Use real-time analytics hook
-  const { platformFeatures, topPerformingContent, userDemographics: realtimeUserDemographics, isLoading, error, refreshData } = useRealtimeAnalytics(user?.id || null);
+  const { platformFeatures: realtimePlatformFeatures, topPerformingContent: realtimeTopPerformingContent, userDemographics: realtimeUserDemographics, isLoading, error, refreshData } = useRealtimeAnalytics(user?.id || null);
+
+  // Update platform features when real-time data changes
+  useEffect(() => {
+    if (realtimePlatformFeatures) {
+      setPlatformFeatures(realtimePlatformFeatures);
+    }
+  }, [realtimePlatformFeatures]);
+
+  // Update top performing content when real-time data changes
+  useEffect(() => {
+    if (realtimeTopPerformingContent) {
+      setTopPerformingContent(realtimeTopPerformingContent);
+    }
+  }, [realtimeTopPerformingContent]);
 
   // Update user demographics when real-time data changes
   useEffect(() => {

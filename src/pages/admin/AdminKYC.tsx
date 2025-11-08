@@ -40,16 +40,12 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  User,
   FileText,
-  Camera,
   AlertTriangle,
   Search,
   Filter,
   Download,
   Eye,
-  UserCheck,
-  TrendingUp,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
