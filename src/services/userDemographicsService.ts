@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import cache from '@/utils/cache';
 
 // Types for demographics data
 interface User {
@@ -89,6 +90,13 @@ const formatNumber = (num: number): string => {
 
 // Fetch user demographics data
 export const fetchUserDemographics = async (): Promise<UserDemographics> => {
+  // Check cache first
+  const cacheKey = 'userDemographics';
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   try {
     // Fetch all users with demographic information
     const { data: users, error } = await supabase
@@ -396,7 +404,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
     ];
     const dailyInsight = dailyInsights[Math.floor(Math.random() * dailyInsights.length)];
     
-    return {
+    const result = {
       age: ageDemographics,
       gender: genderDemographics,
       location: locationDemographics,
@@ -412,6 +420,11 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       revenueOptimizationTips,
       dailyInsight
     };
+
+    // Cache the result for 10 minutes
+    cache.set(cacheKey, result, 10 * 60 * 1000);
+
+    return result;
   } catch (error) {
     console.error('Error processing user demographics:', error);
     throw error; // Propagate the error instead of returning fallback data

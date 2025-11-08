@@ -210,6 +210,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
   // Fetch quick actions data
   useEffect(() => {
     // These actions are now dynamically determined based on user features
+    // In a real implementation, these would be fetched from the backend based on user permissions
     const actions = [
       { name: "Create Post", icon: Plus, color: "bg-blue-500", href: "/app/feed" },
       { name: "New Video", icon: Video, color: "bg-red-500", href: "/videos" },
