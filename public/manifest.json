@@ -13,52 +13,9 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
     }
   ],
   "shortcuts": [
@@ -66,79 +23,25 @@
       "name": "Feed",
       "short_name": "Feed",
       "description": "View your social feed",
-      "url": "/app/feed",
-      "icons": [
-        {
-          "src": "/icons/shortcut-feed.png",
-          "sizes": "96x96"
-        }
-      ]
+      "url": "/app/feed"
     },
     {
       "name": "Messages",
       "short_name": "Messages",
       "description": "Check your messages",
-      "url": "/messages",
-      "icons": [
-        {
-          "src": "/icons/shortcut-messages.png",
-          "sizes": "96x96"
-        }
-      ]
+      "url": "/messages"
     },
     {
       "name": "Crypto",
       "short_name": "Trading",
       "description": "Crypto trading platform",
-      "url": "/crypto",
-      "icons": [
-        {
-          "src": "/icons/shortcut-crypto.png",
-          "sizes": "96x96"
-        }
-      ]
+      "url": "/crypto"
     },
     {
       "name": "Marketplace",
       "short_name": "Shop",
       "description": "Browse and shop products",
-      "url": "/marketplace",
-      "icons": [
-        {
-          "src": "/icons/shortcut-marketplace.png",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop-feed.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Social Feed on Desktop"
-    },
-    {
-      "src": "/screenshots/mobile-feed.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Social Feed on Mobile"
-    },
-    {
-      "src": "/screenshots/desktop-crypto.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Crypto Trading on Desktop"
-    },
-    {
-      "src": "/screenshots/mobile-crypto.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Crypto Trading on Mobile"
+      "url": "/marketplace"
     }
   ],
   "related_applications": [
