@@ -12,6 +12,7 @@ import type {
   GroupVoteWithDetails
 } from "@/types/group-contributions";
 import { NotificationService } from "./notificationService";
+import { walletService } from "./walletService";
 import { Database } from "@/integrations/supabase/types";
 
 export class GroupContributionService {
@@ -146,6 +147,42 @@ export class GroupContributionService {
         .single();
 
       if (error) throw error;
+
+      // If payment method is wallet, transfer funds after recording the contribution
+      let walletTxId: string | null = null;
+      
+      if (request.payment_method === 'wallet') {
+        // Get contribution details to identify the recipient
+        const contribution = await this.getContributionById(request.contribution_id);
+        if (!contribution) {
+          throw new Error('Contribution not found');
+        }
+        
+        // Transfer funds from contributor to contribution creator
+        const transferResult = await walletService.sendMoney({
+          recipientId: contribution.created_by,
+          amount: request.amount.toString(),
+          currency: request.currency || 'ELOITY',
+          description: `Contribution to "${contribution.title}"`
+        });
+        
+        if (!transferResult.success) {
+          throw new Error('Wallet transfer failed');
+        }
+        
+        walletTxId = transferResult.transactionId;
+        
+        // Update the contribution record with the wallet transaction ID
+        const { error: updateError } = await supabase
+          .from('group_contributors')
+          .update({ wallet_tx_id: walletTxId })
+          .eq('id', data.id);
+          
+        if (updateError) {
+          console.error('Failed to update contribution with wallet transaction ID:', updateError);
+          // Don't throw here as the transfer was successful, we just couldn't record the ID
+        }
+      }
 
       // Get contribution details for notification
       const contribution = await this.getContributionById(request.contribution_id);
