@@ -7,6 +7,11 @@ interface User {
   gender: string | null;
   location: string | null;
   interests: string[] | null;
+  followers_count?: number;
+  engagement_rate?: number;
+  revenue_data?: {
+    optimization_tips?: { title: string; description: string; impact: string; effort: string }[];
+  };
 }
 
 export interface AgeDemographic {
@@ -37,6 +42,16 @@ export interface UserDemographics {
   gender: GenderDemographic[];
   location: LocationDemographic[];
   interests: InterestDemographic[];
+  totalFollowers: string;
+  growthRate: string;
+  peakHours: { time: string; activity: number }[];
+  bestDays: { day: string; activity: number }[];
+  engagementMetrics: { metric: string; value: string; description: string }[];
+  contentRecommendations: { type: string; topic: string; reason: string; potential: string; confidence: number }[];
+  audienceGrowthStrategies: { strategy: string; description: string; impact: string; effort: string }[];
+  marketTrends: { trend: string; growth: string; opportunity: string; timeline: string; difficulty: string }[];
+  revenueOptimizationTips: { title: string; description: string; impact: string; effort: string }[];
+  dailyInsight: string;
 }
 
 // Utility function to calculate age from date of birth
@@ -204,11 +219,198 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
         percentage: totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0
       }));
 
+    // Calculate total followers (mock value based on user count)
+    const totalFollowers = formatNumber(totalUsers * 150); // Assuming each user has ~150 followers
+    
+    // Calculate growth rate (mock value)
+    const growthRate = "+" + (Math.random() * 10 + 5).toFixed(1) + "%";
+    
+    // Peak hours data (mock values)
+    const peakHours = [
+      { time: "6-9 AM", activity: Math.floor(Math.random() * 30) + 20 },
+      { time: "12-3 PM", activity: Math.floor(Math.random() * 40) + 30 },
+      { time: "6-9 PM", activity: Math.floor(Math.random() * 35) + 25 },
+      { time: "9-12 PM", activity: Math.floor(Math.random() * 25) + 15 }
+    ];
+    
+    // Best days data (mock values)
+    const bestDays = [
+      { day: "Tuesday", activity: Math.floor(Math.random() * 20) + 20 },
+      { day: "Wednesday", activity: Math.floor(Math.random() * 25) + 25 },
+      { day: "Thursday", activity: Math.floor(Math.random() * 20) + 15 },
+      { day: "Monday", activity: Math.floor(Math.random() * 15) + 10 },
+      { day: "Friday", activity: Math.floor(Math.random() * 15) + 5 }
+    ];
+    
+    // Engagement metrics (mock values)
+    const engagementMetrics = [
+      { metric: "Average Session", value: "4:" + (Math.floor(Math.random() * 30) + 20), description: "Time spent per visit" },
+      { metric: "Pages per Session", value: (Math.random() * 2 + 2).toFixed(1), description: "Average page views" },
+      { metric: "Return Visitor Rate", value: Math.floor(Math.random() * 30 + 60) + "%", description: "Repeat audience" },
+      { metric: "Share Rate", value: Math.floor(Math.random() * 10 + 8) + "%", description: "Content sharing" },
+      { metric: "Comment Rate", value: Math.floor(Math.random() * 5 + 5) + "%", description: "Active commenting" },
+      { metric: "Save Rate", value: Math.floor(Math.random() * 10 + 10) + "%", description: "Content saves" }
+    ];
+    
+    // Content recommendations (mock values)
+    const contentRecommendations = [
+      {
+        type: "Blog Post",
+        topic: "Blockchain 101: An Introduction",
+        reason: "High interest from audience",
+        potential: `${(Math.floor(Math.random() * 1000) + 1000).toFixed(0)} views, ${formatNumber(Math.floor(Math.random() * 100) + 50)}`,
+        confidence: Math.floor(Math.random() * 20 + 75)
+      },
+      {
+        type: "Video Tutorial",
+        topic: "Advanced Crypto Trading Strategies",
+        reason: "High demand topic in your audience",
+        potential: `${(Math.floor(Math.random() * 3000) + 3000).toFixed(0)} views, ${formatNumber(Math.floor(Math.random() * 1000) + 1500)}`,
+        confidence: Math.floor(Math.random() * 20 + 65)
+      },
+      {
+        type: "Live Stream",
+        topic: "Q&A: Building Online Business",
+        reason: "Your live content performs 3x better",
+        potential: `${(Math.floor(Math.random() * 200) + 200).toFixed(0)} viewers, ${formatNumber(Math.floor(Math.random() * 300) + 300)}`,
+        confidence: Math.floor(Math.random() * 20 + 70)
+      },
+      {
+        type: "Product Launch",
+        topic: "Premium Course: Freelance Mastery",
+        reason: "Your audience shows high interest in education",
+        potential: `${(Math.floor(Math.random() * 50) + 50).toFixed(0)} sales, ${formatNumber(Math.floor(Math.random() * 3000) + 3000)}`,
+        confidence: Math.floor(Math.random() * 15 + 80)
+      }
+    ];
+    
+    // Audience growth strategies (mock values)
+    const audienceGrowthStrategies = [
+      {
+        strategy: "Cross-Platform Promotion",
+        description: "Promote your video content on social media",
+        impact: "+" + Math.floor(Math.random() * 10 + 20) + "% more views",
+        effort: "Low"
+      },
+      {
+        strategy: "Collaboration Opportunities",
+        description: "Partner with creators in your niche",
+        impact: "+" + Math.floor(Math.random() * 15 + 30) + "% audience growth",
+        effort: "Medium"
+      },
+      {
+        strategy: "Trending Topic Integration",
+        description: "Create content around #CryptoEducation",
+        impact: "+" + Math.floor(Math.random() * 15 + 35) + "% more reach",
+        effort: "Low"
+      },
+      {
+        strategy: "Community Building",
+        description: "Start a Discord or Telegram group",
+        impact: "+" + Math.floor(Math.random() * 10 + 15) + "% higher engagement",
+        effort: "High"
+      }
+    ];
+    
+    // Market trends (mock values)
+    const marketTrends = [
+      {
+        trend: "AI & Automation",
+        growth: Math.floor(Math.random() * 10 + 30) + "%",
+        opportunity: "Create AI tool reviews and tutorials",
+        timeline: "Next 30 days",
+        difficulty: "Medium"
+      },
+      {
+        trend: "Sustainable Tech",
+        growth: Math.floor(Math.random() * 10 + 25) + "%",
+        opportunity: "Green technology investment content",
+        timeline: "Next 60 days",
+        difficulty: "Low"
+      },
+      {
+        trend: "Remote Work Tools",
+        growth: Math.floor(Math.random() * 10 + 18) + "%",
+        opportunity: "Productivity and freelance tools reviews",
+        timeline: "Ongoing",
+        difficulty: "Low"
+      },
+      {
+        trend: "Crypto Regulations",
+        growth: Math.floor(Math.random() * 10 + 38) + "%",
+        opportunity: "Educational content on compliance",
+        timeline: "Immediate",
+        difficulty: "High"
+      },
+      {
+        trend: "Creator Economy",
+        growth: Math.floor(Math.random() * 10 + 35) + "%",
+        opportunity: "Monetization strategy guides",
+        timeline: "Next 14 days",
+        difficulty: "Medium"
+      },
+      {
+        trend: "Web3 Development",
+        growth: Math.floor(Math.random() * 10 + 40) + "%",
+        opportunity: "DeFi and blockchain tutorials",
+        timeline: "Next 45 days",
+        difficulty: "High"
+      }
+    ];
+    
+    // Revenue optimization tips (mock values)
+    const revenueOptimizationTips = [
+      {
+        title: "Optimize Video Content",
+        description: "Your videos have high engagement but low monetization. Consider adding sponsored segments.",
+        impact: "High",
+        effort: "Low"
+      },
+      {
+        title: "Expand Marketplace",
+        description: "Add premium product tiers to increase average order value by 35%.",
+        impact: "High",
+        effort: "Medium"
+      },
+      {
+        title: "Leverage Live Streaming",
+        description: "Your live streams generate 3x more revenue per viewer. Increase frequency.",
+        impact: "Medium",
+        effort: "Low"
+      },
+      {
+        title: "Cross-Platform Promotion",
+        description: "Promote high-value content across all platforms to maximize reach.",
+        impact: "Medium",
+        effort: "Low"
+      }
+    ];
+    
+    // Daily insight (mock value)
+    const dailyInsights = [
+      "Your video content has 3x higher engagement than posts. Increase video production by 40% to boost overall performance.",
+      "Post content between 6-9 PM for 45% higher engagement. Your current posting time is suboptimal.",
+      "Add premium tiers to your marketplace. Similar creators see 60% revenue increase with tiered pricing.",
+      "Your audience is growing fastest in the 25-34 age group. Consider creating content specifically for this demographic.",
+      "Engagement drops by 30% on weekends. Try scheduling important content for weekdays."
+    ];
+    const dailyInsight = dailyInsights[Math.floor(Math.random() * dailyInsights.length)];
+    
     return {
       age: ageDemographics,
       gender: genderDemographics,
       location: locationDemographics,
-      interests: interestDemographics
+      interests: interestDemographics,
+      totalFollowers,
+      growthRate,
+      peakHours,
+      bestDays,
+      engagementMetrics,
+      contentRecommendations,
+      audienceGrowthStrategies,
+      marketTrends,
+      revenueOptimizationTips,
+      dailyInsight
     };
   } catch (error) {
     console.error('Error processing user demographics:', error);
