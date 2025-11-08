@@ -211,17 +211,66 @@ const EnhancedCreatorDashboard: React.FC = () => {
   useEffect(() => {
     // These actions are now dynamically determined based on user features
     // In a real implementation, these would be fetched from the backend based on user permissions
-    const actions = [
-      { name: "Create Post", icon: Plus, color: "bg-blue-500", href: "/app/feed" },
-      { name: "New Video", icon: Video, color: "bg-red-500", href: "/videos" },
-      { name: "List Product", icon: ShoppingBag, color: "bg-green-500", href: "/marketplace" },
-      { name: "Find Job", icon: Briefcase, color: "bg-orange-500", href: "/freelance" },
-      { name: "Trade Crypto", icon: Coins, color: "bg-yellow-500", href: "/app/crypto" },
-      { name: "Go Live", icon: Radio, color: "bg-pink-500", href: "/app/live-streaming" },
-      { name: "Create Event", icon: Calendar, color: "bg-indigo-500", href: "/events" },
-      { name: "Start Chat", icon: MessageSquare, color: "bg-purple-500", href: "/chat" },
+    const actions = platformFeatures
+      .filter(feature => feature.active)
+      .map(feature => {
+        // Map feature names to icons and colors
+        let icon = Activity;
+        let color = "bg-gray-500";
+        
+        switch (feature.name) {
+          case "Feed Posts":
+            icon = Plus;
+            color = "bg-blue-500";
+            break;
+          case "Video Content":
+            icon = Video;
+            color = "bg-red-500";
+            break;
+          case "Marketplace":
+            icon = ShoppingBag;
+            color = "bg-green-500";
+            break;
+          case "Freelance":
+            icon = Briefcase;
+            color = "bg-orange-500";
+            break;
+          case "Crypto Trading":
+            icon = Coins;
+            color = "bg-yellow-500";
+            break;
+          case "Live Streaming":
+            icon = Radio;
+            color = "bg-pink-500";
+            break;
+          case "Events & Calendar":
+            icon = Calendar;
+            color = "bg-indigo-500";
+            break;
+          case "Chat & Messaging":
+            icon = MessageSquare;
+            color = "bg-purple-500";
+            break;
+          default:
+            icon = Activity;
+            color = "bg-gray-500";
+        }
+        
+        return {
+          name: `Create ${feature.name.replace(' & ', ' and ')}`,
+          icon,
+          color: color,
+          href: getFeatureRoute(feature.name)
+        };
+      });
+    
+    // Add a few default actions that are always available
+    const defaultActions = [
+      { name: "View Analytics", icon: BarChart3, color: "bg-blue-500", href: "/analytics" },
+      { name: "Manage Profile", icon: Settings, color: "bg-gray-500", href: "/profile" }
     ];
-    setQuickActions(actions);
+    
+    setQuickActions([...actions.slice(0, 6), ...defaultActions]);
   }, [platformFeatures]); // Depend on platformFeatures to update when features change
 
   // Fetch recent activities data
