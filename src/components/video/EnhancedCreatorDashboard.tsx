@@ -189,6 +189,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [topPerformingContent, setTopPerformingContent] = useState<any[]>([]);
   const [userDemographics, setUserDemographics] = useState<UserDemographics | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
   // Use real-time analytics hook
   const { platformFeatures: realtimePlatformFeatures, topPerformingContent: realtimeTopPerformingContent, userDemographics: realtimeUserDemographics, isLoading, error, refreshData } = useRealtimeAnalytics(user?.id || null);
