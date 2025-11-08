@@ -47,12 +47,12 @@ const ResponsiveDialogContent = React.forwardRef<
         const hasDialogTitle = childrenArray.some(child =>
           React.isValidElement(child) &&
           (child.type === ResponsiveDialogTitle ||
-           (typeof child.type === 'object' && child.type?.displayName === 'DialogTitle') ||
-           child.props?.children && React.Children.toArray(child.props.children).some(grandchild =>
+           (typeof child.type === 'object' && child.type !== null && 'displayName' in child.type && child.type.displayName === 'DialogTitle') ||
+           (child.props?.children && React.Children.toArray(child.props.children).some(grandchild =>
              React.isValidElement(grandchild) &&
              (grandchild.type === ResponsiveDialogTitle ||
-              (typeof grandchild.type === 'object' && grandchild.type?.displayName === 'DialogTitle'))
-           ))
+              (typeof grandchild.type === 'object' && grandchild.type !== null && 'displayName' in grandchild.type && grandchild.type.displayName === 'DialogTitle'))
+           )))
         );
 
         if (!hasDialogTitle) {

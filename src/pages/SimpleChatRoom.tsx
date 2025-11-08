@@ -32,17 +32,10 @@ const SimpleChatRoom = () => {
           setChatData(data);
         } else {
           // Create simple mock data
-          const mockData = {
+          const mockData: any = {
             id: threadId,
             type: chatType,
-            isGroup: threadId?.includes('group'),
-            groupName: threadId?.includes('group') ? 'Test Group' : undefined,
-            participant_profile: !threadId?.includes('group') ? {
-              id: 'test_user',
-              name: 'Test User',
-              avatar: null,
-              is_online: true
-            } : undefined,
+            referenceId: null,
             participants: threadId?.includes('group') ? [
               {
                 id: user?.id || 'current',
@@ -55,7 +48,25 @@ const SimpleChatRoom = () => {
               }
             ] : [],
             lastMessage: 'Test message',
-            lastMessageAt: new Date().toISOString()
+            lastMessageAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            isGroup: threadId?.includes('group'),
+            groupName: threadId?.includes('group') ? 'Test Group' : undefined,
+            groupAvatar: undefined,
+            groupDescription: undefined,
+            createdBy: undefined,
+            unreadCount: 0,
+            contextData: undefined,
+            isPinned: false,
+            isArchived: false,
+            isMuted: false,
+            participant_profile: !threadId?.includes('group') ? {
+              id: 'test_user',
+              name: 'Test User',
+              avatar: null,
+              is_online: true
+            } : undefined
           };
           console.log("Created mock data:", mockData);
           setChatData(mockData);
@@ -116,7 +127,8 @@ const SimpleChatRoom = () => {
     );
   }
 
-  const displayName = chatData.isGroup ? chatData.groupName : chatData.participant_profile?.name;
+  // Use optional chaining and nullish coalescing to safely access displayName
+  const displayName = chatData?.isGroup ? chatData.groupName : (chatData?.participant_profile?.name || 'Unknown User');
 
   return (
     <>
@@ -156,7 +168,7 @@ const SimpleChatRoom = () => {
           <div className="space-y-4">
             {/* Group Data Validation for group chats */}
             {chatData.isGroup && (
-              <GroupDataTest group={chatData} />
+              <GroupDataTest group={chatData as any} />
             )}
 
             <div className="bg-muted p-4 rounded-lg">
@@ -195,7 +207,7 @@ const SimpleChatRoom = () => {
       {chatData?.isGroup && showGroupModal && (
         <GroupInfoModal
           trigger={<div />}
-          group={chatData}
+          group={chatData as any}
           currentUserId="current"
           onUpdateGroup={async (request) => {
             console.log("Test update group:", request);

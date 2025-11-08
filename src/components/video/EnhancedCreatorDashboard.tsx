@@ -447,51 +447,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
     (selectedFeatures.length === 0 || selectedFeatures.includes(feature.name))
   );
 
-  );
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="relative">
-        <SearchIcon className="absolute left-4 top-3 h-5 w-5 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search features"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="h-10 w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredFeatures.map(feature => (
-          <div
-            key={feature.name}
-            className={`flex cursor-pointer items-center rounded-lg border px-4 py-3 shadow-sm transition-colors hover:bg-gray-100 ${
-              selectedFeatures.includes(feature.name) ? "border-blue-500" : "border-gray-300"
-            }`}
-            onClick={() => {
-              setSelectedFeatures(prev =>
-                prev.includes(feature.name)
-                  ? prev.filter(name => name !== feature.name)
-                  : [...prev, feature.name]
-              );
-            }}
-          >
-            <div className="relative h-10 w-10 flex-shrink-0">
-              <feature.icon className="h-full w-full text-gray-600" />
-              {feature.new && (
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-500" />
-              )}
-            </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-medium text-gray-900">{feature.name}</h3>
-              <p className="text-sm text-gray-500">{feature.description}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   useEffect(() => {
     const handleResize = () => {
       const newViewMode = window.innerWidth < 768 ? 'list' : 'grid';
@@ -1592,6 +1547,48 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Add Feature
                 </Button>
+              </div>
+            </div>
+
+            {/* Feature Filter */}
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <SearchIcon className="absolute left-4 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search features"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredFeatures.map(feature => (
+                  <div
+                    key={feature.name}
+                    className={`flex cursor-pointer items-center rounded-lg border px-4 py-3 shadow-sm transition-colors hover:bg-gray-100 ${
+                      selectedFeatures.includes(feature.name) ? "border-blue-500" : "border-gray-300"
+                    }`}
+                    onClick={() => {
+                      setSelectedFeatures(prev =>
+                        prev.includes(feature.name)
+                          ? prev.filter(name => name !== feature.name)
+                          : [...prev, feature.name]
+                      );
+                    }}
+                  >
+                    <div className="relative h-10 w-10 flex-shrink-0">
+                      <feature.icon className="h-full w-full text-gray-600" />
+                      {feature.new && (
+                        <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-500" />
+                      )}
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-sm font-medium text-gray-900">{feature.name}</h3>
+                      <p className="text-sm text-gray-500">{feature.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -3312,6 +3309,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default EnhancedCreatorDashboard;
