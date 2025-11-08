@@ -14,7 +14,6 @@ import {
   Flame,
   Star,
   DollarSign,
-  ChevronUp,
   ChevronDown,
   Coins,
   Target,
@@ -23,14 +22,8 @@ import {
   Send,
   Smile,
   MoreHorizontal,
-  Zap,
-  Award,
-  TrendingUp,
   ThumbsUp,
   ThumbsDown,
-  RotateCcw,
-  Maximize,
-  Minimize,
   Reply
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -147,7 +140,7 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
     creator1: creator1.score,
     creator2: creator2.score,
   });
-  const [totalVotes, setTotalVotes] = useState({ creator1: 12, creator2: 6 });
+  const [totalVotes] = useState({ creator1: 12, creator2: 6 });
   const [giftEffects, setGiftEffects] = useState<Array<{ id: string; creatorId: string; gift: Gift; timestamp: Date }>>([]);
   const [showVoteModal, setShowVoteModal] = useState(false);
   const [userVotes, setUserVotes] = useState<Vote[]>([]);
@@ -170,7 +163,7 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
     userVoteOutcome: 'won' | 'lost' | 'none';
   } | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [chatMessageLikes, setChatMessageLikes] = useState<Record<string, { likes: number; userLiked: boolean }>>({});
+  const [, setChatMessageLikes] = useState<Record<string, { likes: number; userLiked: boolean }>>({});
 
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -290,9 +283,6 @@ const TikTokStyleBattle: React.FC<TikTokStyleBattleProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getLeadingCreator = () => {
-    return scores.creator1 > scores.creator2 ? creator1 : creator2;
-  };
 
   const getScorePercentage = (creatorScore: number) => {
     const total = scores.creator1 + scores.creator2;

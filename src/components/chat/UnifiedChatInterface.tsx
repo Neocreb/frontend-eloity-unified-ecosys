@@ -880,10 +880,21 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>New Chat</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Start Social Chat</DropdownMenuItem>
-                      <DropdownMenuItem>Find Freelancer</DropdownMenuItem>
-                      <DropdownMenuItem>Message Seller</DropdownMenuItem>
-                      <DropdownMenuItem>P2P Trade Chat</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/explore')}>Start Social Chat</DropdownMenuItem>
+                      {activeTab === "social" && (
+                        <DropdownMenuItem onClick={() => {
+                          toast({
+                            title: "Create Group",
+                            description: "Group creation feature coming soon!",
+                          });
+                        }}>
+                          <Users className="h-4 w-4 mr-2" />
+                          Create Group
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => navigate('/freelance')}>Find Freelancer</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/marketplace')}>Message Seller</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/crypto')}>P2P Trade Chat</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

@@ -1143,6 +1143,60 @@ export type Database = {
         }
         Relationships: []
       }
+      audience_analytics: {
+        Row: {
+          age_distribution: Json | null
+          buyers: number | null
+          content_viewers: number | null
+          created_at: string | null
+          date: string
+          engagement_rate: number | null
+          gender_distribution: Json | null
+          id: string
+          location_distribution: Json | null
+          new_followers: number | null
+          retention_rate: number | null
+          sellers: number | null
+          total_followers: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age_distribution?: Json | null
+          buyers?: number | null
+          content_viewers?: number | null
+          created_at?: string | null
+          date: string
+          engagement_rate?: number | null
+          gender_distribution?: Json | null
+          id?: string
+          location_distribution?: Json | null
+          new_followers?: number | null
+          retention_rate?: number | null
+          sellers?: number | null
+          total_followers?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age_distribution?: Json | null
+          buyers?: number | null
+          content_viewers?: number | null
+          created_at?: string | null
+          date?: string
+          engagement_rate?: number | null
+          gender_distribution?: Json | null
+          id?: string
+          location_distribution?: Json | null
+          new_followers?: number | null
+          retention_rate?: number | null
+          sellers?: number | null
+          total_followers?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_banking_access: {
         Row: {
           accessed_at: string
@@ -2614,54 +2668,71 @@ export type Database = {
       }
       content_analytics: {
         Row: {
-          analyzed_at: string
-          engagement_score: number | null
-          hashtags: Json | null
+          comments: number | null
+          created_at: string | null
+          description: string | null
+          engagement: number | null
           id: string
-          post_id: string | null
+          likes: number | null
+          platform: string
           publish_date: string | null
-          quality_score: number | null
-          sentiment_score: number | null
-          topics: Json | null
-          type: string | null
+          revenue: number | null
+          shares: number | null
+          source_id: string
+          source_type: string
+          thumbnail_url: string | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+          views: number | null
         }
         Insert: {
-          analyzed_at?: string
-          engagement_score?: number | null
-          hashtags?: Json | null
+          comments?: number | null
+          created_at?: string | null
+          description?: string | null
+          engagement?: number | null
           id?: string
-          post_id?: string | null
+          likes?: number | null
+          platform: string
           publish_date?: string | null
-          quality_score?: number | null
-          sentiment_score?: number | null
-          topics?: Json | null
-          type?: string | null
+          revenue?: number | null
+          shares?: number | null
+          source_id: string
+          source_type: string
+          thumbnail_url?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+          views?: number | null
         }
         Update: {
-          analyzed_at?: string
-          engagement_score?: number | null
-          hashtags?: Json | null
+          comments?: number | null
+          created_at?: string | null
+          description?: string | null
+          engagement?: number | null
           id?: string
-          post_id?: string | null
+          likes?: number | null
+          platform?: string
           publish_date?: string | null
-          quality_score?: number | null
-          sentiment_score?: number | null
-          topics?: Json | null
-          type?: string | null
+          revenue?: number | null
+          shares?: number | null
+          source_id?: string
+          source_type?: string
+          thumbnail_url?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+          views?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "content_analytics_post_id_fkey"
-            columns: ["post_id"]
+            foreignKeyName: "fk_user"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "content_analytics_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_with_profiles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -3020,6 +3091,50 @@ export type Database = {
           },
         ]
       }
+      creator_goals: {
+        Row: {
+          created_at: string | null
+          current_value: number | null
+          deadline: string | null
+          goal_type: string
+          id: string
+          status: string | null
+          target_value: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number | null
+          deadline?: string | null
+          goal_type: string
+          id?: string
+          status?: string | null
+          target_value: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number | null
+          deadline?: string | null
+          goal_type?: string
+          id?: string
+          status?: string | null
+          target_value?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_payouts: {
         Row: {
           admin_notes: string | null
@@ -3340,6 +3455,77 @@ export type Database = {
           volume_24h?: number | null
         }
         Relationships: []
+      }
+      crypto_profiles: {
+        Row: {
+          average_rating: number | null
+          created_at: string | null
+          id: string
+          investment_strategy: string | null
+          is_verified_trader: boolean | null
+          kyc_status: string | null
+          kyc_verified_at: string | null
+          notification_preferences: Json | null
+          preferred_currencies: string[] | null
+          risk_tolerance: string | null
+          security_settings: Json | null
+          total_trades: number | null
+          trading_pairs: Json | null
+          trading_volume: number | null
+          updated_at: string | null
+          user_id: string
+          wallet_address: string | null
+          wallet_provider: string | null
+        }
+        Insert: {
+          average_rating?: number | null
+          created_at?: string | null
+          id?: string
+          investment_strategy?: string | null
+          is_verified_trader?: boolean | null
+          kyc_status?: string | null
+          kyc_verified_at?: string | null
+          notification_preferences?: Json | null
+          preferred_currencies?: string[] | null
+          risk_tolerance?: string | null
+          security_settings?: Json | null
+          total_trades?: number | null
+          trading_pairs?: Json | null
+          trading_volume?: number | null
+          updated_at?: string | null
+          user_id: string
+          wallet_address?: string | null
+          wallet_provider?: string | null
+        }
+        Update: {
+          average_rating?: number | null
+          created_at?: string | null
+          id?: string
+          investment_strategy?: string | null
+          is_verified_trader?: boolean | null
+          kyc_status?: string | null
+          kyc_verified_at?: string | null
+          notification_preferences?: Json | null
+          preferred_currencies?: string[] | null
+          risk_tolerance?: string | null
+          security_settings?: Json | null
+          total_trades?: number | null
+          trading_pairs?: Json | null
+          trading_volume?: number | null
+          updated_at?: string | null
+          user_id?: string
+          wallet_address?: string | null
+          wallet_provider?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_profiles_profile_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crypto_settings: {
         Row: {
@@ -4869,6 +5055,98 @@ export type Database = {
           },
         ]
       }
+      freelance_profiles: {
+        Row: {
+          availability: string | null
+          certifications: Json | null
+          completed_projects: number | null
+          created_at: string | null
+          education: Json | null
+          experience_level: string | null
+          hourly_rate: number | null
+          id: string
+          is_available: boolean | null
+          is_featured: boolean | null
+          languages: Json | null
+          overview: string | null
+          portfolio_url: string | null
+          preferred_project_size: string | null
+          professional_title: string | null
+          profile_completion: number | null
+          repeat_clients: number | null
+          response_time: string | null
+          resume_url: string | null
+          services_offered: Json | null
+          success_rate: number | null
+          total_earnings: number | null
+          updated_at: string | null
+          user_id: string
+          work_history: Json | null
+        }
+        Insert: {
+          availability?: string | null
+          certifications?: Json | null
+          completed_projects?: number | null
+          created_at?: string | null
+          education?: Json | null
+          experience_level?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          languages?: Json | null
+          overview?: string | null
+          portfolio_url?: string | null
+          preferred_project_size?: string | null
+          professional_title?: string | null
+          profile_completion?: number | null
+          repeat_clients?: number | null
+          response_time?: string | null
+          resume_url?: string | null
+          services_offered?: Json | null
+          success_rate?: number | null
+          total_earnings?: number | null
+          updated_at?: string | null
+          user_id: string
+          work_history?: Json | null
+        }
+        Update: {
+          availability?: string | null
+          certifications?: Json | null
+          completed_projects?: number | null
+          created_at?: string | null
+          education?: Json | null
+          experience_level?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          languages?: Json | null
+          overview?: string | null
+          portfolio_url?: string | null
+          preferred_project_size?: string | null
+          professional_title?: string | null
+          profile_completion?: number | null
+          repeat_clients?: number | null
+          response_time?: string | null
+          resume_url?: string | null
+          services_offered?: Json | null
+          success_rate?: number | null
+          total_earnings?: number | null
+          updated_at?: string | null
+          user_id?: string
+          work_history?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelance_profiles_profile_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       freelance_projects: {
         Row: {
           agreed_budget: number
@@ -6361,7 +6639,15 @@ export type Database = {
           id?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_profiles_profile_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketplace_reviews: {
         Row: {
@@ -8614,6 +8900,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
           id: string
           is_verified: boolean | null
@@ -8632,6 +8919,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
           is_verified?: boolean | null
@@ -8650,6 +8938,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
           is_verified?: boolean | null
@@ -10980,6 +11269,39 @@ export type Database = {
           },
         ]
       }
+      user_demographics: {
+        Row: {
+          age_group: string | null
+          created_at: string | null
+          gender: string | null
+          id: string
+          interests: string[] | null
+          location: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age_group?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string
+          interests?: string[] | null
+          location?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age_group?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string
+          interests?: string[] | null
+          location?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_follows: {
         Row: {
           created_at: string | null
@@ -12458,6 +12780,15 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_growth_metrics: {
+        Args: { period?: string; user_id: string }
+        Returns: {
+          current_value: number
+          growth_rate: number
+          metric_name: string
+          previous_value: number
+        }[]
+      }
       check_column_exists: {
         Args: { column_name: string; table_name: string }
         Returns: boolean
@@ -12472,6 +12803,24 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      get_audience_demographics: {
+        Args: { user_id: string }
+        Returns: {
+          demographic: string
+          value: number
+        }[]
+      }
+      get_creator_revenue_by_period: {
+        Args: { end_date: string; start_date: string; user_id: string }
+        Returns: {
+          comments: number
+          likes: number
+          period: string
+          revenue: number
+          shares: number
+          views: number
+        }[]
       }
       get_user_banking_info_full: {
         Args: { p_purpose?: string; p_user_id: string }

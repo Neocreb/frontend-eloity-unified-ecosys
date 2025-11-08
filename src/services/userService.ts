@@ -505,38 +505,11 @@ export class UserService {
   // Search users
   static async searchUsers(query: string, limit = 20): Promise<UserWithProfile[]> {
     try {
-      // Search in users table first
-      const usersResponse = await supabaseClient
-        .from('users')
-        .select('*')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-        .limit(limit);
-
-      if (!usersResponse.error && usersResponse.data && usersResponse.data.length > 0) {
-        // Found users in users table
-        return usersResponse.data.map((user: any) => ({
-          id: user.id,
-          username: user.username || null,
-          full_name: user.full_name || null,
-          name: user.full_name || null,
-          avatar: user.avatar_url || null,
-          avatar_url: user.avatar_url || null,
-          bio: user.bio || null,
-          is_verified: user.is_verified || false,
-          points: user.points || 0,
-          level: user.level || null,
-          role: user.role || null,
-          created_at: user.created_at || null,
-          updated_at: user.updated_at || null,
-          profile: null
-        }));
-      }
-
-      // If not found in users table, search in profiles table
+      // Search in profiles table with email, username, and full_name
       const profilesResponse = await supabaseClient
         .from('profiles')
         .select('*')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,email.ilike.%${query}%`)
         .limit(limit);
 
       if (profilesResponse.error) {

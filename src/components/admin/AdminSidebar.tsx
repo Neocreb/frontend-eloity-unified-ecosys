@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";

@@ -26,12 +26,10 @@ import {
   CheckCircle,
   XCircle,
   Coins,
-  ChevronUp,
   ChevronDown,
   ThumbsUp,
   ThumbsDown,
   Reply,
-  RotateCcw,
   Award,
   Sparkles,
   Send,
@@ -141,7 +139,7 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
   const [showCombo, setShowCombo] = useState(false);
   const [battlePhase, setBattlePhase] = useState<'active' | 'ending' | 'ended'>('active');
   const [giftEffects, setGiftEffects] = useState<Array<{ id: string; creatorId: string; gift: Gift; timestamp: Date }>>([]);
-  const [chatMessageLikes, setChatMessageLikes] = useState<Record<string, { likes: number; userLiked: boolean }>>({});
+  const [, setChatMessageLikes] = useState<Record<string, { likes: number; userLiked: boolean }>>({});
 
   // Voting state
   const [showVoting, setShowVoting] = useState(false);
@@ -156,7 +154,6 @@ const LiveBattle: React.FC<LiveBattleProps> = ({
   const [battleResults, setBattleResults] = useState<BattleResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [showCommentsOverlay, setShowCommentsOverlay] = useState(false);
-  const [isMobile] = useState(window.innerWidth < 768);
   
   const commentsRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
