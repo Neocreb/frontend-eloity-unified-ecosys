@@ -247,20 +247,22 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       : "+" + (Math.random() * 10 + 5).toFixed(1) + "%"; // Fallback to mock value
     
     // Peak hours data (mock values - could be enhanced with real data if available)
+    // In a real implementation, this would be calculated from actual user activity data
     const peakHours = [
-      { time: "6-9 AM", activity: Math.floor(Math.random() * 30) + 20 },
-      { time: "12-3 PM", activity: Math.floor(Math.random() * 40) + 30 },
-      { time: "6-9 PM", activity: Math.floor(Math.random() * 35) + 25 },
-      { time: "9-12 PM", activity: Math.floor(Math.random() * 25) + 15 }
+      { time: "6-9 AM", activity: 25 },
+      { time: "12-3 PM", activity: 35 },
+      { time: "6-9 PM", activity: 30 },
+      { time: "9-12 PM", activity: 20 }
     ];
     
     // Best days data (mock values - could be enhanced with real data if available)
+    // In a real implementation, this would be calculated from actual user activity data
     const bestDays = [
-      { day: "Tuesday", activity: Math.floor(Math.random() * 20) + 20 },
-      { day: "Wednesday", activity: Math.floor(Math.random() * 25) + 25 },
-      { day: "Thursday", activity: Math.floor(Math.random() * 20) + 15 },
-      { day: "Monday", activity: Math.floor(Math.random() * 15) + 10 },
-      { day: "Friday", activity: Math.floor(Math.random() * 15) + 5 }
+      { day: "Tuesday", activity: 25 },
+      { day: "Wednesday", activity: 30 },
+      { day: "Thursday", activity: 20 },
+      { day: "Monday", activity: 15 },
+      { day: "Friday", activity: 10 }
     ];
     
     // Engagement metrics (real values from analytics or fallback to mock)
@@ -274,114 +276,117 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
           { metric: "Followers", value: totalFollowers, description: "Your total follower count" }
         ]
       : [
-          { metric: "Average Session", value: "4:" + (Math.floor(Math.random() * 30) + 20), description: "Time spent per visit" },
-          { metric: "Pages per Session", value: (Math.random() * 2 + 2).toFixed(1), description: "Average page views" },
-          { metric: "Return Visitor Rate", value: Math.floor(Math.random() * 30 + 60) + "%", description: "Repeat audience" },
-          { metric: "Share Rate", value: Math.floor(Math.random() * 10 + 8) + "%", description: "Content sharing" },
-          { metric: "Comment Rate", value: Math.floor(Math.random() * 5 + 5) + "%", description: "Active commenting" },
-          { metric: "Save Rate", value: Math.floor(Math.random() * 10 + 10) + "%", description: "Content saves" }
+          { metric: "Average Session", value: "4:25", description: "Time spent per visit" },
+          { metric: "Pages per Session", value: "3.2", description: "Average page views" },
+          { metric: "Return Visitor Rate", value: "75%", description: "Repeat audience" },
+          { metric: "Share Rate", value: "12%", description: "Content sharing" },
+          { metric: "Comment Rate", value: "8%", description: "Active commenting" },
+          { metric: "Save Rate", value: "15%", description: "Content saves" }
         ];
     
     // Content recommendations (mock values - could be enhanced with real data if available)
+    // In a real implementation, this would be generated from AI analysis of user preferences
     const contentRecommendations = [
       {
         type: "Blog Post",
-        topic: "Blockchain 101: An Introduction",
+        topic: "Industry Trends Analysis",
         reason: "High interest from audience",
-        potential: `${(Math.floor(Math.random() * 1000) + 1000).toFixed(0)} views, ${formatNumber(Math.floor(Math.random() * 100) + 50)}`,
-        confidence: Math.floor(Math.random() * 20 + 75)
+        potential: "2,500 views, 150 shares",
+        confidence: 85
       },
       {
         type: "Video Tutorial",
-        topic: "Advanced Crypto Trading Strategies",
+        topic: "Advanced Platform Features",
         reason: "High demand topic in your audience",
-        potential: `${(Math.floor(Math.random() * 3000) + 3000).toFixed(0)} views, ${formatNumber(Math.floor(Math.random() * 1000) + 1500)}`,
-        confidence: Math.floor(Math.random() * 20 + 65)
+        potential: "5,200 views, 2,800 likes",
+        confidence: 78
       },
       {
         type: "Live Stream",
-        topic: "Q&A: Building Online Business",
+        topic: "Q&A: Expert Insights",
         reason: "Your live content performs 3x better",
-        potential: `${(Math.floor(Math.random() * 200) + 200).toFixed(0)} viewers, ${formatNumber(Math.floor(Math.random() * 300) + 300)}`,
-        confidence: Math.floor(Math.random() * 20 + 70)
+        potential: "450 viewers, 600 comments",
+        confidence: 82
       },
       {
         type: "Product Launch",
-        topic: "Premium Course: Freelance Mastery",
+        topic: "Premium Course: Skill Development",
         reason: "Your audience shows high interest in education",
-        potential: `${(Math.floor(Math.random() * 50) + 50).toFixed(0)} sales, ${formatNumber(Math.floor(Math.random() * 3000) + 3000)}`,
-        confidence: Math.floor(Math.random() * 15 + 80)
+        potential: "85 sales, $4,200 revenue",
+        confidence: 90
       }
     ];
     
     // Audience growth strategies (mock values - could be enhanced with real data if available)
+    // In a real implementation, this would be generated from AI analysis of growth patterns
     const audienceGrowthStrategies = [
       {
         strategy: "Cross-Platform Promotion",
-        description: "Promote your video content on social media",
-        impact: "+" + Math.floor(Math.random() * 10 + 20) + "% more views",
+        description: "Promote your content on social media",
+        impact: "+25% more views",
         effort: "Low"
       },
       {
         strategy: "Collaboration Opportunities",
         description: "Partner with creators in your niche",
-        impact: "+" + Math.floor(Math.random() * 15 + 30) + "% audience growth",
+        impact: "+40% audience growth",
         effort: "Medium"
       },
       {
         strategy: "Trending Topic Integration",
-        description: "Create content around #CryptoEducation",
-        impact: "+" + Math.floor(Math.random() * 15 + 35) + "% more reach",
+        description: "Create content around trending topics",
+        impact: "+45% more reach",
         effort: "Low"
       },
       {
         strategy: "Community Building",
         description: "Start a Discord or Telegram group",
-        impact: "+" + Math.floor(Math.random() * 10 + 15) + "% higher engagement",
+        impact: "+20% higher engagement",
         effort: "High"
       }
     ];
     
     // Market trends (mock values - could be enhanced with real data if available)
+    // In a real implementation, this would be fetched from market research APIs
     const marketTrends = [
       {
         trend: "AI & Automation",
-        growth: Math.floor(Math.random() * 10 + 30) + "%",
+        growth: "35%",
         opportunity: "Create AI tool reviews and tutorials",
         timeline: "Next 30 days",
         difficulty: "Medium"
       },
       {
         trend: "Sustainable Tech",
-        growth: Math.floor(Math.random() * 10 + 25) + "%",
+        growth: "30%",
         opportunity: "Green technology investment content",
         timeline: "Next 60 days",
         difficulty: "Low"
       },
       {
         trend: "Remote Work Tools",
-        growth: Math.floor(Math.random() * 10 + 18) + "%",
+        growth: "22%",
         opportunity: "Productivity and freelance tools reviews",
         timeline: "Ongoing",
         difficulty: "Low"
       },
       {
-        trend: "Crypto Regulations",
-        growth: Math.floor(Math.random() * 10 + 38) + "%",
+        trend: "Regulatory Compliance",
+        growth: "42%",
         opportunity: "Educational content on compliance",
         timeline: "Immediate",
         difficulty: "High"
       },
       {
         trend: "Creator Economy",
-        growth: Math.floor(Math.random() * 10 + 35) + "%",
+        growth: "40%",
         opportunity: "Monetization strategy guides",
         timeline: "Next 14 days",
         difficulty: "Medium"
       },
       {
         trend: "Web3 Development",
-        growth: Math.floor(Math.random() * 10 + 40) + "%",
+        growth: "45%",
         opportunity: "DeFi and blockchain tutorials",
         timeline: "Next 45 days",
         difficulty: "High"
@@ -389,6 +394,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
     ];
     
     // Revenue optimization tips (mock values - could be enhanced with real data if available)
+    // In a real implementation, this would be generated from AI analysis of revenue patterns
     const revenueOptimizationTips = [
       {
         title: "Optimize Video Content",
@@ -417,6 +423,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
     ];
     
     // Daily insight (mock value - could be enhanced with real data if available)
+    // In a real implementation, this would be generated from AI analysis of user data
     const dailyInsights = [
       "Your video content has 3x higher engagement than posts. Increase video production by 40% to boost overall performance.",
       "Post content between 6-9 PM for 45% higher engagement. Your current posting time is suboptimal.",
@@ -424,7 +431,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       "Your audience is growing fastest in the 25-34 age group. Consider creating content specifically for this demographic.",
       "Engagement drops by 30% on weekends. Try scheduling important content for weekdays."
     ];
-    const dailyInsight = dailyInsights[Math.floor(Math.random() * dailyInsights.length)];
+    const dailyInsight = dailyInsights[0]; // Use first insight instead of random for consistency
     
     const result = {
       age: ageDemographics,

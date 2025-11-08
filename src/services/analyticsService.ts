@@ -68,7 +68,7 @@ export interface DetailedCategory {
 }
 
 // Data transformation utilities
-export const transformPostData = (posts: any[], contentAnalytics: any[]) => {
+export const transformPostData = (posts: any[]) => {
   const totalPosts = posts.length;
   const totalLikes = posts.reduce((sum: number, post: any) => sum + (post.post_likes?.length || 0), 0);
   const totalComments = posts.reduce((sum: number, post: any) => sum + (post.post_comments?.length || 0), 0);
@@ -383,14 +383,6 @@ const fetchPostAnalytics = async () => {
     
     if (postsError) throw postsError;
     
-    // Get content analytics for posts
-    const { data: contentAnalytics, error: analyticsError } = await supabase
-      .from('content_analytics')
-      .select('*')
-      .eq('type', 'Post');
-    
-    if (analyticsError) throw analyticsError;
-    
     const totalPosts = posts.length;
     const totalLikes = posts.reduce((sum: number, post: any) => sum + (post.post_likes?.length || 0), 0);
     const totalComments = posts.reduce((sum: number, post: any) => sum + (post.post_comments?.length || 0), 0);
@@ -458,13 +450,6 @@ const fetchVideoAnalytics = async () => {
       .select('id, title, views_count, likes_count, comments_count, created_at');
     
     if (videosError) throw videosError;
-    
-    // Get video analytics data
-    const { data: videoAnalytics, error: analyticsError } = await supabase
-      .from('video_analytics')
-      .select('*');
-    
-    if (analyticsError) throw analyticsError;
     
     const totalVideos = videos.length;
     const totalViews = videos.reduce((sum: number, video: any) => sum + (video.views_count || 0), 0);
@@ -534,13 +519,6 @@ const fetchProductAnalytics = async () => {
       .select('id, name, price, total_sales, total_reviews, average_rating');
     
     if (productsError) throw productsError;
-    
-    // Get product analytics data
-    const { data: productAnalytics, error: analyticsError } = await supabase
-      .from('product_analytics')
-      .select('*');
-    
-    if (analyticsError) throw analyticsError;
     
     const totalProducts = products.length;
     const totalRevenue = products.reduce((sum: number, product: any) => sum + (product.price * (product.total_sales || 0)), 0);
