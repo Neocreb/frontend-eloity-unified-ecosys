@@ -518,7 +518,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
     const load = async () => {
       setContentLoading(true);
       try {
-        const { data, total } = await fetchContentPage({ types: selectedTypes.map(s => s.toLowerCase()), range: timeRange, sort: sortBy, search: debouncedSearchTerm, pageNum: page, size: pageSize });
+        const { data, total } = await fetchContentPageSupabase({ types: selectedTypes.map(s => s.toLowerCase()), range: timeRange, sort: sortBy, search: debouncedSearchTerm, pageNum: page, size: pageSize });
         if (!cancelled) {
           setContentPageData(data);
           setContentTotal(total);
