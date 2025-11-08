@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useI18n } from "@/contexts/I18nContext";
-import { analyticsService } from "@/services/analyticsService";
+import analyticsService from "@/services/analyticsService";
 import { giftCardService } from "@/services/giftCardService";
 import {
   Dialog,

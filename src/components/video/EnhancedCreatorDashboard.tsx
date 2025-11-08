@@ -116,6 +116,8 @@ import EnhancedCreatorAnalytics from '@/components/video/EnhancedCreatorAnalytic
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 import { fetchContentPageSupabase } from '@/services/contentService';
+import { fetchUserDemographics } from '@/services/userDemographicsService';
+import { UserDemographics } from '@/services/userDemographicsService';
 
 interface MetricCard {
   title: string;
@@ -176,6 +178,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [userDemographics, setUserDemographics] = useState<UserDemographics | null>(null);
 
   // Advanced content filtering/pagination states
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // multi-select types
@@ -575,6 +578,20 @@ const EnhancedCreatorDashboard: React.FC = () => {
       }
     })();
     return () => { mounted = false; };
+  }, []);
+
+  // Fetch user demographics data
+  useEffect(() => {
+    const loadUserDemographics = async () => {
+      try {
+        const data = await fetchUserDemographics();
+        setUserDemographics(data);
+      } catch (error) {
+        console.error('Failed to fetch user demographics:', error);
+      }
+    };
+
+    loadUserDemographics();
   }, []);
 
   // Reset page when filters change
@@ -2687,13 +2704,13 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[
+                    {(userDemographics?.age || [
                       { range: "18-24", percentage: 35, count: "15.8K" },
                       { range: "25-34", percentage: 40, count: "18.1K" },
                       { range: "35-44", percentage: 20, count: "9.0K" },
                       { range: "45-54", percentage: 4, count: "1.8K" },
                       { range: "55+", percentage: 1, count: "450" },
-                    ].map((age, index) => (
+                    ]).map((age, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="font-medium">{age.range} years</span>
@@ -2719,27 +2736,27 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">58%</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Male</div>
-                        <div className="text-xs text-gray-500 mt-1">26.2K followers</div>
-                      </div>
-                      <div className="text-center p-4 bg-pink-50 dark:bg-pink-900/20 rounded-lg">
-                        <div className="text-2xl font-bold text-pink-600">42%</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Female</div>
-                        <div className="text-xs text-gray-500 mt-1">19.0K followers</div>
-                      </div>
+                      {(userDemographics?.gender || [
+                        { gender: "Male", percentage: 58, count: "26.2K" },
+                        { gender: "Female", percentage: 42, count: "19.0K" }
+                      ]).map((genderItem, index) => (
+                        <div key={index} className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">{genderItem.percentage}%</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">{genderItem.gender}</div>
+                          <div className="text-xs text-gray-500 mt-1">{genderItem.count} followers</div>
+                        </div>
+                      ))}
                     </div>
 
                     <div className="space-y-3">
                       <h4 className="font-medium">Top Interests</h4>
-                      {[
+                      {(userDemographics?.interests || [
                         { interest: "Technology", percentage: 78 },
                         { interest: "Finance", percentage: 65 },
                         { interest: "Business", percentage: 52 },
                         { interest: "Education", percentage: 47 },
                         { interest: "Entertainment", percentage: 38 },
-                      ].map((item, index) => (
+                      ]).map((item, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <span className="text-sm">{item.interest}</span>
                           <div className="flex items-center gap-2 flex-1 mx-3">
@@ -2767,16 +2784,16 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <div>
                     <h4 className="font-medium mb-3">Top Countries</h4>
                     <div className="space-y-3">
-                      {[
-                        { country: "United States", percentage: 42, count: "18.9K" },
-                        { country: "United Kingdom", percentage: 18, count: "8.1K" },
-                        { country: "Canada", percentage: 12, count: "5.4K" },
-                        { country: "Australia", percentage: 8, count: "3.6K" },
-                        { country: "Germany", percentage: 6, count: "2.7K" },
-                        { country: "Others", percentage: 14, count: "6.3K" },
-                      ].map((location, index) => (
+                      {(userDemographics?.location || [
+                        { location: "United States", percentage: 42, count: "18.9K" },
+                        { location: "United Kingdom", percentage: 18, count: "8.1K" },
+                        { location: "Canada", percentage: 12, count: "5.4K" },
+                        { location: "Australia", percentage: 8, count: "3.6K" },
+                        { location: "Germany", percentage: 6, count: "2.7K" },
+                        { location: "Others", percentage: 14, count: "6.3K" },
+                      ]).map((location, index) => (
                         <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm font-medium">{location.country}</span>
+                          <span className="text-sm font-medium">{location.location}</span>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-600 dark:text-gray-400">{location.count}</span>
                             <span className="text-sm font-medium w-8">{location.percentage}%</span>

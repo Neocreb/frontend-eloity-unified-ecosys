@@ -1,5 +1,5 @@
 import { findRetailer } from "@/config/giftCards";
-import { analyticsService } from "@/services/analyticsService";
+import analyticsService from "@/services/analyticsService";
 
 export type GiftCardStatus = "active" | "redeemed" | "pending" | "submitted";
 
