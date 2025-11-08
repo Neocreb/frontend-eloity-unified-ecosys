@@ -102,9 +102,9 @@ const Groups: React.FC = () => {
         .eq("user_id", user.id)
         .eq("status", "active");
 
-      const joinedIds = membershipData?.map((m) => m.group_id) || [];
+      const joinedIds = membershipData?.map((m: any) => m.group_id) || [];
 
-      const enriched = (groups || []).map((g, i) => ({
+      const enriched = (groups || []).map((g: any, i: number) => ({
         ...g,
         privacy: g.privacy || 'public',
         isJoined: joinedIds.includes(g.id),
@@ -114,7 +114,7 @@ const Groups: React.FC = () => {
       }));
 
       setAllGroups(enriched);
-      setJoinedGroups(enriched.filter((g) => g.isJoined));
+      setJoinedGroups(enriched.filter((g: Group) => g.isJoined));
     } catch (e) {
       toast({ title: "Error", description: "Failed to load groups", variant: "destructive" });
     } finally {
@@ -181,7 +181,7 @@ const Groups: React.FC = () => {
   const join = async (groupId: string) => {
     if (!user?.id) return;
     await supabase.from("group_members").insert({ group_id: groupId, user_id: user.id, role: "member", status: "active" });
-    setAllGroups((prev) => prev.map((g) => (g.id === groupId ? { ...g, isJoined: true, member_count: g.member_count + 1 } : g)));
+    setAllGroups((prev) => prev.map((g: Group) => (g.id === groupId ? { ...g, isJoined: true, member_count: g.member_count + 1 } : g)));
     setJoinedGroups((prev) => {
       const g = allGroups.find((x) => x.id === groupId);
       return g ? [{ ...g, isJoined: true }, ...prev] : prev;
