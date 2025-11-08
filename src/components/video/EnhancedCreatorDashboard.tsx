@@ -301,7 +301,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
     
     // Add a few default actions that are always available
     const defaultActions = [
-      { name: "View Analytics", icon: BarChart3, color: "bg-blue-500", href: "/analytics" },
+      { name: "View Analytics", icon: BarChart3, color: "bg-blue-500", href: "/app/unified-creator-studio?tab=insights" },
       { name: "Manage Profile", icon: Settings, color: "bg-gray-500", href: "/profile" }
     ];
     
