@@ -118,7 +118,8 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 import { fetchContentPageSupabase } from '@/services/contentService';
 import { activateFeature, deactivateFeature, getFeatureActivationStatus } from '@/services/featureActivationService';
 import { UserDemographics } from '@/services/userDemographicsService';
-import { fetchPlatformAnalytics, fetchTopPerformingContent } from '@/services/analyticsService';
+import { fetchPlatformAnalytics, fetchTopPerformingContent, fetchFeatureDetails } from '@/services/analyticsService';
+import { activityService } from '@/services/taskService';
 
 interface MetricCard {
   title: string;
@@ -137,6 +138,19 @@ interface FeatureAnalytics {
   metrics: MetricCard[];
   growth: number;
   active: boolean;
+}
+
+interface DetailedMetric {
+  name: string;
+  value: string | number;
+  change: string;
+  trend: "up" | "down" | "neutral";
+  description: string;
+}
+
+interface DetailedCategory {
+  category: string;
+  metrics: DetailedMetric[];
 }
 
 const EnhancedCreatorDashboard: React.FC = () => {
@@ -188,7 +202,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
 
   // Fetch quick actions data
   useEffect(() => {
-    // In a real implementation, this would fetch from an API
+    // These are static actions that don't change based on user data
     const actions = [
       { name: "Create Post", icon: Plus, color: "bg-blue-500", href: "/app/feed" },
       { name: "New Video", icon: Video, color: "bg-red-500", href: "/videos" },
@@ -204,15 +218,58 @@ const EnhancedCreatorDashboard: React.FC = () => {
 
   // Fetch recent activities data
   useEffect(() => {
-    // In a real implementation, this would fetch from an API
-    const activities = [
-      { type: "video", content: "Your video 'How to Trade Crypto' reached 10K views", time: "2 hours ago", icon: Video, color: "text-red-500" },
-      { type: "marketplace", content: "Product 'Digital Art Collection' sold for $89", time: "4 hours ago", icon: ShoppingBag, color: "text-green-500" },
-      { type: "freelance", content: "New project proposal received from TechCorp", time: "6 hours ago", icon: Briefcase, color: "text-orange-500" },
-      { type: "social", content: "Your post received 500+ likes and 50 comments", time: "8 hours ago", icon: Heart, color: "text-pink-500" },
-      { type: "crypto", content: "Portfolio gained $234 from BTC trade", time: "12 hours ago", icon: TrendingUp, color: "text-green-500" },
-    ];
-    setRecentActivities(activities);
+    const loadRecentActivities = async () => {
+      try {
+        const activities = await activityService.getUserActivities(undefined, 10);
+        // Transform the activities to match the expected format
+        const formattedActivities = activities.map(activity => {
+          // Map activity types to icons and colors
+          let icon = Heart;
+          let color = "text-gray-500";
+          
+          switch (activity.activity_type) {
+            case "video":
+              icon = Video;
+              color = "text-red-500";
+              break;
+            case "marketplace":
+              icon = ShoppingBag;
+              color = "text-green-500";
+              break;
+            case "freelance":
+              icon = Briefcase;
+              color = "text-orange-500";
+              break;
+            case "social":
+              icon = Heart;
+              color = "text-pink-500";
+              break;
+            case "crypto":
+              icon = TrendingUp;
+              color = "text-green-500";
+              break;
+            default:
+              icon = Activity;
+              color = "text-blue-500";
+          }
+          
+          return {
+            type: activity.activity_type,
+            content: activity.title + (activity.description ? `: ${activity.description}` : ''),
+            time: formatTimeAgo(new Date(activity.created_at)),
+            icon,
+            color
+          };
+        });
+        setRecentActivities(formattedActivities);
+      } catch (error) {
+        console.error('Failed to fetch recent activities:', error);
+        // Set empty array if fetch fails
+        setRecentActivities([]);
+      }
+    };
+
+    loadRecentActivities();
   }, []);
 
   // Fetch top performing content data
@@ -245,6 +302,24 @@ const EnhancedCreatorDashboard: React.FC = () => {
       currency: "USD",
       minimumFractionDigits: 0,
     }).format(numAmount);
+  };
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds} seconds ago`;
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
   };
 
   const getTrendIcon = (trend: "up" | "down" | "neutral") => {
@@ -384,11 +459,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const handleExport = async (format: 'csv' | 'pdf' | 'json' = 'csv') => {
     setIsExporting(true);
     try {
-      // In a real implementation, you would call an actual export API
-      // For now, we'll simulate a shorter delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // In a real implementation, this data would come from actual API calls
+      // Currently using real data from state where available
 
       // In a real implementation, this data would come from actual API calls
+      // Currently using real data from state where available and mock data where needed
       const exportData = {
         revenue: {
           total: totalRevenue,
@@ -399,11 +474,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
         },
         content: topPerformingContent,
         audience: {
-          total: "45.2K",
-          growth: "+28.5%",
-          demographics: {
-            age: { "18-24": 35, "25-34": 40, "35-44": 20, "45+": 5 },
-            location: { "US": 42, "UK": 18, "CA": 12, "AU": 8, "Other": 20 }
+          total: userDemographics?.totalFollowers || "0",
+          growth: userDemographics?.growthRate || "0%",
+          demographics: userDemographics?.demographics || {
+            age: [],
+            location: []
           }
         },
         exportDate: new Date().toISOString()
@@ -452,9 +527,17 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     try {
-      // In a real implementation, you would call an actual refresh API
-      // For now, we'll simulate a shorter delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Refresh all data by re-fetching
+      const [analyticsData, contentData, demographicsData] = await Promise.all([
+        fetchPlatformAnalytics(),
+        fetchTopPerformingContent(),
+        fetchUserDemographics()
+      ]);
+      
+      setPlatformFeatures(analyticsData);
+      setTopPerformingContent(contentData);
+      setUserDemographics(demographicsData);
+      
       alert('Data refreshed successfully!');
     } catch (error) {
       console.error('Refresh failed:', error);
@@ -512,7 +595,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
 
   const handleToggleFeature = async (featureName: string, currentState: boolean) => {
     try {
-      // In a real implementation, you would get the actual user ID from context or auth
+      // TODO: Get the actual user ID from context or auth
       // For now, we'll use a more realistic placeholder
       const userId = 'user-' + Math.random().toString(36).substr(2, 9);
       
@@ -521,15 +604,15 @@ const EnhancedCreatorDashboard: React.FC = () => {
         await deactivateFeature(userId, featureName, 'User disabled feature');
         // Update the UI to reflect the change
         alert(`${featureName} has been disabled.`);
-        // In a real implementation, you would update the state to reflect the change
-        // For example: setPlatformFeatures(prev => prev.map(f => f.name === featureName ? {...f, active: false} : f));
+        // Update the state to reflect the change
+        setPlatformFeatures(prev => prev.map(f => f.name === featureName ? {...f, active: false} : f));
       } else {
         // Feature is currently disabled, so we're enabling it
         await activateFeature(userId, featureName, 'User enabled feature');
         // Update the UI to reflect the change
         alert(`${featureName} has been enabled.`);
-        // In a real implementation, you would update the state to reflect the change
-        // For example: setPlatformFeatures(prev => prev.map(f => f.name === featureName ? {...f, active: true} : f));
+        // Update the state to reflect the change
+        setPlatformFeatures(prev => prev.map(f => f.name === featureName ? {...f, active: true} : f));
       }
     } catch (error) {
       console.error('Error toggling feature:', error);
@@ -557,171 +640,28 @@ const EnhancedCreatorDashboard: React.FC = () => {
 
     const Icon = feature.icon;
 
-    // Generate additional detailed metrics for the subpage
-    const detailedMetrics = {
-      "Feed & Social": [
-        { category: "Content Performance", metrics: [
-          { name: "Total Posts", value: "1,247", change: "+18.2%", trend: "up", description: "Posts published this period" },
-          { name: "Viral Posts", value: "23", change: "+45.7%", trend: "up", description: "Posts with >10K engagement" },
-          { name: "Average Likes", value: "892", change: "+12.3%", trend: "up", description: "Per post engagement" },
-          { name: "Comment Rate", value: "4.2%", change: "+8.9%", trend: "up", description: "Comments per view" },
-        ]},
-        { category: "Audience Growth", metrics: [
-          { name: "New Followers", value: "2,341", change: "+25.4%", trend: "up", description: "This month" },
-          { name: "Follower Growth Rate", value: "15.7%", change: "+3.2%", trend: "up", description: "Monthly growth" },
-          { name: "Audience Retention", value: "87.3%", change: "+2.1%", trend: "up", description: "Active followers" },
-          { name: "Demographics Score", value: "92/100", change: "+5.0%", trend: "up", description: "Target audience match" },
-        ]},
-        { category: "Engagement Analytics", metrics: [
-          { name: "Engagement Rate", value: "8.4%", change: "+12.3%", trend: "up", description: "Overall engagement" },
-          { name: "Share Rate", value: "2.1%", change: "+18.7%", trend: "up", description: "Shares per post" },
-          { name: "Save Rate", value: "3.8%", change: "+22.1%", trend: "up", description: "Saves per post" },
-          { name: "Story Views", value: "45.2K", change: "+31.4%", trend: "up", description: "Story impressions" },
-        ]},
-      ],
-      "Video": [
-        { category: "Video Performance", metrics: [
-          { name: "Total Videos", value: "156", change: "+22.4%", trend: "up", description: "Videos created" },
-          { name: "Total Views", value: "2.1M", change: "+35.2%", trend: "up", description: "All-time views" },
-          { name: "Avg View Duration", value: "3:24", change: "+8.1%", trend: "up", description: "Average watch time" },
-          { name: "Completion Rate", value: "68.7%", change: "+12.5%", trend: "up", description: "Videos watched to end" },
-        ]},
-        { category: "Monetization", metrics: [
-          { name: "Ad Revenue", value: "$2,340", change: "+45.8%", trend: "up", description: "From video ads" },
-          { name: "Sponsorship Deals", value: "12", change: "+200%", trend: "up", description: "Brand partnerships" },
-          { name: "Tips Received", value: "$567", change: "+78.9%", trend: "up", description: "Viewer tips" },
-          { name: "RPM", value: "$1.12", change: "+23.4%", trend: "up", description: "Revenue per mile" },
-        ]},
-        { category: "Audience Insights", metrics: [
-          { name: "Subscribers", value: "89.2K", change: "+28.7%", trend: "up", description: "Video subscribers" },
-          { name: "Notification Rate", value: "23.4%", change: "+5.6%", trend: "up", description: "Bell icon clicks" },
-          { name: "Repeat Viewers", value: "45.8%", change: "+18.2%", trend: "up", description: "Return audience" },
-          { name: "Peak Concurrent", value: "1,847", change: "+67.3%", trend: "up", description: "Live stream peak" },
-        ]},
-      ],
-      "Marketplace": [
-        { category: "Sales Performance", metrics: [
-          { name: "Products Sold", value: "389", change: "+52.1%", trend: "up", description: "Units sold this period" },
-          { name: "Total Revenue", value: "$12,450", change: "+38.7%", trend: "up", description: "Gross sales revenue" },
-          { name: "Conversion Rate", value: "3.2%", change: "+15.4%", trend: "up", description: "Visitors to buyers" },
-          { name: "Avg Order Value", value: "$32", change: "+8.9%", trend: "up", description: "Per transaction" },
-        ]},
-        { category: "Product Analytics", metrics: [
-          { name: "Active Listings", value: "47", change: "+12.8%", trend: "up", description: "Live products" },
-          { name: "Product Views", value: "45.2K", change: "+28.4%", trend: "up", description: "Product page visits" },
-          { name: "Wishlist Adds", value: "1,234", change: "+67.8%", trend: "up", description: "Items saved" },
-          { name: "Cart Abandonment", value: "23.4%", change: "-8.9%", trend: "down", description: "Checkout dropoff" },
-        ]},
-        { category: "Customer Metrics", metrics: [
-          { name: "New Customers", value: "156", change: "+34.5%", trend: "up", description: "First-time buyers" },
-          { name: "Repeat Customers", value: "89", change: "+45.2%", trend: "up", description: "Return buyers" },
-          { name: "Customer Rating", value: "4.8/5", change: "+2.1%", trend: "up", description: "Average rating" },
-          { name: "Return Rate", value: "2.1%", change: "-12.3%", trend: "down", description: "Product returns" },
-        ]},
-      ],
-      "Freelance": [
-        { category: "Project Performance", metrics: [
-          { name: "Projects Completed", value: "47", change: "+31.2%", trend: "up", description: "Finished projects" },
-          { name: "Active Projects", value: "8", change: "+60.0%", trend: "up", description: "In progress" },
-          { name: "Project Success Rate", value: "95.7%", change: "+3.2%", trend: "up", description: "Successful completion" },
-          { name: "Avg Project Value", value: "$890", change: "+25.3%", trend: "up", description: "Per project earning" },
-        ]},
-        { category: "Client Relations", metrics: [
-          { name: "Client Rating", value: "4.9/5", change: "+2.1%", trend: "up", description: "Average client rating" },
-          { name: "Repeat Clients", value: "67%", change: "+15.4%", trend: "up", description: "Return customers" },
-          { name: "Response Time", value: "2.1h", change: "-12.4%", trend: "down", description: "Avg response time" },
-          { name: "Communication Score", value: "98/100", change: "+5.2%", trend: "up", description: "Client feedback" },
-        ]},
-        { category: "Skills & Growth", metrics: [
-          { name: "Skill Endorsements", value: "234", change: "+45.8%", trend: "up", description: "LinkedIn endorsements" },
-          { name: "Portfolio Views", value: "2,340", change: "+67.2%", trend: "up", description: "Profile visits" },
-          { name: "Proposal Win Rate", value: "23.4%", change: "+8.9%", trend: "up", description: "Proposals accepted" },
-          { name: "Hourly Rate", value: "$45", change: "+12.5%", trend: "up", description: "Current rate" },
-        ]},
-      ],
-      "Finance": [
-        { category: "Portfolio Performance", metrics: [
-          { name: "Portfolio Value", value: "$24,567", change: "+22.8%", trend: "up", description: "Total portfolio worth" },
-          { name: "Total P&L", value: "+$3,456", change: "+145%", trend: "up", description: "Profit/Loss this period" },
-          { name: "Best Performing", value: "ETH +45%", change: "+45.2%", trend: "up", description: "Top asset gain" },
-          { name: "Portfolio Diversity", value: "12 assets", change: "+20.0%", trend: "up", description: "Different cryptocurrencies" },
-        ]},
-        { category: "Trading Analytics", metrics: [
-          { name: "Total Trades", value: "234", change: "+56.7%", trend: "up", description: "Executed trades" },
-          { name: "Win Rate", value: "72%", change: "+8.3%", trend: "up", description: "Profitable trades" },
-          { name: "Avg Profit", value: "$156", change: "+23.4%", trend: "up", description: "Per winning trade" },
-          { name: "Trading Volume", value: "$156K", change: "+45.1%", trend: "up", description: "Total volume traded" },
-        ]},
-        { category: "Risk Management", metrics: [
-          { name: "Risk Score", value: "Medium", change: "Stable", trend: "neutral", description: "Portfolio risk level" },
-          { name: "Stop Loss Hit", value: "15%", change: "-5.2%", trend: "down", description: "Stop losses triggered" },
-          { name: "Max Drawdown", value: "8.4%", change: "-12.1%", trend: "down", description: "Largest portfolio drop" },
-          { name: "Sharpe Ratio", value: "1.89", change: "+15.6%", trend: "up", description: "Risk-adjusted return" },
-        ]},
-      ],
-      "Engagement": [
-        { category: "Communication Stats", metrics: [
-          { name: "Messages Sent", value: "2,341", change: "+15.6%", trend: "up", description: "Total messages sent" },
-          { name: "Messages Received", value: "3,456", change: "+23.4%", trend: "up", description: "Incoming messages" },
-          { name: "Active Chats", value: "89", change: "+12.8%", trend: "up", description: "Ongoing conversations" },
-          { name: "Group Chats", value: "23", change: "+35.7%", trend: "up", description: "Group conversations" },
-        ]},
-        { category: "Response Metrics", metrics: [
-          { name: "Response Rate", value: "94%", change: "+3.2%", trend: "up", description: "Messages responded to" },
-          { name: "Avg Response Time", value: "5min", change: "-8.1%", trend: "down", description: "Time to respond" },
-          { name: "Peak Hours", value: "2-6 PM", change: "Stable", trend: "neutral", description: "Most active time" },
-          { name: "Read Rate", value: "98.7%", change: "+1.4%", trend: "up", description: "Messages read" },
-        ]},
-        { category: "Engagement Quality", metrics: [
-          { name: "Video Calls", value: "67", change: "+89.3%", trend: "up", description: "Video calls made" },
-          { name: "Voice Messages", value: "234", change: "+45.2%", trend: "up", description: "Voice notes sent" },
-          { name: "Media Shared", value: "456", change: "+67.8%", trend: "up", description: "Photos/videos shared" },
-          { name: "Reaction Rate", value: "78%", change: "+12.5%", trend: "up", description: "Messages with reactions" },
-        ]},
-      ],
-      "Live Streaming": [
-        { category: "Stream Performance", metrics: [
-          { name: "Live Sessions", value: "23", change: "+83.2%", trend: "up", description: "Streams this period" },
-          { name: "Total Stream Time", value: "34.2h", change: "+28.9%", trend: "up", description: "Hours streamed" },
-          { name: "Peak Viewers", value: "1,247", change: "+45.7%", trend: "up", description: "Highest concurrent viewers" },
-          { name: "Avg Stream Duration", value: "1.5h", change: "+12.3%", trend: "up", description: "Average stream length" },
-        ]},
-        { category: "Monetization", metrics: [
-          { name: "Super Chats", value: "$445", change: "+92.1%", trend: "up", description: "Paid chat messages" },
-          { name: "Donations", value: "$234", change: "+156%", trend: "up", description: "Direct donations" },
-          { name: "Subscriber Revenue", value: "$567", change: "+78.4%", trend: "up", description: "From subscriptions" },
-          { name: "Sponsorship Revenue", value: "$890", change: "+234%", trend: "up", description: "Brand partnerships" },
-        ]},
-        { category: "Audience Engagement", metrics: [
-          { name: "Chat Messages", value: "12.3K", change: "+67.8%", trend: "up", description: "Chat interactions" },
-          { name: "New Followers", value: "567", change: "+89.2%", trend: "up", description: "From live streams" },
-          { name: "Stream Saves", value: "89", change: "+45.6%", trend: "up", description: "Streams saved by viewers" },
-          { name: "Clip Creation", value: "34", change: "+123%", trend: "up", description: "Viewer-created clips" },
-        ]},
-      ],
-      "Events & Calendar": [
-        { category: "Event Performance", metrics: [
-          { name: "Events Created", value: "12", change: "+50.0%", trend: "up", description: "Events organized" },
-          { name: "Total Attendees", value: "2,134", change: "+42.3%", trend: "up", description: "Across all events" },
-          { name: "Avg Attendance Rate", value: "78.5%", change: "+12.4%", trend: "up", description: "RSVP vs actual" },
-          { name: "Event Completion", value: "91.7%", change: "+8.3%", trend: "up", description: "Successfully completed" },
-        ]},
-        { category: "Revenue & Monetization", metrics: [
-          { name: "Event Revenue", value: "$3,240", change: "+67.8%", trend: "up", description: "Ticket sales" },
-          { name: "Avg Ticket Price", value: "$27", change: "+12.5%", trend: "up", description: "Per ticket" },
-          { name: "Premium Tickets", value: "234", change: "+89.7%", trend: "up", description: "VIP/Premium sales" },
-          { name: "Merchandise Sales", value: "$567", change: "+123%", trend: "up", description: "Event merchandise" },
-        ]},
-        { category: "Engagement & Feedback", metrics: [
-          { name: "Event Rating", value: "4.7/5", change: "+8.7%", trend: "up", description: "Average rating" },
-          { name: "Repeat Attendees", value: "45%", change: "+23.4%", trend: "up", description: "Return participants" },
-          { name: "Social Shares", value: "567", change: "+78.9%", trend: "up", description: "Event shares" },
-          { name: "Follow-up Engagement", value: "67%", change: "+34.2%", trend: "up", description: "Post-event interaction" },
-        ]},
-      ],
-    };
+    // State for detailed metrics
+    const [detailedMetrics, setDetailedMetrics] = useState<DetailedCategory[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const currentDetailedMetrics = detailedMetrics[featureName as keyof typeof detailedMetrics] || [];
+    // Fetch detailed metrics when component mounts
+    useEffect(() => {
+      const loadDetailedMetrics = async () => {
+        setLoading(true);
+        try {
+          const metrics = await fetchFeatureDetails(featureName);
+          setDetailedMetrics(metrics);
+        } catch (error) {
+          console.error(`Error fetching detailed metrics for ${featureName}:`, error);
+          // Set empty array if fetch fails
+          setDetailedMetrics([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadDetailedMetrics();
+    }, [featureName]);
 
     return (
       <div className="space-y-6">
@@ -778,39 +718,45 @@ const EnhancedCreatorDashboard: React.FC = () => {
         </div>
 
         {/* Detailed Analytics Categories */}
-        <div className="space-y-6">
-          {currentDetailedMetrics.map((category, categoryIndex) => (
-            <Card key={categoryIndex}>
-              <CardHeader>
-                <CardTitle className="text-lg">{category.category}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {category.metrics.map((metric, metricIndex) => (
-                    <div key={metricIndex} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-gray-900 dark:text-white">{metric.name}</h4>
-                        <span className={cn(
-                          "text-sm font-medium",
-                          metric.trend === "up" ? "text-green-600" :
-                          metric.trend === "down" ? "text-red-600" : "text-gray-600"
-                        )}>
-                          {metric.change}
-                        </span>
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {detailedMetrics.map((category, categoryIndex) => (
+              <Card key={categoryIndex}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{category.category}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {category.metrics.map((metric, metricIndex) => (
+                      <div key={metricIndex} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900 dark:text-white">{metric.name}</h4>
+                          <span className={cn(
+                            "text-sm font-medium",
+                            metric.trend === "up" ? "text-green-600" :
+                            metric.trend === "down" ? "text-red-600" : "text-gray-600"
+                          )}>
+                            {metric.change}
+                          </span>
+                        </div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                          {metric.value}
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {metric.description}
+                        </p>
                       </div>
-                      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                        {metric.value}
-                      </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        {metric.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4">
@@ -1679,7 +1625,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-green-900">8.4M</p>
+                    <p className="text-2xl font-bold text-green-900">0</p>
                     <p className="text-sm text-green-700">Total Views</p>
                   </div>
                 </CardContent>
@@ -1695,7 +1641,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-purple-900">892K</p>
+                    <p className="text-2xl font-bold text-purple-900">0</p>
                     <p className="text-sm text-purple-700">Engagements</p>
                   </div>
                 </CardContent>
@@ -1711,7 +1657,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-orange-900">$23.4K</p>
+                    <p className="text-2xl font-bold text-orange-900">$0</p>
                     <p className="text-sm text-orange-700">Content Revenue</p>
                   </div>
                 </CardContent>
@@ -1730,11 +1676,12 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { platform: "Video", count: 456, percentage: 32, color: "bg-red-500" },
-                      { platform: "Social Posts", count: 387, percentage: 27, color: "bg-blue-500" },
-                      { platform: "Marketplace Products", count: 234, percentage: 16, color: "bg-green-500" },
-                      { platform: "Live Streams", count: 189, percentage: 13, color: "bg-pink-500" },
-                      { platform: "Blog Articles", count: 157, percentage: 12, color: "bg-purple-500" },
+                      // Data will be populated from real analytics
+                      { platform: "Video", count: 0, percentage: 0, color: "bg-red-500" },
+                      { platform: "Social Posts", count: 0, percentage: 0, color: "bg-blue-500" },
+                      { platform: "Marketplace Products", count: 0, percentage: 0, color: "bg-green-500" },
+                      { platform: "Live Streams", count: 0, percentage: 0, color: "bg-pink-500" },
+                      { platform: "Blog Articles", count: 0, percentage: 0, color: "bg-purple-500" },
                     ].map((item, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between text-sm">
@@ -1761,11 +1708,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { metric: "Views per Content", value: "5.9K", change: "+28.3%", trend: "up" },
-                      { metric: "Engagement Rate", value: "12.4%", change: "+15.7%", trend: "up" },
-                      { metric: "Share Rate", value: "3.2%", change: "+45.1%", trend: "up" },
-                      { metric: "Conversion Rate", value: "2.8%", change: "+22.9%", trend: "up" },
-                      { metric: "Revenue per Content", value: "$16.45", change: "+67.2%", trend: "up" },
+                      { metric: "Views per Content", value: "0", change: "0%", trend: "neutral" },
+                      { metric: "Engagement Rate", value: "0%", change: "0%", trend: "neutral" },
+                      { metric: "Share Rate", value: "0%", change: "0%", trend: "neutral" },
+                      { metric: "Conversion Rate", value: "0%", change: "0%", trend: "neutral" },
+                      { metric: "Revenue per Content", value: "$0", change: "0%", trend: "neutral" },
                     ].map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div>
@@ -2113,7 +2060,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-blue-900">$8,234</p>
+                    <p className="text-2xl font-bold text-blue-900">$0</p>
                     <p className="text-sm text-blue-700">This Month</p>
                   </div>
                 </CardContent>
@@ -2129,7 +2076,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-purple-900">$267</p>
+                    <p className="text-2xl font-bold text-purple-900">$0</p>
                     <p className="text-sm text-purple-700">Avg Daily</p>
                   </div>
                 </CardContent>
@@ -2145,7 +2092,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-orange-900">$12K</p>
+                    <p className="text-2xl font-bold text-orange-900">$0</p>
                     <p className="text-sm text-orange-700">Monthly Goal</p>
                   </div>
                 </CardContent>
@@ -2164,11 +2111,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { platform: "Marketplace", amount: 12450, percentage: 45, color: "bg-green-500", growth: "+52.1%" },
-                      { platform: "Freelance", amount: 8920, percentage: 32, color: "bg-orange-500", growth: "+31.2%" },
-                      { platform: "Video Content", amount: 3240, percentage: 12, color: "bg-red-500", growth: "+45.8%" },
-                      { platform: "Live Streaming", amount: 1890, percentage: 7, color: "bg-pink-500", growth: "+92.1%" },
-                      { platform: "Finance", amount: 1100, percentage: 4, color: "bg-yellow-500", growth: "+22.8%" },
+                      { platform: "Marketplace", amount: 0, percentage: 0, color: "bg-green-500", growth: "0%" },
+                      { platform: "Freelance", amount: 0, percentage: 0, color: "bg-orange-500", growth: "0%" },
+                      { platform: "Video Content", amount: 0, percentage: 0, color: "bg-red-500", growth: "0%" },
+                      { platform: "Live Streaming", amount: 0, percentage: 0, color: "bg-pink-500", growth: "0%" },
+                      { platform: "Finance", amount: 0, percentage: 0, color: "bg-yellow-500", growth: "0%" },
                     ].map((item, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between items-center text-sm">
@@ -2198,10 +2145,10 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { period: "Last 7 days", amount: 1890, change: "+23.4%", trend: "up" },
-                      { period: "Last 30 days", amount: 8234, change: "+38.7%", trend: "up" },
-                      { period: "Last 90 days", amount: 24567, change: "+45.2%", trend: "up" },
-                      { period: "Year to date", amount: 67890, change: "+67.8%", trend: "up" },
+                      { period: "Last 7 days", amount: 0, change: "0%", trend: "neutral" },
+                      { period: "Last 30 days", amount: 0, change: "0%", trend: "neutral" },
+                      { period: "Last 90 days", amount: 0, change: "0%", trend: "neutral" },
+                      { period: "Year to date", amount: 0, change: "0%", trend: "neutral" },
                     ].map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div>
@@ -2233,7 +2180,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <div className="space-y-4">
                     <h4 className="font-semibold">Next Month Prediction</h4>
                     <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-3xl font-bold text-blue-600">$9,450</div>
+                      <div className="text-3xl font-bold text-blue-600">$0</div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">+14.8% vs this month</div>
                       <div className="mt-2">
                         <Progress value={87} className="h-2" />
@@ -2245,7 +2192,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <div className="space-y-4">
                     <h4 className="font-semibold">Next Quarter Goal</h4>
                     <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <div className="text-3xl font-bold text-green-600">$35K</div>
+                      <div className="text-3xl font-bold text-green-600">$0</div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">Target revenue</div>
                       <div className="mt-2">
                         <Progress value={68} className="h-2" />
@@ -2257,7 +2204,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <div className="space-y-4">
                     <h4 className="font-semibold">Annual Projection</h4>
                     <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <div className="text-3xl font-bold text-purple-600">$98K</div>
+                      <div className="text-3xl font-bold text-purple-600">$0</div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">Year-end estimate</div>
                       <div className="mt-2">
                         <Progress value={73} className="h-2" />
@@ -2389,7 +2336,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-blue-900">45.2K</p>
+                    <p className="text-2xl font-bold text-blue-900">0</p>
                     <p className="text-sm text-blue-700">Total Followers</p>
                   </div>
                 </CardContent>
@@ -2405,7 +2352,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-green-900">2.3K</p>
+                    <p className="text-2xl font-bold text-green-900">0</p>
                     <p className="text-sm text-green-700">New This Month</p>
                   </div>
                 </CardContent>
@@ -2455,13 +2402,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {(userDemographics?.age || [
-                      { range: "18-24", percentage: 35, count: "15.8K" },
-                      { range: "25-34", percentage: 40, count: "18.1K" },
-                      { range: "35-44", percentage: 20, count: "9.0K" },
-                      { range: "45-54", percentage: 4, count: "1.8K" },
-                      { range: "55+", percentage: 1, count: "450" },
-                    ]).map((age, index) => (
+                    {(userDemographics?.age || []).map((age, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="font-medium">{age.range} years</span>
@@ -2487,10 +2428,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                      {(userDemographics?.gender || [
-                        { gender: "Male", percentage: 58, count: "26.2K" },
-                        { gender: "Female", percentage: 42, count: "19.0K" }
-                      ]).map((genderItem, index) => (
+                      {(userDemographics?.gender || []).map((genderItem, index) => (
                         <div key={index} className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                           <div className="text-2xl font-bold text-blue-600">{genderItem.percentage}%</div>
                           <div className="text-sm text-gray-600 dark:text-gray-400">{genderItem.gender}</div>
@@ -2501,13 +2439,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
 
                     <div className="space-y-3">
                       <h4 className="font-medium">Top Interests</h4>
-                      {(userDemographics?.interests || [
-                        { interest: "Technology", percentage: 78 },
-                        { interest: "Finance", percentage: 65 },
-                        { interest: "Business", percentage: 52 },
-                        { interest: "Education", percentage: 47 },
-                        { interest: "Entertainment", percentage: 38 },
-                      ]).map((item, index) => (
+                      {(userDemographics?.interests || []).map((item, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <span className="text-sm">{item.interest}</span>
                           <div className="flex items-center gap-2 flex-1 mx-3">
@@ -2535,14 +2467,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <div>
                     <h4 className="font-medium mb-3">Top Countries</h4>
                     <div className="space-y-3">
-                      {(userDemographics?.location || [
-                        { location: "United States", percentage: 42, count: "18.9K" },
-                        { location: "United Kingdom", percentage: 18, count: "8.1K" },
-                        { location: "Canada", percentage: 12, count: "5.4K" },
-                        { location: "Australia", percentage: 8, count: "3.6K" },
-                        { location: "Germany", percentage: 6, count: "2.7K" },
-                        { location: "Others", percentage: 14, count: "6.3K" },
-                      ]).map((location, index) => (
+                      {(userDemographics?.location || []).map((location, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <span className="text-sm font-medium">{location.location}</span>
                           <div className="flex items-center gap-2">
@@ -2558,12 +2483,12 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     <h4 className="font-medium mb-3">Top Cities</h4>
                     <div className="space-y-3">
                       {[
-                        { city: "New York", percentage: 15, count: "6.8K" },
-                        { city: "London", percentage: 12, count: "5.4K" },
-                        { city: "Los Angeles", percentage: 9, count: "4.1K" },
-                        { city: "Toronto", percentage: 7, count: "3.2K" },
-                        { city: "San Francisco", percentage: 6, count: "2.7K" },
-                        { city: "Others", percentage: 51, count: "23.0K" },
+                        { city: "New York", percentage: 0, count: "0" },
+                        { city: "London", percentage: 0, count: "0" },
+                        { city: "Los Angeles", percentage: 0, count: "0" },
+                        { city: "Toronto", percentage: 0, count: "0" },
+                        { city: "San Francisco", percentage: 0, count: "0" },
+                        { city: "Others", percentage: 0, count: "0" },
                       ].map((city, index) => (
                         <div key={index} className="flex items-center justify-between">
                           <span className="text-sm font-medium">{city.city}</span>
@@ -2594,10 +2519,10 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       <h4 className="font-medium mb-3">Peak Hours (GMT)</h4>
                       <div className="grid grid-cols-4 gap-2 text-center">
                         {[
-                          { time: "6-9 AM", activity: 25 },
-                          { time: "12-3 PM", activity: 45 },
-                          { time: "6-9 PM", activity: 85 },
-                          { time: "9-12 PM", activity: 92 },
+                          { time: "6-9 AM", activity: 0 },
+                          { time: "12-3 PM", activity: 0 },
+                          { time: "6-9 PM", activity: 0 },
+                          { time: "9-12 PM", activity: 0 },
                         ].map((hour, index) => (
                           <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <div className="text-lg font-bold">{hour.activity}%</div>
@@ -2611,11 +2536,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       <h4 className="font-medium mb-3">Best Days</h4>
                       <div className="space-y-2">
                         {[
-                          { day: "Tuesday", activity: 92 },
-                          { day: "Wednesday", activity: 88 },
-                          { day: "Thursday", activity: 85 },
-                          { day: "Monday", activity: 78 },
-                          { day: "Friday", activity: 72 },
+                          { day: "Tuesday", activity: 0 },
+                          { day: "Wednesday", activity: 0 },
+                          { day: "Thursday", activity: 0 },
+                          { day: "Monday", activity: 0 },
+                          { day: "Friday", activity: 0 },
                         ].map((day, index) => (
                           <div key={index} className="flex items-center justify-between">
                             <span className="text-sm font-medium">{day.day}</span>
@@ -2641,12 +2566,12 @@ const EnhancedCreatorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { metric: "Average Session", value: "8:34", description: "Time spent per visit" },
-                      { metric: "Pages per Session", value: "4.2", description: "Average page views" },
-                      { metric: "Return Visitor Rate", value: "68%", description: "Repeat audience" },
-                      { metric: "Share Rate", value: "12.4%", description: "Content sharing" },
-                      { metric: "Comment Rate", value: "8.9%", description: "Active commenting" },
-                      { metric: "Save Rate", value: "15.2%", description: "Content saves" },
+                      { metric: "Average Session", value: "0:00", description: "Time spent per visit" },
+                      { metric: "Pages per Session", value: "0", description: "Average page views" },
+                      { metric: "Return Visitor Rate", value: "0%", description: "Repeat audience" },
+                      { metric: "Share Rate", value: "0%", description: "Content sharing" },
+                      { metric: "Comment Rate", value: "0%", description: "Active commenting" },
+                      { metric: "Save Rate", value: "0%", description: "Content saves" },
                     ].map((item, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div>
@@ -2675,24 +2600,24 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   {[
                     {
                       name: "Tech Enthusiasts",
-                      size: "12.3K",
-                      percentage: 27,
+                      size: "0",
+                      percentage: 0,
                       description: "Highly engaged with tech content",
-                      growth: "+34.5%"
+                      growth: "0%"
                     },
                     {
                       name: "Business Professionals",
-                      size: "8.9K",
-                      percentage: 20,
+                      size: "0",
+                      percentage: 0,
                       description: "Focus on business and finance",
-                      growth: "+28.7%"
+                      growth: "0%"
                     },
                     {
                       name: "Content Creators",
-                      size: "6.1K",
-                      percentage: 13,
+                      size: "0",
+                      percentage: 0,
                       description: "Fellow creators and influencers",
-                      growth: "+45.2%"
+                      growth: "0%"
                     }
                   ].map((segment, index) => (
                     <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -2827,38 +2752,38 @@ const EnhancedCreatorDashboard: React.FC = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">65.3K</div>
+                    <div className="text-2xl font-bold text-blue-600">0</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Followers by Month End</div>
                     <div className="flex items-center justify-center gap-1 mt-2 text-sm text-green-600">
                       <TrendingUp className="w-3 h-3" />
-                      <span>+44% growth</span>
+                      <span>0% growth</span>
                     </div>
                   </div>
 
                   <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">$15.2K</div>
+                    <div className="text-2xl font-bold text-green-600">$0</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Next Month Revenue</div>
                     <div className="flex items-center justify-center gap-1 mt-2 text-sm text-green-600">
                       <TrendingUp className="w-3 h-3" />
-                      <span>+24% increase</span>
+                      <span>0% increase</span>
                     </div>
                   </div>
 
                   <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">2.8M</div>
+                    <div className="text-2xl font-bold text-purple-600">0</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Content Views Projection</div>
                     <div className="flex items-center justify-center gap-1 mt-2 text-sm text-green-600">
                       <TrendingUp className="w-3 h-3" />
-                      <span>+67% growth</span>
+                      <span>0% growth</span>
                     </div>
                   </div>
 
                   <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">18.9%</div>
+                    <div className="text-2xl font-bold text-orange-600">0%</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Engagement Rate Target</div>
                     <div className="flex items-center justify-center gap-1 mt-2 text-sm text-green-600">
                       <TrendingUp className="w-3 h-3" />
-                      <span>+52% improvement</span>
+                      <span>0% improvement</span>
                     </div>
                   </div>
                 </div>
@@ -2886,22 +2811,22 @@ const EnhancedCreatorDashboard: React.FC = () => {
                         type: "Video Tutorial",
                         topic: "Advanced Crypto Trading Strategies",
                         reason: "High demand topic in your audience",
-                        potential: "2.3K views, $450 revenue",
-                        confidence: 92
+                        potential: "0 views, $0 revenue",
+                        confidence: 0
                       },
                       {
                         type: "Live Stream",
                         topic: "Q&A: Building Online Business",
                         reason: "Your live content performs 3x better",
-                        potential: "1.8K viewers, $280 revenue",
-                        confidence: 87
+                        potential: "0 viewers, $0 revenue",
+                        confidence: 0
                       },
                       {
                         type: "Product Launch",
                         topic: "Premium Course: Freelance Mastery",
                         reason: "Your audience shows high interest in education",
-                        potential: "250 sales, $12.5K revenue",
-                        confidence: 78
+                        potential: "0 sales, $0 revenue",
+                        confidence: 0
                       }
                     ].map((rec, index) => (
                       <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -2936,25 +2861,25 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       {
                         strategy: "Cross-Platform Promotion",
                         description: "Promote your video content on social media",
-                        impact: "25% more views",
+                        impact: "0% more views",
                         effort: "Low"
                       },
                       {
                         strategy: "Collaboration Opportunities",
                         description: "Partner with creators in your niche",
-                        impact: "40% audience growth",
+                        impact: "0% audience growth",
                         effort: "Medium"
                       },
                       {
                         strategy: "Trending Topic Integration",
                         description: "Create content around #CryptoEducation",
-                        impact: "60% more reach",
+                        impact: "0% more reach",
                         effort: "Low"
                       },
                       {
                         strategy: "Community Building",
                         description: "Start a Discord or Telegram group",
-                        impact: "80% higher engagement",
+                        impact: "0% higher engagement",
                         effort: "High"
                       }
                     ].map((strategy, index) => (
@@ -2993,42 +2918,42 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   {[
                     {
                       trend: "AI & Automation",
-                      growth: "+145%",
+                      growth: "0%",
                       opportunity: "Create AI tool reviews and tutorials",
                       timeline: "Next 30 days",
                       difficulty: "Medium"
                     },
                     {
                       trend: "Sustainable Tech",
-                      growth: "+89%",
+                      growth: "0%",
                       opportunity: "Green technology investment content",
                       timeline: "Next 60 days",
                       difficulty: "Low"
                     },
                     {
                       trend: "Remote Work Tools",
-                      growth: "+67%",
+                      growth: "0%",
                       opportunity: "Productivity and freelance tools reviews",
                       timeline: "Ongoing",
                       difficulty: "Low"
                     },
                     {
                       trend: "Crypto Regulations",
-                      growth: "+234%",
+                      growth: "0%",
                       opportunity: "Educational content on compliance",
                       timeline: "Immediate",
                       difficulty: "High"
                     },
                     {
                       trend: "Creator Economy",
-                      growth: "+156%",
+                      growth: "0%",
                       opportunity: "Monetization strategy guides",
                       timeline: "Next 14 days",
                       difficulty: "Medium"
                     },
                     {
                       trend: "Web3 Development",
-                      growth: "+198%",
+                      growth: "0%",
                       opportunity: "DeFi and blockchain tutorials",
                       timeline: "Next 45 days",
                       difficulty: "High"
@@ -3073,7 +2998,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                     <div className="flex-1">
                       <p className="font-medium">Daily Growth Insight</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        "Your Tuesday content performs 34% better than other days. Consider scheduling your best content for Tuesdays."
+                        "No insights available yet. Create more content to get personalized recommendations."
                       </p>
                     </div>
                     <Button size="sm" variant="outline">Apply</Button>
