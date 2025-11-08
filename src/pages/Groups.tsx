@@ -102,9 +102,9 @@ const Groups: React.FC = () => {
         .eq("user_id", user.id)
         .eq("status", "active");
 
-      const joinedIds = membershipData?.map((m: any) => m.group_id) || [];
+      const joinedIds = membershipData?.map((m: { group_id: string }) => m.group_id) || [];
 
-      const enriched = (groups || []).map((g: any, i: number) => ({
+      const enriched = (groups || []).map((g: Group, i: number) => ({
         ...g,
         privacy: g.privacy || 'public',
         isJoined: joinedIds.includes(g.id),
@@ -123,7 +123,7 @@ const Groups: React.FC = () => {
   };
 
   const filteredJoined = useMemo(
-    () => joinedGroups.filter((g) => g.name.toLowerCase().includes(search.toLowerCase())),
+    () => joinedGroups.filter((g: Group) => g.name.toLowerCase().includes(search.toLowerCase())),
     [joinedGroups, search]
   );
 
@@ -183,7 +183,7 @@ const Groups: React.FC = () => {
     await supabase.from("group_members").insert({ group_id: groupId, user_id: user.id, role: "member", status: "active" });
     setAllGroups((prev) => prev.map((g: Group) => (g.id === groupId ? { ...g, isJoined: true, member_count: g.member_count + 1 } : g)));
     setJoinedGroups((prev) => {
-      const g = allGroups.find((x) => x.id === groupId);
+      const g = allGroups.find((x: Group) => x.id === groupId);
       return g ? [{ ...g, isJoined: true }, ...prev] : prev;
     });
   };
