@@ -124,6 +124,7 @@ import { fetchPlatformAnalytics, fetchTopPerformingContent, fetchFeatureDetails 
 import { activityService } from '@/services/taskService';
 import { useRealtimeAnalytics } from '@/hooks/useRealtimeAnalytics';
 import { useAuth } from '@/contexts/AuthContext';
+import ContentCreationModal from '@/components/content/ContentCreationModal';
 
 interface MetricCard {
   title: string;
@@ -208,6 +209,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [contentCreationType, setContentCreationType] = useState<'video' | 'post' | 'product' | 'stream'>('video');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showSearch, setShowSearch] = useState(false);
+  const [filterType, setFilterType] = useState('all');
 
   // Use real-time analytics hook
   const { platformFeatures: realtimePlatformFeatures, topPerformingContent: realtimeTopPerformingContent, userDemographics: realtimeUserDemographics, isLoading, error, refreshData } = useRealtimeAnalytics(user?.id || null);
@@ -252,11 +254,11 @@ const EnhancedCreatorDashboard: React.FC = () => {
         let color = "bg-gray-500";
         
         switch (feature.name) {
-          case "Feed Posts":
+          case "Feed & Social":
             icon = Plus;
             color = "bg-blue-500";
             break;
-          case "Video Content":
+          case "Video":
             icon = Video;
             color = "bg-red-500";
             break;
@@ -268,7 +270,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
             icon = Briefcase;
             color = "bg-orange-500";
             break;
-          case "Crypto Trading":
+          case "Finance":
             icon = Coins;
             color = "bg-yellow-500";
             break;
@@ -280,7 +282,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
             icon = Calendar;
             color = "bg-indigo-500";
             break;
-          case "Chat & Messaging":
+          case "Engagement":
             icon = MessageSquare;
             color = "bg-purple-500";
             break;
@@ -417,11 +419,127 @@ const EnhancedCreatorDashboard: React.FC = () => {
     }
   };
 
+  const getFeatureRoute = (featureName: string) => {
+    switch (featureName) {
+      case "Feed & Social":
+        return "/app/feed";
+      case "Video":
+        return "/app/videos";
+      case "Marketplace":
+        return "/marketplace";
+      case "Freelance":
+        return "/freelance";
+      case "Finance":
+        return "/crypto";
+      case "Engagement":
+        return "/messages";
+      case "Live Streaming":
+        return "/live";
+      case "Events & Calendar":
+        return "/events";
+      default:
+        return "/app/feed";
+    }
+  };
+
   const filteredFeatures = platformFeatures.filter(feature =>
-    feature.name !== "Live Streaming" &&
     feature.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (selectedFeatures.length === 0 || selectedFeatures.includes(feature.name))
   );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="relative">
+        <SearchIcon className="absolute left-4 top-3 h-5 w-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search features"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="h-10 w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filteredFeatures.map(feature => (
+          <div
+            key={feature.name}
+            className={`flex cursor-pointer items-center rounded-lg border px-4 py-3 shadow-sm transition-colors hover:bg-gray-100 ${
+              selectedFeatures.includes(feature.name) ? "border-blue-500" : "border-gray-300"
+            }`}
+            onClick={() => {
+              setSelectedFeatures(prev =>
+                prev.includes(feature.name)
+                  ? prev.filter(name => name !== feature.name)
+                  : [...prev, feature.name]
+              );
+            }}
+          >
+            <div className="relative h-10 w-10 flex-shrink-0">
+              <feature.icon className="h-full w-full text-gray-600" />
+              {feature.new && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-500" />
+              )}
+            </div>
+            <div className="ml-4">
+              <h3 className="text-sm font-medium text-gray-900">{feature.name}</h3>
+              <p className="text-sm text-gray-500">{feature.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      const newViewMode = window.innerWidth < 768 ? 'list' : 'grid';
+      setViewMode(newViewMode);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Listen for window resize events
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const handleContentCreation = (type: 'video' | 'post' | 'product' | 'stream') => {
+    setContentCreationType(type);
+    setShowContentCreationModal(true);
+  };
+
+  useEffect(() => {
+    const handleContentPageData = async () => {
+      if (contentLoading) return;
+
+      setContentLoading(true);
+
+      try {
+        const response = await fetchContentPageSupabase({
+          types: selectedTypes,
+          search: debouncedSearchTerm,
+          page,
+          pageSize,
+          sortBy,
+        });
+
+        setContentPageData(response.data);
+        setContentTotal(response.total);
+      } catch (error) {
+        console.error('Failed to fetch content page data:', error);
+        alert('Failed to load content. Please try again later.');
+      } finally {
+        setContentLoading(false);
+      }
+    };
+
+    handleContentPageData();
+  }, [selectedTypes, debouncedSearchTerm, page, pageSize, sortBy]);
 
   useEffect(() => {
     try {
@@ -1664,7 +1782,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <Filter className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Filter Content</span>
                 </Button>
-                <Button onClick={() => setShowCreateModal(true)} aria-label="Create Content">
+                <Button onClick={() => setShowContentCreationModal(true)} aria-label="Create Content">
                   <Plus className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Create Content</span>
                 </Button>

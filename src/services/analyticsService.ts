@@ -1,5 +1,71 @@
 import { supabase } from '@/integrations/supabase/client';
 import cache from '@/utils/cache';
+import {
+  FileText,
+  Video,
+  ShoppingBag,
+  Briefcase,
+  TrendingUp,
+  MessageSquare,
+  Radio,
+  Calendar,
+  Eye,
+  Heart,
+  MessageCircle,
+  Users,
+  DollarSign,
+  BarChart3,
+  Target,
+  Zap,
+  Activity,
+  TrendingDown,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Info,
+  Plus,
+  Settings,
+  Download,
+  RefreshCw,
+  Filter,
+  ChevronRight,
+  ChevronDown,
+  ArrowUpRight,
+  ArrowDownRight,
+  Layers,
+  Grid3X3,
+  List,
+  Lightbulb,
+  CreditCard,
+  Wallet,
+  HandCoins,
+  Image,
+  Film,
+  Mic,
+  Camera,
+  ThumbsUp,
+  UserPlus,
+  Crown,
+  Clock,
+  Timer,
+  Menu,
+  X,
+  ChevronLeft,
+  Home,
+  Globe,
+  Search,
+  Coins,
+  Gift,
+  Building,
+  Megaphone,
+  Award,
+  Star,
+  ExternalLink,
+  MoreHorizontal,
+  Bell,
+  Share2,
+  Play
+} from "lucide-react";
 
 // Utility functions for formatting
 const formatNumber = (num: number): string => {
@@ -84,7 +150,7 @@ export const transformPostData = (posts: any[]) => {
         value: formatNumber(totalPosts), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: FileText, 
         color: "text-blue-600" 
       },
       { 
@@ -92,7 +158,7 @@ export const transformPostData = (posts: any[]) => {
         value: totalPosts > 0 ? `${((totalLikes + totalComments) / totalPosts).toFixed(1)}%` : "0%", 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: Heart, 
         color: "text-pink-600" 
       },
       { 
@@ -100,7 +166,7 @@ export const transformPostData = (posts: any[]) => {
         value: formatNumber(totalLikes), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: ThumbsUp, 
         color: "text-green-600" 
       },
       { 
@@ -108,7 +174,7 @@ export const transformPostData = (posts: any[]) => {
         value: formatNumber(totalComments), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: MessageCircle, 
         color: "text-purple-600" 
       }
     ]
@@ -132,7 +198,7 @@ export const transformVideoData = (videos: any[], videoAnalytics: any[]) => {
         value: formatNumber(totalVideos), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: Video, 
         color: "text-red-600" 
       },
       { 
@@ -140,7 +206,7 @@ export const transformVideoData = (videos: any[], videoAnalytics: any[]) => {
         value: formatNumber(totalViews), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: Eye, 
         color: "text-blue-600" 
       },
       { 
@@ -148,7 +214,7 @@ export const transformVideoData = (videos: any[], videoAnalytics: any[]) => {
         value: formatNumber(totalLikes), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: ThumbsUp, 
         color: "text-green-600" 
       },
       { 
@@ -156,7 +222,7 @@ export const transformVideoData = (videos: any[], videoAnalytics: any[]) => {
         value: formatNumber(totalComments), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: MessageCircle, 
         color: "text-orange-600" 
       }
     ]
@@ -181,7 +247,7 @@ export const transformProductData = (products: any[], productAnalytics: any[]) =
         value: formatNumber(totalProducts), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: ShoppingBag, 
         color: "text-green-600" 
       },
       { 
@@ -189,7 +255,7 @@ export const transformProductData = (products: any[], productAnalytics: any[]) =
         value: formatCurrency(totalRevenue), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: DollarSign, 
         color: "text-emerald-600" 
       },
       { 
@@ -197,7 +263,7 @@ export const transformProductData = (products: any[], productAnalytics: any[]) =
         value: formatNumber(totalSales), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: TrendingUp, 
         color: "text-blue-600" 
       },
       { 
@@ -205,7 +271,7 @@ export const transformProductData = (products: any[], productAnalytics: any[]) =
         value: avgRating, 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: Star, 
         color: "text-yellow-600" 
       }
     ]
@@ -227,7 +293,7 @@ export const transformEngagementData = (chatMessages: any[], postComments: any[]
         value: formatNumber(totalMessages), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: MessageSquare, 
         color: "text-blue-600" 
       },
       { 
@@ -235,7 +301,7 @@ export const transformEngagementData = (chatMessages: any[], postComments: any[]
         value: formatNumber(totalComments), 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: MessageCircle, 
         color: "text-green-600" 
       },
       { 
@@ -243,7 +309,7 @@ export const transformEngagementData = (chatMessages: any[], postComments: any[]
         value: totalMessages > 0 ? `${Math.min(100, Math.round((totalComments / totalMessages) * 100))}%` : "0%", 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: TrendingUp, 
         color: "text-emerald-600" 
       },
       { 
@@ -251,7 +317,7 @@ export const transformEngagementData = (chatMessages: any[], postComments: any[]
         value: totalMessages > 0 ? formatNumber(Math.round(totalMessages / 10)) : "0", 
         change: growth, 
         trend: growth > 0 ? "up" : "neutral", 
-        icon: () => null, 
+        icon: Users, 
         color: "text-purple-600" 
       }
     ]
@@ -299,7 +365,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
     const result = [
       {
         name: "Feed & Social",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: FileText,
         color: "bg-blue-500",
         growth: postsData.growth,
         active: true,
@@ -307,7 +373,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       },
       {
         name: "Video",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: Video,
         color: "bg-red-500",
         growth: videosData.growth,
         active: true,
@@ -315,7 +381,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       },
       {
         name: "Marketplace",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: ShoppingBag,
         color: "bg-green-500",
         growth: productsData.growth,
         active: true,
@@ -323,7 +389,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       },
       {
         name: "Freelance",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: Briefcase,
         color: "bg-orange-500",
         growth: freelancesData.growth,
         active: true,
@@ -331,7 +397,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       },
       {
         name: "Finance",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: TrendingUp,
         color: "bg-yellow-500",
         growth: financesData.growth,
         active: true,
@@ -339,7 +405,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       },
       {
         name: "Engagement",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: MessageSquare,
         color: "bg-purple-500",
         growth: engagementsData.growth,
         active: true,
@@ -347,7 +413,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       },
       {
         name: "Live Streaming",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: Radio,
         color: "bg-pink-500",
         growth: liveStreamsData.growth,
         active: true,
@@ -355,7 +421,7 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
       },
       {
         name: "Events & Calendar",
-        icon: () => null, // Will be replaced by actual icon component
+        icon: Calendar,
         color: "bg-indigo-500",
         growth: eventsData.growth,
         active: true,
@@ -398,7 +464,7 @@ const fetchPostAnalytics = async () => {
           value: formatNumber(totalPosts), 
           change: growth, 
           trend: growth > 0 ? "up" as const : "neutral" as const, 
-          icon: () => null, 
+          icon: FileText, 
           color: "text-blue-600" 
         },
         { 
@@ -406,7 +472,7 @@ const fetchPostAnalytics = async () => {
           value: totalPosts > 0 ? `${((totalLikes + totalComments) / totalPosts).toFixed(1)}%` : "0%", 
           change: growth, 
           trend: growth > 0 ? "up" as const : "neutral" as const, 
-          icon: () => null, 
+          icon: Heart, 
           color: "text-pink-600" 
         },
         { 
@@ -414,7 +480,7 @@ const fetchPostAnalytics = async () => {
           value: formatNumber(totalLikes), 
           change: growth, 
           trend: growth > 0 ? "up" as const : "neutral" as const, 
-          icon: () => null, 
+          icon: ThumbsUp, 
           color: "text-green-600" 
         },
         { 
@@ -422,7 +488,7 @@ const fetchPostAnalytics = async () => {
           value: formatNumber(totalComments), 
           change: growth, 
           trend: growth > 0 ? "up" as const : "neutral" as const, 
-          icon: () => null, 
+          icon: MessageCircle, 
           color: "text-purple-600" 
         }
       ]
@@ -432,10 +498,10 @@ const fetchPostAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Total Posts", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Engagement Rate", value: "0%", change: 0, trend: "neutral", icon: () => null, color: "text-pink-600" },
-        { title: "Likes", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Comments", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-purple-600" }
+        { title: "Total Posts", value: "0", change: 0, trend: "neutral", icon: FileText, color: "text-blue-600" },
+        { title: "Engagement Rate", value: "0%", change: 0, trend: "neutral", icon: Heart, color: "text-pink-600" },
+        { title: "Likes", value: "0", change: 0, trend: "neutral", icon: ThumbsUp, color: "text-green-600" },
+        { title: "Comments", value: "0", change: 0, trend: "neutral", icon: MessageCircle, color: "text-purple-600" }
       ]
     };
   }
@@ -467,7 +533,7 @@ const fetchVideoAnalytics = async () => {
           value: formatNumber(totalVideos), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: Video, 
           color: "text-red-600" 
         },
         { 
@@ -475,7 +541,7 @@ const fetchVideoAnalytics = async () => {
           value: formatNumber(totalViews), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: Eye, 
           color: "text-blue-600" 
         },
         { 
@@ -483,7 +549,7 @@ const fetchVideoAnalytics = async () => {
           value: formatNumber(totalLikes), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: ThumbsUp, 
           color: "text-green-600" 
         },
         { 
@@ -491,7 +557,7 @@ const fetchVideoAnalytics = async () => {
           value: formatNumber(totalComments), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: MessageCircle, 
           color: "text-orange-600" 
         }
       ]
@@ -501,10 +567,10 @@ const fetchVideoAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Videos Created", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-red-600" },
-        { title: "Total Views", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Likes", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Comments", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-orange-600" }
+        { title: "Videos Created", value: "0", change: 0, trend: "neutral", icon: Video, color: "text-red-600" },
+        { title: "Total Views", value: "0", change: 0, trend: "neutral", icon: Eye, color: "text-blue-600" },
+        { title: "Likes", value: "0", change: 0, trend: "neutral", icon: ThumbsUp, color: "text-green-600" },
+        { title: "Comments", value: "0", change: 0, trend: "neutral", icon: MessageCircle, color: "text-orange-600" }
       ]
     };
   }
@@ -537,7 +603,7 @@ const fetchProductAnalytics = async () => {
           value: formatNumber(totalProducts), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: ShoppingBag, 
           color: "text-green-600" 
         },
         { 
@@ -545,7 +611,7 @@ const fetchProductAnalytics = async () => {
           value: formatCurrency(totalRevenue), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: DollarSign, 
           color: "text-emerald-600" 
         },
         { 
@@ -553,7 +619,7 @@ const fetchProductAnalytics = async () => {
           value: formatNumber(totalSales), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: TrendingUp, 
           color: "text-blue-600" 
         },
         { 
@@ -561,7 +627,7 @@ const fetchProductAnalytics = async () => {
           value: avgRating, 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: Star, 
           color: "text-yellow-600" 
         }
       ]
@@ -571,10 +637,10 @@ const fetchProductAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Products Listed", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Total Revenue", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-emerald-600" },
-        { title: "Units Sold", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Avg Rating", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" }
+        { title: "Products Listed", value: "0", change: 0, trend: "neutral", icon: ShoppingBag, color: "text-green-600" },
+        { title: "Total Revenue", value: "$0", change: 0, trend: "neutral", icon: DollarSign, color: "text-emerald-600" },
+        { title: "Units Sold", value: "0", change: 0, trend: "neutral", icon: TrendingUp, color: "text-blue-600" },
+        { title: "Avg Rating", value: "0", change: 0, trend: "neutral", icon: Star, color: "text-yellow-600" }
       ]
     };
   }
@@ -589,10 +655,10 @@ const fetchFreelanceAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Projects Completed", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Client Rating", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" },
-        { title: "Earnings", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Response Time", value: "0h", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" }
+        { title: "Projects Completed", value: "0", change: 0, trend: "neutral", icon: Briefcase, color: "text-green-600" },
+        { title: "Client Rating", value: "0", change: 0, trend: "neutral", icon: Star, color: "text-yellow-600" },
+        { title: "Earnings", value: "$0", change: 0, trend: "neutral", icon: DollarSign, color: "text-green-600" },
+        { title: "Response Time", value: "0h", change: 0, trend: "neutral", icon: Clock, color: "text-blue-600" }
       ]
     };
   } catch (error) {
@@ -600,10 +666,10 @@ const fetchFreelanceAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Projects Completed", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Client Rating", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" },
-        { title: "Earnings", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Response Time", value: "0h", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" }
+        { title: "Projects Completed", value: "0", change: 0, trend: "neutral", icon: Briefcase, color: "text-green-600" },
+        { title: "Client Rating", value: "0", change: 0, trend: "neutral", icon: Star, color: "text-yellow-600" },
+        { title: "Earnings", value: "$0", change: 0, trend: "neutral", icon: DollarSign, color: "text-green-600" },
+        { title: "Response Time", value: "0h", change: 0, trend: "neutral", icon: Clock, color: "text-blue-600" }
       ]
     };
   }
@@ -612,16 +678,16 @@ const fetchFreelanceAnalytics = async () => {
 // Fetch finance analytics data
 const fetchFinanceAnalytics = async () => {
   try {
-    // For now, we'll use placeholder data since we don't have specific finance tables
+    // For now, we'll use placeholder data
     // In a real implementation, you would query finance-specific tables
     
     return {
       growth: 0,
       metrics: [
-        { title: "Portfolio Value", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Trading Volume", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Win Rate", value: "0%", change: 0, trend: "neutral", icon: () => null, color: "text-emerald-600" },
-        { title: "P&L Today", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" }
+        { title: "Total Balance", value: "$0", change: 0, trend: "neutral", icon: Wallet, color: "text-yellow-600" },
+        { title: "Transactions", value: "0", change: 0, trend: "neutral", icon: TrendingUp, color: "text-green-600" },
+        { title: "Investments", value: "$0", change: 0, trend: "neutral", icon: BarChart3, color: "text-blue-600" },
+        { title: "ROI", value: "0%", change: 0, trend: "neutral", icon: Target, color: "text-purple-600" }
       ]
     };
   } catch (error) {
@@ -629,10 +695,10 @@ const fetchFinanceAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Portfolio Value", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Trading Volume", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Win Rate", value: "0%", change: 0, trend: "neutral", icon: () => null, color: "text-emerald-600" },
-        { title: "P&L Today", value: "$0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" }
+        { title: "Total Balance", value: "$0", change: 0, trend: "neutral", icon: Wallet, color: "text-yellow-600" },
+        { title: "Transactions", value: "0", change: 0, trend: "neutral", icon: TrendingUp, color: "text-green-600" },
+        { title: "Investments", value: "$0", change: 0, trend: "neutral", icon: BarChart3, color: "text-blue-600" },
+        { title: "ROI", value: "0%", change: 0, trend: "neutral", icon: Target, color: "text-purple-600" }
       ]
     };
   }
@@ -641,55 +707,16 @@ const fetchFinanceAnalytics = async () => {
 // Fetch live stream analytics data
 const fetchLiveStreamAnalytics = async () => {
   try {
-    // Get live stream data
-    const { data: liveStreams, error: liveStreamsError } = await supabase
-      .from('live_streams')
-      .select('id, title, viewer_count, started_at, ended_at');
-    
-    if (liveStreamsError) throw liveStreamsError;
-    
-    const totalStreams = liveStreams.length;
-    const totalViewers = liveStreams.reduce((sum: number, stream: any) => sum + (stream.viewer_count || 0), 0);
-    const activeStreams = liveStreams.filter((stream: any) => stream.ended_at === null).length;
-    
-    // Calculate growth (simplified)
-    const growth = totalStreams > 0 ? Math.min(100, Math.round((totalViewers / totalStreams) / 100)) : 0;
+    // For now, we'll use placeholder data
+    // In a real implementation, you would query live stream-specific tables
     
     return {
-      growth,
+      growth: 0,
       metrics: [
-        { 
-          title: "Live Sessions", 
-          value: formatNumber(totalStreams), 
-          change: growth, 
-          trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
-          color: "text-pink-600" 
-        },
-        { 
-          title: "Peak Viewers", 
-          value: formatNumber(totalViewers), 
-          change: growth, 
-          trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
-          color: "text-blue-600" 
-        },
-        { 
-          title: "Active Streams", 
-          value: formatNumber(activeStreams), 
-          change: growth, 
-          trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
-          color: "text-green-600" 
-        },
-        { 
-          title: "Avg Viewers/Stream", 
-          value: totalStreams > 0 ? formatNumber(Math.round(totalViewers / totalStreams)) : "0", 
-          change: growth, 
-          trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
-          color: "text-yellow-600" 
-        }
+        { title: "Live Sessions", value: "0", change: 0, trend: "neutral", icon: Radio, color: "text-pink-600" },
+        { title: "Peak Viewers", value: "0", change: 0, trend: "neutral", icon: Eye, color: "text-blue-600" },
+        { title: "Active Streams", value: "0", change: 0, trend: "neutral", icon: Activity, color: "text-green-600" },
+        { title: "Avg Viewers/Stream", value: "0", change: 0, trend: "neutral", icon: Users, color: "text-yellow-600" }
       ]
     };
   } catch (error) {
@@ -697,10 +724,10 @@ const fetchLiveStreamAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Live Sessions", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-pink-600" },
-        { title: "Peak Viewers", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Active Streams", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Avg Viewers/Stream", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" }
+        { title: "Live Sessions", value: "0", change: 0, trend: "neutral", icon: Radio, color: "text-pink-600" },
+        { title: "Peak Viewers", value: "0", change: 0, trend: "neutral", icon: Eye, color: "text-blue-600" },
+        { title: "Active Streams", value: "0", change: 0, trend: "neutral", icon: Activity, color: "text-green-600" },
+        { title: "Avg Viewers/Stream", value: "0", change: 0, trend: "neutral", icon: Users, color: "text-yellow-600" }
       ]
     };
   }
@@ -730,7 +757,7 @@ const fetchEventsAnalytics = async () => {
           value: formatNumber(totalEvents), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: Calendar, 
           color: "text-indigo-600" 
         },
         { 
@@ -738,7 +765,7 @@ const fetchEventsAnalytics = async () => {
           value: formatNumber(totalAttendees), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: Users, 
           color: "text-blue-600" 
         },
         { 
@@ -746,7 +773,7 @@ const fetchEventsAnalytics = async () => {
           value: totalEvents > 0 ? formatNumber(Math.round(totalAttendees / totalEvents)) : "0", 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: TrendingUp, 
           color: "text-green-600" 
         },
         { 
@@ -754,7 +781,7 @@ const fetchEventsAnalytics = async () => {
           value: formatNumber(events.filter((event: any) => new Date(event.created_at) > new Date()).length), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: Calendar, 
           color: "text-yellow-600" 
         }
       ]
@@ -764,10 +791,10 @@ const fetchEventsAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Events Created", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-indigo-600" },
-        { title: "Total Attendees", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Avg Attendance", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Upcoming Events", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" }
+        { title: "Events Created", value: "0", change: 0, trend: "neutral", icon: Calendar, color: "text-indigo-600" },
+        { title: "Total Attendees", value: "0", change: 0, trend: "neutral", icon: Users, color: "text-blue-600" },
+        { title: "Avg Attendance", value: "0", change: 0, trend: "neutral", icon: TrendingUp, color: "text-green-600" },
+        { title: "Upcoming Events", value: "0", change: 0, trend: "neutral", icon: Calendar, color: "text-yellow-600" }
       ]
     };
   }
@@ -810,7 +837,7 @@ const fetchEngagementAnalytics = async () => {
           value: formatNumber(totalMessages), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: MessageSquare, 
           color: "text-blue-600" 
         },
         { 
@@ -818,7 +845,7 @@ const fetchEngagementAnalytics = async () => {
           value: formatNumber(totalComments), 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: MessageCircle, 
           color: "text-green-600" 
         },
         { 
@@ -826,7 +853,7 @@ const fetchEngagementAnalytics = async () => {
           value: totalMessages > 0 ? `${Math.min(100, Math.round((totalComments / totalMessages) * 100))}%` : "0%", 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: TrendingUp, 
           color: "text-emerald-600" 
         },
         { 
@@ -834,7 +861,7 @@ const fetchEngagementAnalytics = async () => {
           value: totalMessages > 0 ? formatNumber(Math.round(totalMessages / 10)) : "0", 
           change: growth, 
           trend: growth > 0 ? "up" : "neutral", 
-          icon: () => null, 
+          icon: Users, 
           color: "text-purple-600" 
         }
       ]
@@ -844,10 +871,10 @@ const fetchEngagementAnalytics = async () => {
     return {
       growth: 0,
       metrics: [
-        { title: "Messages Sent", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
-        { title: "Comments", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
-        { title: "Engagement Rate", value: "0%", change: 0, trend: "neutral", icon: () => null, color: "text-emerald-600" },
-        { title: "Active Chats", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-purple-600" }
+        { title: "Messages Sent", value: "0", change: 0, trend: "neutral", icon: MessageSquare, color: "text-blue-600" },
+        { title: "Comments", value: "0", change: 0, trend: "neutral", icon: MessageCircle, color: "text-green-600" },
+        { title: "Engagement Rate", value: "0%", change: 0, trend: "neutral", icon: TrendingUp, color: "text-emerald-600" },
+        { title: "Active Chats", value: "0", change: 0, trend: "neutral", icon: Users, color: "text-purple-600" }
       ]
     };
   }
