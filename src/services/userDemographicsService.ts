@@ -227,13 +227,26 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
         percentage: totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0
       }));
 
-    // Calculate total followers (mock value based on user count)
-    const totalFollowers = formatNumber(totalUsers * 150); // Assuming each user has ~150 followers
+    // Fetch real analytics data for the current user
+    const { data: analyticsData, error: analyticsError } = await supabase
+      .from('user_analytics')
+      .select('*')
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+      .order('date', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Calculate total followers (real value from analytics or fallback to user count)
+    const totalFollowers = analyticsData?.followers_count 
+      ? formatNumber(analyticsData.followers_count) 
+      : formatNumber(totalUsers * 150); // Fallback to mock value based on user count
     
-    // Calculate growth rate (mock value)
-    const growthRate = "+" + (Math.random() * 10 + 5).toFixed(1) + "%";
+    // Calculate growth rate (real value from analytics or fallback to mock)
+    const growthRate = analyticsData?.engagement_rate 
+      ? "+" + analyticsData.engagement_rate.toFixed(1) + "%"
+      : "+" + (Math.random() * 10 + 5).toFixed(1) + "%"; // Fallback to mock value
     
-    // Peak hours data (mock values)
+    // Peak hours data (mock values - could be enhanced with real data if available)
     const peakHours = [
       { time: "6-9 AM", activity: Math.floor(Math.random() * 30) + 20 },
       { time: "12-3 PM", activity: Math.floor(Math.random() * 40) + 30 },
@@ -241,7 +254,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       { time: "9-12 PM", activity: Math.floor(Math.random() * 25) + 15 }
     ];
     
-    // Best days data (mock values)
+    // Best days data (mock values - could be enhanced with real data if available)
     const bestDays = [
       { day: "Tuesday", activity: Math.floor(Math.random() * 20) + 20 },
       { day: "Wednesday", activity: Math.floor(Math.random() * 25) + 25 },
@@ -250,17 +263,26 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       { day: "Friday", activity: Math.floor(Math.random() * 15) + 5 }
     ];
     
-    // Engagement metrics (mock values)
-    const engagementMetrics = [
-      { metric: "Average Session", value: "4:" + (Math.floor(Math.random() * 30) + 20), description: "Time spent per visit" },
-      { metric: "Pages per Session", value: (Math.random() * 2 + 2).toFixed(1), description: "Average page views" },
-      { metric: "Return Visitor Rate", value: Math.floor(Math.random() * 30 + 60) + "%", description: "Repeat audience" },
-      { metric: "Share Rate", value: Math.floor(Math.random() * 10 + 8) + "%", description: "Content sharing" },
-      { metric: "Comment Rate", value: Math.floor(Math.random() * 5 + 5) + "%", description: "Active commenting" },
-      { metric: "Save Rate", value: Math.floor(Math.random() * 10 + 10) + "%", description: "Content saves" }
-    ];
+    // Engagement metrics (real values from analytics or fallback to mock)
+    const engagementMetrics = analyticsData 
+      ? [
+          { metric: "Total Posts", value: formatNumber(analyticsData.posts_count || 0), description: "Published content" },
+          { metric: "Likes Received", value: formatNumber(analyticsData.likes_received || 0), description: "Total likes on your content" },
+          { metric: "Comments Received", value: formatNumber(analyticsData.comments_received || 0), description: "Total comments on your content" },
+          { metric: "Active Minutes", value: formatNumber(analyticsData.active_minutes || 0), description: "Time spent on platform" },
+          { metric: "Engagement Rate", value: (analyticsData.engagement_rate || 0).toFixed(1) + "%", description: "Interaction with your content" },
+          { metric: "Followers", value: totalFollowers, description: "Your total follower count" }
+        ]
+      : [
+          { metric: "Average Session", value: "4:" + (Math.floor(Math.random() * 30) + 20), description: "Time spent per visit" },
+          { metric: "Pages per Session", value: (Math.random() * 2 + 2).toFixed(1), description: "Average page views" },
+          { metric: "Return Visitor Rate", value: Math.floor(Math.random() * 30 + 60) + "%", description: "Repeat audience" },
+          { metric: "Share Rate", value: Math.floor(Math.random() * 10 + 8) + "%", description: "Content sharing" },
+          { metric: "Comment Rate", value: Math.floor(Math.random() * 5 + 5) + "%", description: "Active commenting" },
+          { metric: "Save Rate", value: Math.floor(Math.random() * 10 + 10) + "%", description: "Content saves" }
+        ];
     
-    // Content recommendations (mock values)
+    // Content recommendations (mock values - could be enhanced with real data if available)
     const contentRecommendations = [
       {
         type: "Blog Post",
@@ -292,7 +314,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       }
     ];
     
-    // Audience growth strategies (mock values)
+    // Audience growth strategies (mock values - could be enhanced with real data if available)
     const audienceGrowthStrategies = [
       {
         strategy: "Cross-Platform Promotion",
@@ -320,7 +342,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       }
     ];
     
-    // Market trends (mock values)
+    // Market trends (mock values - could be enhanced with real data if available)
     const marketTrends = [
       {
         trend: "AI & Automation",
@@ -366,7 +388,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       }
     ];
     
-    // Revenue optimization tips (mock values)
+    // Revenue optimization tips (mock values - could be enhanced with real data if available)
     const revenueOptimizationTips = [
       {
         title: "Optimize Video Content",
@@ -394,7 +416,7 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
       }
     ];
     
-    // Daily insight (mock value)
+    // Daily insight (mock value - could be enhanced with real data if available)
     const dailyInsights = [
       "Your video content has 3x higher engagement than posts. Increase video production by 40% to boost overall performance.",
       "Post content between 6-9 PM for 45% higher engagement. Your current posting time is suboptimal.",

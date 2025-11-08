@@ -285,13 +285,15 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
 
   try {
     // Fetch data from various tables
-    const [postsData, videosData, productsData, freelancesData, financesData, engagementsData] = await Promise.all([
+    const [postsData, videosData, productsData, freelancesData, financesData, engagementsData, liveStreamsData, eventsData] = await Promise.all([
       fetchPostAnalytics(),
       fetchVideoAnalytics(),
       fetchProductAnalytics(),
       fetchFreelanceAnalytics(),
       fetchFinanceAnalytics(),
-      fetchEngagementAnalytics()
+      fetchEngagementAnalytics(),
+      fetchLiveStreamAnalytics(),
+      fetchEventsAnalytics()
     ]);
 
     const result = [
@@ -347,27 +349,17 @@ export const fetchPlatformAnalytics = async (): Promise<FeatureAnalytics[]> => {
         name: "Live Streaming",
         icon: () => null, // Will be replaced by actual icon component
         color: "bg-pink-500",
-        growth: 0,
-        active: false,
-        metrics: [
-          { title: "Live Sessions", value: "0", change: 0, trend: "neutral" as const, icon: () => null, color: "text-pink-600" },
-          { title: "Peak Viewers", value: "0", change: 0, trend: "neutral" as const, icon: () => null, color: "text-blue-600" },
-          { title: "Stream Time", value: "0h", change: 0, trend: "neutral" as const, icon: () => null, color: "text-green-600" },
-          { title: "Super Chats", value: "$0", change: 0, trend: "neutral" as const, icon: () => null, color: "text-yellow-600" },
-        ]
+        growth: liveStreamsData.growth,
+        active: true,
+        metrics: liveStreamsData.metrics as MetricCard[]
       },
       {
         name: "Events & Calendar",
         icon: () => null, // Will be replaced by actual icon component
         color: "bg-indigo-500",
-        growth: 0,
+        growth: eventsData.growth,
         active: true,
-        metrics: [
-          { title: "Events Created", value: "0", change: 0, trend: "neutral" as const, icon: () => null, color: "text-indigo-600" },
-          { title: "Attendees", value: "0", change: 0, trend: "neutral" as const, icon: () => null, color: "text-blue-600" },
-          { title: "Event Revenue", value: "$0", change: 0, trend: "neutral" as const, icon: () => null, color: "text-green-600" },
-          { title: "Avg Rating", value: "0", change: 0, trend: "neutral" as const, icon: () => null, color: "text-yellow-600" },
-        ]
+        metrics: eventsData.metrics as MetricCard[]
       }
     ];
 
@@ -668,6 +660,141 @@ const fetchFinanceAnalytics = async () => {
   }
 };
 
+// Fetch live stream analytics data
+const fetchLiveStreamAnalytics = async () => {
+  try {
+    // Get live stream data
+    const { data: liveStreams, error: liveStreamsError } = await supabase
+      .from('live_streams')
+      .select('id, title, viewer_count, started_at, ended_at');
+    
+    if (liveStreamsError) throw liveStreamsError;
+    
+    const totalStreams = liveStreams.length;
+    const totalViewers = liveStreams.reduce((sum: number, stream: any) => sum + (stream.viewer_count || 0), 0);
+    const activeStreams = liveStreams.filter((stream: any) => stream.ended_at === null).length;
+    
+    // Calculate growth (simplified)
+    const growth = totalStreams > 0 ? Math.min(100, Math.round((totalViewers / totalStreams) / 100)) : 0;
+    
+    return {
+      growth,
+      metrics: [
+        { 
+          title: "Live Sessions", 
+          value: formatNumber(totalStreams), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-pink-600" 
+        },
+        { 
+          title: "Peak Viewers", 
+          value: formatNumber(totalViewers), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-blue-600" 
+        },
+        { 
+          title: "Active Streams", 
+          value: formatNumber(activeStreams), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-green-600" 
+        },
+        { 
+          title: "Avg Viewers/Stream", 
+          value: totalStreams > 0 ? formatNumber(Math.round(totalViewers / totalStreams)) : "0", 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-yellow-600" 
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching live stream analytics:', error);
+    return {
+      growth: 0,
+      metrics: [
+        { title: "Live Sessions", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-pink-600" },
+        { title: "Peak Viewers", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
+        { title: "Active Streams", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
+        { title: "Avg Viewers/Stream", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" }
+      ]
+    };
+  }
+};
+
+// Fetch events analytics data
+const fetchEventsAnalytics = async () => {
+  try {
+    // Get events data
+    const { data: events, error: eventsError } = await supabase
+      .from('events')
+      .select('id, title, attendee_count, created_at');
+    
+    if (eventsError) throw eventsError;
+    
+    const totalEvents = events.length;
+    const totalAttendees = events.reduce((sum: number, event: any) => sum + (event.attendee_count || 0), 0);
+    
+    // Calculate growth (simplified)
+    const growth = totalEvents > 0 ? Math.min(100, Math.round((totalAttendees / totalEvents) / 10)) : 0;
+    
+    return {
+      growth,
+      metrics: [
+        { 
+          title: "Events Created", 
+          value: formatNumber(totalEvents), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-indigo-600" 
+        },
+        { 
+          title: "Total Attendees", 
+          value: formatNumber(totalAttendees), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-blue-600" 
+        },
+        { 
+          title: "Avg Attendance", 
+          value: totalEvents > 0 ? formatNumber(Math.round(totalAttendees / totalEvents)) : "0", 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-green-600" 
+        },
+        { 
+          title: "Upcoming Events", 
+          value: formatNumber(events.filter((event: any) => new Date(event.created_at) > new Date()).length), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-yellow-600" 
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching events analytics:', error);
+    return {
+      growth: 0,
+      metrics: [
+        { title: "Events Created", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-indigo-600" },
+        { title: "Total Attendees", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
+        { title: "Avg Attendance", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
+        { title: "Upcoming Events", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" }
+      ]
+    };
+  }
+};
+
 // Fetch engagement analytics data
 const fetchEngagementAnalytics = async () => {
   try {
@@ -743,6 +870,141 @@ const fetchEngagementAnalytics = async () => {
         { title: "Comments", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
         { title: "Engagement Rate", value: "0%", change: 0, trend: "neutral", icon: () => null, color: "text-emerald-600" },
         { title: "Active Chats", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-purple-600" }
+      ]
+    };
+  }
+};
+
+// Fetch live stream analytics data
+const fetchLiveStreamAnalytics = async () => {
+  try {
+    // Get live stream data
+    const { data: liveStreams, error: liveStreamsError } = await supabase
+      .from('live_streams')
+      .select('id, title, viewer_count, started_at, ended_at');
+    
+    if (liveStreamsError) throw liveStreamsError;
+    
+    const totalStreams = liveStreams.length;
+    const totalViewers = liveStreams.reduce((sum: number, stream: any) => sum + (stream.viewer_count || 0), 0);
+    const activeStreams = liveStreams.filter((stream: any) => stream.ended_at === null).length;
+    
+    // Calculate growth (simplified)
+    const growth = totalStreams > 0 ? Math.min(100, Math.round((totalViewers / totalStreams) / 100)) : 0;
+    
+    return {
+      growth,
+      metrics: [
+        { 
+          title: "Live Sessions", 
+          value: formatNumber(totalStreams), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-pink-600" 
+        },
+        { 
+          title: "Peak Viewers", 
+          value: formatNumber(totalViewers), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-blue-600" 
+        },
+        { 
+          title: "Active Streams", 
+          value: formatNumber(activeStreams), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-green-600" 
+        },
+        { 
+          title: "Avg Viewers/Stream", 
+          value: totalStreams > 0 ? formatNumber(Math.round(totalViewers / totalStreams)) : "0", 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-yellow-600" 
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching live stream analytics:', error);
+    return {
+      growth: 0,
+      metrics: [
+        { title: "Live Sessions", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-pink-600" },
+        { title: "Peak Viewers", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
+        { title: "Active Streams", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
+        { title: "Avg Viewers/Stream", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" }
+      ]
+    };
+  }
+};
+
+// Fetch events analytics data
+const fetchEventsAnalytics = async () => {
+  try {
+    // Get events data
+    const { data: events, error: eventsError } = await supabase
+      .from('events')
+      .select('id, title, attendee_count, created_at');
+    
+    if (eventsError) throw eventsError;
+    
+    const totalEvents = events.length;
+    const totalAttendees = events.reduce((sum: number, event: any) => sum + (event.attendee_count || 0), 0);
+    
+    // Calculate growth (simplified)
+    const growth = totalEvents > 0 ? Math.min(100, Math.round((totalAttendees / totalEvents) / 10)) : 0;
+    
+    return {
+      growth,
+      metrics: [
+        { 
+          title: "Events Created", 
+          value: formatNumber(totalEvents), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-indigo-600" 
+        },
+        { 
+          title: "Total Attendees", 
+          value: formatNumber(totalAttendees), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-blue-600" 
+        },
+        { 
+          title: "Avg Attendance", 
+          value: totalEvents > 0 ? formatNumber(Math.round(totalAttendees / totalEvents)) : "0", 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-green-600" 
+        },
+        { 
+          title: "Upcoming Events", 
+          value: formatNumber(events.filter((event: any) => new Date(event.created_at) > new Date()).length), 
+          change: growth, 
+          trend: growth > 0 ? "up" : "neutral", 
+          icon: () => null, 
+          color: "text-yellow-600" 
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching events analytics:', error);
+    return {
+      growth: 0,
+      metrics: [
+        { title: "Events Created", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-indigo-600" },
+        { title: "Total Attendees", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-blue-600" },
+        { title: "Avg Attendance", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-green-600" },
+        { title: "Upcoming Events", value: "0", change: 0, trend: "neutral", icon: () => null, color: "text-yellow-600" }
       ]
     };
   }
