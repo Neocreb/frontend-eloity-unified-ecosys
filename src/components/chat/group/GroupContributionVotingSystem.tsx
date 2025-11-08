@@ -127,6 +127,31 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
     refreshData();
   };
 
+  // Handle refund
+  const handleRefund = async (contributorId: string) => {
+    if (!user) return;
+    
+    try {
+      const success = await GroupContributionService.refundContribution(contributorId, user.id);
+      if (success) {
+        refreshData();
+        toast({
+          title: "Success",
+          description: "Contribution has been refunded!",
+        });
+      } else {
+        throw new Error("Failed to refund contribution");
+      }
+    } catch (error) {
+      console.error("Error refunding contribution:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refund contribution. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -294,6 +319,8 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
         <GroupContributionStatus
           contribution={selectedContribution}
           onContribute={() => setShowContributeModal(true)}
+          isAdmin={isAdmin}
+          onRefund={handleRefund}
           trigger={<div className="hidden"></div>}
         />
       )}

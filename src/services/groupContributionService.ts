@@ -551,4 +551,63 @@ export class GroupContributionService {
     const percentage = (maxVotes / totalVotes) * 100;
     return percentage >= vote.required_percentage;
   }
+
+  // Refund a contribution
+  static async refundContribution(contributorId: string, adminId: string): Promise<boolean> {
+    try {
+      // Get the contribution details
+      const { data: contributor, error: fetchError } = await supabase
+        .from('group_contributors')
+        .select(`
+          *,
+          group_contributions (created_by, title, currency)
+        `)
+        .eq('id', contributorId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!contributor) throw new Error('Contributor not found');
+
+      // Check if already refunded
+      if (contributor.refunded) {
+        throw new Error('Contribution already refunded');
+      }
+
+      // Update the contribution record to mark as refunded
+      const { error: updateError } = await supabase
+        .from('group_contributors')
+        .update({ 
+          refunded: true, 
+          refunded_at: new Date().toISOString() 
+        })
+        .eq('id', contributorId);
+
+      if (updateError) throw updateError;
+
+      // Send notification to the contributor
+      await NotificationService.sendUserNotification(
+        contributor.user_id,
+        "Contribution Refunded",
+        `Your contribution of ${contributor.amount} ${contributor.currency} to "${contributor.group_contributions?.title}" has been refunded by an admin.`,
+        "info",
+        contributor.contribution_id
+      );
+
+      // Send notification to contribution creator if it's not the admin
+      if (contributor.group_contributions?.created_by !== adminId) {
+        await NotificationService.sendUserNotification(
+          contributor.group_contributions?.created_by || '',
+          "Contribution Refunded",
+          `A contribution of ${contributor.amount} ${contributor.currency} to your contribution "${contributor.group_contributions?.title}" has been refunded by an admin.`,
+          "info",
+          contributor.contribution_id
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error refunding contribution:', error);
+      return false;
+    }
+  }
 }

@@ -28,7 +28,8 @@ import {
   CheckCircle, 
   XCircle,
   TrendingUp,
-  Wallet
+  Wallet,
+  RotateCcw
 } from "lucide-react";
 import { format } from "date-fns";
 import GroupContributionPayoutStatus from "./GroupContributionPayoutStatus";
@@ -37,12 +38,16 @@ interface GroupContributionStatusProps {
   contribution: GroupContributionWithDetails;
   trigger: React.ReactNode;
   onContribute?: () => void;
+  isAdmin?: boolean;
+  onRefund?: (contributorId: string) => void;
 }
 
 export const GroupContributionStatus: React.FC<GroupContributionStatusProps> = ({
   contribution,
   trigger,
   onContribute,
+  isAdmin = false,
+  onRefund,
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -305,6 +310,22 @@ export const GroupContributionStatus: React.FC<GroupContributionStatusProps> = (
                             {format(new Date(contributor.contributed_at), "MMM d")}
                           </p>
                         </div>
+                        {isAdmin && !contributor.refunded && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => onRefund?.(contributor.id)}
+                            className="h-8 px-2 text-xs"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Refund
+                          </Button>
+                        )}
+                        {contributor.refunded && (
+                          <Badge variant="destructive" className="h-6 text-xs">
+                            Refunded
+                          </Badge>
+                        )}
                       </div>
                     ))}
                   </div>
