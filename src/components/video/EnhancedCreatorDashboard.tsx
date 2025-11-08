@@ -207,6 +207,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [showContentCreationModal, setShowContentCreationModal] = useState(false);
   const [contentCreationType, setContentCreationType] = useState<'video' | 'post' | 'product' | 'stream'>('video');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showSearch, setShowSearch] = useState(false);
 
   // Use real-time analytics hook
   const { platformFeatures: realtimePlatformFeatures, topPerformingContent: realtimeTopPerformingContent, userDemographics: realtimeUserDemographics, isLoading, error, refreshData } = useRealtimeAnalytics(user?.id || null);
