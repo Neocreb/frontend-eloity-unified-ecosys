@@ -191,6 +191,20 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [userDemographics, setUserDemographics] = useState<UserDemographics | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(['video', 'post', 'product']);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState('recent');
+  const [contentLoading, setContentLoading] = useState(false);
+  const [contentPageData, setContentPageData] = useState<any[]>([]);
+  const [contentTotal, setContentTotal] = useState(0);
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showContentCreationModal, setShowContentCreationModal] = useState(false);
+  const [contentCreationType, setContentCreationType] = useState<'video' | 'post' | 'product' | 'stream'>('video');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Use real-time analytics hook
   const { platformFeatures: realtimePlatformFeatures, topPerformingContent: realtimeTopPerformingContent, userDemographics: realtimeUserDemographics, isLoading, error, refreshData } = useRealtimeAnalytics(user?.id || null);
