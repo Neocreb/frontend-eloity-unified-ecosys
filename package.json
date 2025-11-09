@@ -31,7 +31,8 @@
     "deploy:replicate": "node scripts/deploy-replicate-function.js",
     "init:env": "node scripts/init-env.js",
     "get:supabase-credentials": "node scripts/get-supabase-credentials.js",
-    "verify:setup": "node scripts/verify-secure-setup.js"
+    "verify:setup": "node scripts/verify-secure-setup.js",
+    "grant-super-admin": "npx tsx scripts/grant-super-admin.ts"
   },
   "//": "Enhanced package.json with comprehensive dependencies and scripts",
   "dependencies": {

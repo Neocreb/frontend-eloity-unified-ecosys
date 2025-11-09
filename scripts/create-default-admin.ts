@@ -1,11 +1,15 @@
 #!/usr/bin/env npx tsx
 
+import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { wallets, adminUsers } from "../shared/enhanced-schema";
-import { users, profiles } from "../shared/schema";
+import { users } from "../shared/schema";
+import { admin_permissions } from "../shared/admin-schema";
+
+// Load environment variables from .env.local
+config({ path: '.env.local' });
 
 // Setup database connection
 const connectionString = process.env.DATABASE_URL;
@@ -52,40 +56,37 @@ async function createDefaultAdmin() {
         .update(users)
         .set({
           password: hashedPassword,
-          emailConfirmed: true,
+          email_confirmed: true,
         })
         .where(eq(users.id, userId));
 
       // Check if admin record exists
-      const existingAdmin = await db
+      const existingAdminPermission = await db
         .select()
-        .from(adminUsers)
-        .where(eq(adminUsers.userId, userId))
+        .from(admin_permissions)
+        .where(eq(admin_permissions.user_id, userId))
+        .where(eq(admin_permissions.role, 'super_admin'))
         .limit(1);
 
-      if (existingAdmin.length > 0) {
-        // Update admin
+      if (existingAdminPermission.length > 0) {
+        // Update admin permission
         await db
-          .update(adminUsers)
+          .update(admin_permissions)
           .set({
-            roles,
             permissions: generatePermissions(roles),
-            department,
-            position,
-            employeeId,
-            isActive: true,
+            is_active: true,
+            granted_by: userId,
           })
-          .where(eq(adminUsers.userId, userId));
+          .where(eq(admin_permissions.user_id, userId))
+          .where(eq(admin_permissions.role, 'super_admin'));
       } else {
-        // Create admin record
-        await db.insert(adminUsers).values({
-          userId,
-          roles,
+        // Create admin permission record
+        await db.insert(admin_permissions).values({
+          user_id: userId,
+          role: 'super_admin',
           permissions: generatePermissions(roles),
-          department,
-          position,
-          employeeId,
-          isActive: true,
+          is_active: true,
+          granted_by: userId,
         });
       }
     } else {
@@ -99,37 +100,24 @@ async function createDefaultAdmin() {
         .values({
           email,
           password: hashedPassword,
-          emailConfirmed: true,
+          full_name: name,
+          email_confirmed: true,
+          role: "admin",
+          is_verified: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .returning();
 
       userId = newUser.id;
 
-      // Create profile
-      await db.insert(profiles).values({
-        userId: userId,
-        fullName: name,
-        name,
-        role: "admin",
-        status: "active",
-        isVerified: true,
-      });
-
-      // Create wallet
-      await db.insert(wallets).values({
-        userId: userId,
-        isActive: true,
-      });
-
-      // Create admin user
-      await db.insert(adminUsers).values({
-        userId: userId,
-        roles,
+      // Create admin permission
+      await db.insert(admin_permissions).values({
+        user_id: userId,
+        role: 'super_admin',
         permissions: generatePermissions(roles),
-        department,
-        position,
-        employeeId,
-        isActive: true,
+        is_active: true,
+        granted_by: userId,
       });
     }
 
