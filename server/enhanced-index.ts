@@ -21,7 +21,12 @@ import { eq, and, or, desc, asc, like, sql, count, ilike } from 'drizzle-orm';
 import { randomUUID } from 'crypto'; // Import crypto module
 
 // Load environment variables
-dotenv.config();
+console.log("🔄 Loading environment variables...");
+dotenv.config({ path: '.env.local' });
+console.log("✅ Environment variables loaded");
+console.log("🔍 DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
+console.log("🔍 VITE_SUPABASE_URL:", process.env.VITE_SUPABASE_URL ? "SET" : "NOT SET");
+console.log("🔍 SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "NOT SET");
 
 // Import schemas
 import { 
@@ -87,17 +92,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Initialize database connection
+console.log("🔄 Initializing database connection...");
 const databaseUrl = process.env.DATABASE_URL || 'postgresql://mock:mock@localhost:5432/mock';
+console.log("🔍 DATABASE_URL value:", databaseUrl);
 if (!process.env.DATABASE_URL) {
   console.warn('⚠️  DATABASE_URL not set. Using development fallback.');
   console.warn('⚠️  For production use, please set up a proper database.');
   console.warn('⚠️  Consider connecting to Neon database for persistent storage.');
+} else {
+  console.log('✅ DATABASE_URL is set');
 }
 
 let client, db;
 let useMockData = false;
 
 try {
+  console.log('🔄 Attempting to connect to database...');
   // Use postgres-js for Supabase connection with additional connection options
   client = postgres(databaseUrl, { 
     ssl: {
@@ -107,6 +117,7 @@ try {
     idle_timeout: 30,
     max_lifetime: 60 * 60
   });
+  console.log('🔄 Creating drizzle client...');
   db = drizzle(client);
   
   // Test the connection
@@ -115,6 +126,7 @@ try {
   console.log('✅ Database connection initialized');
 } catch (error) {
   console.error('❌ Database connection failed:', error.message);
+  console.error('🔍 Full error details:', error);
   console.warn('⚠️  Running in mock mode. Some features may not work.');
   useMockData = true;
 
