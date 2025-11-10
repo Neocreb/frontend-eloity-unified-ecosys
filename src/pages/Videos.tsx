@@ -960,6 +960,72 @@ const VideoCard: React.FC<{
           userId={user?.id || 'guest'}
         />
       )}
+      
+      {/* Gift Panel */}
+      {showGiftPanel && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-white font-semibold">Send Gift to @{video.user.username}</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowGiftPanel(false)}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-3 gap-3">
+                {virtualGifts.map((gift) => (
+                  <div 
+                    key={gift.id}
+                    className="flex flex-col items-center gap-2 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                    onClick={async () => {
+                      try {
+                        await videoService.sendGift({
+                          toUserId: video.user.id,
+                          giftId: gift.id,
+                          quantity: 1
+                        });
+                        
+                        setShowGiftPanel(false);
+                        
+                        toast({
+                          title: "Gift Sent",
+                          description: `You sent a ${gift.name} to @${video.user.username}`
+                        });
+                      } catch (error) {
+                        console.error('Error sending gift:', error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to send gift",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                  >
+                    <div className="text-2xl">{gift.emoji}</div>
+                    <div className="text-white text-xs font-medium text-center">{gift.name}</div>
+                    <div className="text-purple-400 text-xs">${gift.price.toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-700">
+              <Button 
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                onClick={() => setShowGiftPanel(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1242,30 +1308,7 @@ const Videos: React.FC = () => {
     fetchBattles();
   }, [activeTab]);
 
-  // Check if user is already following - this should be handled per video in VideoCard
-  // useEffect(() => {
-  //   const checkFollowingStatus = async () => {
-  //     try {
-  //       // This logic should be moved to VideoCard component
-  //     } catch (error) {
-  //       console.error('Error checking following status:', error);
-  //     }
-  //   };
-  // }, []);
 
-  // Load virtual gifts
-  useEffect(() => {
-    const loadVirtualGifts = async () => {
-      try {
-        const gifts = await videoService.getVirtualGifts();
-        setVirtualGifts(gifts);
-      } catch (error) {
-        console.error('Error loading virtual gifts:', error);
-      }
-    };
-    
-    loadVirtualGifts();
-  }, []);
   
   // Handle follow/unfollow
   const toggleFollow = async (video: VideoData) => {
@@ -1323,30 +1366,7 @@ const Videos: React.FC = () => {
     }
   };
   
-  // Handle sending gift
-  const handleSendGift = async (video: VideoData, giftId: string, quantity: number = 1) => {
-    try {
-      await videoService.sendGift({
-        toUserId: video.user.id,
-        giftId,
-        quantity
-      });
-      
-      setShowGiftPanel(false);
-      
-      toast({
-        title: "Gift Sent",
-        description: `You sent a gift to @${video.user.username}`
-      });
-    } catch (error) {
-      console.error('Error sending gift:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send gift",
-        variant: "destructive"
-      });
-    }
-  };
+
 
   if (loading) {
     return (
@@ -1795,50 +1815,6 @@ const Videos: React.FC = () => {
         </div>
       )}
 
-      {/* Gift Panel */}
-      {showGiftPanel && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h3 className="text-white font-semibold">Send Gift</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowGiftPanel(false)}
-                className="text-white hover:bg-white/20"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="grid grid-cols-3 gap-3">
-                {virtualGifts.map((gift) => (
-                  <div 
-                    key={gift.id}
-                    className="flex flex-col items-center gap-2 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
-                    onClick={() => handleSendGift(gift.id)}
-                  >
-                    <div className="text-2xl">{gift.emoji}</div>
-                    <div className="text-white text-xs font-medium text-center">{gift.name}</div>
-                    <div className="text-purple-400 text-xs">${gift.price.toFixed(2)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="p-4 border-t border-gray-700">
-              <Button 
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                onClick={() => setShowGiftPanel(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      
       {/* Live Stream Modal */}
       <LiveStreamModal 
         open={showLiveStreamModal}
