@@ -62,6 +62,8 @@ import {
   Check,
   ThumbsUp,
   ThumbsDown,
+  Reply,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -107,6 +109,9 @@ import { VideoInterstitialAd } from "@/components/ads/VideoInterstitialAd";
 import { adSettings } from "../../config/adSettings";
 import { useVideos } from "@/hooks/use-videos";
 import { VideoItem } from "@/types/video";
+import { formatDistanceToNow } from "date-fns";
+import { videoService } from "@/services/videoService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VideoData {
   id: string;
@@ -181,7 +186,9 @@ const VideoCard: React.FC<{
   isActive: boolean;
   showControls?: boolean;
   onVideoElementReady?: (element: HTMLVideoElement | null) => void;
-}> = ({ video, isActive, showControls = true, onVideoElementReady }) => {
+  onLike?: (videoId: string, isLiked: boolean) => void;
+  onComment?: (videoId: string) => void;
+}> = ({ video, isActive, showControls = true, onVideoElementReady, onLike, onComment }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showMore, setShowMore] = useState(false);
@@ -196,10 +203,38 @@ const VideoCard: React.FC<{
   const [isOfflineAvailable, setIsOfflineAvailable] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [connectionQuality, setConnectionQuality] = useState<"good" | "poor" | "offline">("good");
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [showComments, setShowComments] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const { safePlay, safePause, togglePlayback } = useVideoPlayback();
   const { user } = useAuth();
+
+  // Check if user has liked the video
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('video_likes')
+          .select('id')
+          .eq('video_id', video.id)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (!error && data) {
+          setIsLiked(true);
+        }
+      } catch (error) {
+        console.error("Error checking like status:", error);
+      }
+    };
+    
+    checkLikeStatus();
+  }, [video.id, user]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -304,6 +339,77 @@ const VideoCard: React.FC<{
       return (num / 1000).toFixed(1) + "K";
     }
     return num.toString();
+  };
+
+  // Load comments for the video
+  const loadComments = async () => {
+    try {
+      const videoComments = await videoService.getVideoComments(video.id);
+      setComments(videoComments);
+    } catch (error) {
+      console.error("Error loading comments:", error);
+    }
+  };
+
+  // Handle adding a new comment
+  const handleAddComment = async () => {
+    if (!newComment.trim() || isSubmitting) return;
+      
+    setIsSubmitting(true);
+    try {
+      const newCommentObj = await videoService.addComment(video.id, newComment);
+      setComments(prev => [newCommentObj, ...prev]);
+      setNewComment("");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle liking a comment
+  const handleLikeComment = async (commentId: string) => {
+    // In a real implementation, this would connect to the backend
+    // For now, we'll just update the UI
+    setComments(prev => 
+      prev.map(comment => {
+        if (comment.id === commentId) {
+          const isLiked = !comment.isLiked;
+          const likes = isLiked ? comment.likes + 1 : comment.likes - 1;
+          return { ...comment, isLiked, likes };
+        }
+        return comment;
+      })
+    );
+  };
+
+  // Toggle like for the video
+  const toggleLike = async () => {
+    try {
+      if (isLiked) {
+        await videoService.unlikeVideo(video.id);
+      } else {
+        await videoService.likeVideo(video.id);
+      }
+      setIsLiked(!isLiked);
+      if (onLike) onLike(video.id, !isLiked);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      toast({
+        title: "Error",
+        description: "Failed to like/unlike video",
+      });
+    }
+  };
+
+  // Toggle comments visibility and load comments if needed
+  const toggleComments = () => {
+    const newShowComments = !showComments;
+    setShowComments(newShowComments);
+      
+    if (newShowComments && comments.length === 0) {
+      loadComments();
+    }
   };
 
   const description = video.description;
@@ -531,77 +637,70 @@ const VideoCard: React.FC<{
 
         {/* Right side - Enhanced Interactive Features */}
         <div className="flex flex-col items-center justify-end gap-3 md:gap-4 p-2 md:p-4 pb-28 md:pb-8">
-          <InteractiveFeatures
-            videoId={video.id}
-            isLiveStream={video.isLiveStream}
-            allowDuets={video.allowDuets}
-            allowComments={video.allowComments}
-          />
+          {/* Like Button */}
+          <div className="flex flex-col items-center">
+            <Button
+              size="icon"
+              className={cn(
+                "w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm",
+                isLiked && "text-red-500"
+              )}
+              onClick={toggleLike}
+            >
+              <Heart className={cn("w-6 h-6 md:w-7 md:h-7", isLiked && "fill-current")} />
+            </Button>
+            <span className="text-white text-xs mt-1">
+              {formatNumber(video.stats.likes + (isLiked ? 1 : 0))}
+            </span>
+          </div>
 
-          {/* Enhanced Sharing Hub */}
-          <AdvancedSharingHub
-            videoId={video.id}
-            videoTitle={video.description}
-            videoUrl={video.videoUrl}
-            videoThumbnail={video.thumbnail}
-            videoDuration={video.duration}
-            currentUser={user ? {
-              id: user.id,
-              name: user.displayName || user.username,
-              avatar: user.avatar || 'https://i.pravatar.cc/150?u=' + user.id
-            } : undefined}
-          />
+          {/* Comment Button */}
+          <div className="flex flex-col items-center">
+            <Button
+              size="icon"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm"
+              onClick={toggleComments}
+            >
+              <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+            </Button>
+            <span className="text-white text-xs mt-1">
+              {formatNumber(video.stats.comments)}
+            </span>
+          </div>
 
-          {/* Video Monetization Hub */}
-          <VideoMonetizationHub
-            videoId={video.id}
-            creatorId={video.user.id}
-            videoMetrics={{
-              views: parseInt(video.stats.views.replace(/[^0-9]/g, '')) || 0,
-              likes: video.stats.likes,
-              comments: video.stats.comments,
-              shares: video.stats.shares,
-              duration: video.duration
-            }}
-            onTipSent={(amount) => {
-              toast({
-                title: "Tip Sent!",
-                description: `You sent $${amount.toFixed(2)} to support this creator`,
-              });
-            }}
-            onSubscribe={(tier) => {
-              toast({
-                title: "Subscription Active",
-                description: `You subscribed to ${tier} tier`,
-              });
-            }}
-            onPurchaseMerchandise={(itemId) => {
-              toast({
-                title: "Purchase Successful",
-                description: "Item added to your cart",
-              });
-            }}
-          />
+          {/* Share Button */}
+          <div className="flex flex-col items-center">
+            <Button
+              size="icon"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm"
+            >
+              <Share className="w-6 h-6 md:w-7 md:h-7" />
+            </Button>
+            <span className="text-white text-xs mt-1">Share</span>
+          </div>
 
           {/* Gift Button */}
-          <Button
-            size="icon"
-            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white"
-            onClick={() => {
-              // Handle gift sending functionality
-              toast({
-                title: "Send Gift",
-                description: "Gift feature coming soon!",
-              });
-            }}
-          >
-            <Gift className="w-6 h-6 md:w-7 md:h-7" />
-          </Button>
+          <div className="flex flex-col items-center">
+            <Button
+              size="icon"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white"
+              onClick={() => {
+                // Handle gift sending functionality
+                toast({
+                  title: "Send Gift",
+                  description: "Gift feature coming soon!",
+                });
+              }}
+            >
+              <Gift className="w-6 h-6 md:w-7 md:h-7" />
+            </Button>
+            <span className="text-white text-xs mt-1">Gift</span>
+          </div>
         </div>
       </div>
 
       {/* Enhanced Controls Bar */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
+      <div className="absolute top-4 right-4 flex flex-col gap-2 md:gap-3">
         {/* Connection Quality Indicator */}
         <div className="flex items-center gap-1">
           {connectionQuality === "good" && (
@@ -645,7 +744,7 @@ const VideoCard: React.FC<{
 
       {/* Advanced Controls Panel */}
       {showAdvancedControls && (
-        <div className="absolute top-20 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 space-y-3 min-w-[200px] z-10">
+        <div className="absolute top-20 right-4 md:top-24 md:right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 space-y-3 min-w-[200px] z-10">
           {/* Quality Selector */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-white text-sm">
@@ -797,6 +896,7 @@ const Videos: React.FC = () => {
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentVideoElement, setCurrentVideoElement] = useState<HTMLVideoElement | null>(null);
+  const [videos, setVideos] = useState<any[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -867,6 +967,26 @@ const Videos: React.FC = () => {
       hasCaption: videoItem.hasCaption || false,
       isLiveStream: videoItem.isLiveStream || false,
     };
+  };
+
+  // Handle video like/unlike
+  const handleVideoLike = async (videoId: string, isLiked: boolean) => {
+    // Update the videos state to reflect the like change
+    setVideos(prev => prev.map(video => {
+      if (video.id === videoId) {
+        return {
+          ...video,
+          likes: isLiked ? video.likes + 1 : video.likes - 1
+        };
+      }
+      return video;
+    }));
+  };
+
+  // Handle comment button click
+  const handleCommentClick = (videoId: string) => {
+    // This will be handled by the VideoCard component
+    console.log("Comment clicked for video:", videoId);
   };
 
   // Auto-hide controls after inactivity
@@ -960,6 +1080,19 @@ const Videos: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
+      <style jsx>{`
+        @keyframes slideUp {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slideUp 0.3s ease-out forwards;
+        }
+      `}</style>
       <Helmet>
         <title>Videos | Eloity</title>
         <meta
@@ -984,7 +1117,7 @@ const Videos: React.FC = () => {
               </Button>
             </div>
 
-            {/* 2-5. Central tabs (Live, Battle, For You, Following) */}
+            {/* 2-5. Central tabs (Live, Battle, For You, Following) + Create Menu */}
             <div className="col-span-4 flex justify-center">
               <Tabs
                 value={activeTab}
@@ -998,7 +1131,7 @@ const Videos: React.FC = () => {
                 }}
                 className="w-full"
               >
-                <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-white/10 rounded-full p-1">
+                <TabsList className="grid w-full grid-cols-5 bg-black/40 border border-white/10 rounded-full p-1">
                   <TabsTrigger
                     value="live"
                     className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
@@ -1027,63 +1160,71 @@ const Videos: React.FC = () => {
                     <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     Following
                   </TabsTrigger>
+                  {/* Create Menu Tab */}
+                  <DropdownMenu open={showCreateMenu} onOpenChange={setShowCreateMenu}>
+                    <DropdownMenuTrigger asChild>
+                      <TabsTrigger
+                        value="create"
+                        className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </TabsTrigger>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="center" className="bg-gray-900 border-gray-700 w-48">
+                      <DropdownMenuItem 
+                        className="text-white hover:bg-gray-800 cursor-pointer"
+                        onClick={() => {
+                          setShowCreateMenu(false);
+                          setIsAdvancedRecorderOpen(true);
+                        }}
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Create Video
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-white hover:bg-gray-800 cursor-pointer"
+                        onClick={() => {
+                          setShowCreateMenu(false);
+                          // Handle go live functionality
+                          toast({
+                            title: "Go Live",
+                            description: "Live streaming feature coming soon!",
+                          });
+                        }}
+                      >
+                        <Radio className="w-4 h-4 mr-2" />
+                        Go Live
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-white hover:bg-gray-800 cursor-pointer"
+                        onClick={() => {
+                          setShowCreateMenu(false);
+                          // Handle start battle functionality
+                          toast({
+                            title: "Start Battle",
+                            description: "Battle feature coming soon!",
+                          });
+                        }}
+                      >
+                        <Swords className="w-4 h-4 mr-2" />
+                        Start Battle
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TabsList>
               </Tabs>
             </div>
 
-            {/* 6. Create Menu (right side) */}
+            {/* 6. Profile/Menu (right side) */}
             <div className="flex justify-end">
-              <DropdownMenu open={showCreateMenu} onOpenChange={setShowCreateMenu}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full"
-                  >
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700 w-48">
-                  <DropdownMenuItem 
-                    className="text-white hover:bg-gray-800 cursor-pointer"
-                    onClick={() => {
-                      setShowCreateMenu(false);
-                      setIsAdvancedRecorderOpen(true);
-                    }}
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Create Video
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-white hover:bg-gray-800 cursor-pointer"
-                    onClick={() => {
-                      setShowCreateMenu(false);
-                      // Handle go live functionality
-                      toast({
-                        title: "Go Live",
-                        description: "Live streaming feature coming soon!",
-                      });
-                    }}
-                  >
-                    <Radio className="w-4 h-4 mr-2" />
-                    Go Live
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-white hover:bg-gray-800 cursor-pointer"
-                    onClick={() => {
-                      setShowCreateMenu(false);
-                      // Handle start battle functionality
-                      toast({
-                        title: "Start Battle",
-                        description: "Battle feature coming soon!",
-                      });
-                    }}
-                  >
-                    <Swords className="w-4 h-4 mr-2" />
-                    Start Battle
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                onClick={() => navigate('/app/profile')}
+              >
+                <User className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -1127,6 +1268,8 @@ const Videos: React.FC = () => {
               isActive={index === currentIndex}
               showControls={showControls}
               onVideoElementReady={index === currentIndex ? setCurrentVideoElement : undefined}
+              onLike={handleVideoLike}
+              onComment={handleCommentClick}
             />
           );
         })}
@@ -1221,7 +1364,92 @@ const Videos: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Comments Section - TikTok Style (slides up from bottom) */}
+      {showComments && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0">
+          <div className="bg-gray-900 rounded-tl-2xl rounded-tr-2xl w-full h-2/3 max-w-md flex flex-col animate-slide-up">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-white font-semibold">Comments ({comments.length})</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowComments(false)}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            {/* Comments List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  <Avatar className="w-8 h-8 flex-shrink-0">
+                    <AvatarImage src={comment.user?.avatar_url || "https://i.pravatar.cc/150"} />
+                    <AvatarFallback>{comment.user?.username?.[0] || "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-medium text-sm">{comment.user?.username || "User"}</span>
+                      {comment.user?.is_verified && (
+                        <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                        </div>
+                      )}
+                      <span className="text-gray-400 text-xs">
+                        {formatDistanceToNow(new Date(comment.created_at))} ago
+                      </span>
+                    </div>
+                    <p className="text-white text-sm mt-1">{comment.content}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-gray-400 hover:text-white p-0 h-auto"
+                        onClick={() => handleLikeComment(comment.id)}
+                      >
+                        <Heart className={`w-4 h-4 mr-1 ${comment.isLiked ? "fill-current text-red-500" : ""}`} />
+                        <span className="text-xs">{comment.likes_count || comment.likes || 0}</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-gray-400 hover:text-white p-0 h-auto"
+                      >
+                        <Reply className="w-4 h-4 mr-1" />
+                        <span className="text-xs">Reply</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Add Comment */}
+            <div className="p-4 border-t border-gray-700">
+              <div className="flex gap-2">
+                <Input
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 bg-gray-800 border-gray-600 text-white"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                />
+                <Button 
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim() || isSubmitting}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
+      )}
+
+    </div>
   );
 };
 
