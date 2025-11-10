@@ -110,7 +110,7 @@ import { adSettings } from "../../config/adSettings";
 import { useVideos } from "@/hooks/use-videos";
 import { VideoItem } from "@/types/video";
 import { formatDistanceToNow } from "date-fns";
-import { videoService } from "@/services/videoService";
+import { videoService } from '@/services/videoService';
 import { liveStreamService, LiveStream } from "@/services/liveStreamService";
 import { supabase } from "@/integrations/supabase/client";
 import InVideoBannerAd from "@/components/ads/InVideoBannerAd";
@@ -219,7 +219,11 @@ const VideoCard: React.FC<{
   const isMobile = useIsMobile();
   const { safePlay, safePause, togglePlayback } = useVideoPlayback();
   const { user } = useAuth();
-
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [gifts, setGifts] = useState<any[]>([]);
+  const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [virtualGifts, setVirtualGifts] = useState<any[]>([]);
+  
   // Check if user has liked the video
   useEffect(() => {
     const checkLikeStatus = async () => {
@@ -602,13 +606,19 @@ const VideoCard: React.FC<{
               </div>
               <Button
                 size="sm"
-                variant="outline"
-                className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm"
+                variant={isFollowing ? "default" : "outline"}
+                className={cn(
+                  "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm",
+                  isFollowing 
+                    ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white" 
+                    : "bg-white/20 border-white/30 text-white hover:bg-white/30"
+                )}
+                onClick={toggleFollow}
               >
-                Follow
+                {isFollowing ? "Following" : "Follow"}
               </Button>
             </div>
-
+            
             {/* Description */}
             <div className="text-white text-xs md:text-sm">
               <p className="leading-relaxed line-clamp-2 md:line-clamp-3">
@@ -683,8 +693,13 @@ const VideoCard: React.FC<{
               size="sm"
               variant="default"
               className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-xs font-bold shadow-lg transition-all duration-300 hover:scale-110"
+              onClick={toggleFollow}
             >
-              +
+              {isFollowing ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
             </Button>
           </div>
 
@@ -724,6 +739,7 @@ const VideoCard: React.FC<{
             <Button
               size="icon"
               className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+              onClick={() => handleShare('web')}
             >
               <Share className="w-6 h-6 md:w-7 md:h-7" />
             </Button>
@@ -735,13 +751,7 @@ const VideoCard: React.FC<{
             <Button
               size="icon"
               className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-              onClick={() => {
-                // Handle gift sending functionality
-                toast({
-                  title: "Send Gift",
-                  description: "Gift feature coming soon!",
-                });
-              }}
+              onClick={() => setShowGiftPanel(true)}
             >
               <Gift className="w-6 h-6 md:w-7 md:h-7" />
             </Button>
@@ -750,7 +760,7 @@ const VideoCard: React.FC<{
 
           {/* Music Disc with Enhanced Animation */}
           <div className="flex flex-col items-center gap-1 group-hover:animate-spin-slow">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 animate-spin-slow">
               <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
           </div>
@@ -1228,6 +1238,117 @@ const Videos: React.FC = () => {
     fetchBattles();
   }, [activeTab]);
 
+  // Check if user is already following
+  useEffect(() => {
+    const checkFollowingStatus = async () => {
+      try {
+        const isFollowing = await videoService.isFollowingUser(video.user.id);
+        setIsFollowing(isFollowing);
+      } catch (error) {
+        console.error('Error checking following status:', error);
+      }
+    };
+    
+    if (video.user.id) {
+      checkFollowingStatus();
+    }
+  }, [video.user.id]);
+  
+  // Load virtual gifts
+  useEffect(() => {
+    const loadVirtualGifts = async () => {
+      try {
+        const gifts = await videoService.getVirtualGifts();
+        setVirtualGifts(gifts);
+      } catch (error) {
+        console.error('Error loading virtual gifts:', error);
+      }
+    };
+    
+    loadVirtualGifts();
+  }, []);
+  
+  // Handle follow/unfollow
+  const toggleFollow = async () => {
+    try {
+      if (isFollowing) {
+        await videoService.unfollowUser(video.user.id);
+      } else {
+        await videoService.followUser(video.user.id);
+      }
+      setIsFollowing(!isFollowing);
+      
+      toast({
+        title: isFollowing ? "Unfollowed" : "Following",
+        description: isFollowing 
+          ? `You have unfollowed @${video.user.username}` 
+          : `You are now following @${video.user.username}`
+      });
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      toast({
+        title: "Error",
+        description: "Failed to follow/unfollow user",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle sharing
+  const handleShare = async (platform: string) => {
+    try {
+      await videoService.shareVideo(video.id, platform);
+      
+      // Show share success message
+      toast({
+        title: "Shared Successfully",
+        description: `Video shared to ${platform}`
+      });
+      
+      // Copy link to clipboard for web sharing
+      if (platform === 'web') {
+        const videoUrl = `${window.location.origin}/app/video/${video.id}`;
+        await navigator.clipboard.writeText(videoUrl);
+        toast({
+          title: "Link Copied",
+          description: "Video link copied to clipboard"
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to share video",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle sending gift
+  const handleSendGift = async (giftId: string, quantity: number = 1) => {
+    try {
+      await videoService.sendGift({
+        toUserId: video.user.id,
+        giftId,
+        quantity
+      });
+      
+      setShowGiftPanel(false);
+      
+      toast({
+        title: "Gift Sent",
+        description: `You sent a gift to @${video.user.username}`
+      });
+    } catch (error) {
+      console.error('Error sending gift:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send gift",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black text-white flex items-center justify-center">
@@ -1675,6 +1796,50 @@ const Videos: React.FC = () => {
         </div>
       )}
 
+      {/* Gift Panel */}
+      {showGiftPanel && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-white font-semibold">Send Gift to @{video.user.username}</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowGiftPanel(false)}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-3 gap-3">
+                {virtualGifts.map((gift) => (
+                  <div 
+                    key={gift.id}
+                    className="flex flex-col items-center gap-2 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                    onClick={() => handleSendGift(gift.id)}
+                  >
+                    <div className="text-2xl">{gift.emoji}</div>
+                    <div className="text-white text-xs font-medium text-center">{gift.name}</div>
+                    <div className="text-purple-400 text-xs">${gift.price.toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-700">
+              <Button 
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                onClick={() => setShowGiftPanel(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Live Stream Modal */}
       <LiveStreamModal 
         open={showLiveStreamModal}

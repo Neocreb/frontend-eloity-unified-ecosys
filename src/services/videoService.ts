@@ -385,5 +385,169 @@ export const videoService = {
       ...video,
       user: video.profiles || undefined
     }));
+  },
+
+  // New method for sharing a video
+  async shareVideo(videoId: string, platform: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Record the share action
+    const { error } = await supabase
+      .from('video_shares')
+      .insert({
+        video_id: videoId,
+        user_id: user?.id || null,
+        platform: platform,
+        created_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
+
+    // Increment shares count
+    const { data: currentVideo } = await supabase
+      .from('videos')
+      .select('shares_count')
+      .eq('id', videoId)
+      .single();
+
+    if (currentVideo) {
+      await supabase
+        .from('videos')
+        .update({ shares_count: currentVideo.shares_count + 1 })
+        .eq('id', videoId);
+    }
+  },
+
+  // New method for sending a gift to a video creator
+  async sendGift(params: {
+    toUserId: string;
+    giftId: string;
+    quantity: number;
+    message?: string;
+    contentId?: string;
+    isAnonymous?: boolean;
+  }): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get gift details
+    const { data: gift, error: giftError } = await supabase
+      .from('virtual_gifts')
+      .select('*')
+      .eq('id', params.giftId)
+      .single();
+
+    if (giftError) throw giftError;
+    if (!gift) throw new Error('Gift not found');
+
+    const totalAmount = gift.price * params.quantity;
+
+    // Create gift transaction
+    const { error: transactionError } = await supabase
+      .from('gift_transactions')
+      .insert({
+        from_user_id: user.id,
+        to_user_id: params.toUserId,
+        gift_id: params.giftId,
+        quantity: params.quantity,
+        total_amount: totalAmount,
+        message: params.message,
+        content_id: params.contentId,
+        is_anonymous: params.isAnonymous || false,
+        status: 'completed'
+      });
+
+    if (transactionError) throw transactionError;
+
+    // Update gift inventory for recipient
+    const { data: existingInventory } = await supabase
+      .from('user_gift_inventory')
+      .select('*')
+      .eq('user_id', params.toUserId)
+      .eq('gift_id', params.giftId)
+      .single();
+
+    if (existingInventory) {
+      await supabase
+        .from('user_gift_inventory')
+        .update({ quantity: existingInventory.quantity + params.quantity })
+        .eq('id', existingInventory.id);
+    } else {
+      await supabase
+        .from('user_gift_inventory')
+        .insert({
+          user_id: params.toUserId,
+          gift_id: params.giftId,
+          quantity: params.quantity
+        });
+    }
+  },
+
+  // New method for getting available virtual gifts
+  async getVirtualGifts(): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('virtual_gifts')
+      .select('*')
+      .eq('available', true)
+      .order('price', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  // New method for getting user's gift inventory
+  async getUserGiftInventory(): Promise<any[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('user_gift_inventory')
+      .select(`
+        *,
+        gift:virtual_gifts(*)
+      `)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  // New method for tipping a creator
+  async sendTip(params: {
+    toUserId: string;
+    amount: number;
+    message?: string;
+    contentId?: string;
+    isAnonymous?: boolean;
+  }): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Create tip transaction
+    const { error } = await supabase
+      .from('tip_transactions')
+      .insert({
+        from_user_id: user.id,
+        to_user_id: params.toUserId,
+        amount: params.amount,
+        message: params.message,
+        content_id: params.contentId,
+        is_anonymous: params.isAnonymous || false,
+        status: 'completed'
+      });
+
+    if (error) throw error;
+  },
+
+  // New method for getting creator tip settings
+  async getCreatorTipSettings(userId: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('creator_tip_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 };
