@@ -9,59 +9,26 @@ import {
   type SchedulingOptimization,
   type AIPersonalAssistant,
 } from "@/services/aiPersonalAssistantService";
-import { enhancedAIService } from "@/services/enhancedAIService";
+import { enhancedAIService, type SmartResponse } from "@/services/enhancedAIService";
+import { supabase } from "@/integrations/supabase/client";
 
-export interface UseAIAssistantReturn {
-  // Data
+// Define the return interface
+interface UseAIAssistantReturn {
   assistant: AIPersonalAssistant | null;
   insights: AIInsight[];
   contentSuggestions: ContentSuggestion[];
   tradingInsights: TradingInsight[];
-  performance: PerformanceAnalysis | null;
-  scheduling: SchedulingOptimization | null;
-  dashboardSummary: any;
-
-  // Loading states
+  performanceAnalysis: PerformanceAnalysis | null;
+  schedulingOptimizations: SchedulingOptimization[];
   isLoading: boolean;
-  isLoadingInsights: boolean;
-  isLoadingContent: boolean;
-  isLoadingTrading: boolean;
-  isLoadingPerformance: boolean;
-
-  // Actions
-  initializeAssistant: () => Promise<void>;
-  refreshInsights: () => Promise<void>;
-  refreshContentSuggestions: () => Promise<void>;
-  refreshTradingInsights: () => Promise<void>;
-  refreshPerformance: () => Promise<void>;
-  refreshScheduling: () => Promise<void>;
-  refreshAll: () => Promise<void>;
-
-  // Interactions
-  acceptSuggestion: (suggestionId: string, type: string) => Promise<void>;
-  dismissSuggestion: (suggestionId: string, type: string) => Promise<void>;
-  trackInteraction: (type: string, data: any) => Promise<void>;
-
-  // Configuration
-  updateAssistantPreferences: (
-    preferences: Partial<AIPersonalAssistant["preferences"]>,
-  ) => Promise<boolean>;
-
-  // Chat
-  chatMessages: any[];
-  isTyping: boolean;
-  sendChatMessage: (message: string) => Promise<void>;
-  clearChat: () => void;
-
-  // Utilities
-  getInsightsByType: (type: string) => AIInsight[];
-  getInsightsByPriority: (priority: string) => AIInsight[];
-  getTopPerformingContent: () => ContentSuggestion[];
-  getUrgentInsights: () => AIInsight[];
-
-  // Error handling
+  isProcessing: boolean;
   error: string | null;
-  clearError: () => void;
+  initializeAssistant: (preferences?: Partial<AIPersonalAssistant>) => Promise<void>;
+  fetchInsights: () => Promise<void>;
+  generateContent: (prompt: string) => Promise<SmartResponse | null>;
+  analyzePerformance: () => Promise<PerformanceAnalysis | null>;
+  suggestOptimizations: () => Promise<SchedulingOptimization | null>;
+  getRealTimeInsights: () => Promise<AIInsight[]>;
 }
 
 export const useAIAssistant = (): UseAIAssistantReturn => {
@@ -74,403 +41,194 @@ export const useAIAssistant = (): UseAIAssistantReturn => {
     ContentSuggestion[]
   >([]);
   const [tradingInsights, setTradingInsights] = useState<TradingInsight[]>([]);
-  const [performance, setPerformance] = useState<PerformanceAnalysis | null>(
-    null,
-  );
-  const [scheduling, setScheduling] = useState<SchedulingOptimization | null>(
-    null,
-  );
-  const [dashboardSummary, setDashboardSummary] = useState<any>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [conversationContext, setConversationContext] = useState<string[]>([]);
+  const [performanceAnalysis, setPerformanceAnalysis] = useState<PerformanceAnalysis | null>(null);
+  const [schedulingOptimizations, setSchedulingOptimizations] = useState<SchedulingOptimization[]>([]);
 
-  // Loading states
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
-  const [isLoadingContent, setIsLoadingContent] = useState(false);
-  const [isLoadingTrading, setIsLoadingTrading] = useState(false);
-  const [isLoadingPerformance, setIsLoadingPerformance] = useState(false);
-
-  // Error state
+  // Loading and error states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize assistant on mount
-  useEffect(() => {
-    if (user?.id) {
-      initializeAssistant();
-    }
-  }, [user?.id]);
-
-  const initializeAssistant = useCallback(async () => {
+  // Fetch real insights from the service
+  const fetchInsights = useCallback(async () => {
     if (!user?.id) return;
 
-    setIsLoading(true);
-    setError(null);
-
     try {
-      // Initialize assistant
-      const assistantData =
-        await aiPersonalAssistantService.initializeAssistant(user.id);
-      setAssistant(assistantData);
+      setIsLoading(true);
+      setError(null);
+      
+      // Get personalized insights from the service
+      const userInsights = await aiPersonalAssistantService.getPersonalizedInsights(user.id);
+      setInsights(userInsights);
 
-      // Initialize chat with welcome message
-      setChatMessages([
-        {
-          id: "welcome",
-          type: "assistant",
-          content: `Hey ${user.username || user.email || "there"}! 👋 I'm ${assistantData.name}, your personal Eloity assistant.\n\nI'm here to help you succeed on the platform - whether you want to create amazing content, trade crypto, sell products, or earn through freelancing. Just ask me anything and I'll guide you step by step!\n\nWhat would you like to explore first?`,
-          timestamp: new Date(),
-        },
-      ]);
+      // Get content suggestions
+      const suggestions = await aiPersonalAssistantService.generateContentSuggestions(user.id);
+      setContentSuggestions(suggestions);
 
-      // Load initial data
-      await refreshAll();
+      // Get trading insights
+      const tradeInsights = await aiPersonalAssistantService.generateTradingInsights(user.id);
+      setTradingInsights(tradeInsights);
+
+      // Get performance analysis
+      const perfAnalysis = await aiPersonalAssistantService.generatePerformanceAnalysis(user.id);
+      setPerformanceAnalysis(perfAnalysis);
+
+      // Get scheduling optimizations
+      const schedOptimizations = await aiPersonalAssistantService.generateSchedulingOptimization(user.id);
+      setSchedulingOptimizations([schedOptimizations]);
     } catch (err) {
-      setError("Failed to initialize AI assistant");
-      console.error("Error initializing AI assistant:", err);
+      console.error("Error fetching AI insights:", err);
+      setError("Failed to load AI insights. Please try again.");
     } finally {
       setIsLoading(false);
     }
   }, [user?.id]);
 
-  const refreshInsights = useCallback(async () => {
+  // Initialize assistant
+  const initializeAssistant = useCallback(async (preferences?: Partial<AIPersonalAssistant>) => {
     if (!user?.id) return;
 
-    setIsLoadingInsights(true);
     try {
-      const data = await aiPersonalAssistantService.getAIInsights(user.id);
-      setInsights(data);
-    } catch (err) {
-      setError("Failed to load AI insights");
-      console.error("Error loading insights:", err);
-    } finally {
-      setIsLoadingInsights(false);
-    }
-  }, [user?.id]);
-
-  const refreshContentSuggestions = useCallback(async () => {
-    if (!user?.id) return;
-
-    setIsLoadingContent(true);
-    try {
-      const data = await aiPersonalAssistantService.generateContentSuggestions(
+      setIsProcessing(true);
+      setError(null);
+      
+      // Initialize the assistant with real data
+      const initializedAssistant = await aiPersonalAssistantService.initializeAssistant(
         user.id,
+        preferences
       );
-      setContentSuggestions(data);
+      
+      setAssistant(initializedAssistant);
+      
+      // Fetch initial insights after initialization
+      await fetchInsights();
     } catch (err) {
-      setError("Failed to load content suggestions");
-      console.error("Error loading content suggestions:", err);
+      console.error("Error initializing AI assistant:", err);
+      setError("Failed to initialize AI assistant. Please try again.");
     } finally {
-      setIsLoadingContent(false);
+      setIsProcessing(false);
     }
-  }, [user?.id]);
+  }, [user?.id, fetchInsights]);
 
-  const refreshTradingInsights = useCallback(async () => {
-    if (!user?.id) return;
+  // Effect to initialize assistant when user is available
+  useEffect(() => {
+    if (user?.id && !assistant) {
+      initializeAssistant();
+    }
+  }, [user?.id, assistant, initializeAssistant]);
 
-    setIsLoadingTrading(true);
+  // Effect to fetch insights when assistant is available
+  useEffect(() => {
+    if (assistant && user?.id) {
+      fetchInsights();
+    }
+  }, [assistant, user?.id, fetchInsights]);
+
+  // Generate content using the assistant
+  const generateContent = useCallback(async (prompt: string) => {
+    if (!user?.id) return null;
+
     try {
-      const data = await aiPersonalAssistantService.generateTradingInsights(
-        user.id,
-      );
-      setTradingInsights(data);
+      setIsProcessing(true);
+      setError(null);
+      
+      // Use the enhanced AI service for content generation
+      const content = await enhancedAIService.generateSmartResponse(prompt, {
+        id: user.id,
+        email: user.email || undefined,
+      });
+      
+      return content;
     } catch (err) {
-      setError("Failed to load trading insights");
-      console.error("Error loading trading insights:", err);
+      console.error("Error generating content:", err);
+      setError("Failed to generate content. Please try again.");
+      return null;
     } finally {
-      setIsLoadingTrading(false);
+      setIsProcessing(false);
     }
   }, [user?.id]);
 
-  const refreshPerformance = useCallback(async () => {
-    if (!user?.id) return;
+  // Analyze performance using the assistant
+  const analyzePerformance = useCallback(async () => {
+    if (!user?.id) return null;
 
-    setIsLoadingPerformance(true);
     try {
-      const data = await aiPersonalAssistantService.generatePerformanceAnalysis(
-        user.id,
-      );
-      setPerformance(data);
+      setIsProcessing(true);
+      setError(null);
+      
+      // Get performance analysis from the service
+      const performance = await aiPersonalAssistantService.generatePerformanceAnalysis(user.id);
+      setPerformanceAnalysis(performance);
+      
+      return performance;
     } catch (err) {
-      setError("Failed to load performance analysis");
-      console.error("Error loading performance:", err);
+      console.error("Error analyzing performance:", err);
+      setError("Failed to analyze performance. Please try again.");
+      return null;
     } finally {
-      setIsLoadingPerformance(false);
+      setIsProcessing(false);
     }
   }, [user?.id]);
 
-  const refreshScheduling = useCallback(async () => {
-    if (!user?.id) return;
+  // Suggest optimizations using the assistant
+  const suggestOptimizations = useCallback(async () => {
+    if (!user?.id) return null;
 
     try {
-      const data =
-        await aiPersonalAssistantService.generateSchedulingOptimization(
-          user.id,
-        );
-      setScheduling(data);
+      setIsProcessing(true);
+      setError(null);
+      
+      // Get scheduling optimization from the service
+      const optimizations = await aiPersonalAssistantService.generateSchedulingOptimization(user.id);
+      setSchedulingOptimizations([optimizations]);
+      
+      return optimizations;
     } catch (err) {
-      setError("Failed to load scheduling optimization");
-      console.error("Error loading scheduling:", err);
+      console.error("Error suggesting optimizations:", err);
+      setError("Failed to suggest optimizations. Please try again.");
+      return null;
+    } finally {
+      setIsProcessing(false);
     }
   }, [user?.id]);
 
-  const refreshAll = useCallback(async () => {
-    if (!user?.id) return;
+  // Get real-time insights using the assistant
+  const getRealTimeInsights = useCallback(async () => {
+    if (!user?.id) return [];
 
-    await Promise.all([
-      refreshInsights(),
-      refreshContentSuggestions(),
-      refreshTradingInsights(),
-      refreshPerformance(),
-      refreshScheduling(),
-    ]);
-
-    // Load dashboard summary
     try {
-      const summary = await aiPersonalAssistantService.getDashboardSummary(
-        user.id,
-      );
-      setDashboardSummary(summary);
+      setIsProcessing(true);
+      setError(null);
+      
+      // Get AI insights from the service
+      const realTimeInsights = await aiPersonalAssistantService.getAIInsights(user.id);
+      setInsights(realTimeInsights);
+      
+      return realTimeInsights;
     } catch (err) {
-      console.error("Error loading dashboard summary:", err);
+      console.error("Error getting real-time insights:", err);
+      setError("Failed to get real-time insights. Please try again.");
+      return [];
+    } finally {
+      setIsProcessing(false);
     }
-  }, [
-    user?.id,
-    refreshInsights,
-    refreshContentSuggestions,
-    refreshTradingInsights,
-    refreshPerformance,
-    refreshScheduling,
-  ]);
-
-  const acceptSuggestion = useCallback(
-    async (suggestionId: string, type: string) => {
-      if (!user?.id) return;
-
-      try {
-        await trackInteraction("accept_suggestion", { suggestionId, type });
-
-        // Remove suggestion from list if it's a content suggestion
-        if (type === "content") {
-          setContentSuggestions((prev) =>
-            prev.filter((s) => s.id !== suggestionId),
-          );
-        }
-      } catch (err) {
-        setError("Failed to accept suggestion");
-        console.error("Error accepting suggestion:", err);
-      }
-    },
-    [user?.id],
-  );
-
-  const dismissSuggestion = useCallback(
-    async (suggestionId: string, type: string) => {
-      if (!user?.id) return;
-
-      try {
-        await trackInteraction("dismiss_suggestion", { suggestionId, type });
-
-        // Remove suggestion from appropriate list
-        if (type === "content") {
-          setContentSuggestions((prev) =>
-            prev.filter((s) => s.id !== suggestionId),
-          );
-        } else if (type === "insight") {
-          setInsights((prev) => prev.filter((i) => i.id !== suggestionId));
-        }
-      } catch (err) {
-        setError("Failed to dismiss suggestion");
-        console.error("Error dismissing suggestion:", err);
-      }
-    },
-    [user?.id],
-  );
-
-  const trackInteraction = useCallback(
-    async (type: string, data: any) => {
-      if (!user?.id) return;
-
-      try {
-        await aiPersonalAssistantService.trackInteraction(user.id, type, data);
-      } catch (err) {
-        console.error("Error tracking interaction:", err);
-      }
-    },
-    [user?.id],
-  );
-
-  const updateAssistantPreferences = useCallback(
-    async (preferences: Partial<AIPersonalAssistant["preferences"]>) => {
-      if (!user?.id) return false;
-
-      try {
-        const success =
-          await aiPersonalAssistantService.updateAssistantPreferences(
-            user.id,
-            preferences,
-          );
-        if (success) {
-          setAssistant((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  preferences: { ...prev.preferences, ...preferences },
-                }
-              : null,
-          );
-        }
-        return success;
-      } catch (err) {
-        setError("Failed to update assistant preferences");
-        console.error("Error updating preferences:", err);
-        return false;
-      }
-    },
-    [user?.id],
-  );
-
-  const sendChatMessage = useCallback(
-    async (message: string) => {
-      if (!user?.id || !message.trim() || isTyping) return;
-
-      const userMessage = {
-        id: `msg-${Date.now()}`,
-        type: "user",
-        content: message,
-        timestamp: new Date(),
-      };
-
-      setChatMessages((prev) => [...prev, userMessage]);
-
-      // Add to conversation context
-      setConversationContext((prev) => [...prev.slice(-4), message]); // Keep last 5 messages for context
-
-      // Track chat interaction
-      await trackInteraction("chat", { message });
-
-      // Show typing indicator
-      setIsTyping(true);
-
-      // Simulate realistic response time based on message complexity
-      const responseDelay = Math.min(500 + message.length * 10, 2000);
-
-      // Use enhanced AI service for more intelligent responses
-      setTimeout(() => {
-        // Generate response with conversation context
-        const contextualInput =
-          conversationContext.length > 0
-            ? `Previous context: ${conversationContext.slice(-2).join(". ")}. Current: ${message}`
-            : message;
-
-        const smartResponse = enhancedAIService.generateSmartResponse(
-          contextualInput,
-          user,
-        );
-        const aiResponse = {
-          id: `ai-${Date.now()}`,
-          type: "assistant",
-          content: smartResponse.message,
-          timestamp: new Date(),
-          suggestedActions: smartResponse.suggestedActions,
-          relatedTopics: smartResponse.relatedTopics,
-          followUpQuestions: smartResponse.followUpQuestions,
-        };
-        setChatMessages((prev) => [...prev, aiResponse]);
-        setIsTyping(false);
-      }, responseDelay);
-    },
-    [user?.id, trackInteraction, isTyping, conversationContext],
-  );
-
-  const clearChat = useCallback(() => {
-    setChatMessages([]);
-    setConversationContext([]);
-    setIsTyping(false);
-  }, []);
-
-  // Utility functions
-  const getInsightsByType = useCallback(
-    (type: string) => {
-      return insights.filter((insight) => insight.type === type);
-    },
-    [insights],
-  );
-
-  const getInsightsByPriority = useCallback(
-    (priority: string) => {
-      return insights.filter((insight) => insight.priority === priority);
-    },
-    [insights],
-  );
-
-  const getTopPerformingContent = useCallback(() => {
-    return contentSuggestions
-      .sort((a, b) => b.confidence - a.confidence)
-      .slice(0, 3);
-  }, [contentSuggestions]);
-
-  const getUrgentInsights = useCallback(() => {
-    return insights.filter(
-      (insight) => insight.priority === "urgent" || insight.priority === "high",
-    );
-  }, [insights]);
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+  }, [user?.id]);
 
   return {
-    // Data
     assistant,
     insights,
     contentSuggestions,
     tradingInsights,
-    performance,
-    scheduling,
-    dashboardSummary,
-
-    // Loading states
+    performanceAnalysis,
+    schedulingOptimizations,
     isLoading,
-    isLoadingInsights,
-    isLoadingContent,
-    isLoadingTrading,
-    isLoadingPerformance,
-
-    // Actions
-    initializeAssistant,
-    refreshInsights,
-    refreshContentSuggestions,
-    refreshTradingInsights,
-    refreshPerformance,
-    refreshScheduling,
-    refreshAll,
-
-    // Interactions
-    acceptSuggestion,
-    dismissSuggestion,
-    trackInteraction,
-
-    // Configuration
-    updateAssistantPreferences,
-
-    // Chat
-    chatMessages,
-    isTyping,
-    sendChatMessage,
-    clearChat,
-
-    // Utilities
-    getInsightsByType,
-    getInsightsByPriority,
-    getTopPerformingContent,
-    getUrgentInsights,
-
-    // Error handling
+    isProcessing,
     error,
-    clearError,
+    initializeAssistant,
+    fetchInsights,
+    generateContent,
+    analyzePerformance,
+    suggestOptimizations,
+    getRealTimeInsights,
   };
 };
-
-export default useAIAssistant;
