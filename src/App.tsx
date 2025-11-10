@@ -146,7 +146,9 @@ import AdminSystem from "./pages/admin/AdminSystem";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 
-import EnhancedTikTokVideosV3 from "./pages/EnhancedTikTokVideosV3";
+// Import the Videos component with a different name to avoid conflicts
+import VideosPage from "./pages/Videos";
+
 import CameraPermissionTest from "./components/debug/CameraPermissionTest";
 import FreelanceDashboardRouteTest from "./components/debug/FreelanceDashboardRouteTest";
 import RouteTest from "./components/debug/RouteTest";
@@ -524,7 +526,7 @@ const AppRoutes = () => {
           <Route path="delivery/profile/:username" element={<DeliveryProfile />} />
           <Route path="campaigns" element={<CampaignCenter />} />
           <Route path="rewards" element={<EnhancedRewards />} />
-          <Route path="videos" element={<Videos />} />
+          <Route path="videos" element={<VideosPage />} />
           <Route path="videos/:videoId" element={<VideoDetail />} />
           {/* Commented out route for missing DuetDemo component */}
           {/* <Route path="duet-demo" element={<DuetDemo />} /> */}
