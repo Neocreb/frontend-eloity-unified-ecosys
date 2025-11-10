@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Radio, Heart, MessageCircle, Share } from 'lucide-react';
+import { Users, Radio, Heart, MessageCircle, Share, Trophy, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -13,28 +13,80 @@ interface LiveStreamCardProps {
 const LiveStreamCard: React.FC<LiveStreamCardProps> = ({ stream, onClick }) => {
   return (
     <div 
-      className="relative h-screen w-full bg-black snap-start snap-always cursor-pointer"
+      className="relative h-screen w-full bg-black snap-start snap-always cursor-pointer group"
       onClick={onClick}
     >
-      {/* Live Stream Thumbnail/Video Placeholder */}
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex items-center justify-center">
-        <div className="text-center">
-          <Radio className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
-          <h3 className="text-white text-xl font-bold mb-2">{stream.title}</h3>
-          <p className="text-gray-300">{stream.description || 'Live stream in progress'}</p>
+      {/* Live Stream Background with Gradient Overlay */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900/30 via-blue-900/20 to-red-900/30">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,rgba(0,0,0,0)_70%)]"></div>
+      </div>
+      
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(5)].map((_, i) => (
+          <div 
+            key={i}
+            className="absolute rounded-full bg-red-500/10 animate-pulse"
+            style={{
+              width: `${Math.random() * 100 + 50}px`,
+              height: `${Math.random() * 100 + 50}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDuration: `${Math.random() * 3 + 2}s`,
+              animationDelay: `${Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Live Stream Content */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center z-10">
+          <div className="relative inline-block">
+            <Radio className="w-20 h-20 text-red-500 mx-auto mb-4 animate-pulse" />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-ping">
+              <div className="w-3 h-3 bg-white rounded-full"></div>
+            </div>
+          </div>
+          <h3 className="text-white text-2xl font-bold mb-2 drop-shadow-lg">{stream.title}</h3>
+          <p className="text-gray-300 mb-6 max-w-md mx-auto">{stream.description || 'Live stream in progress'}</p>
+          
+          {/* Streamer Info */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Avatar className="w-12 h-12 border-2 border-white/20">
+              <AvatarImage src={stream.user?.avatar_url || "https://i.pravatar.cc/150"} />
+              <AvatarFallback>{stream.user?.username?.[0] || "U"}</AvatarFallback>
+            </Avatar>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-white font-semibold text-lg">
+                  @{stream.user?.username || "Unknown"}
+                </span>
+                {stream.user?.is_verified && (
+                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-2.5 h-2.5 bg-white rounded-full" />
+                  </div>
+                )}
+              </div>
+              <div className="text-gray-400 text-sm">
+                {stream.user?.full_name || "Unknown User"}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
-
-      {/* Live Indicator */}
+      {/* Live Indicator with Animation */}
       <div className="absolute top-4 left-4">
         <Badge
           variant="secondary"
-          className="bg-red-500/20 text-red-400 border-none text-xs px-2 py-1 animate-pulse"
+          className="bg-red-500/20 text-red-400 border-none text-sm px-3 py-1.5 animate-pulse"
         >
-          LIVE
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+            <Radio className="w-3.5 h-3.5" />
+            <span className="font-bold">LIVE</span>
+          </div>
         </Badge>
       </div>
 
@@ -42,84 +94,64 @@ const LiveStreamCard: React.FC<LiveStreamCardProps> = ({ stream, onClick }) => {
       <div className="absolute top-4 right-4">
         <Badge
           variant="secondary"
-          className="bg-black/40 text-white border-none text-xs px-2 py-1"
+          className="bg-black/40 text-white border-none text-sm px-3 py-1.5 backdrop-blur-sm"
         >
-          <Users className="w-3 h-3 mr-1" />
+          <Users className="w-4 h-4 mr-2" />
           {stream.viewer_count?.toLocaleString() || '0'}
         </Badge>
       </div>
 
-      {/* Content overlay */}
-      <div className="absolute inset-0 flex">
-        {/* Left side - user info */}
-        <div className="flex-1 flex flex-col justify-end p-4 pb-24">
-          <div className="space-y-3">
-            {/* User info */}
+      {/* Interactive Features Overlay - Hidden by default, shown on hover */}
+      <div className="absolute right-4 bottom-24 md:bottom-32 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {/* Like Button */}
+        <Button
+          size="icon"
+          className="w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+        >
+          <Heart className="w-5 h-5" />
+        </Button>
+        
+        {/* Comment Button */}
+        <Button
+          size="icon"
+          className="w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+        >
+          <MessageCircle className="w-5 h-5" />
+        </Button>
+        
+        {/* Share Button */}
+        <Button
+          size="icon"
+          className="w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+        >
+          <Share className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Stream Info Bar at Bottom */}
+      <div className="absolute bottom-4 left-4 right-4">
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12 border-2 border-white/20">
+              <Avatar className="w-10 h-10 border-2 border-white/20">
                 <AvatarImage src={stream.user?.avatar_url || "https://i.pravatar.cc/150"} />
                 <AvatarFallback>{stream.user?.username?.[0] || "U"}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold text-sm truncate">
-                    @{stream.user?.username || "Unknown"}
-                  </span>
-                  {stream.user?.is_verified && (
-                    <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    </div>
-                  )}
-                </div>
-                <div className="text-white/80 text-xs">
-                  {stream.user?.full_name || "Unknown User"}
-                </div>
+              <div>
+                <div className="text-white font-medium">{stream.user?.username || "Unknown"}</div>
+                <div className="text-gray-400 text-xs">{stream.category || "General"}</div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Right side - Interactive Features */}
-        <div className="flex flex-col items-center justify-end gap-4 p-4 pb-32">
-          {/* User Avatar */}
-          <div className="flex flex-col items-center gap-2">
-            <Avatar className="w-14 h-14 border-2 border-white/20">
-              <AvatarImage src={stream.user?.avatar_url || "https://i.pravatar.cc/150"} />
-              <AvatarFallback>{stream.user?.username?.[0] || "U"}</AvatarFallback>
-            </Avatar>
-          </div>
-
-          {/* Like Button */}
-          <div className="flex flex-col items-center gap-1">
-            <Button
-              size="icon"
-              className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
-            >
-              <Heart className="w-7 h-7" />
-            </Button>
-            <span className="text-white text-xs font-medium">Like</span>
-          </div>
-
-          {/* Comment Button */}
-          <div className="flex flex-col items-center gap-1">
-            <Button
-              size="icon"
-              className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
-            >
-              <MessageCircle className="w-7 h-7" />
-            </Button>
-            <span className="text-white text-xs font-medium">Comment</span>
-          </div>
-
-          {/* Share Button */}
-          <div className="flex flex-col items-center gap-1">
-            <Button
-              size="icon"
-              className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
-            >
-              <Share className="w-7 h-7" />
-            </Button>
-            <span className="text-white text-xs font-medium">Share</span>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-xs h-8 px-3"
+              >
+                <Zap className="w-3 h-3 mr-1" />
+                Join
+              </Button>
+            </div>
           </div>
         </div>
       </div>

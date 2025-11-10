@@ -116,6 +116,8 @@ import { supabase } from "@/integrations/supabase/client";
 import InVideoBannerAd from "@/components/ads/InVideoBannerAd";
 import LiveStreamCard from "@/components/live/LiveStreamCard";
 import BattleCard from "@/components/live/BattleCard";
+import LiveStreamModal from "@/components/live/LiveStreamModal";
+import BattleCreationModal from "@/components/live/BattleCreationModal";
 
 interface VideoData {
   id: string;
@@ -323,7 +325,7 @@ const VideoCard: React.FC<{
     setAdWatchTimer(0);
     // Resume main video
     const video = videoRef.current;
-    if (video && isActive) {
+    if (video) {
       safePlay(video);
       setIsPlaying(true);
     }
@@ -335,7 +337,7 @@ const VideoCard: React.FC<{
     setAdWatchTimer(0);
     // Resume main video
     const video = videoRef.current;
-    if (video && isActive) {
+    if (video) {
       safePlay(video);
       setIsPlaying(true);
     }
@@ -461,7 +463,7 @@ const VideoCard: React.FC<{
       : description;
 
   return (
-    <div className="relative h-screen w-full bg-black snap-start snap-always">
+    <div className="relative h-screen w-full bg-black snap-start snap-always group">
       {/* Video */}
       <video
         ref={videoRef}
@@ -542,16 +544,16 @@ const VideoCard: React.FC<{
         </div>
       )}
 
-      {/* Play/Pause indicator */}
+      {/* Play/Pause indicator with enhanced animation */}
       {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px] transition-all duration-300">
           <Button
             size="icon"
             variant="ghost"
-            className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/20 hover:bg-white/30 border-none backdrop-blur-sm"
+            className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 hover:bg-white/30 border-none backdrop-blur-sm shadow-2xl transition-all duration-300 hover:scale-110"
             onClick={togglePlay}
           >
-            <Play className="w-8 h-8 md:w-10 md:h-10 text-white fill-white ml-1" />
+            <Play className="w-10 h-10 md:w-12 md:h-12 text-white fill-white ml-1" />
           </Button>
         </div>
       )}
@@ -601,7 +603,7 @@ const VideoCard: React.FC<{
               <Button
                 size="sm"
                 variant="outline"
-                className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto"
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm"
               >
                 Follow
               </Button>
@@ -657,14 +659,6 @@ const VideoCard: React.FC<{
                   {video.category}
                 </Badge>
               )}
-              {video.hasCaption && (
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-500/20 text-blue-400 text-[10px]"
-                >
-                  CC
-                </Badge>
-              )}
               {video.isSponsored && (
                 <Badge
                   variant="secondary"
@@ -681,14 +675,14 @@ const VideoCard: React.FC<{
         <div className="flex flex-col items-center justify-end gap-4 p-3 pb-32">
           {/* User Avatar with Follow Button */}
           <div className="flex flex-col items-center gap-2">
-            <Avatar className="w-12 h-12 md:w-14 md:h-14 border-2 border-white/20 cursor-pointer">
+            <Avatar className="w-12 h-12 md:w-14 md:h-14 border-2 border-white/20 cursor-pointer hover:scale-105 transition-transform duration-300">
               <AvatarImage src={video.user.avatar} />
               <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
             </Avatar>
             <Button
               size="sm"
               variant="default"
-              className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-xs font-bold shadow-lg"
+              className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-xs font-bold shadow-lg transition-all duration-300 hover:scale-110"
             >
               +
             </Button>
@@ -699,7 +693,7 @@ const VideoCard: React.FC<{
             <Button
               size="icon"
               className={cn(
-                "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300 shadow-lg",
+                "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300 shadow-lg hover:scale-110",
                 isLiked ? "text-red-500 scale-110" : "text-white"
               )}
               onClick={toggleLike}
@@ -715,7 +709,7 @@ const VideoCard: React.FC<{
           <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
               onClick={toggleComments}
             >
               <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
@@ -729,7 +723,7 @@ const VideoCard: React.FC<{
           <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
             >
               <Share className="w-6 h-6 md:w-7 md:h-7" />
             </Button>
@@ -740,7 +734,7 @@ const VideoCard: React.FC<{
           <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
               onClick={() => {
                 // Handle gift sending functionality
                 toast({
@@ -754,15 +748,15 @@ const VideoCard: React.FC<{
             <span className="text-white text-xs font-medium">Gift</span>
           </div>
 
-          {/* Music Disc with Animation */}
-          <div className="flex flex-col items-center gap-1 animate-spin-slow">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg">
+          {/* Music Disc with Enhanced Animation */}
+          <div className="flex flex-col items-center gap-1 group-hover:animate-spin-slow">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300">
               <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
           </div>
         </div>
       </div>
-
+      
       {/* Enhanced Controls Bar */}
       <div className="absolute top-4 right-4 flex flex-col gap-2 md:gap-3">
         {/* Connection Quality Indicator */}
@@ -1396,31 +1390,9 @@ const Videos: React.FC = () => {
                     </div>
                     <div 
                       className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
-                      onClick={async () => {
+                      onClick={() => {
                         setShowCreateMenu(false);
-                        // Handle go live functionality
-                        try {
-                          const stream = await liveStreamService.createLiveStream({
-                            title: "My Live Stream",
-                            description: "Join me live!",
-                            category: "general"
-                          });
-                          
-                          // Navigate to live stream page
-                          navigate(`/app/live/${stream.id}`);
-                          
-                          toast({
-                            title: "Live Stream Started!",
-                            description: "Your live stream is now broadcasting.",
-                          });
-                        } catch (error) {
-                          console.error("Error starting live stream:", error);
-                          toast({
-                            title: "Error",
-                            description: "Failed to start live stream. Please try again.",
-                            variant: "destructive",
-                          });
-                        }
+                        setShowLiveStreamModal(true);
                       }}
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
@@ -1433,38 +1405,9 @@ const Videos: React.FC = () => {
                     </div>
                     <div 
                       className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
-                      onClick={async () => {
+                      onClick={() => {
                         setShowCreateMenu(false);
-                        // Handle start battle functionality
-                        try {
-                          // First create a live stream for the battle
-                          const stream = await liveStreamService.createLiveStream({
-                            title: "Battle Challenge",
-                            description: "Join the battle!",
-                            category: "general"
-                          });
-                          
-                          // Then create the battle
-                          const battle = await liveStreamService.createBattle({
-                            liveStreamId: stream.id,
-                            battleType: "general"
-                          });
-                          
-                          // Navigate to battle page
-                          navigate(`/app/battle/${battle.id}`);
-                          
-                          toast({
-                            title: "Battle Started!",
-                            description: "Your battle is now live.",
-                          });
-                        } catch (error) {
-                          console.error("Error starting battle:", error);
-                          toast({
-                            title: "Error",
-                            description: "Failed to start battle. Please try again.",
-                            variant: "destructive",
-                          });
-                        }
+                        setShowBattleCreationModal(true);
                       }}
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
@@ -1732,6 +1675,24 @@ const Videos: React.FC = () => {
         </div>
       )}
 
+      {/* Live Stream Modal */}
+      <LiveStreamModal 
+        open={showLiveStreamModal}
+        onOpenChange={setShowLiveStreamModal}
+        onStreamStart={(streamId) => {
+          console.log("Stream started:", streamId);
+        }}
+      />
+      
+      {/* Battle Creation Modal */}
+      <BattleCreationModal 
+        open={showBattleCreationModal}
+        onOpenChange={setShowBattleCreationModal}
+        onBattleStart={(battleId) => {
+          console.log("Battle started:", battleId);
+        }}
+      />
+      
     </div>
   );
 };

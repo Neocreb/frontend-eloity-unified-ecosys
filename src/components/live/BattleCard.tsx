@@ -1,5 +1,5 @@
 import React from 'react';
-import { Swords, Users, Trophy, Heart, MessageCircle, Share } from 'lucide-react';
+import { Swords, Users, Trophy, Heart, MessageCircle, Share, Zap, Crown, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -11,44 +11,145 @@ interface BattleCardProps {
 }
 
 const BattleCard: React.FC<BattleCardProps> = ({ battle, onClick }) => {
+  // Get challenger and opponent info (mock data for now)
+  const challenger = {
+    username: "battleking",
+    fullName: "Battle King",
+    avatar: "https://i.pravatar.cc/150?u=challenger",
+    isVerified: true,
+    score: battle.battle?.challenger_score || 0
+  };
+  
+  const opponent = {
+    username: "epicfighter",
+    fullName: "Epic Fighter",
+    avatar: "https://i.pravatar.cc/150?u=opponent",
+    isVerified: true,
+    score: battle.battle?.opponent_score || 0
+  };
+
   return (
     <div 
-      className="relative h-screen w-full bg-black snap-start snap-always cursor-pointer"
+      className="relative h-screen w-full bg-black snap-start snap-always cursor-pointer group"
       onClick={onClick}
     >
-      {/* Battle Background */}
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900/70 via-pink-900/70 to-red-900/70 flex items-center justify-center">
-        <div className="text-center">
-          <Swords className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          <h3 className="text-white text-xl font-bold mb-2">BATTLE IN PROGRESS</h3>
-          <p className="text-gray-300 mb-4">{battle.title}</p>
+      {/* Battle Background with Animated Gradient */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900/40 via-pink-900/30 to-red-900/40">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,rgba(0,0,0,0)_70%)]"></div>
+      </div>
+      
+      {/* Animated Battle Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(3)].map((_, i) => (
+          <div 
+            key={i}
+            className="absolute rounded-full bg-purple-500/10 animate-pulse"
+            style={{
+              width: `${Math.random() * 150 + 50}px`,
+              height: `${Math.random() * 150 + 50}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDuration: `${Math.random() * 4 + 3}s`,
+              animationDelay: `${Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Battle Arena */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center z-10 max-w-2xl mx-auto px-4">
+          {/* Battle Title */}
+          <div className="relative mb-8">
+            <Swords className="w-20 h-20 text-yellow-400 mx-auto mb-4 animate-pulse" />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center animate-ping">
+              <div className="w-3 h-3 bg-white rounded-full"></div>
+            </div>
+          </div>
           
-          {/* Battle Scores */}
-          <div className="flex justify-center items-center gap-8">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500">
+            BATTLE IN PROGRESS
+          </h2>
+          <h3 className="text-white text-2xl font-bold mb-2 drop-shadow-lg">{battle.title}</h3>
+          <p className="text-gray-300 mb-8 text-lg max-w-lg mx-auto">{battle.description || 'Epic creator battle'}</p>
+          
+          {/* Battle Arena */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-center mb-8">
+            {/* Challenger */}
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{battle.battle.challenger_score || 0}</div>
-              <div className="text-sm text-gray-300">Challenger</div>
+              <div className="relative inline-block mb-3">
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 p-1 mx-auto">
+                  <Avatar className="w-full h-full rounded-full">
+                    <AvatarImage src={challenger.avatar} />
+                    <AvatarFallback>{challenger.username[0]}</AvatarFallback>
+                  </Avatar>
+                </div>
+                {challenger.isVerified && (
+                  <div className="absolute bottom-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <div className="w-3 h-3 bg-white rounded-full" />
+                  </div>
+                )}
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-blue-400 mb-1">{challenger.score}</div>
+              <div className="text-white font-medium">@{challenger.username}</div>
+              <div className="text-gray-400 text-sm">{challenger.fullName}</div>
             </div>
-            <div className="text-2xl font-bold text-yellow-400">VS</div>
+            
+            {/* VS Indicator */}
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">{battle.battle.opponent_score || 0}</div>
-              <div className="text-sm text-gray-300">Opponent</div>
+              <div className="bg-gradient-to-r from-yellow-500 to-red-500 rounded-full w-16 h-16 md:w-20 md:h-20 flex items-center justify-center mx-auto mb-2">
+                <span className="text-white font-bold text-xl md:text-2xl">VS</span>
+              </div>
+              <div className="text-yellow-400 font-bold text-sm md:text-base">
+                {battle.battle?.time_remaining ? `${Math.floor(battle.battle.time_remaining / 60)}:${(battle.battle.time_remaining % 60).toString().padStart(2, '0')}` : '05:00'}
+              </div>
+              <div className="text-gray-400 text-xs">TIME LEFT</div>
             </div>
+            
+            {/* Opponent */}
+            <div className="text-center">
+              <div className="relative inline-block mb-3">
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-red-500 to-pink-500 p-1 mx-auto">
+                  <Avatar className="w-full h-full rounded-full">
+                    <AvatarImage src={opponent.avatar} />
+                    <AvatarFallback>{opponent.username[0]}</AvatarFallback>
+                  </Avatar>
+                </div>
+                {opponent.isVerified && (
+                  <div className="absolute bottom-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <div className="w-3 h-3 bg-white rounded-full" />
+                  </div>
+                )}
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-red-400 mb-1">{opponent.score}</div>
+              <div className="text-white font-medium">@{opponent.username}</div>
+              <div className="text-gray-400 text-sm">{opponent.fullName}</div>
+            </div>
+          </div>
+          
+          {/* Battle Type */}
+          <div className="flex justify-center mb-6">
+            <Badge
+              variant="secondary"
+              className="bg-purple-500/20 text-purple-400 border-none text-sm px-4 py-2"
+            >
+              <Trophy className="w-4 h-4 mr-2" />
+              {battle.battle?.battle_type?.toUpperCase() || 'GENERAL'} BATTLE
+            </Badge>
           </div>
         </div>
       </div>
-
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
 
       {/* Battle Indicator */}
       <div className="absolute top-4 left-4">
         <Badge
           variant="secondary"
-          className="bg-purple-500/20 text-purple-400 border-none text-xs px-2 py-1"
+          className="bg-purple-500/20 text-purple-400 border-none text-sm px-3 py-1.5 animate-pulse"
         >
-          <Swords className="w-3 h-3 mr-1" />
-          BATTLE
+          <div className="flex items-center gap-1.5">
+            <Flame className="w-3.5 h-3.5" />
+            <span className="font-bold">BATTLE</span>
+          </div>
         </Badge>
       </div>
 
@@ -56,80 +157,69 @@ const BattleCard: React.FC<BattleCardProps> = ({ battle, onClick }) => {
       <div className="absolute top-4 right-4">
         <Badge
           variant="secondary"
-          className="bg-black/40 text-white border-none text-xs px-2 py-1"
+          className="bg-black/40 text-white border-none text-sm px-3 py-1.5 backdrop-blur-sm"
         >
-          <Users className="w-3 h-3 mr-1" />
+          <Users className="w-4 h-4 mr-2" />
           {battle.viewer_count?.toLocaleString() || '0'}
         </Badge>
       </div>
 
-      {/* Content overlay */}
-      <div className="absolute inset-0 flex">
-        {/* Left side - battle info */}
-        <div className="flex-1 flex flex-col justify-end p-4 pb-24">
-          <div className="space-y-3">
-            {/* Battle Type */}
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-yellow-400" />
-              <span className="text-white text-sm font-medium">
-                {battle.battle.battle_type?.toUpperCase() || 'GENERAL'} BATTLE
-              </span>
+      {/* Interactive Features Overlay - Hidden by default, shown on hover */}
+      <div className="absolute right-4 bottom-24 md:bottom-32 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {/* Vote for Challenger */}
+        <Button
+          size="icon"
+          className="w-12 h-12 rounded-full bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm text-blue-400 transition-all duration-300 shadow-lg hover:scale-110 border border-blue-500/30"
+        >
+          <Heart className="w-5 h-5" />
+        </Button>
+        
+        {/* Vote for Opponent */}
+        <Button
+          size="icon"
+          className="w-12 h-12 rounded-full bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm text-red-400 transition-all duration-300 shadow-lg hover:scale-110 border border-red-500/30"
+        >
+          <Heart className="w-5 h-5" />
+        </Button>
+        
+        {/* Comment Button */}
+        <Button
+          size="icon"
+          className="w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+        >
+          <MessageCircle className="w-5 h-5" />
+        </Button>
+        
+        {/* Share Button */}
+        <Button
+          size="icon"
+          className="w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+        >
+          <Share className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Battle Info Bar at Bottom */}
+      <div className="absolute bottom-4 left-4 right-4">
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Crown className="w-5 h-5 text-yellow-400" />
+              <div>
+                <div className="text-white font-medium">Leader: {challenger.score > opponent.score ? challenger.username : opponent.username}</div>
+                <div className="text-gray-400 text-xs">Current Score: {Math.max(challenger.score, opponent.score)}</div>
+              </div>
             </div>
             
-            {/* Time Remaining */}
-            {battle.battle.time_remaining && (
-              <div className="text-white/80 text-xs">
-                Time remaining: {Math.floor(battle.battle.time_remaining / 60)}:{(battle.battle.time_remaining % 60).toString().padStart(2, '0')}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right side - Interactive Features */}
-        <div className="flex flex-col items-center justify-end gap-4 p-4 pb-32">
-          {/* Vote Buttons */}
-          <div className="flex flex-col gap-2">
-            <Button
-              size="sm"
-              className="w-14 h-14 rounded-full bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm text-blue-400 transition-all duration-300 shadow-lg border border-blue-500/30"
-            >
-              <div className="flex flex-col items-center">
-                <Heart className="w-5 h-5" />
-                <span className="text-xs mt-1">Vote</span>
-              </div>
-            </Button>
-            
-            <Button
-              size="sm"
-              className="w-14 h-14 rounded-full bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm text-red-400 transition-all duration-300 shadow-lg border border-red-500/30"
-            >
-              <div className="flex flex-col items-center">
-                <Heart className="w-5 h-5" />
-                <span className="text-xs mt-1">Vote</span>
-              </div>
-            </Button>
-          </div>
-
-          {/* Comment Button */}
-          <div className="flex flex-col items-center gap-1">
-            <Button
-              size="icon"
-              className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
-            >
-              <MessageCircle className="w-7 h-7" />
-            </Button>
-            <span className="text-white text-xs font-medium">Comment</span>
-          </div>
-
-          {/* Share Button */}
-          <div className="flex flex-col items-center gap-1">
-            <Button
-              size="icon"
-              className="w-14 h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
-            >
-              <Share className="w-7 h-7" />
-            </Button>
-            <span className="text-white text-xs font-medium">Share</span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs h-8 px-3"
+              >
+                <Zap className="w-3 h-3 mr-1" />
+                Join Battle
+              </Button>
+            </div>
           </div>
         </div>
       </div>
