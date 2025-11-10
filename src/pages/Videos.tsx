@@ -1512,7 +1512,7 @@ const Videos: React.FC = () => {
       </div>
 
       {/* Enhanced Create Button Group - Moved to left side */}
-      <div className="fixed bottom-24 md:bottom-8 left-4 md:left-8 z-50 flex flex-col gap-3">
+      <div className="fixed bottom-32 md:bottom-24 left-4 md:left-8 z-50 flex flex-col gap-3">
         <AccessibilityFAB
           videoElement={currentVideoElement}
           className="w-12 h-12"
