@@ -25,6 +25,8 @@ import {
   UserPlus,
   VideoIcon,
   X,
+  Bot,
+  MessageCircle,
 } from "lucide-react";
 import WhatsAppChatInput from "./WhatsAppChatInput";
 import { VoiceVideoCall } from "./VoiceVideoCall";
@@ -59,6 +61,8 @@ import { CreateGroupModal } from "./group/CreateGroupModal";
 import { groupChatService } from "@/services/groupChatService";
 import { ChatParticipant } from "@/types/chat";
 import { CreateGroupRequest } from "@/types/group-chat";
+import UserSearchModal from '@/components/search/UserSearchModal';
+import { UserService } from '@/services/userService';
 
 interface UnifiedChatInterfaceProps {
   className?: string;
@@ -639,7 +643,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     if (showCreateGroupModal) {
       fetchContacts();
     }
-  }, [showCreateGroupModal, user?.id]);
+  }, [ showCreateGroupModal, user?.id]);
 
   const handleTabChange = (tab: UnifiedChatType) => {
     setActiveTab(tab);
@@ -903,8 +907,78 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
   if (!user) return null;
 
+  const [showSidebar, setShowSidebar] = useState(!isMobile);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+
+  const startNewChat = async (userId: string) => {
+    if (!user) return;
+    
+    try {
+      // Get the user's profile information
+      const userProfile = await UserService.getUserById(userId);
+      
+      if (!userProfile) {
+        toast({
+          title: "Error",
+          description: "Could not find user profile",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create a new chat thread using the chat service
+      const newThread = await chatService.createChatThread({
+        type: "social",
+        participants: [user.id, userId],
+        initialMessage: "",
+      });
+      
+      // Create a proper UnifiedChatThread object
+      const newChat: UnifiedChatThread = {
+        id: newThread.id,
+        type: newThread.type,
+        referenceId: newThread.referenceId,
+        participants: newThread.participants,
+        lastMessage: newThread.lastMessage,
+        lastMessageAt: newThread.lastMessageAt,
+        updatedAt: newThread.updatedAt,
+        isGroup: newThread.isGroup,
+        groupName: newThread.groupName,
+        groupAvatar: newThread.groupAvatar,
+        groupDescription: newThread.groupDescription,
+        createdBy: newThread.createdBy,
+        createdAt: newThread.createdAt,
+        unreadCount: newThread.unreadCount,
+        contextData: newThread.contextData,
+        participant_profile: {
+          id: userProfile.id,
+          name: userProfile.full_name || userProfile.username || "Unknown User",
+          avatar: userProfile.avatar_url || userProfile.avatar || "/placeholder.svg",
+          is_online: false, // We would need to implement real-time presence tracking
+          last_seen: userProfile.updated_at || new Date().toISOString(),
+        },
+      };
+      
+      setConversations((prev) => [newChat, ...prev]);
+      setSelectedChat(newChat);
+      setShowUserSearch(false);
+      
+      toast({
+        title: "Chat Started",
+        description: `You can now chat with ${userProfile.full_name || userProfile.username}`,
+      });
+    } catch (error) {
+      console.error("Error starting new chat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start new chat. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className={cn("h-full flex flex-col", className)}>
+    <div className="flex h-full bg-background">
       {/* Chat Tabs - sticky top */}
       <div className="shrink-0 bg-background border-b px-4 py-3">
         <ChatTabs
@@ -969,7 +1043,10 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>New Chat</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate('/explore')}>Start Social Chat</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowUserSearch(true)}>
+                        <Users className="h-4 w-4 mr-2" />
+                        Start Social Chat
+                      </DropdownMenuItem>
                       {activeTab === "social" && (
                         <DropdownMenuItem onClick={() => setShowCreateGroupModal(true)}>
                           <Users className="h-4 w-4 mr-2" />
@@ -1645,6 +1722,321 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
         isOpen={showCreateGroupModal}
         onOpenChange={setShowCreateGroupModal}
       />
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "border-r bg-muted/10 flex flex-col transition-all duration-300",
+          isMobile ? "absolute inset-y-0 left-0 z-20 w-64" : "w-80",
+          (!isMobile || showSidebar) ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <Card className="flex flex-col h-full border-0 rounded-none shadow-none">
+          <CardHeader className="p-4 border-b">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                {activeTab === "ai_assistant" ? (
+                  <>
+                    <Bot className="h-5 w-5 text-purple-500" />
+                    AI Assistant
+                  </>
+                ) : activeTab === "social" ? (
+                  <>
+                    <MessageCircle className="h-5 w-5" />
+                    Social Chat
+                  </>
+                ) : activeTab === "freelance" ? (
+                  <>
+                    <Briefcase className="h-5 w-5" />
+                    Freelance
+                  </>
+                ) : activeTab === "marketplace" ? (
+                  <>
+                    <ShoppingBag className="h-5 w-5" />
+                    Marketplace
+                  </>
+                ) : activeTab === "crypto" ? (
+                  <>
+                    <Coins className="h-5 w-5" />
+                    P2P Trading
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="h-5 w-5" />
+                    {activeTab.charAt(0).toUpperCase() +
+                      activeTab.slice(1)}{" "}
+                    {isMobile ? "" : "Chat"}
+                  </>
+                )}
+              </CardTitle>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size={isMobile ? "sm" : "default"}
+                    className={isMobile ? "h-8 w-8 p-0" : "h-9 w-9 p-0"}
+                  >
+                    <span className="sr-only">Open menu</span>
+                    <PlusCircle className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>New Chat</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowUserSearch(true)}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Start Social Chat
+                  </DropdownMenuItem>
+                  {activeTab === "social" && (
+                    <DropdownMenuItem onClick={() => setShowCreateGroupModal(true)}>
+                      <Users className="h-4 w-4 mr-2" />
+                      Create Group
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => navigate('/freelance')}>Find Freelancer</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/marketplace')}>Message Seller</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/crypto')}>P2P Trade Chat</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Search and Filter */}
+            {activeTab !== "ai_assistant" && (
+              <>
+                <div className="relative mt-3">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={
+                      isMobile ? "Search..." : "Search conversations..."
+                    }
+                    className={`pl-10 ${isMobile ? "h-9" : "h-10"}`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowUserSearch(true)}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  >
+                    <Users className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="flex justify-between items-center mt-2 gap-2">
+                  <Button
+                    variant={showUnreadOnly ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+                    className={isMobile ? "text-xs px-2" : ""}
+                  >
+                    <Filter className="h-3 w-3 mr-1" />
+                    {showUnreadOnly ? "All" : "Unread"}
+                  </Button>
+                  <span
+                    className={`text-muted-foreground ${isMobile ? "text-xs" : "text-sm"}`}
+                  >
+                    {filteredConversations.length}
+                    {!isMobile && " conversation"}
+                    {!isMobile && filteredConversations.length !== 1
+                      ? "s"
+                      : ""}
+                  </span>
+                </div>
+              </>
+            )}
+          </CardHeader>
+
+          {/* User Search Modal */}
+          <UserSearchModal
+            open={showUserSearch}
+            onOpenChange={setShowUserSearch}
+            onSelectUser={(user) => {
+              // Start a new chat with the selected user
+              startNewChat(user.id);
+            }}
+            title="Start a Chat"
+            placeholder="Search by username or name..."
+          />
+
+          <CardContent className="p-0 flex-1 overflow-hidden">
+            <ScrollArea
+              className={cn(
+                "chat-scroll-area",
+                isMobile
+                  ? "h-[calc(100 vh-200px)]"
+                  : "h-[calc(100vh-290px)]",
+              )}
+              style={{
+                height: isMobile
+                  ? "calc(100vh - 200px)"
+                  : "calc(100vh - 290px)",
+              }}
+            >
+              {loading ? (
+                <div
+                  className={`${isMobile ? "p-3" : "p-4"} text-center`}
+                >
+                  <div className="animate-pulse space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`flex items-center gap-3 ${isMobile ? "p-2" : "p-3"}`}
+                      >
+                        <div
+                          className={`bg-muted rounded-full ${isMobile ? "w-8 h-8" : "w-10 h-10"}`}
+                        />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-3/4" />
+                          <div className="h-3 bg-muted rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : filteredConversations.length > 0 ? (
+                filteredConversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={cn(
+                      "flex items-start cursor-pointer transition-all duration-200 border-b border-border/30 last:border-b-0",
+                      "touch-optimized active:bg-muted/70", // Touch optimizations
+                      isMobile ? "gap-2 p-3 min-h-[60px]" : "gap-3 p-4", // Minimum touch target
+                      selectedChat?.id === conv.id
+                        ? "bg-primary/5 border-l-2 border-l-primary"
+                        : "hover:bg-muted/50 hover:border-l-2 hover:border-l-muted-foreground/20",
+                    )}
+                    onClick={() => handleChatSelect(conv)}
+                  >
+                    <div className="relative flex-shrink-0">
+                      <Avatar
+                        className={isMobile ? "h-10 w-10" : "h-12 w-12"}
+                      >
+                        <AvatarImage
+                          src={conv.participant_profile?.avatar}
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
+                          {conv.participant_profile?.name?.charAt(0) ||
+                            "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="absolute -bottom-0.5 -right-0.5">
+                        <OnlineStatusIndicator
+                          isOnline={conv.participant_profile?.is_online || false}
+                          lastSeen={conv.participant_profile?.last_seen}
+                          size={isMobile ? "sm" : "md"}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div
+                            className={`rounded bg-muted/50 ${isMobile ? "p-0.5" : "p-1"}`}
+                          >
+                            {getTypeIcon(conv.type)}
+                          </div>
+                          <h4
+                            className={`font-semibold truncate text-foreground ${
+                              isMobile ? "text-sm" : "text-sm"
+                            }`}
+                          >
+                            {conv.participant_profile?.name}
+                          </h4>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 ml-2">
+                          <p
+                            className={`text-muted-foreground ${
+                              isMobile ? "text-xs" : "text-xs"
+                            }`}
+                          >
+                            {formatMessageDate(conv.lastMessageAt)}
+                          </p>
+                          {(conv.unreadCount || 0) > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className={`text-xs ${
+                                isMobile
+                                  ? "h-4 min-w-[16px] px-1"
+                                  : "h-5 min-w-[20px] px-1.5"
+                              }`}
+                            >
+                              {(conv.unreadCount || 0) > 99
+                                ? "99+"
+                                : (conv.unreadCount || 0)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Context info */}
+                      {getContextInfo(conv) && (
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-1 h-1 bg-primary rounded-full"></div>
+                          <p
+                            className={`text-primary font-medium ${
+                              isMobile ? "text-xs" : "text-xs"
+                            }`}
+                          >
+                            {getContextInfo(conv)}
+                          </p>
+                        </div>
+                      )}
+
+                      <p
+                        className={`text-muted-foreground truncate leading-relaxed ${
+                          isMobile ? "text-xs" : "text-sm"
+                        }`}
+                      >
+                        {conv.lastMessage || "No messages yet"}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div
+                  className={`${isMobile ? "p-3" : "p-4"} text-center text-muted-foreground`}
+                >
+                  <div className="space-y-2">
+                    <MessageSquare
+                      className={`mx-auto text-muted-foreground/50 ${
+                        isMobile ? "h-8 w-8" : "h-12 w-12"
+                      }`}
+                    />
+                    <p className={isMobile ? "text-sm" : "text-base"}>
+                      {searchQuery
+                        ? "No conversations found"
+                        : `No ${activeTab} conversations yet`}
+                    </p>
+                    {!searchQuery && (
+                      <p
+                        className={`text-muted-foreground/70 ${
+                          isMobile ? "text-xs" : "text-sm"
+                        }`}
+                      >
+                        Start a new conversation to get started
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Chat Input */}
+      {!isMobile && selectedChat && (
+        <div className="flex flex-col border-t bg-background/10">
+          <WhatsAppChatInput
+            messageInput={messageInput}
+            setMessageInput={setMessageInput}
+            onSendMessage={handleSendEnhancedMessage}
+            isMobile={isMobile}
+            disabled={loading}
+            placeholder={`Message ${selectedChat?.participant_profile?.name || 'chat'}...`}
+          />
+        </div>
+      )}
     </div>
   );
 };

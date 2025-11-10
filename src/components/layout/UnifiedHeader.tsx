@@ -85,6 +85,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { globalSearchService } from "@/services/globalSearchService";
+import UserSearchModal from '@/components/search/UserSearchModal';
 
 interface UnifiedHeaderProps {
   mobileMenuOpen?: boolean;
@@ -172,10 +173,7 @@ const mockSearchResults: SearchResult[] = [
   },
 ];
 
-const UnifiedHeader = ({
-  mobileMenuOpen = false,
-  setMobileMenuOpen,
-}: UnifiedHeaderProps) => {
+const UnifiedHeader = () => {
   const { user, logout } = useAuth();
   const { cart, wishlist, getCartItemsCount, getCartTotal, categories } =
     useEnhancedMarketplace();
@@ -217,6 +215,7 @@ const UnifiedHeader = ({
 
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const [showUserSearch, setShowUserSearch] = useState(false);
 
   // Navigation items with dynamic badges
   const mainNavItems = [
@@ -277,67 +276,53 @@ const UnifiedHeader = ({
     setSavedSearches(saved);
   }, []);
 
-  // Debounced search
+  // Add this effect to handle search when query changes
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    const search = async () => {
+      if (searchQuery.trim() === '') {
+        setSearchResults([]);
+        return;
+      }
 
-    debounceRef.current = setTimeout(() => {
-      if (searchQuery.trim()) {
-        performSearch();
+      setIsSearching(true);
+      try {
+        // Use global search service for real API integration
+        const searchResponse = await globalSearchService.search({
+          query: searchQuery,
+          limit: 8, // Limit for header preview
+        });
+
+        setSearchResults(searchResponse.results);
+        setShowSearchOverlay(true);
+      } catch (error) {
+        console.error("Search failed:", error);
+        // Fallback to mock results if API fails
+        const filteredResults = mockSearchResults.filter(
+          (result) =>
+            result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            result.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            result.tags?.some((tag) =>
+              tag.toLowerCase().includes(searchQuery.toLowerCase()),
+            ),
+        );
+        setSearchResults(filteredResults);
+        setShowSearchOverlay(true);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim() !== '') {
+        search();
       } else {
         setSearchResults([]);
+        setShowSearchOverlay(false);
       }
     }, 300);
 
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
+    return () => clearTimeout(timeoutId);
   }, [searchQuery]);
-
-  const performSearch = async () => {
-    setIsSearching(true);
-
-    try {
-      // Use global search service for real API integration
-      const searchResponse = await globalSearchService.search({
-        query: searchQuery,
-        limit: 5, // Limit for header preview
-      });
-
-      setSearchResults(searchResponse.results);
-      setShowSearchOverlay(true);
-
-      // Save to recent searches
-      if (searchQuery.trim() && !recentSearches.includes(searchQuery)) {
-        const newRecent = [searchQuery, ...recentSearches.slice(0, 4)];
-        setRecentSearches(newRecent);
-        localStorage.setItem("recent-searches", JSON.stringify(newRecent));
-      }
-
-      // Track search analytics
-      await globalSearchService.trackSearch(searchQuery, searchResponse.totalCount);
-    } catch (error) {
-      console.error("Search failed:", error);
-
-      // Fallback to mock results if API fails
-      const filteredResults = mockSearchResults.filter(
-        (result) =>
-          result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          result.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          result.tags?.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase()),
-          ),
-      );
-      setSearchResults(filteredResults);
-      setShowSearchOverlay(true);
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,9 +350,7 @@ const UnifiedHeader = ({
     // Navigate based on result type
     switch (result.type) {
       case "user":
-        navigate(
-          `/app/user/${result.title.toLowerCase().replace(/\s+/g, "-")}`,
-        );
+        navigate(`/app/profile/${result.id}`);
         break;
       case "product":
         navigate(`/app/marketplace/product/${result.id}`);
@@ -591,7 +574,10 @@ const UnifiedHeader = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header
+        className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur
+    supports-[backdrop-filter]:bg-background/60 shadow-md"
+      >
         <div className="flex h-14 items-center justify-between px-4">
           {/* Left section - Logo and Mobile Menu */}
           <div className="flex items-center gap-4">
@@ -764,401 +750,261 @@ const UnifiedHeader = ({
                           ))}
                         </div>
                       )}
+
+                      {/* Quick Actions */}
+                      {!searchQuery && (
+                        <div className="pt-2 border-t border-border">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-sm"
+                            onClick={() => setShowUserSearch(true)}
+                          >
+                            <Users className="w-4 h-4 mr-2" />
+                            Find People to Connect With
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
-                )}
-            </div>
-
-            {/* Mobile Search Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                // On mobile, navigate directly to global search for better UX
-                navigate('/app/global-search?source=mobile');
-              }}
-              className="lg:hidden"
-              title="Search across all platform features"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-
-            {/* Marketplace Mode Toggle */}
-            {(location.pathname.includes("/marketplace") ||
-              location.pathname.includes("/freelance")) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleMarketplaceMode}
-                className="hidden md:flex items-center gap-2"
-              >
-                <ToggleLeft className="h-4 w-4" />
-                <span className="text-xs">
-                  {marketplaceMode === "buyer" ? "Buy" : "Sell"}
-                </span>
-              </Button>
-            )}
-
-            {/* Cart Button with Badge */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/app/marketplace/cart")}
-              className="relative"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {getCartItemsCount() > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
-                >
-                  {getCartItemsCount()}
-                </Badge>
               )}
-            </Button>
-
-            {/* Wishlist Button with Badge */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/app/marketplace/wishlist")}
-              className="relative hidden sm:flex"
-            >
-              <Heart className="h-5 w-5" />
-              {wishlist.length > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
-                >
-                  {wishlist.length}
-                </Badge>
-              )}
-            </Button>
-
-            {/* Create button */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="hidden md:flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate("/app/feed")}>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Create Post
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/app/freelance/post-job")}>
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Post Job
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/app/freelance/post-skill")}>
-                  <Award className="h-4 w-4 mr-2" />
-                  Post Skill/Talent
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/app/marketplace/sell")}>
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  List Product
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Notifications */}
-            <NotificationsDropdown />
-
-            {/* Messages */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/app/chat")}
-              className="relative"
-            >
-              <MessageSquare className="h-5 w-5" />
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
-              >
-                5
-              </Badge>
-            </Button>
-
-            {/* User menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-10 w-10 rounded-full"
-                >
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage
-                      src={user?.user_metadata?.avatar || "/placeholder.svg"}
-                      alt={user?.user_metadata?.name || "@user"}
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {user?.user_metadata?.name
-                        ?.substring(0, 2)
-                        .toUpperCase() || "SC"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-72 max-h-[80vh] overflow-y-auto"
-                align="end"
-                forceMount
-              >
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user?.user_metadata?.name || "User"}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email || "user@example.com"}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-
-                {/* Profile Section */}
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate("/app/profile")}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/app/settings")}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-
-                {/* Marketplace Section - Collapsible */}
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="justify-between cursor-pointer font-medium"
-                    onClick={() => toggleSection("marketplace")}
-                  >
-                    <div className="flex items-center">
-                      <Store className="mr-2 h-4 w-4" />
-                      <span>Marketplace</span>
-                    </div>
-                    {expandedSections.marketplace ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </DropdownMenuItem>
-
-                  {expandedSections.marketplace && (
-                    <>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/marketplace")}
-                      >
-                        <Store className="mr-2 h-4 w-4" />
-                        <span>Browse</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/marketplace/cart")}
-                      >
-                        <ShoppingCart className="mr-2 h-4 w-4" />
-                        <span>Cart ({getCartItemsCount()})</span>
-                        {getCartTotal() > 0 && (
-                          <span className="ml-auto text-xs text-muted-foreground">
-                            ${getCartTotal().toFixed(2)}
-                          </span>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/marketplace/wishlist")}
-                      >
-                        <Heart className="mr-2 h-4 w-4" />
-                        <span>Wishlist ({wishlist.length})</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/marketplace/my")}
-                      >
-                        <Package className="mr-2 h-4 w-4" />
-                        <span>Orders</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/marketplace/seller")}
-                      >
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        <span>Seller Dashboard</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-
-                {/* Freelance Section - Collapsible */}
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="justify-between cursor-pointer font-medium"
-                    onClick={() => toggleSection("freelance")}
-                  >
-                    <div className="flex items-center">
-                      <Briefcase className="mr-2 h-4 w-4" />
-                      <span>Freelance</span>
-                    </div>
-                    {expandedSections.freelance ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </DropdownMenuItem>
-
-                  {expandedSections.freelance && (
-                    <>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/freelance")}
-                      >
-                        <Briefcase className="mr-2 h-4 w-4" />
-                        <span>Browse Jobs</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/freelance/dashboard")}
-                      >
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        <span>Dashboard</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-
-                {/* Finance Section - Collapsible */}
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="justify-between cursor-pointer font-medium"
-                    onClick={() => toggleSection("finance")}
-                  >
-                    <div className="flex items-center">
-                      <Wallet className="mr-2 h-4 w-4" />
-                      <span>Finance</span>
-                    </div>
-                    {expandedSections.finance ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </DropdownMenuItem>
-
-                  {expandedSections.finance && (
-                    <>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/wallet")}
-                      >
-                        <Wallet className="mr-2 h-4 w-4" />
-                        <span>Wallet</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/crypto")}
-                      >
-                        <TrendingUp className="mr-2 h-4 w-4" />
-                        <span>Crypto</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/rewards")}
-                      >
-                        <Award className="mr-2 h-4 w-4" />
-                        <span>Rewards</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-
-                {/* Premium & Tools - Collapsible */}
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="justify-between cursor-pointer font-medium"
-                    onClick={() => toggleSection("premiumTools")}
-                  >
-                    <div className="flex items-center">
-                      <Crown className="mr-2 h-4 w-4 text-purple-600" />
-                      <span>Premium & Tools</span>
-                    </div>
-                    {expandedSections.premiumTools ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </DropdownMenuItem>
-
-                  {expandedSections.premiumTools && (
-                    <>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/premium")}
-                      >
-                        <Crown className="mr-2 h-4 w-4 text-purple-600" />
-                        <span className="text-purple-600">Premium</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/ai-assistant")}
-                      >
-                        <Bot className="mr-2 h-4 w-4 text-blue-600" />
-                        <span className="text-blue-600">AI Assistant</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/kyc")}
-                      >
-                        <ShieldCheck className="mr-2 h-4 w-4" />
-                        <span>KYC Verification</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/delivery/provider/dashboard")}
-                      >
-                        <Truck className="mr-2 h-4 w-4 text-orange-600" />
-                        <span className="text-orange-600">Delivery Provider Demo</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="pl-6"
-                        onClick={() => navigate("/app/send-gifts")}
-                      >
-                        <Gift className="mr-2 h-4 w-4 text-pink-600" />
-                        <span className="text-pink-600">Send Gifts</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
+
+          {/* Mobile Search Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowMobileSearch(true)}
+            className="lg:hidden"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+
+          {/* Notifications */}
+          <NotificationsDropdown />
+
+          {/* Messages */}
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="Messages"
+            onClick={() => navigate("/app/chat")}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </Button>
+
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="relative h-8 w-8 rounded-full p-0"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.avatar_url || ""} />
+                  <AvatarFallback className="bg-gradient-to-r from-primary to-purple-600 text-white text-xs">
+                    {user?.full_name?.charAt(0) ||
+                      user?.username?.charAt(0) ||
+                      "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {user?.full_name || user?.username}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    @{user?.username}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => navigate("/app/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowUserSearch(true)}>
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Find People</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/app/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
+      {/* User Search Modal */}
+      <UserSearchModal
+        open={showUserSearch}
+        onOpenChange={setShowUserSearch}
+        onSelectUser={(user) => {
+          navigate(`/app/profile/${user.id}`);
+        }}
+        title="Find People to Connect With"
+        placeholder="Search by username or name..."
+      />
+
       {/* Mobile Search Overlay */}
-      <MobileSearchOverlay />
+      {showMobileSearch && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <div className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMobileSearch(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+              <form onSubmit={handleSearchSubmit} className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    ref={searchRef}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products, users, jobs..."
+                    className="pl-10 pr-20"
+                    autoFocus
+                  />
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                    {searchQuery && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={saveSearch}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Bookmark className="w-3 h-3" />
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearchQuery("")}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* Mobile Search Results */}
+            <div className="space-y-4">
+              {searchResults.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    {isSearching
+                      ? "Searching..."
+                      : `${searchResults.length} results`}
+                  </p>
+                  {searchResults.map((result) => (
+                    <Card
+                      key={result.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => handleResultSelect(result)}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex gap-3">
+                          {result.image && (
+                            <div className="w-12 h-12 flex-shrink-0">
+                              <img
+                                src={result.image}
+                                alt={result.title}
+                                className="w-full h-full object-cover rounded"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-start justify-between">
+                              <h3 className="font-medium text-sm line-clamp-1">
+                                {result.title}
+                              </h3>
+                              <Badge variant="outline" className="text-xs ml-2">
+                                {result.type}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {result.description}
+                            </p>
+                            {result.price && (
+                              <p className="text-xs font-medium">
+                                {formatPrice(result.price)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && !searchQuery && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Recent Searches
+                  </p>
+                  {recentSearches.map((search, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer"
+                      onClick={() => setSearchQuery(search)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <History className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{search}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRecentSearch(search);
+                        }}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              {!searchQuery && (
+                <div className="pt-4 border-t border-border">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => setShowUserSearch(true)}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Find People to Connect With
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

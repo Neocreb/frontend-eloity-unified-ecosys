@@ -31,6 +31,7 @@ import {
   Building,
   UserCheck,
 } from "lucide-react";
+import UserSearchModal from '@/components/search/UserSearchModal';
 
 const Explore = () => {
   const {
@@ -52,6 +53,7 @@ const Explore = () => {
   );
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showUserSearch, setShowUserSearch] = useState(false);
 
   // Debounce search for better performance
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -85,7 +87,12 @@ const Explore = () => {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Enhanced Search Section */}
       <div className="space-y-4">
-        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <div className="flex items-center gap-2">
+          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <Button onClick={() => setShowUserSearch(true)} variant="outline" size="icon">
+            <Users className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* Search Results Summary */}
         {searchQuery && (
@@ -109,74 +116,120 @@ const Explore = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-1"
               >
-                <Filter className="w-3 h-3" />
+                <Filter className="h-4 w-4" />
                 Filters
               </Button>
-
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="text-sm border rounded px-2 py-1 bg-background"
-              >
-                <option value="relevance">Most Relevant</option>
-                <option value="date">Recent</option>
-                <option value="popularity">Popular</option>
-              </select>
             </div>
           </div>
         )}
 
-        {/* Advanced Filters Panel */}
+        {/* Filters */}
         {showFilters && (
-          <Card className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Location
-                </label>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <select className="flex-1 text-sm border rounded px-2 py-1 bg-background">
-                    <option>All locations</option>
-                    <option>New York</option>
-                    <option>Los Angeles</option>
-                    <option>London</option>
-                    <option>Tokyo</option>
-                  </select>
+          <Card>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Category</label>
+                  <Select
+                    value={filters.category || ""}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, category: value || undefined })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="technology">Technology</SelectItem>
+                      <SelectItem value="art">Art</SelectItem>
+                      <SelectItem value="music">Music</SelectItem>
+                      <SelectItem value="gaming">Gaming</SelectItem>
+                      <SelectItem value="education">Education</SelectItem>
+                      <SelectItem value="cooking">Cooking</SelectItem>
+                      <SelectItem value="travel">Travel</SelectItem>
+                      <SelectItem value="sports">Sports</SelectItem>
+                      <SelectItem value="comedy">Comedy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Sort By</label>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(value: any) => setSortBy(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="relevance">Relevance</SelectItem>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="popularity">Popularity</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Date Range</label>
+                  <Select
+                    value={filters.dateRange || ""}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, dateRange: value || undefined })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any Time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Any Time</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Location</label>
+                  <Input
+                    placeholder="Any Location"
+                    value={filters.location || ""}
+                    onChange={(e) =>
+                      setFilters({ ...filters, location: e.target.value || undefined })
+                    }
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Time Range
-                </label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <select className="flex-1 text-sm border rounded px-2 py-1 bg-background">
-                    <option>All time</option>
-                    <option>Last 24 hours</option>
-                    <option>Last week</option>
-                    <option>Last month</option>
-                  </select>
-                </div>
+              <div className="flex justify-end mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFilters({});
+                    setShowFilters(false);
+                  }}
+                >
+                  Clear Filters
+                </Button>
               </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Content Type
-                </label>
-                <select className="w-full text-sm border rounded px-2 py-1 bg-background">
-                  <option>All types</option>
-                  <option>Posts</option>
-                  <option>Videos</option>
-                  <option>Images</option>
-                  <option>Articles</option>
-                </select>
-              </div>
-            </div>
+            </CardContent>
           </Card>
         )}
       </div>
+
+      {/* User Search Modal */}
+      <UserSearchModal
+        open={showUserSearch}
+        onOpenChange={setShowUserSearch}
+        onSelectUser={(user) => {
+          navigate(`/app/profile/${user.id}`);
+        }}
+        title="Find People to Connect With"
+        placeholder="Search by username or name..."
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Mobile-friendly tabs */}
