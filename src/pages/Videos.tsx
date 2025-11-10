@@ -990,6 +990,10 @@ const Videos: React.FC = () => {
   const [isLiveStreaming, setIsLiveStreaming] = useState(false);
   const [currentLiveStream, setCurrentLiveStream] = useState<LiveStream | null>(null);
   
+  // Modals state
+  const [showLiveStreamModal, setShowLiveStreamModal] = useState(false);
+  const [showBattleCreationModal, setShowBattleCreationModal] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
