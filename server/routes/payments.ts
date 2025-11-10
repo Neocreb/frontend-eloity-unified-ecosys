@@ -36,7 +36,7 @@ const router = express.Router();
 router.post('/flutterwave/initiate', authenticateToken, async (req: express.Request, res: express.Response) => {
   try {
     const { amount, currency, purpose, metadata } = req.body;
-    const userId = req.userId as string;
+    const userId = req.userId;
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -112,7 +112,7 @@ router.post('/flutterwave/webhook', async (req, res) => {
 router.post('/paystack/initiate', authenticateToken, async (req: express.Request, res: express.Response) => {
   try {
     const { amount, currency, channels, metadata } = req.body;
-    const userId = req.userId as string;
+    const userId = req.userId;
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -222,7 +222,7 @@ async function handlePaystackVirtualAccountTransfer(data: any) {
 router.post('/paystack/customer', authenticateToken, async (req: express.Request, res: express.Response) => {
   try {
     const { email, firstName, lastName, phone } = req.body;
-    const userId = req.userId as string;
+    const userId = req.userId;
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -476,7 +476,7 @@ router.get('/banks/:country', async (req, res) => {
   try {
     const { country } = req.params;
     
-    const bankLists = {
+    const bankLists: Record<string, any> = {
       'NG': await getNigerianBanks(),
       'KE': await getKenyanBanks(),
       'GH': await getGhanaianBanks(),
@@ -485,7 +485,8 @@ router.get('/banks/:country', async (req, res) => {
       'TZ': await getTanzanianBanks()
     };
 
-    const banks = bankLists[country.toUpperCase()];
+    const countryKey = country.toUpperCase();
+    const banks = bankLists[countryKey];
     
     if (!banks) {
       return res.status(404).json({ error: 'Country not supported' });
@@ -533,7 +534,7 @@ router.get('/exchange-rates', async (req, res) => {
 router.get('/payment-methods', authenticateToken, async (req, res) => {
   try {
     const { country, amount, currency } = req.query;
-    const userId = req.userId;
+    const userId = req.user;
 
     // Detect user location if not provided
     const userCountry = (country as string) || await detectUserLocation(req.ip || '');

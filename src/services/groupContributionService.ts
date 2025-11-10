@@ -15,6 +15,8 @@ import { NotificationService } from "./notificationService";
 import { walletService } from "./walletService";
 import { Database } from "@/integrations/supabase/types";
 
+const notificationService = new NotificationService();
+
 export class GroupContributionService {
   // Create a new group contribution
   static async createContribution(request: CreateGroupContributionRequest, userId: string): Promise<GroupContribution | null> {
@@ -55,7 +57,7 @@ export class GroupContributionService {
       if (error) throw error;
 
       // Send notification to group members
-      await NotificationService.sendGroupNotification(
+      await notificationService.sendGroupNotification(
         request.group_id,
         "New Group Contribution",
         `A new contribution "${request.title}" has been started in the group.`,
@@ -114,7 +116,12 @@ export class GroupContributionService {
       if (error) throw error;
 
       // Process contributors to include user details
-      const contributorsWithUsers = data.group_contributors?.map((contributor: any) => ({
+      // Define proper type for the contributor data
+      type ContributorData = GroupContributor & {
+        profiles?: { full_name: string | null; avatar_url: string | null } | null;
+      };
+
+      const contributorsWithUsers = data.group_contributors?.map((contributor: ContributorData) => ({
         ...contributor,
         user: contributor.profiles || null
       })) || [];
@@ -189,7 +196,7 @@ export class GroupContributionService {
       if (contribution) {
         // Send notification to contribution creator
         if (contribution.created_by !== userId) {
-          await NotificationService.sendUserNotification(
+          await notificationService.sendUserNotification(
             contribution.created_by,
             "New Contribution",
             `${contribution.created_by_name} contributed ${request.amount} ${request.currency || 'ELOITY'} to your contribution "${contribution.title}".`,
@@ -199,7 +206,7 @@ export class GroupContributionService {
         }
 
         // Send notification to contributor
-        await NotificationService.sendUserNotification(
+        await notificationService.sendUserNotification(
           userId,
           "Contribution Successful",
           `You've successfully contributed ${request.amount} ${request.currency || 'ELOITY'} to "${contribution.title}".`,
@@ -270,7 +277,7 @@ export class GroupContributionService {
       if (error) throw error;
 
       // Send notification to group members
-      await NotificationService.sendGroupNotification(
+      await notificationService.sendGroupNotification(
         request.group_id,
         "New Group Vote",
         `A new vote "${request.topic}" has been started in the group.`,
@@ -301,7 +308,13 @@ export class GroupContributionService {
       if (error) throw error;
 
       // Get vote responses for each vote
-      const votesWithDetails = await Promise.all(data.map(async (vote: any) => {
+      // Define proper type for the vote data
+      type VoteData = GroupVote & {
+        groups?: { name: string } | null;
+        profiles?: { full_name: string | null; avatar_url: string | null } | null;
+      };
+
+      const votesWithDetails = await Promise.all(data.map(async (vote: VoteData) => {
         const responses = await this.getVoteResponses(vote.id);
         const voteCounts = this.calculateVoteCounts(vote.options, responses);
         
@@ -509,7 +522,7 @@ export class GroupContributionService {
       if (updateError) throw updateError;
 
       // Send notification to group members
-      await NotificationService.sendGroupNotification(
+      await notificationService.sendGroupNotification(
         contribution.group_id,
         "Contribution Payout Processing",
         `The contribution "${contribution.title}" has been closed and payout is being processed.`,
@@ -585,7 +598,7 @@ export class GroupContributionService {
       if (updateError) throw updateError;
 
       // Send notification to the contributor
-      await NotificationService.sendUserNotification(
+      await notificationService.sendUserNotification(
         contributor.user_id,
         "Contribution Refunded",
         `Your contribution of ${contributor.amount} ${contributor.currency} to "${contributor.group_contributions?.title}" has been refunded by an admin.`,
@@ -595,7 +608,7 @@ export class GroupContributionService {
 
       // Send notification to contribution creator if it's not the admin
       if (contributor.group_contributions?.created_by !== adminId) {
-        await NotificationService.sendUserNotification(
+        await notificationService.sendUserNotification(
           contributor.group_contributions?.created_by || '',
           "Contribution Refunded",
           `A contribution of ${contributor.amount} ${contributor.currency} to your contribution "${contributor.group_contributions?.title}" has been refunded by an admin.`,

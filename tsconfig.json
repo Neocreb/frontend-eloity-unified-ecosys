@@ -30,5 +30,5 @@
     /* Silence deprecation warnings */
     "ignoreDeprecations": "5.0"
   },
-  "include": ["src", "./*.ts", "./*.tsx"]
+  "include": ["src", "server", "./*.ts", "./*.tsx"]
 }

@@ -164,7 +164,6 @@ import GlobalSearch from "./pages/GlobalSearch";
 import LandingPage from "./pages/LandingPage";
 import TestComponent from "./pages/TestComponent";
 import SupabaseDebug from "./pages/SupabaseDebug";
-import Debug from "./pages/Debug";
 import UnifiedNotifications from "./pages/UnifiedNotifications";
 // import Create from "./pages/Create";
 // import EnhancedPlatform from "./pages/EnhancedPlatform";
@@ -327,7 +326,6 @@ const AppRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/test" element={<TestComponent />} />
       <Route path="/supabase-debug" element={<SupabaseDebug />} />
-      <Route path="/debug" element={<Debug />} />
       <Route path="/home" element={<Home />} />
       {/* Commented out route for missing MemeGifDemo component */}
       {/* <Route path="/meme-gif-demo" element={<MemeGifDemo />} /> */}
