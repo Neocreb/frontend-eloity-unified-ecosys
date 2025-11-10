@@ -530,6 +530,8 @@ const AppRoutes = () => {
           <Route path="rewards" element={<EnhancedRewards />} />
           <Route path="videos" element={<VideosPage />} />
           <Route path="videos/:videoId" element={<VideoDetail />} />
+          <Route path="live/:id" element={<LiveStreamPage />} />
+          <Route path="battle/:id" element={<BattlePage />} />
           {/* Commented out route for missing DuetDemo component */}
           {/* <Route path="duet-demo" element={<DuetDemo />} /> */}
           <Route path="explore" element={<Explore />} />

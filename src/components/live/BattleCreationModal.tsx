@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,9 @@ import {
   Trophy, 
   Settings,
   Crown,
-  Zap
+  Zap,
+  Search,
+  X
 } from 'lucide-react';
 import {
   Select,
@@ -22,8 +24,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { liveStreamService } from '@/services/liveStreamService';
+import { UserService, UserWithProfile } from '@/services/userService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface BattleCreationModalProps {
   open: boolean;
@@ -48,6 +52,13 @@ const BattleCreationModal: React.FC<BattleCreationModalProps> = ({
   const [allowGifting, setAllowGifting] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   
+  // User selection states
+  const [selectedOpponent, setSelectedOpponent] = useState<UserWithProfile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserWithProfile[]>([]);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  
   const battleTypes = [
     { value: 'general', label: 'General Challenge' },
     { value: 'dance', label: 'Dance Battle' },
@@ -67,11 +78,46 @@ const BattleCreationModal: React.FC<BattleCreationModalProps> = ({
     { value: 1800, label: '30 minutes' },
   ];
   
+  // Search for users when query changes
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (searchQuery.trim() === '') {
+        setSearchResults([]);
+        return;
+      }
+      
+      setIsSearching(true);
+      try {
+        const results = await UserService.searchUsers(searchQuery, 10);
+        // Filter out the current user
+        const filteredResults = results.filter(u => u.id !== user?.id);
+        setSearchResults(filteredResults);
+      } catch (error) {
+        console.error("Error searching users:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+    
+    const timeoutId = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, user?.id]);
+  
   const handleCreateBattle = async () => {
     if (!battleTitle.trim()) {
       toast({
         title: "Title Required",
         description: "Please enter a title for your battle.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!selectedOpponent) {
+      toast({
+        title: "Opponent Required",
+        description: "Please select an opponent for the battle.",
         variant: "destructive",
       });
       return;
@@ -87,10 +133,11 @@ const BattleCreationModal: React.FC<BattleCreationModalProps> = ({
         category: 'battle',
       });
       
-      // Then create the battle
+      // Then create the battle with the selected opponent
       const battle = await liveStreamService.createBattle({
         liveStreamId: stream.id,
         battleType: battleType as any,
+        opponentId: selectedOpponent.id,
       });
       
       toast({
@@ -100,6 +147,7 @@ const BattleCreationModal: React.FC<BattleCreationModalProps> = ({
       
       onOpenChange(false);
       onBattleStart?.(battle.id);
+      // Ensure we're using the correct base path
       navigate(`/app/battle/${battle.id}`);
     } catch (error) {
       console.error("Error creating battle:", error);
@@ -111,6 +159,17 @@ const BattleCreationModal: React.FC<BattleCreationModalProps> = ({
     } finally {
       setIsCreating(false);
     }
+  };
+  
+  const handleSelectOpponent = (user: UserWithProfile) => {
+    setSelectedOpponent(user);
+    setShowUserSearch(false);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+  
+  const handleRemoveOpponent = () => {
+    setSelectedOpponent(null);
   };
   
   return (
@@ -148,6 +207,102 @@ const BattleCreationModal: React.FC<BattleCreationModalProps> = ({
               </div>
             </div>
           </div>
+          
+          {/* Opponent Selection (Required for battles) */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Select Opponent *
+            </label>
+            {selectedOpponent ? (
+              <div className="flex items-center justify-between p-2 bg-gray-100 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={selectedOpponent.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {selectedOpponent.username?.[0] || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm">@{selectedOpponent.username}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveOpponent}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full justify-start text-gray-500"
+                onClick={() => setShowUserSearch(true)}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Select opponent
+              </Button>
+            )}
+            {!selectedOpponent && (
+              <p className="text-xs text-red-500">You must select an opponent to start a battle</p>
+            )}
+          </div>
+          
+          {/* User Search Dialog */}
+          {showUserSearch && (
+            <Dialog open={showUserSearch} onOpenChange={setShowUserSearch}>
+              <DialogContent className="max-w-md w-[90vw]">
+                <DialogHeader>
+                  <DialogTitle>Select Opponent</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search users..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  
+                  {isSearching ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="max-h-60 overflow-y-auto space-y-2">
+                      {searchResults.map((user) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                          onClick={() => handleSelectOpponent(user)}
+                        >
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={user.avatar_url || undefined} />
+                            <AvatarFallback>
+                              {user.username?.[0] || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-sm">
+                              {user.full_name || user.username}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              @{user.username}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : searchQuery.trim() !== '' ? (
+                    <div className="text-center py-4 text-gray-500">
+                      No users found
+                    </div>
+                  ) : null}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
           
           {/* Battle Information */}
           <div className="space-y-3">
@@ -283,7 +438,7 @@ const BattleCreationModal: React.FC<BattleCreationModalProps> = ({
             <Button
               onClick={handleCreateBattle}
               className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              disabled={!battleTitle.trim() || isCreating}
+              disabled={!battleTitle.trim() || !selectedOpponent || isCreating}
             >
               {isCreating ? (
                 <>

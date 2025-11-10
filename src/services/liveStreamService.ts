@@ -32,6 +32,14 @@ export interface Battle {
   status: 'pending' | 'active' | 'completed' | 'cancelled';
 }
 
+interface Profile {
+  user_id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string;
+  is_verified: boolean;
+}
+
 export const liveStreamService = {
   async getActiveLiveStreams(): Promise<LiveStream[]> {
     const { data, error } = await supabase
@@ -46,25 +54,25 @@ export const liveStreamService = {
     // Get user profiles separately
     if (!data || data.length === 0) return [];
 
-    const userIds = Array.from(new Set(data.map(s => s.user_id)));
+    const userIds = Array.from(new Set(data.map((s: any) => s.user_id)));
     const { data: profiles } = await supabase
       .from('profiles')
       .select('user_id, username, full_name, avatar_url, is_verified')
       .in('user_id', userIds);
 
     const profileMap = new Map(
-      (profiles || []).map(p => [p.user_id, p])
+      (profiles || []).map((p: any) => [p.user_id, p])
     );
 
-    return data.map(stream => {
+    return data.map((stream: any) => {
       const profile = profileMap.get(stream.user_id);
       return {
         ...stream,
         user: profile ? {
-          username: profile.username || 'unknown',
-          full_name: profile.full_name || 'Unknown User',
-          avatar_url: profile.avatar_url || '',
-          is_verified: profile.is_verified || false
+          username: (profile as Profile).username || 'unknown',
+          full_name: (profile as Profile).full_name || 'Unknown User',
+          avatar_url: (profile as Profile).avatar_url || '',
+          is_verified: (profile as Profile).is_verified || false
         } : undefined
       };
     });
@@ -89,10 +97,10 @@ export const liveStreamService = {
     return {
       ...data,
       user: profile ? {
-        username: profile.username || 'unknown',
-        full_name: profile.full_name || 'Unknown User',
-        avatar_url: profile.avatar_url || '',
-        is_verified: profile.is_verified || false
+        username: (profile as Profile).username || 'unknown',
+        full_name: (profile as Profile).full_name || 'Unknown User',
+        avatar_url: (profile as Profile).avatar_url || '',
+        is_verified: (profile as Profile).is_verified || false
       } : undefined
     };
   },
@@ -112,7 +120,7 @@ export const liveStreamService = {
         title: streamData.title,
         description: streamData.description,
         category: streamData.category,
-        stream_key: `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        // Let the database generate the ID and stream_key
       })
       .select()
       .single();
@@ -152,7 +160,7 @@ export const liveStreamService = {
     if (error) throw error;
     if (!battles || battles.length === 0) return [];
 
-    const streamIds = battles.map(b => b.live_stream_id);
+    const streamIds = battles.map((b: any) => b.live_stream_id);
     const { data: streams } = await supabase
       .from('live_streams')
       .select('*')
@@ -160,28 +168,28 @@ export const liveStreamService = {
 
     if (!streams) return [];
 
-    const userIds = Array.from(new Set(streams.map(s => s.user_id)));
+    const userIds = Array.from(new Set(streams.map((s: any) => s.user_id)));
     const { data: profiles } = await supabase
       .from('profiles')
       .select('user_id, username, full_name, avatar_url, is_verified')
       .in('user_id', userIds);
 
-    const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
-    const streamMap = new Map(streams.map(s => [s.id, s]));
+    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+    const streamMap = new Map(streams.map((s: any) => [s.id, s]));
 
-    return battles.map(battle => {
+    return battles.map((battle: any) => {
       const stream = streamMap.get(battle.live_stream_id);
       if (!stream) return null;
 
-      const profile = profileMap.get(stream.user_id);
+      const profile: any = profileMap.get((stream as any).user_id);
       
       return {
         ...stream,
         user: profile ? {
-          username: profile.username || 'unknown',
-          full_name: profile.full_name || 'Unknown User',
-          avatar_url: profile.avatar_url || '',
-          is_verified: profile.is_verified || false
+          username: (profile as Profile).username || 'unknown',
+          full_name: (profile as Profile).full_name || 'Unknown User',
+          avatar_url: (profile as Profile).avatar_url || '',
+          is_verified: (profile as Profile).is_verified || false
         } : undefined,
         battle: {
           id: battle.id,
@@ -216,6 +224,7 @@ export const liveStreamService = {
         battle_type: battleData.battleType,
         time_remaining: 300,
         status: 'pending'
+        // Let the database generate the ID
       })
       .select()
       .single();
