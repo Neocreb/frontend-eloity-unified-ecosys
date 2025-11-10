@@ -1,3 +1,5 @@
+// Debug import - this will run the debug function on import
+import '@/utils/debugNotificationService';
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -73,7 +75,7 @@ export const useRealtimeNotifications = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
+        (payload: any) => {
           const newNotification = payload.new as NotificationData;
           
           setNotifications(prev => [newNotification, ...prev]);

@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { useAuth } from './AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { notificationService } from '@/services/notificationService';
+// Debug import - this will run the debug function on import
+import '@/utils/debugNotificationService';
 
 // Enhanced notification interface
 export interface UnifiedNotification {

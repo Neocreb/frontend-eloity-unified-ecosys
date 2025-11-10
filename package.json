@@ -32,7 +32,10 @@
     "init:env": "node scripts/init-env.js",
     "get:supabase-credentials": "node scripts/get-supabase-credentials.js",
     "verify:setup": "node scripts/verify-secure-setup.js",
-    "grant-super-admin": "npx tsx scripts/grant-super-admin.ts"
+    "grant-super-admin": "npx tsx scripts/grant-super-admin.ts",
+    "clear-cache": "node scripts/clear-cache.cjs",
+    "verify-notification-service": "node scripts/verify-notification-service.cjs",
+    "restart-dev": "node scripts/restart-dev.cjs"
   },
   "//": "Enhanced package.json with comprehensive dependencies and scripts",
   "dependencies": {

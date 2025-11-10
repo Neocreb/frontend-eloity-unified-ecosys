@@ -33,10 +33,10 @@ const router = express.Router();
 // =============================================================================
 
 // Flutterwave payment initiation (34+ African countries)
-router.post('/flutterwave/initiate', authenticateToken, async (req, res) => {
+router.post('/flutterwave/initiate', authenticateToken, async (req: express.Request, res: express.Response) => {
   try {
     const { amount, currency, purpose, metadata } = req.body;
-    const userId = req.userId;
+    const userId = req.userId as string;
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -109,10 +109,10 @@ router.post('/flutterwave/webhook', async (req, res) => {
 });
 
 // Paystack payment initiation (Nigeria, Ghana, South Africa)
-router.post('/paystack/initiate', authenticateToken, async (req, res) => {
+router.post('/paystack/initiate', authenticateToken, async (req: express.Request, res: express.Response) => {
   try {
     const { amount, currency, channels, metadata } = req.body;
-    const userId = req.userId;
+    const userId = req.userId as string;
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -193,7 +193,7 @@ router.post('/paystack/webhook', async (req, res) => {
 });
 
 // Handle Paystack virtual account assignment
-async function handlePaystackVirtualAccountAssigned(data) {
+async function handlePaystackVirtualAccountAssigned(data: any) {
   try {
     logger.info('Paystack virtual account assigned', data);
     // Update database with assigned virtual account details
@@ -203,7 +203,7 @@ async function handlePaystackVirtualAccountAssigned(data) {
 }
 
 // Handle Paystack virtual account transfer
-async function handlePaystackVirtualAccountTransfer(data) {
+async function handlePaystackVirtualAccountTransfer(data: any) {
   try {
     logger.info('Paystack virtual account transfer received', data);
     // Process the incoming transfer
@@ -219,10 +219,10 @@ async function handlePaystackVirtualAccountTransfer(data) {
 // =============================================================================
 
 // Create Paystack customer
-router.post('/paystack/customer', authenticateToken, async (req, res) => {
+router.post('/paystack/customer', authenticateToken, async (req: express.Request, res: express.Response) => {
   try {
     const { email, firstName, lastName, phone } = req.body;
-    const userId = req.userId;
+    const userId = req.userId as string;
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -626,7 +626,7 @@ router.get('/transactions/:transactionId/status', authenticateToken, async (req,
 // HELPER FUNCTIONS FOR PAYMENT PROCESSING
 // =============================================================================
 
-async function handleFlutterwavePaymentSuccess(data) {
+async function handleFlutterwavePaymentSuccess(data: any) {
   try {
     const { tx_ref, flw_ref, amount, currency, customer } = data;
     
@@ -654,7 +654,7 @@ async function handleFlutterwavePaymentSuccess(data) {
   }
 }
 
-async function handleFlutterwavePaymentFailure(data) {
+async function handleFlutterwavePaymentFailure(data: any) {
   try {
     const { tx_ref, flw_ref, amount, currency, customer } = data;
     
@@ -679,7 +679,7 @@ async function handleFlutterwavePaymentFailure(data) {
   }
 }
 
-async function handlePaystackPaymentSuccess(data) {
+async function handlePaystackPaymentSuccess(data: any) {
   try {
     const { reference, amount, currency, customer } = data;
     
@@ -707,7 +707,7 @@ async function handlePaystackPaymentSuccess(data) {
   }
 }
 
-async function handlePaystackPaymentFailure(data) {
+async function handlePaystackPaymentFailure(data: any) {
   try {
     const { reference, amount, currency, customer } = data;
     

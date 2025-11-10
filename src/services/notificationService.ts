@@ -17,13 +17,19 @@ export interface NotificationData {
 
 export class NotificationService {
   // Send notification to group members
-  static async sendGroupNotification(
+  async sendGroupNotification(
     groupId: string,
     title: string,
     message: string,
     type: string = "info",
     relatedId?: string
   ) {
+    // Defensive check to ensure the service is properly initialized
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return false;
+    }
+    
     try {
       // Get all group members
       const { data: members, error: membersError } = await supabase
@@ -61,13 +67,19 @@ export class NotificationService {
   }
 
   // Send notification to specific user
-  static async sendUserNotification(
+  async sendUserNotification(
     userId: string,
     title: string,
     message: string,
     type: string = "info",
     relatedId?: string
   ) {
+    // Defensive check to ensure the service is properly initialized
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return false;
+    }
+    
     try {
       const { error } = await supabase
         .from("notifications")
@@ -91,7 +103,13 @@ export class NotificationService {
   }
 
   // Mark notification as read
-  static async markAsRead(notificationId: string) {
+  async markAsRead(notificationId: string) {
+    // Defensive check to ensure the service is properly initialized
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return false;
+    }
+    
     try {
       const { error } = await supabase
         .from("notifications")
@@ -107,7 +125,13 @@ export class NotificationService {
   }
 
   // Get unread notifications count for user
-  static async getUnreadCount(userId: string) {
+  async getUnreadCount(userId: string) {
+    // Defensive check to ensure the service is properly initialized
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return 0;
+    }
+    
     try {
       const { count, error } = await supabase
         .from("notifications")
@@ -124,7 +148,13 @@ export class NotificationService {
   }
 
   // Get user notifications
-  static async getUserNotifications(userId: string) {
+  async getUserNotifications(userId: string) {
+    // Defensive check to ensure the service is properly initialized
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return [];
+    }
+    
     try {
       const { data, error } = await supabase
         .from("notifications")
@@ -142,12 +172,18 @@ export class NotificationService {
   }
 
   // Create notification
-  static async createNotification(
+  async createNotification(
     userId: string,
     type: string,
     title: string,
     message: string
   ) {
+    // Defensive check to ensure the service is properly initialized
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return null;
+    }
+    
     try {
       const { data, error } = await supabase
         .from("notifications")
@@ -171,7 +207,13 @@ export class NotificationService {
   }
 
   // Mark all notifications as read for user
-  static async markAllAsRead(userId: string) {
+  async markAllAsRead(userId: string) {
+    // Defensive check to ensure the service is properly initialized
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return false;
+    }
+    
     try {
       const { error } = await supabase
         .from("notifications")

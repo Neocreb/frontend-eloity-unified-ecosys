@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { realtimeNotificationService, RealtimeNotification } from '@/services/realtimeNotificationService';
 import { notificationService, NotificationData } from '@/services/notificationService';
+// Debug import - this will run the debug function on import
+import '@/utils/debugNotificationService';
 
 export interface UseRealtimeNotificationsReturn {
   notifications: RealtimeNotification[];
@@ -37,14 +39,14 @@ export const useRealtimeNotifications = (): UseRealtimeNotificationsReturn => {
         const notificationData = await notificationService.getUserNotifications(user.id);
         
         // Map to RealtimeNotification format
-        const mappedNotifications = notificationData.map(data => ({
+        const mappedNotifications = notificationData.map((data: any) => ({
           ...data,
           priority: 'medium',
           category: data.type
         }));
         
         setNotifications(mappedNotifications);
-        setUnreadCount(notificationData.filter(n => !n.read).length);
+        setUnreadCount(notificationData.filter((n: any) => !n.read).length);
         
         // Listen for new real-time notifications
         realtimeNotificationService.on('notification', handleNewNotification);
