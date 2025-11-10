@@ -50,6 +50,18 @@ import {
   Flag,
   Copy,
   ExternalLink,
+  Radio,
+  Swords,
+  Upload,
+  Camera,
+  Gift,
+  ArrowLeft,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -60,6 +72,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -563,6 +582,21 @@ const VideoCard: React.FC<{
               });
             }}
           />
+
+          {/* Gift Button */}
+          <Button
+            size="icon"
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white"
+            onClick={() => {
+              // Handle gift sending functionality
+              toast({
+                title: "Send Gift",
+                description: "Gift feature coming soon!",
+              });
+            }}
+          >
+            <Gift className="w-6 h-6 md:w-7 md:h-7" />
+          </Button>
         </div>
       </div>
 
@@ -756,6 +790,8 @@ const Videos: React.FC = () => {
   const [isAdvancedRecorderOpen, setIsAdvancedRecorderOpen] = useState(false);
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [activeTab, setActiveTab] = useState<"foryou" | "following" | "live" | "battle">("foryou");
   const navigate = useNavigate();
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -932,37 +968,122 @@ const Videos: React.FC = () => {
         />
       </Helmet>
 
-      {/* Enhanced Header */}
+      {/* Enhanced 6-Element TikTok-style header */}
       {showControls && !isFullscreen && (
-        <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 to-transparent">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
+        <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
+          <div className="grid grid-cols-6 items-center gap-2 p-3 pt-8 md:p-4 md:pt-8 max-w-screen-xl mx-auto">
+            {/* 1. Search Icon (left side) */}
+            <div className="flex justify-start">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSearchOverlay(true)}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
-              <Badge variant="secondary" className="bg-black/40 text-white">
-                {currentIndex + 1} / {allItems.length}
-              </Badge>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleFullscreen}
-                className="text-white hover:bg-white/20"
+            {/* 2-5. Central tabs (Live, Battle, For You, Following) */}
+            <div className="col-span-4 flex justify-center">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => {
+                  setActiveTab(value as any);
+                  // Reset to first video when switching tabs
+                  setCurrentIndex(0);
+                  if (containerRef.current) {
+                    containerRef.current.scrollTop = 0;
+                  }
+                }}
+                className="w-full"
               >
-                {isFullscreen ? (
-                  <Minimize className="w-5 h-5" />
-                ) : (
-                  <Maximize className="w-5 h-5" />
-                )}
-              </Button>
+                <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-white/10 rounded-full p-1">
+                  <TabsTrigger
+                    value="live"
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                  >
+                    <Radio className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Live
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="battle"
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                  >
+                    <Swords className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Battle
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="foryou"
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                  >
+                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    For You
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="following"
+                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                  >
+                    <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Following
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* 6. Create Menu (right side) */}
+            <div className="flex justify-end">
+              <DropdownMenu open={showCreateMenu} onOpenChange={setShowCreateMenu}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                  >
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700 w-48">
+                  <DropdownMenuItem 
+                    className="text-white hover:bg-gray-800 cursor-pointer"
+                    onClick={() => {
+                      setShowCreateMenu(false);
+                      setIsAdvancedRecorderOpen(true);
+                    }}
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Create Video
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-white hover:bg-gray-800 cursor-pointer"
+                    onClick={() => {
+                      setShowCreateMenu(false);
+                      // Handle go live functionality
+                      toast({
+                        title: "Go Live",
+                        description: "Live streaming feature coming soon!",
+                      });
+                    }}
+                  >
+                    <Radio className="w-4 h-4 mr-2" />
+                    Go Live
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-white hover:bg-gray-800 cursor-pointer"
+                    onClick={() => {
+                      setShowCreateMenu(false);
+                      // Handle start battle functionality
+                      toast({
+                        title: "Start Battle",
+                        description: "Battle feature coming soon!",
+                      });
+                    }}
+                  >
+                    <Swords className="w-4 h-4 mr-2" />
+                    Start Battle
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -974,7 +1095,7 @@ const Videos: React.FC = () => {
         className="h-full w-full overflow-y-auto snap-y snap-mandatory"
         style={{
           scrollBehavior: "smooth",
-          paddingTop: 0,
+          paddingTop: showControls && !isFullscreen ? "120px" : "0",
           paddingBottom: isMobile ? "80px" : "20px",
         }}
         onClick={() => setShowControls(!showControls)}
