@@ -613,7 +613,7 @@ const VideoCard: React.FC<{
                     ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white" 
                     : "bg-white/20 border-white/30 text-white hover:bg-white/30"
                 )}
-                onClick={toggleFollow}
+                onClick={() => toggleFollow(video)}
               >
                 {isFollowing ? "Following" : "Follow"}
               </Button>
@@ -693,7 +693,7 @@ const VideoCard: React.FC<{
               size="sm"
               variant="default"
               className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-xs font-bold shadow-lg transition-all duration-300 hover:scale-110"
-              onClick={toggleFollow}
+              onClick={() => toggleFollow(video)}
             >
               {isFollowing ? (
                 <Check className="h-4 w-4" />
@@ -739,7 +739,7 @@ const VideoCard: React.FC<{
             <Button
               size="icon"
               className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-              onClick={() => handleShare('web')}
+              onClick={() => handleShare(video, 'web')}
             >
               <Share className="w-6 h-6 md:w-7 md:h-7" />
             </Button>
@@ -1238,22 +1238,17 @@ const Videos: React.FC = () => {
     fetchBattles();
   }, [activeTab]);
 
-  // Check if user is already following
-  useEffect(() => {
-    const checkFollowingStatus = async () => {
-      try {
-        const isFollowing = await videoService.isFollowingUser(video.user.id);
-        setIsFollowing(isFollowing);
-      } catch (error) {
-        console.error('Error checking following status:', error);
-      }
-    };
-    
-    if (video.user.id) {
-      checkFollowingStatus();
-    }
-  }, [video.user.id]);
-  
+  // Check if user is already following - this should be handled per video in VideoCard
+  // useEffect(() => {
+  //   const checkFollowingStatus = async () => {
+  //     try {
+  //       // This logic should be moved to VideoCard component
+  //     } catch (error) {
+  //       console.error('Error checking following status:', error);
+  //     }
+  //   };
+  // }, []);
+
   // Load virtual gifts
   useEffect(() => {
     const loadVirtualGifts = async () => {
@@ -1269,7 +1264,7 @@ const Videos: React.FC = () => {
   }, []);
   
   // Handle follow/unfollow
-  const toggleFollow = async () => {
+  const toggleFollow = async (video: VideoData) => {
     try {
       if (isFollowing) {
         await videoService.unfollowUser(video.user.id);
@@ -1295,7 +1290,7 @@ const Videos: React.FC = () => {
   };
   
   // Handle sharing
-  const handleShare = async (platform: string) => {
+  const handleShare = async (video: VideoData, platform: string) => {
     try {
       await videoService.shareVideo(video.id, platform);
       
@@ -1325,7 +1320,7 @@ const Videos: React.FC = () => {
   };
   
   // Handle sending gift
-  const handleSendGift = async (giftId: string, quantity: number = 1) => {
+  const handleSendGift = async (video: VideoData, giftId: string, quantity: number = 1) => {
     try {
       await videoService.sendGift({
         toUserId: video.user.id,
@@ -1801,7 +1796,7 @@ const Videos: React.FC = () => {
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h3 className="text-white font-semibold">Send Gift to @{video.user.username}</h3>
+              <h3 className="text-white font-semibold">Send Gift</h3>
               <Button
                 variant="ghost"
                 size="icon"
