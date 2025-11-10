@@ -369,18 +369,30 @@ const VideoCard: React.FC<{
 
   // Handle liking a comment
   const handleLikeComment = async (commentId: string) => {
-    // In a real implementation, this would connect to the backend
-    // For now, we'll just update the UI
-    setComments(prev => 
-      prev.map(comment => {
-        if (comment.id === commentId) {
-          const isLiked = !comment.isLiked;
-          const likes = isLiked ? comment.likes + 1 : comment.likes - 1;
-          return { ...comment, isLiked, likes };
-        }
-        return comment;
-      })
-    );
+    try {
+      // In a real implementation, this would connect to the backend
+      // For now, we'll just update the UI
+      setComments(prev => 
+        prev.map(comment => {
+          if (comment.id === commentId) {
+            const isLiked = !comment.isLiked;
+            const likes = isLiked ? comment.likes + 1 : comment.likes - 1;
+            return { ...comment, isLiked, likes };
+          }
+          return comment;
+        })
+      );
+      
+      // TODO: Implement real comment liking functionality
+      // This would require adding a likeComment method to the videoService
+      // and updating the backend accordingly
+    } catch (error) {
+      console.error("Error liking comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to like comment",
+      });
+    }
   };
 
   // Toggle like for the video
@@ -581,9 +593,9 @@ const VideoCard: React.FC<{
 
               {/* Hashtags */}
               <div className="flex flex-wrap gap-1 mt-1 md:mt-2">
-                {video.hashtags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-blue-300 text-xs md:text-sm">
-                    #{tag}
+                {video.hashtags.slice(0, 3).map((tag, index) => (
+                  <span key={tag} className="text-blue-300 text-xs md:text-sm hover:text-blue-100 cursor-pointer">
+                    #{tag}{index < video.hashtags.slice(0, 3).length - 1 ? ' ' : ''}
                   </span>
                 ))}
               </div>
@@ -636,54 +648,69 @@ const VideoCard: React.FC<{
         </div>
 
         {/* Right side - Enhanced Interactive Features */}
-        <div className="flex flex-col items-center justify-end gap-3 md:gap-4 p-2 md:p-4 pb-28 md:pb-8">
-          {/* Like Button */}
-          <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center justify-end gap-4 p-3 pb-32">
+          {/* User Avatar with Follow Button */}
+          <div className="flex flex-col items-center gap-2">
+            <Avatar className="w-12 h-12 md:w-14 md:h-14 border-2 border-white/20 cursor-pointer">
+              <AvatarImage src={video.user.avatar} />
+              <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
+            </Avatar>
+            <Button
+              size="sm"
+              variant="default"
+              className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-xs font-bold shadow-lg"
+            >
+              +
+            </Button>
+          </div>
+
+          {/* Like Button with Animation */}
+          <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
               className={cn(
-                "w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm",
-                isLiked && "text-red-500"
+                "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300 shadow-lg",
+                isLiked ? "text-red-500 scale-110" : "text-white"
               )}
               onClick={toggleLike}
             >
               <Heart className={cn("w-6 h-6 md:w-7 md:h-7", isLiked && "fill-current")} />
             </Button>
-            <span className="text-white text-xs mt-1">
+            <span className="text-white text-xs font-medium">
               {formatNumber(video.stats.likes + (isLiked ? 1 : 0))}
             </span>
           </div>
 
           {/* Comment Button */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
               onClick={toggleComments}
             >
               <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
             </Button>
-            <span className="text-white text-xs mt-1">
+            <span className="text-white text-xs font-medium">
               {formatNumber(video.stats.comments)}
             </span>
           </div>
 
           {/* Share Button */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
             >
               <Share className="w-6 h-6 md:w-7 md:h-7" />
             </Button>
-            <span className="text-white text-xs mt-1">Share</span>
+            <span className="text-white text-xs font-medium">Share</span>
           </div>
 
           {/* Gift Button */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg"
               onClick={() => {
                 // Handle gift sending functionality
                 toast({
@@ -694,7 +721,14 @@ const VideoCard: React.FC<{
             >
               <Gift className="w-6 h-6 md:w-7 md:h-7" />
             </Button>
-            <span className="text-white text-xs mt-1">Gift</span>
+            <span className="text-white text-xs font-medium">Gift</span>
+          </div>
+
+          {/* Music Disc with Animation */}
+          <div className="flex flex-col items-center gap-1 animate-spin-slow">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg">
+              <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            </div>
           </div>
         </div>
       </div>
@@ -721,7 +755,7 @@ const VideoCard: React.FC<{
         <Button
           size="icon"
           variant="ghost"
-          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none shadow-lg"
           onClick={() => setIsMuted(!isMuted)}
         >
           {isMuted ? (
@@ -735,7 +769,7 @@ const VideoCard: React.FC<{
         <Button
           size="icon"
           variant="ghost"
-          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none shadow-lg"
           onClick={() => setShowAdvancedControls(!showAdvancedControls)}
         >
           <Settings className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -744,7 +778,7 @@ const VideoCard: React.FC<{
 
       {/* Advanced Controls Panel */}
       {showAdvancedControls && (
-        <div className="absolute top-20 right-4 md:top-24 md:right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 space-y-3 min-w-[200px] z-10">
+        <div className="absolute top-20 right-4 md:top-24 md:right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 space-y-3 min-w-[200px] z-10 shadow-2xl">
           {/* Quality Selector */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-white text-sm">
@@ -939,11 +973,12 @@ const Videos: React.FC = () => {
     return {
       id: videoItem.id,
       user: {
-        id: "user-" + videoItem.id,
+        id: videoItem.author.id || "user-" + videoItem.id,
         username: videoItem.author.username,
         displayName: videoItem.author.name,
         avatar: videoItem.author.avatar,
         verified: videoItem.author.verified,
+        followerCount: videoItem.author.followerCount,
       },
       description: videoItem.description,
       music: {
@@ -971,16 +1006,23 @@ const Videos: React.FC = () => {
 
   // Handle video like/unlike
   const handleVideoLike = async (videoId: string, isLiked: boolean) => {
-    // Update the videos state to reflect the like change
-    setVideos(prev => prev.map(video => {
-      if (video.id === videoId) {
-        return {
-          ...video,
-          likes: isLiked ? video.likes + 1 : video.likes - 1
-        };
-      }
-      return video;
-    }));
+    try {
+      // Update the videos state to reflect the like change
+      setVideos(prev => prev.map(video => {
+        if (video.id === videoId) {
+          return {
+            ...video,
+            likes: isLiked ? video.likes + 1 : video.likes - 1
+          };
+        }
+        return video;
+      }));
+      
+      // Also update the allItems state through the useVideos hook
+      // This will require updating the useVideos hook to expose a method for updating videos
+    } catch (error) {
+      console.error("Error updating video like status:", error);
+    }
   };
 
   // Handle comment button click
@@ -1092,6 +1134,32 @@ const Videos: React.FC = () => {
         .animate-slide-up {
           animation: slideUp 0.3s ease-out forwards;
         }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.2s ease-out forwards;
+        }
+        
+        @keyframes spinSlow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .animate-spin-slow {
+          animation: spinSlow 8s linear infinite;
+        }
       `}</style>
       <Helmet>
         <title>Videos | Eloity</title>
@@ -1134,85 +1202,103 @@ const Videos: React.FC = () => {
                 <TabsList className="grid w-full grid-cols-5 bg-black/40 border border-white/10 rounded-full p-1">
                   <TabsTrigger
                     value="live"
-                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                    className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-full py-1 px-2 sm:px-3 transition-all duration-300 shadow-lg"
                   >
                     <Radio className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Live
+                    <span className="hidden sm:inline">Live</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="battle"
-                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                    className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white rounded-full py-1 px-2 sm:px-3 transition-all duration-300 shadow-lg"
                   >
                     <Swords className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Battle
+                    <span className="hidden sm:inline">Battle</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="foryou"
-                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                    className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white rounded-full py-1 px-2 sm:px-3 transition-all duration-300 shadow-lg"
                   >
                     <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    For You
+                    <span className="hidden sm:inline">For You</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value="following"
-                    className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3"
+                    className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white rounded-full py-1 px-2 sm:px-3 transition-all duration-300 shadow-lg"
                   >
                     <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Following
+                    <span className="hidden sm:inline">Following</span>
                   </TabsTrigger>
                   {/* Create Menu Tab */}
-                  <DropdownMenu open={showCreateMenu} onOpenChange={setShowCreateMenu}>
-                    <DropdownMenuTrigger asChild>
-                      <TabsTrigger
-                        value="create"
-                        className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-black rounded-full py-1 px-2 sm:px-3 cursor-pointer"
-                      >
-                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </TabsTrigger>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="bg-gray-900 border-gray-700 w-48">
-                      <DropdownMenuItem 
-                        className="text-white hover:bg-gray-800 cursor-pointer"
-                        onClick={() => {
-                          setShowCreateMenu(false);
-                          setIsAdvancedRecorderOpen(true);
-                        }}
-                      >
-                        <Camera className="w-4 h-4 mr-2" />
-                        Create Video
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-white hover:bg-gray-800 cursor-pointer"
-                        onClick={() => {
-                          setShowCreateMenu(false);
-                          // Handle go live functionality
-                          toast({
-                            title: "Go Live",
-                            description: "Live streaming feature coming soon!",
-                          });
-                        }}
-                      >
-                        <Radio className="w-4 h-4 mr-2" />
-                        Go Live
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-white hover:bg-gray-800 cursor-pointer"
-                        onClick={() => {
-                          setShowCreateMenu(false);
-                          // Handle start battle functionality
-                          toast({
-                            title: "Start Battle",
-                            description: "Battle feature coming soon!",
-                          });
-                        }}
-                      >
-                        <Swords className="w-4 h-4 mr-2" />
-                        Start Battle
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <TabsTrigger
+                    value="create"
+                    className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-full py-1 px-2 sm:px-3 cursor-pointer transition-all duration-300 shadow-lg"
+                    onClick={() => setShowCreateMenu(true)}
+                  >
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
+              
+              {/* Create Menu Dropdown - Positioned absolutely next to tabs */}
+              {showCreateMenu && (
+                <div className="absolute top-16 md:top-20 right-1/2 transform translate-x-1/2 z-50 animate-fade-in">
+                  <div className="bg-gray-900 border border-gray-700 rounded-xl w-56 py-3 shadow-2xl backdrop-blur-lg">
+                    <div 
+                      className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
+                      onClick={() => {
+                        setShowCreateMenu(false);
+                        setIsAdvancedRecorderOpen(true);
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <Camera className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">Create Video</div>
+                        <div className="text-xs text-gray-400">Record or upload a video</div>
+                      </div>
+                    </div>
+                    <div 
+                      className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
+                      onClick={() => {
+                        setShowCreateMenu(false);
+                        // Handle go live functionality
+                        toast({
+                          title: "Go Live",
+                          description: "Live streaming feature coming soon!",
+                        });
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
+                        <Radio className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">Go Live</div>
+                        <div className="text-xs text-gray-400">Start live streaming</div>
+                      </div>
+                    </div>
+                    <div 
+                      className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
+                      onClick={() => {
+                        setShowCreateMenu(false);
+                        // Handle start battle functionality
+                        toast({
+                          title: "Start Battle",
+                          description: "Battle feature coming soon!",
+                        });
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                        <Swords className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-medium">Start Battle</div>
+                        <div className="text-xs text-gray-400">Create a creator battle</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 6. Profile/Menu (right side) */}
@@ -1367,7 +1453,7 @@ const Videos: React.FC = () => {
       {/* Comments Section - TikTok Style (slides up from bottom) */}
       {showComments && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0">
-          <div className="bg-gray-900 rounded-tl-2xl rounded-tr-2xl w-full h-2/3 max-w-md flex flex-col animate-slide-up">
+          <div className="bg-gray-900 rounded-tl-2xl rounded-tr-2xl w-full h-2/3 max-w-md flex flex-col animate-slide-up shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <h3 className="text-white font-semibold">Comments ({comments.length})</h3>
