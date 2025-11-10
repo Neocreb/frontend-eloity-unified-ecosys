@@ -6,6 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 // Ad data - fetch real ads from the database
 const fetchRealAdData = async () => {
   try {
+    // First check if the ads table exists by querying the schema
+    const { data: tableExists, error: schemaError } = await supabase
+      .from('information_schema.tables')
+      .select('table_name')
+      .eq('table_name', 'ads')
+      .eq('table_schema', 'public')
+      .single();
+
+    // If the table doesn't exist, return null
+    if (schemaError || !tableExists) {
+      console.log("Ads table does not exist, skipping ad fetch");
+      return null;
+    }
+
+    // If table exists, try to fetch ads
     const { data, error } = await supabase
       .from('ads')
       .select('*')

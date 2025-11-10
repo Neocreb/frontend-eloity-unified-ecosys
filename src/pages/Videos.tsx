@@ -354,7 +354,7 @@ const VideoCard: React.FC<{
   // Handle adding a new comment
   const handleAddComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
-      
+    
     setIsSubmitting(true);
     try {
       const newCommentObj = await videoService.addComment(video.id, newComment);
@@ -931,6 +931,10 @@ const Videos: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentVideoElement, setCurrentVideoElement] = useState<HTMLVideoElement | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -1095,6 +1099,55 @@ const Videos: React.FC = () => {
     } else {
       document.exitFullscreen?.();
       setIsFullscreen(false);
+    }
+  };
+
+  // Handle liking a comment
+  const handleLikeComment = async (commentId: string) => {
+    try {
+      // In a real implementation, this would update the comment likes in the database
+      console.log("Liking comment:", commentId);
+      // Update the comments state to reflect the like change
+      setComments(prev => prev.map(comment => {
+        if (comment.id === commentId) {
+          return {
+            ...comment,
+            isLiked: !comment.isLiked,
+            likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1
+          };
+        }
+        return comment;
+      }));
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
+  };
+
+  // Handle adding a new comment
+  const handleAddComment = async () => {
+    if (!newComment.trim() || isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      // In a real implementation, this would add the comment to the database
+      const newCommentObj = {
+        id: Date.now().toString(),
+        content: newComment,
+        user: {
+          username: user?.username || "You",
+          avatar_url: user?.avatar_url || "https://i.pravatar.cc/150"
+        },
+        likes: 0,
+        isLiked: false,
+        created_at: new Date().toISOString()
+      };
+      
+      setComments(prev => [...prev, newCommentObj]);
+      setNewComment("");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
