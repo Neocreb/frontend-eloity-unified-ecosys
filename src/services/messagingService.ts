@@ -93,10 +93,10 @@ export const messagingService = {
         .eq("id", conversationId);
 
       // Get sender profile information
-      const { data: senderProfile } = await supabase
+      const { data: senderProfile, error: profileError } = await supabase
         .from("profiles")
         .select("name, username, avatar_url")
-        .eq("user_id", senderId)
+        .eq("user_id", senderId) // This is correct based on the schema
         .single();
 
       return {
@@ -106,7 +106,7 @@ export const messagingService = {
         content: data.content,
         created_at: data.created_at,
         read: data.read,
-        sender: senderProfile
+        sender: senderProfile && !profileError
           ? {
               name: senderProfile.name || "Unknown",
               username: senderProfile.username || "unknown",
@@ -177,13 +177,20 @@ export const messagingService = {
       ];
 
       // Get sender profiles
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, name, username, avatar_url")
-        .in("user_id", senderIds);
+      let profiles = [];
+      if (senderIds.length > 0) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("user_id, name, username, avatar_url")
+          .in("user_id", senderIds);
+
+        if (!profileError) {
+          profiles = profileData || [];
+        }
+      }
 
       const profileMap = new Map(
-        profiles?.map((profile) => [
+        profiles.map((profile) => [
           profile.user_id,
           {
             name: profile.name || "Unknown",
@@ -253,7 +260,7 @@ export const messagingService = {
       const conversationsWithDetails = await Promise.all(
         (conversations || []).map(async (conv) => {
           // Get last message
-          const { data: lastMessage } = await supabase
+          const { data: lastMessage, error: lastMessageError } = await supabase
             .from("chat_messages")
             .select("*")
             .eq("conversation_id", conv.id)
@@ -262,7 +269,7 @@ export const messagingService = {
             .single();
 
           // Get unread count
-          const { count: unreadCount } = await supabase
+          const { count: unreadCount, error: unreadCountError } = await supabase
             .from("chat_messages")
             .select("*", { count: "exact", head: true })
             .eq("conversation_id", conv.id)
@@ -274,13 +281,13 @@ export const messagingService = {
           let otherUser = undefined;
 
           if (otherUserId) {
-            const { data: otherUserProfile } = await supabase
+            const { data: otherUserProfile, error: otherUserError } = await supabase
               .from("profiles")
               .select("user_id, name, username, avatar_url")
               .eq("user_id", otherUserId)
               .single();
 
-            if (otherUserProfile) {
+            if (otherUserProfile && !otherUserError) {
               otherUser = {
                 id: otherUserProfile.user_id,
                 name: otherUserProfile.name || "Unknown",
@@ -292,28 +299,30 @@ export const messagingService = {
 
           // Get sender info for last message if exists
           let lastMessageWithSender = undefined;
-          if (lastMessage) {
-            const { data: senderProfile } = await supabase
+          if (lastMessage && !lastMessageError) {
+            const { data: senderProfile, error: senderProfileError } = await supabase
               .from("profiles")
               .select("name, username, avatar_url")
               .eq("user_id", lastMessage.sender_id)
               .single();
 
-            lastMessageWithSender = {
-              id: lastMessage.id,
-              sender_id: lastMessage.sender_id,
-              conversation_id: lastMessage.conversation_id,
-              content: lastMessage.content,
-              created_at: lastMessage.created_at,
-              read: lastMessage.read,
-              sender: senderProfile
-                ? {
-                    name: senderProfile.name || "Unknown",
-                    username: senderProfile.username || "unknown",
-                    avatar: senderProfile.avatar_url || "/placeholder.svg",
-                  }
-                : undefined,
-            };
+            if (!senderProfileError) {
+              lastMessageWithSender = {
+                id: lastMessage.id,
+                sender_id: lastMessage.sender_id,
+                conversation_id: lastMessage.conversation_id,
+                content: lastMessage.content,
+                created_at: lastMessage.created_at,
+                read: lastMessage.read,
+                sender: senderProfile
+                  ? {
+                      name: senderProfile.name || "Unknown",
+                      username: senderProfile.username || "unknown",
+                      avatar: senderProfile.avatar_url || "/placeholder.svg",
+                    }
+                  : undefined,
+              };
+            }
           }
 
           return {

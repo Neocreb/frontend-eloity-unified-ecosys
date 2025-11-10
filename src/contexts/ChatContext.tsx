@@ -197,7 +197,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         .select(
           `
           *,
-          sender:profiles!chat_messages_sender_id_fkey(*)
+          sender:profiles!chat_messages_sender_id_users_id_fk(*)
         `,
         )
         .eq("conversation_id", conversationId)
