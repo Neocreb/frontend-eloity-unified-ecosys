@@ -39,7 +39,7 @@ class StoriesService {
     try {
       // First get the users that the current user follows
       const { data: following, error: followingError } = await this.supabase
-        .from('follows')
+        .from('user_follows')
         .select('following_id')
         .eq('follower_id', currentUserId);
 

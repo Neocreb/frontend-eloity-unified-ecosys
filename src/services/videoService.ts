@@ -277,7 +277,7 @@ export const videoService = {
     if (!user) throw new Error('Not authenticated');
 
     const { error } = await supabase
-      .from('follows')
+      .from('user_follows')
       .insert({
         follower_id: user.id,
         following_id: userId
@@ -292,7 +292,7 @@ export const videoService = {
     if (!user) throw new Error('Not authenticated');
 
     const { error } = await supabase
-      .from('follows')
+      .from('user_follows')
       .delete()
       .eq('follower_id', user.id)
       .eq('following_id', userId);
@@ -306,7 +306,7 @@ export const videoService = {
     if (!user) return false;
 
     const { data, error } = await supabase
-      .from('follows')
+      .from('user_follows')
       .select('id')
       .eq('follower_id', user.id)
       .eq('following_id', userId)
@@ -350,7 +350,7 @@ export const videoService = {
 
     // First get the list of followed users
     const { data: following, error: followingError } = await supabase
-      .from('follows')
+      .from('user_follows')
       .select('following_id')
       .eq('follower_id', user.id);
 

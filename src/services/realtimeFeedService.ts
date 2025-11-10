@@ -343,7 +343,7 @@ class RealtimeFeedService {
     try {
       // Check if already following
       const { data: existingFollow, error: checkError } = await supabase
-        .from('follows')
+        .from('user_follows')
         .select('id')
         .eq('follower_id', followerId)
         .eq('following_id', followingId)
@@ -357,7 +357,7 @@ class RealtimeFeedService {
       if (existingFollow) {
         // Unfollow
         const { error: deleteError } = await supabase
-          .from('follows')
+          .from('user_follows')
           .delete()
           .eq('id', existingFollow.id);
 
@@ -370,7 +370,7 @@ class RealtimeFeedService {
       } else {
         // Follow
         const { error: insertError } = await supabase
-          .from('follows')
+          .from('user_follows')
           .insert({
             follower_id: followerId,
             following_id: followingId,
@@ -394,7 +394,7 @@ class RealtimeFeedService {
   async getFollowers(userId: string): Promise<UserFollow[]> {
     try {
       const { data, error } = await supabase
-        .from('follows')
+        .from('user_follows')
         .select('*')
         .eq('following_id', userId);
 
@@ -414,7 +414,7 @@ class RealtimeFeedService {
   async getFollowing(userId: string): Promise<UserFollow[]> {
     try {
       const { data, error } = await supabase
-        .from('follows')
+        .from('user_follows')
         .select('*')
         .eq('follower_id', userId);
 
