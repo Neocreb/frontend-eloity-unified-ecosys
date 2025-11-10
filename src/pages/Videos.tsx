@@ -111,7 +111,11 @@ import { useVideos } from "@/hooks/use-videos";
 import { VideoItem } from "@/types/video";
 import { formatDistanceToNow } from "date-fns";
 import { videoService } from "@/services/videoService";
+import { liveStreamService, LiveStream } from "@/services/liveStreamService";
 import { supabase } from "@/integrations/supabase/client";
+import InVideoBannerAd from "@/components/ads/InVideoBannerAd";
+import LiveStreamCard from "@/components/live/LiveStreamCard";
+import BattleCard from "@/components/live/BattleCard";
 
 interface VideoData {
   id: string;
@@ -197,6 +201,8 @@ const VideoCard: React.FC<{
   const [showInVideoAd, setShowInVideoAd] = useState(false);
   const [adWatchTimer, setAdWatchTimer] = useState(0);
   const [hasEarnedReward, setHasEarnedReward] = useState(false);
+  const [showInVideoBannerAd, setShowInVideoBannerAd] = useState(false);
+  const [bannerAdData, setBannerAdData] = useState<any>(null);
   const [currentQuality, setCurrentQuality] = useState("auto");
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
@@ -280,6 +286,16 @@ const VideoCard: React.FC<{
         const newTime = prev + 1;
         if (newTime >= adSettings.inVideoAdDelay && !showInVideoAd) {
           setShowInVideoAd(true);
+          // Show banner ad instead of full-screen ad
+          setShowInVideoBannerAd(true);
+          setBannerAdData({
+            id: `ad-${Date.now()}`,
+            title: "Special Offer",
+            description: "Check out this amazing product!",
+            image_url: "https://placehold.co/100x100",
+            action_url: "#",
+            advertiser: "Sponsored Content"
+          });
           // Pause the main video when ad starts
           const video = videoRef.current;
           if (video) {
@@ -303,6 +319,7 @@ const VideoCard: React.FC<{
 
   const handleAdComplete = () => {
     setShowInVideoAd(false);
+    setShowInVideoBannerAd(false);
     setAdWatchTimer(0);
     // Resume main video
     const video = videoRef.current;
@@ -314,6 +331,7 @@ const VideoCard: React.FC<{
 
   const handleAdSkip = () => {
     setShowInVideoAd(false);
+    setShowInVideoBannerAd(false);
     setAdWatchTimer(0);
     // Resume main video
     const video = videoRef.current;
@@ -355,10 +373,22 @@ const VideoCard: React.FC<{
   const handleAddComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
     
-    setIsSubmitting(true);
     try {
-      const newCommentObj = await videoService.addComment(video.id, newComment);
-      setComments(prev => [newCommentObj, ...prev]);
+      setIsSubmitting(true);
+      // In a real implementation, this would add the comment to the database
+      const newCommentObj = {
+        id: Date.now().toString(),
+        content: newComment,
+        user: {
+          username: user?.username || "You",
+          avatar_url: user?.avatar_url || "https://i.pravatar.cc/150"
+        },
+        likes: 0,
+        isLiked: false,
+        created_at: new Date().toISOString()
+      };
+      
+      setComments(prev => [...prev, newCommentObj]);
       setNewComment("");
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -903,8 +933,22 @@ const VideoCard: React.FC<{
         </Badge>
       </div>
 
-      {/* In-Video Ad Overlay */}
-      {showInVideoAd && (
+      {/* In-Video Banner Ad Overlay */}
+      {showInVideoBannerAd && bannerAdData && (
+        <InVideoBannerAd
+          adData={bannerAdData}
+          onDismiss={handleAdComplete}
+          onAction={(url) => {
+            console.log('Banner ad clicked:', url);
+            // Handle ad click
+            window.open(url, '_blank');
+            handleAdComplete();
+          }}
+        />
+      )}
+
+      {/* In-Video Ad Overlay (fallback) */}
+      {showInVideoAd && !showInVideoBannerAd && (
         <InVideoAd
           onAdComplete={handleAdComplete}
           onSkip={handleAdSkip}
@@ -935,6 +979,13 @@ const Videos: React.FC = () => {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Live streaming state
+  const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
+  const [battles, setBattles] = useState<(LiveStream & { battle: any })[]>([]);
+  const [isLiveStreaming, setIsLiveStreaming] = useState(false);
+  const [currentLiveStream, setCurrentLiveStream] = useState<LiveStream | null>(null);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -1151,6 +1202,38 @@ const Videos: React.FC = () => {
     }
   };
 
+  // Fetch live streams when switching to live tab
+  useEffect(() => {
+    const fetchLiveStreams = async () => {
+      if (activeTab === "live") {
+        try {
+          const streams = await liveStreamService.getActiveLiveStreams();
+          setLiveStreams(streams);
+        } catch (error) {
+          console.error("Error fetching live streams:", error);
+        }
+      }
+    };
+
+    fetchLiveStreams();
+  }, [activeTab]);
+
+  // Fetch battles when switching to battle tab
+  useEffect(() => {
+    const fetchBattles = async () => {
+      if (activeTab === "battle") {
+        try {
+          const activeBattles = await liveStreamService.getActiveBattles();
+          setBattles(activeBattles);
+        } catch (error) {
+          console.error("Error fetching battles:", error);
+        }
+      }
+    };
+
+    fetchBattles();
+  }, [activeTab]);
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black text-white flex items-center justify-center">
@@ -1237,7 +1320,7 @@ const Videos: React.FC = () => {
                 <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </div>
-
+            
             {/* 2-5. Central tabs (Live, Battle, For You, Following) + Create Menu */}
             <div className="col-span-4 flex justify-center">
               <Tabs
@@ -1313,13 +1396,31 @@ const Videos: React.FC = () => {
                     </div>
                     <div 
                       className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
-                      onClick={() => {
+                      onClick={async () => {
                         setShowCreateMenu(false);
                         // Handle go live functionality
-                        toast({
-                          title: "Go Live",
-                          description: "Live streaming feature coming soon!",
-                        });
+                        try {
+                          const stream = await liveStreamService.createLiveStream({
+                            title: "My Live Stream",
+                            description: "Join me live!",
+                            category: "general"
+                          });
+                          
+                          // Navigate to live stream page
+                          navigate(`/app/live/${stream.id}`);
+                          
+                          toast({
+                            title: "Live Stream Started!",
+                            description: "Your live stream is now broadcasting.",
+                          });
+                        } catch (error) {
+                          console.error("Error starting live stream:", error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to start live stream. Please try again.",
+                            variant: "destructive",
+                          });
+                        }
                       }}
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
@@ -1332,16 +1433,41 @@ const Videos: React.FC = () => {
                     </div>
                     <div 
                       className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
-                      onClick={() => {
+                      onClick={async () => {
                         setShowCreateMenu(false);
                         // Handle start battle functionality
-                        toast({
-                          title: "Start Battle",
-                          description: "Battle feature coming soon!",
-                        });
+                        try {
+                          // First create a live stream for the battle
+                          const stream = await liveStreamService.createLiveStream({
+                            title: "Battle Challenge",
+                            description: "Join the battle!",
+                            category: "general"
+                          });
+                          
+                          // Then create the battle
+                          const battle = await liveStreamService.createBattle({
+                            liveStreamId: stream.id,
+                            battleType: "general"
+                          });
+                          
+                          // Navigate to battle page
+                          navigate(`/app/battle/${battle.id}`);
+                          
+                          toast({
+                            title: "Battle Started!",
+                            description: "Your battle is now live.",
+                          });
+                        } catch (error) {
+                          console.error("Error starting battle:", error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to start battle. Please try again.",
+                            variant: "destructive",
+                          });
+                        }
                       }}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
                         <Swords className="w-4 h-4" />
                       </div>
                       <div>
@@ -1353,7 +1479,7 @@ const Videos: React.FC = () => {
                 </div>
               )}
             </div>
-
+            
             {/* 6. Profile/Menu (right side) */}
             <div className="flex justify-end">
               <Button
@@ -1380,42 +1506,70 @@ const Videos: React.FC = () => {
         }}
         onClick={() => setShowControls(!showControls)}
       >
-        {allItems.map((item, index) => {
-          // Render interstitial ad
-          if (item.isAd) {
-            return (
-              <div key={item.ad.id} className="h-screen w-full bg-black snap-start snap-always flex items-center justify-center p-4">
-                <VideoInterstitialAd
-                  onClick={() => {
-                    console.log('Interstitial ad clicked');
-                    // Handle ad click
-                  }}
-                  className="max-w-md w-full"
-                />
-              </div>
-            );
-          }
-
-          // Transform item to VideoData for compatibility
-          const videoData = transformToVideoData(item);
-
-          // Render regular video
-          return (
-            <VideoCard
-              key={videoData.id}
-              video={videoData}
-              isActive={index === currentIndex}
-              showControls={showControls}
-              onVideoElementReady={index === currentIndex ? setCurrentVideoElement : undefined}
-              onLike={handleVideoLike}
-              onComment={handleCommentClick}
+        {/* Render content based on active tab */}
+        {activeTab === "live" ? (
+          // Render live streams
+          liveStreams.map((stream, index) => (
+            <LiveStreamCard
+              key={stream.id}
+              stream={stream}
+              onClick={() => {
+                // Navigate to live stream page
+                navigate(`/app/live/${stream.id}`);
+              }}
             />
-          );
-        })}
+          ))
+        ) : activeTab === "battle" ? (
+          // Render battles
+          battles.map((battle, index) => (
+            <BattleCard
+              key={battle.id}
+              battle={battle}
+              onClick={() => {
+                // Navigate to battle page
+                navigate(`/app/battle/${battle.battle.id}`);
+              }}
+            />
+          ))
+        ) : (
+          // Render regular videos
+          allItems.map((item, index) => {
+            // Render interstitial ad
+            if (item.isAd) {
+              return (
+                <div key={item.ad.id} className="h-screen w-full bg-black snap-start snap-always flex items-center justify-center p-4">
+                  <VideoInterstitialAd
+                    onClick={() => {
+                      console.log('Interstitial ad clicked');
+                      // Handle ad click
+                    }}
+                    className="max-w-md w-full"
+                  />
+                </div>
+              );
+            }
+
+            // Transform item to VideoData for compatibility
+            const videoData = transformToVideoData(item);
+
+            // Render regular video
+            return (
+              <VideoCard
+                key={videoData.id}
+                video={videoData}
+                isActive={index === currentIndex}
+                showControls={showControls}
+                onVideoElementReady={index === currentIndex ? setCurrentVideoElement : undefined}
+                onLike={handleVideoLike}
+                onComment={handleCommentClick}
+              />
+            );
+          })
+        )}
       </div>
 
-      {/* Enhanced Create Button Group */}
-      <div className="fixed bottom-24 md:bottom-8 right-4 md:right-8 z-50 flex flex-col gap-3">
+      {/* Enhanced Create Button Group - Moved to left side */}
+      <div className="fixed bottom-24 md:bottom-8 left-4 md:left-8 z-50 flex flex-col gap-3">
         <AccessibilityFAB
           videoElement={currentVideoElement}
           className="w-12 h-12"
@@ -1429,16 +1583,6 @@ const Videos: React.FC = () => {
           title="Creator Dashboard"
         >
           <Award className="w-6 h-6" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsDiscoveryOpen(true)}
-          className="w-12 h-12 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
-          title="Discover Content"
-        >
-          <Sparkles className="w-6 h-6" />
         </Button>
 
         <Button
