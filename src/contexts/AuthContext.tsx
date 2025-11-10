@@ -89,6 +89,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             rawUser.user_metadata?.avatar ||
             rawUser.user_metadata?.avatar_url ||
             `https://ui-avatars.com/api/?name=${encodeURIComponent(rawUser.user_metadata?.name || "User")}&background=random`,
+          avatar_url:
+            rawUser.user_metadata?.avatar ||
+            rawUser.user_metadata?.avatar_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(rawUser.user_metadata?.name || "User")}&background=random`,
           points: rawUser.user_metadata?.points || 0,
           level: rawUser.user_metadata?.level || "bronze",
           role: rawUser.user_metadata?.role || "user",
@@ -128,6 +132,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           name: "User",
           username: fallbackUsername,
           avatar: `https://ui-avatars.com/api/?name=User&background=random`,
+          avatar_url: `https://ui-avatars.com/api/?name=User&background=random`,
           points: 0,
           level: "bronze",
           role: "user",

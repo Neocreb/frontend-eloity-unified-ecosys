@@ -334,6 +334,7 @@ export interface ExtendedUser extends User {
   name: string;
   username: string;
   avatar: string;
+  avatar_url?: string;
   points: number;
   level: string;
   role: string;
