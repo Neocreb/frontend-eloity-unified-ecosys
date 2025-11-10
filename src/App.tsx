@@ -524,7 +524,7 @@ const AppRoutes = () => {
           <Route path="delivery/profile/:username" element={<DeliveryProfile />} />
           <Route path="campaigns" element={<CampaignCenter />} />
           <Route path="rewards" element={<EnhancedRewards />} />
-          <Route path="videos" element={<EnhancedTikTokVideosV3 />} />
+          <Route path="videos" element={<Videos />} />
           <Route path="videos/:videoId" element={<VideoDetail />} />
           {/* Commented out route for missing DuetDemo component */}
           {/* <Route path="duet-demo" element={<DuetDemo />} /> */}
