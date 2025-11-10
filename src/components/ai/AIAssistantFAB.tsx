@@ -26,7 +26,7 @@ import {
   Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import useAIAssistant from "@/hooks/use-ai-assistant";
+import { useAIAssistant } from "@/hooks/use-ai-assistant";
 
 interface AIInsightPreview {
   id: string;

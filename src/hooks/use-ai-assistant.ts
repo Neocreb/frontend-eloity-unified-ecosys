@@ -20,6 +20,7 @@ interface UseAIAssistantReturn {
   tradingInsights: TradingInsight[];
   performanceAnalysis: PerformanceAnalysis | null;
   schedulingOptimizations: SchedulingOptimization[];
+  dashboardSummary: any;
   isLoading: boolean;
   isProcessing: boolean;
   error: string | null;
@@ -29,6 +30,7 @@ interface UseAIAssistantReturn {
   analyzePerformance: () => Promise<PerformanceAnalysis | null>;
   suggestOptimizations: () => Promise<SchedulingOptimization | null>;
   getRealTimeInsights: () => Promise<AIInsight[]>;
+  getDashboardSummary: () => Promise<any>;
 }
 
 export const useAIAssistant = (): UseAIAssistantReturn => {
@@ -43,6 +45,7 @@ export const useAIAssistant = (): UseAIAssistantReturn => {
   const [tradingInsights, setTradingInsights] = useState<TradingInsight[]>([]);
   const [performanceAnalysis, setPerformanceAnalysis] = useState<PerformanceAnalysis | null>(null);
   const [schedulingOptimizations, setSchedulingOptimizations] = useState<SchedulingOptimization[]>([]);
+  const [dashboardSummary, setDashboardSummary] = useState<any>(null);
 
   // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
@@ -214,6 +217,28 @@ export const useAIAssistant = (): UseAIAssistantReturn => {
     }
   }, [user?.id]);
 
+  // Get dashboard summary using the assistant
+  const getDashboardSummary = useCallback(async () => {
+    if (!user?.id) return null;
+
+    try {
+      setIsProcessing(true);
+      setError(null);
+      
+      // Get dashboard summary from the service
+      const summary = await aiPersonalAssistantService.getDashboardSummary(user.id);
+      setDashboardSummary(summary);
+      
+      return summary;
+    } catch (err) {
+      console.error("Error getting dashboard summary:", err);
+      setError("Failed to get dashboard summary. Please try again.");
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [user?.id]);
+
   return {
     assistant,
     insights,
@@ -221,6 +246,7 @@ export const useAIAssistant = (): UseAIAssistantReturn => {
     tradingInsights,
     performanceAnalysis,
     schedulingOptimizations,
+    dashboardSummary,
     isLoading,
     isProcessing,
     error,
@@ -230,5 +256,6 @@ export const useAIAssistant = (): UseAIAssistantReturn => {
     analyzePerformance,
     suggestOptimizations,
     getRealTimeInsights,
+    getDashboardSummary,
   };
 };

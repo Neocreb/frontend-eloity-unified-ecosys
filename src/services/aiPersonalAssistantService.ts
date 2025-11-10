@@ -962,7 +962,8 @@ class AIPersonalAssistantService {
 
     // Trading insights
     if (tradingData.data && tradingData.data.length > 0) {
-      // TODO: Implement real trading insights based on user data
+      const tradingInsights = this.generateTradingInsightsFromData(tradingData.data);
+      baseInsights.push(...tradingInsights);
     }
 
     // If no real data insights generated, use some mock insights
@@ -1066,7 +1067,7 @@ class AIPersonalAssistantService {
       
       // Trading insights
       if (analyticsData.tradingActivity) {
-        const tradingInsights = this.generateTradingInsights(analyticsData.tradingActivity);
+        const tradingInsights = this.generateTradingInsightsFromData(analyticsData.tradingActivity);
         insights.push(...tradingInsights);
       }
       
@@ -1212,7 +1213,7 @@ class AIPersonalAssistantService {
   }
 
   // Generate trading insights based on real data
-  private generateTradingInsights(tradingData: any[]): AIInsight[] {
+  private generateTradingInsightsFromData(tradingData: any[]): AIInsight[] {
     const insights: AIInsight[] = [];
     
     if (!tradingData || tradingData.length === 0) return insights;
