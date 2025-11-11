@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
+import { useUnifiedNotifications } from "@/contexts/UnifiedNotificationContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -79,6 +80,7 @@ import {
   MapPin,
   ToggleLeft,
   Truck,
+  MessageCircle,
 } from "lucide-react";
 import NotificationsDropdown from "./NotificationsDropdown";
 import { useToast } from "@/hooks/use-toast";
@@ -177,6 +179,7 @@ const UnifiedHeader = () => {
   const { user, logout } = useAuth();
   const { cart, wishlist, getCartItemsCount, getCartTotal, categories } =
     useEnhancedMarketplace();
+  const { unreadCount } = useUnifiedNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -784,12 +787,12 @@ const UnifiedHeader = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="relative">
                   <Heart className="h-4 w-4" />
-                  {unreadNotifications > 0 && (
+                  {unreadCount > 0 && (
                     <Badge
                       variant="destructive"
                       className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
                     >
-                      {unreadNotifications}
+                      {unreadCount}
                     </Badge>
                   )}
                 </Button>
@@ -800,12 +803,12 @@ const UnifiedHeader = () => {
                 <DropdownMenuItem onClick={() => navigate("/app/notifications")}>
                   <Bell className="mr-2 h-4 w-4" />
                   <span>Notifications</span>
-                  {unreadNotifications > 0 && (
+                  {unreadCount > 0 && (
                     <Badge
                       variant="secondary"
                       className="ml-auto text-xs"
                     >
-                      {unreadNotifications}
+                      {unreadCount}
                     </Badge>
                   )}
                 </DropdownMenuItem>
