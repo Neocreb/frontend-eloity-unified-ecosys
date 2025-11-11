@@ -118,6 +118,7 @@ import LiveStreamCard from "@/components/live/LiveStreamCard";
 import BattleCard from "@/components/live/BattleCard";
 import LiveStreamModal from "@/components/live/LiveStreamModal";
 import BattleCreationModal from "@/components/live/BattleCreationModal";
+import EnhancedTikTokBattle from "@/components/battles/EnhancedTikTokBattle";
 
 interface VideoData {
   id: string;
@@ -1052,13 +1053,13 @@ const Videos: React.FC = () => {
   
   // Live streaming state
   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
-  const [battles, setBattles] = useState<(LiveStream & { battle: any })[]>([]);
-  const [isLiveStreaming, setIsLiveStreaming] = useState(false);
-  const [currentLiveStream, setCurrentLiveStream] = useState<LiveStream | null>(null);
-  
-  // Modals state
+  const [battles, setBattles] = useState<LiveStream[]>([]);
   const [showLiveStreamModal, setShowLiveStreamModal] = useState(false);
   const [showBattleCreationModal, setShowBattleCreationModal] = useState(false);
+  
+  // Battle modal state
+  const [showBattleModal, setShowBattleModal] = useState(false);
+  const [selectedBattle, setSelectedBattle] = useState<LiveStream & { battle: any } | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -1215,6 +1216,18 @@ const Videos: React.FC = () => {
     setIsDiscoveryOpen(false);
     setIsAdvancedRecorderOpen(true);
     // Pre-configure challenge in recorder
+  };
+
+  // Handle battle card click
+  const handleBattleClick = (battle: LiveStream & { battle: any }) => {
+    setSelectedBattle(battle);
+    setShowBattleModal(true);
+  };
+
+  // Handle exiting battle modal
+  const handleBattleExit = () => {
+    setShowBattleModal(false);
+    setSelectedBattle(null);
   };
 
   const toggleFullscreen = () => {
@@ -1608,10 +1621,7 @@ const Videos: React.FC = () => {
             <BattleCard
               key={battle.id}
               battle={battle}
-              onClick={() => {
-                // Navigate to battle page
-                navigate(`/app/battle/${battle.battle.id}`);
-              }}
+              onClick={() => handleBattleClick(battle)}
             />
           ))
         ) : (
@@ -1833,6 +1843,15 @@ const Videos: React.FC = () => {
         }}
       />
       
+      {/* Battle Modal */}
+      {showBattleModal && selectedBattle && (
+        <div className="fixed inset-0 z-50">
+          <EnhancedTikTokBattle 
+            battleId={selectedBattle.id}
+            onExit={handleBattleExit}
+          />
+        </div>
+      )}
     </div>
   );
 };

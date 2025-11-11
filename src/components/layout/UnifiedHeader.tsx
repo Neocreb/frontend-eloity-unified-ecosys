@@ -573,7 +573,7 @@ const UnifiedHeader = () => {
   );
 
   return (
-    <>
+    <div>
       <header
         className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur
     supports-[backdrop-filter]:bg-background/60 shadow-md"
@@ -766,82 +766,73 @@ const UnifiedHeader = () => {
                       )}
                     </CardContent>
                   </Card>
-              )}
-          </div>
+                )}
+            </div>
 
-          {/* Mobile Search Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowMobileSearch(true)}
-            className="lg:hidden"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
+            {/* Mobile Search Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMobileSearch(true)}
+              className="lg:hidden"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
 
-          {/* Notifications */}
-          <NotificationsDropdown />
-
-          {/* Messages */}
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="Messages"
-            onClick={() => navigate("/app/chat")}
-          >
-            <MessageSquare className="h-4 w-4" />
-          </Button>
-
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="relative h-8 w-8 rounded-full p-0"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar_url || ""} />
-                  <AvatarFallback className="bg-gradient-to-r from-primary to-purple-600 text-white text-xs">
-                    {user?.full_name?.charAt(0) ||
-                      user?.username?.charAt(0) ||
-                      "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {user?.full_name || user?.username}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    @{user?.username}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => navigate("/app/profile")}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+            {/* Quick Actions Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="relative">
+                  <Heart className="h-4 w-4" />
+                  {unreadNotifications > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                    >
+                      {unreadNotifications}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/app/notifications")}>
+                  <Bell className="mr-2 h-4 w-4" />
+                  <span>Notifications</span>
+                  {unreadNotifications > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto text-xs"
+                    >
+                      {unreadNotifications}
+                    </Badge>
+                  )}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowUserSearch(true)}>
-                  <Users className="mr-2 h-4 w-4" />
-                  <span>Find People</span>
+                <DropdownMenuItem onClick={() => navigate("/app/messages")}>
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  <span>Messages</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/app/wallet")}>
+                  <Wallet className="mr-2 h-4 w-4" />
+                  <span>Wallet</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/app/rewards")}>
+                  <Gift className="mr-2 h-4 w-4" />
+                  <span>Rewards</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/app/settings")}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
@@ -1005,7 +996,7 @@ const UnifiedHeader = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

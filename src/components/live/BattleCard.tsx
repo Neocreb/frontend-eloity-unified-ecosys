@@ -11,15 +11,17 @@ interface BattleCardProps {
 }
 
 const BattleCard: React.FC<BattleCardProps> = ({ battle, onClick }) => {
-  // Get challenger and opponent info (mock data for now)
+  // Get challenger and opponent info from battle data
   const challenger = {
-    username: "battleking",
-    fullName: "Battle King",
-    avatar: "https://i.pravatar.cc/150?u=challenger",
-    isVerified: true,
+    username: battle.user?.username || "challenger",
+    fullName: battle.user?.full_name || "Challenger",
+    avatar: battle.user?.avatar_url || "https://i.pravatar.cc/150?u=challenger",
+    isVerified: battle.user?.is_verified || false,
     score: battle.battle?.challenger_score || 0
   };
   
+  // For opponent, we would need to fetch their profile data
+  // For now, we'll use mock data but in a real implementation this would come from the database
   const opponent = {
     username: "epicfighter",
     fullName: "Epic Fighter",

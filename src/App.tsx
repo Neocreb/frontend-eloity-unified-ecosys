@@ -220,6 +220,7 @@ import MarketplaceSell from "./pages/marketplace/MarketplaceSell";
 import VideoDetail from "./pages/VideoDetail";
 import LiveStreamPage from "./pages/LiveStreamPage";
 import BattlePage from "./pages/BattlePage";
+import TikTokBattlePage from "./pages/TikTokBattlePage";
 import {
   ServiceDetail,
   FreelancerProfile,
@@ -532,6 +533,7 @@ const AppRoutes = () => {
           <Route path="videos/:videoId" element={<VideoDetail />} />
           <Route path="live/:id" element={<LiveStreamPage />} />
           <Route path="battle/:id" element={<BattlePage />} />
+          <Route path="tiktok-battle" element={<TikTokBattlePage />} />
           {/* Commented out route for missing DuetDemo component */}
           {/* <Route path="duet-demo" element={<DuetDemo />} /> */}
           <Route path="explore" element={<Explore />} />

@@ -596,6 +596,14 @@ const EnhancedFeedWithTabs = () => {
                     onViewStory={handleViewStory}
                   />
                   <CreatePostTrigger onOpenCreatePost={() => setShowCreatePostFlow(true)} />
+                  <div className="mb-4">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-red-500 to-blue-500 hover:from-red-600 hover:to-blue-600 text-white font-bold py-6 text-lg"
+                      onClick={() => navigate('/app/tiktok-battle')}
+                    >
+                      Enter TikTok Battle Arena
+                    </Button>
+                  </div>
                 </>
               )}
 
