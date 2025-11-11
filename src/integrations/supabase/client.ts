@@ -6,14 +6,24 @@ import type { Database } from './types';
 let SUPABASE_URL = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_URL : process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 let SUPABASE_PUBLISHABLE_KEY = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY : process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
+console.log('Supabase client initialization:');
+console.log('  SUPABASE_URL from import.meta.env:', typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_URL : 'import.meta not available');
+console.log('  SUPABASE_URL current value:', SUPABASE_URL);
+console.log('  SUPABASE_PUBLISHABLE_KEY current value:', SUPABASE_PUBLISHABLE_KEY ? `${SUPABASE_PUBLISHABLE_KEY.substring(0, 10)}...` : 'NOT SET');
+
 // If we're getting placeholder values, try to load from process.env (which might be loaded from .env.local)
 if (SUPABASE_URL === 'your_supabase_project_url' && typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL) {
+  console.log('Overriding placeholder SUPABASE_URL with process.env value');
   SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 }
 
 if (SUPABASE_PUBLISHABLE_KEY === 'your_supabase_anon_key' && typeof process !== 'undefined' && process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+  console.log('Overriding placeholder SUPABASE_PUBLISHABLE_KEY with process.env value');
   SUPABASE_PUBLISHABLE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 }
+
+console.log('  SUPABASE_URL after override:', SUPABASE_URL);
+console.log('  SUPABASE_PUBLISHABLE_KEY after override:', SUPABASE_PUBLISHABLE_KEY ? `${SUPABASE_PUBLISHABLE_KEY.substring(0, 10)}...` : 'NOT SET');
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +99,7 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     apply() { return thrower; },
   });
 } else {
+  console.log('Creating Supabase client with URL:', SUPABASE_URL);
   _supabase = createClient<Database>(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY,

@@ -216,6 +216,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         setError(null);
 
         // Check if environment variables are available
+        console.log("Checking Supabase environment variables...");
+        console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
+        console.log("VITE_SUPABASE_PUBLISHABLE_KEY available:", !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+        
         if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
           console.error("Supabase environment variables are missing!");
           console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
@@ -231,6 +235,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         const authInitTimeout =
           Number((import.meta as any).env?.VITE_AUTH_INIT_TIMEOUT_MS) || 8000;
 
+        console.log("Getting session with timeout:", authInitTimeout);
         const sessionResult = (await Promise.race([
           supabase.auth.getSession(),
           new Promise((resolve) =>
@@ -241,6 +246,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           ),
         ])) as any;
 
+        console.log("Session result:", sessionResult);
         const session = sessionResult?.data?.session ?? null;
         const sessionError = sessionResult?.error ?? null;
 
@@ -253,6 +259,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           setError(null);
         }
 
+        console.log("Setting session and user:", session?.user?.id);
         setSession(session);
         setUser(enhanceUserData(session?.user || null));
         ensureProfileExists(session?.user || null).catch(() => {});
@@ -264,6 +271,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
       } finally {
         if (mounted) {
+          console.log("Auth initialization complete, setting isLoading to false");
           setIsLoading(false);
         }
       }
@@ -274,6 +282,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     // Listen for auth state changes
     let subscription: any;
     try {
+      console.log("Setting up auth state change listener");
       const {
         data: { subscription: authSubscription },
       } = supabase.auth.onAuthStateChange(async (event, session) => {
