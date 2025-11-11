@@ -15,8 +15,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "start": "node dist/server/enhanced-index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
     "test:supabase": "node test-supabase-integration.js",
     "test:replicate": "node scripts/test-replicate-function.js",
     "lint": "eslint . --ext .ts,.tsx",
@@ -134,11 +134,14 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/express-session": "^1.18.0",
     "@types/helmet": "^4.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.7.0",
     "@types/react": "^18.3.26",
     "@types/react-dom": "^18.3.7",
@@ -152,7 +155,8 @@
     "prettier": "^3.3.2",
     "supabase": "^2.51.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^2.0.0"
   },
   "keywords": [
     "eloity",

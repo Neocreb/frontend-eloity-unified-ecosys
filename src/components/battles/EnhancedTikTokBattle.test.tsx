@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import EnhancedTikTokBattle from './EnhancedTikTokBattle';
-import test, { describe } from 'node:test';
 
 // Mock framer-motion since it's not compatible with jsdom
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   },
@@ -12,24 +12,20 @@ jest.mock('framer-motion', () => ({
 }));
 
 describe('EnhancedTikTokBattle', () => {
-  test('renders without crashing', () => {
+  it('renders without crashing', () => {
     render(<EnhancedTikTokBattle />);
     expect(screen.getByText('creator_red')).toBeInTheDocument();
     expect(screen.getByText('creator_blue')).toBeInTheDocument();
   });
 
-  test('displays initial scores', () => {
+  it('displays initial scores', () => {
     render(<EnhancedTikTokBattle />);
     expect(screen.getByText('1,250')).toBeInTheDocument();
     expect(screen.getByText('980')).toBeInTheDocument();
   });
 
-  test('displays timer', () => {
+  it('displays timer', () => {
     render(<EnhancedTikTokBattle />);
     expect(screen.getByText('05:00')).toBeInTheDocument();
   });
 });
-
-function expect(arg0: any) {
-    throw new Error('Function not implemented.');
-}

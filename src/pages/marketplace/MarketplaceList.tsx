@@ -32,7 +32,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { ChevronLeft, Upload, PlusCircle, X } from "lucide-react";
+import { ChevronLeft, Upload, PlusCircle, X, Package, HardDrive, Wrench } from "lucide-react";
 import { useMarketplace } from "@/contexts/MarketplaceContext";
 import { Product } from "@/types/marketplace";
 
@@ -61,6 +61,18 @@ const productSchema = z.object({
   inStock: z.boolean().default(true),
   image: z.string().min(1, "Product image is required"),
   isNew: z.boolean().default(false),
+  // Digital product fields
+  digitalType: z.string().optional(),
+  format: z.string().optional(),
+  fileSize: z.string().optional(),
+  authors: z.string().optional(),
+  publisher: z.string().optional(),
+  language: z.string().optional(),
+  // Service product fields
+  serviceType: z.string().optional(),
+  deliveryTime: z.string().optional(),
+  hourlyRate: z.coerce.number().optional(),
+  requirements: z.string().optional(),
 });
 
 const MarketplaceList = () => {
@@ -72,6 +84,7 @@ const MarketplaceList = () => {
   const [currentProductId, setCurrentProductId] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [currentImage, setCurrentImage] = useState<string>("");
+  const [productType, setProductType] = useState<"physical" | "digital" | "service">("physical");
 
   // Initialize form
   const form = useForm<z.infer<typeof productSchema>>({
@@ -85,6 +98,16 @@ const MarketplaceList = () => {
       inStock: true,
       image: "",
       isNew: false,
+      digitalType: undefined,
+      format: undefined,
+      fileSize: undefined,
+      authors: undefined,
+      publisher: undefined,
+      language: undefined,
+      serviceType: undefined,
+      deliveryTime: undefined,
+      hourlyRate: undefined,
+      requirements: undefined,
     },
   });
 
@@ -109,10 +132,29 @@ const MarketplaceList = () => {
           inStock: product.inStock,
           image: product.image,
           isNew: product.isNew || false,
+          digitalType: product.digitalType,
+          format: product.format,
+          fileSize: product.fileSize,
+          authors: product.authors,
+          publisher: product.publisher,
+          language: product.language,
+          serviceType: product.serviceType,
+          deliveryTime: product.deliveryTime,
+          hourlyRate: product.hourlyRate,
+          requirements: product.requirements,
         });
 
         if (product.images) {
           setProductImages(product.images);
+        }
+        
+        // Set product type based on existing data
+        if (product.digitalType) {
+          setProductType("digital");
+        } else if (product.serviceType) {
+          setProductType("service");
+        } else {
+          setProductType("physical");
         }
       }
     }
@@ -137,6 +179,18 @@ const MarketplaceList = () => {
         isFeatured: false,
         tags: [],
         specifications: [],
+        // Digital product fields
+        digitalType: productType === "digital" ? values.digitalType : undefined,
+        format: productType === "digital" ? values.format : undefined,
+        fileSize: productType === "digital" ? values.fileSize : undefined,
+        authors: productType === "digital" ? values.authors : undefined,
+        publisher: productType === "digital" ? values.publisher : undefined,
+        language: productType === "digital" ? values.language : undefined,
+        // Service product fields
+        serviceType: productType === "service" ? values.serviceType : undefined,
+        deliveryTime: productType === "service" ? values.deliveryTime : undefined,
+        hourlyRate: productType === "service" ? values.hourlyRate : undefined,
+        requirements: productType === "service" ? values.requirements : undefined,
       };
 
       if (isEditing && currentProductId) {
@@ -206,6 +260,44 @@ const MarketplaceList = () => {
           </p>
         </div>
       </div>
+
+      {/* Product Type Selection */}
+      <Card className="mb-6">
+        <CardHeader>
+          <h2 className="text-lg font-medium">Product Type</h2>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button
+              type="button"
+              variant={productType === "physical" ? "default" : "outline"}
+              className="flex flex-col items-center justify-center h-24 gap-2"
+              onClick={() => setProductType("physical")}
+            >
+              <Package className="h-6 w-6" />
+              <span>Physical Product</span>
+            </Button>
+            <Button
+              type="button"
+              variant={productType === "digital" ? "default" : "outline"}
+              className="flex flex-col items-center justify-center h-24 gap-2"
+              onClick={() => setProductType("digital")}
+            >
+              <HardDrive className="h-6 w-6" />
+              <span>Digital Product</span>
+            </Button>
+            <Button
+              type="button"
+              variant={productType === "service" ? "default" : "outline"}
+              className="flex flex-col items-center justify-center h-24 gap-2"
+              onClick={() => setProductType("service")}
+            >
+              <Wrench className="h-6 w-6" />
+              <span>Service</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -381,6 +473,205 @@ const MarketplaceList = () => {
                       )}
                     />
                   </div>
+
+                  {/* Digital Product Fields */}
+                  {productType === "digital" && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h3 className="text-md font-medium">Digital Product Details</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="digitalType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Digital Type</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="ebook">eBook</SelectItem>
+                                  <SelectItem value="audio">Audio</SelectItem>
+                                  <SelectItem value="video">Video</SelectItem>
+                                  <SelectItem value="software">Software</SelectItem>
+                                  <SelectItem value="game">Game</SelectItem>
+                                  <SelectItem value="template">Template</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="format"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Format</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., PDF, MP3, etc." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="fileSize"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>File Size</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., 2.5MB" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="language"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Language</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., English" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="authors"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Authors</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Author names" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="publisher"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Publisher</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Publisher name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {/* Service Product Fields */}
+                  {productType === "service" && (
+                    <div className="space-y-4 border-t pt-4">
+                      <h3 className="text-md font-medium">Service Details</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="serviceType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Service Type</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="consulting">Consulting</SelectItem>
+                                  <SelectItem value="freelance">Freelance</SelectItem>
+                                  <SelectItem value="repair">Repair</SelectItem>
+                                  <SelectItem value="training">Training</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="deliveryTime"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Delivery Time</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., 2-3 business days" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="hourlyRate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Hourly Rate ($)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                step="0.01"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="requirements"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Requirements</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Special requirements or information needed from customers"
+                                className="min-h-[80px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

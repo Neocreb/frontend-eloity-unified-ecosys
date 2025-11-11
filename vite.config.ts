@@ -82,4 +82,10 @@ export default defineConfig(({ mode }) => ({
     },
     chunkSizeWarningLimit: 1000, // Increase limit to 1MB for better performance
   },
+
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test-setup.ts',
+    globals: true,
+  },
 }));

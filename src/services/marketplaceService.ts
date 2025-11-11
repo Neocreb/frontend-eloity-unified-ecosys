@@ -231,6 +231,21 @@ export class MarketplaceService {
           is_sponsored: productData.isSponsored,
           boost_until: productData.boostExpiresAt?.toISOString(),
           tags: productData.tags,
+          // Digital product fields
+          digital_type: productData.digitalType,
+          system_requirements: productData.systemRequirements,
+          support_info: productData.supportInfo,
+          file_size: productData.fileSize,
+          format: productData.format,
+          authors: productData.authors,
+          publisher: productData.publisher,
+          publication_date: productData.publicationDate,
+          language: productData.language,
+          // Service product fields
+          service_type: productData.serviceType,
+          delivery_time: productData.deliveryTime,
+          hourly_rate: productData.hourlyRate,
+          requirements: productData.requirements,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }])
@@ -268,94 +283,26 @@ export class MarketplaceService {
         condition: data.condition || "new",
         brand: data.brand || undefined,
         model: data.model || undefined,
+        // Digital product fields
+        digitalType: data.digital_type,
+        systemRequirements: data.system_requirements,
+        supportInfo: data.support_info,
+        fileSize: data.file_size,
+        format: data.format,
+        authors: data.authors,
+        publisher: data.publisher,
+        publicationDate: data.publication_date,
+        language: data.language,
+        // Service product fields
+        serviceType: data.service_type,
+        deliveryTime: data.delivery_time,
+        hourlyRate: data.hourly_rate,
+        requirements: data.requirements,
         createdAt: new Date(data.created_at).toISOString(),
         updatedAt: new Date(data.updated_at).toISOString()
       };
     } catch (error) {
       console.error("Error in createProduct:", error);
-      return null;
-    }
-  }
-
-  // Reviews
-  static async getReviews(productId: string): Promise<Review[]> {
-    try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select(`
-          *,
-          profiles:user_id(full_name, avatar_url)
-        `)
-        .eq('product_id', productId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching reviews:", error);
-        return [];
-      }
-
-      return data.map(review => ({
-        id: review.id,
-        productId: review.product_id,
-        userId: review.user_id,
-        userName: review.profiles?.full_name || "Anonymous",
-        userAvatar: review.profiles?.avatar_url || "",
-        rating: review.rating,
-        title: review.title || "",
-        comment: review.comment || "",
-        helpfulCount: review.helpful_count || 0,
-        verifiedPurchase: review.verified_purchase || false,
-        createdAt: new Date(review.created_at),
-        updatedAt: new Date(review.updated_at)
-      }));
-    } catch (error) {
-      console.error("Error in getReviews:", error);
-      return [];
-    }
-  }
-
-  static async createReview(reviewData: Omit<Review, 'id' | 'createdAt' | 'updatedAt'>): Promise<Review | null> {
-    try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .insert([{
-          product_id: reviewData.productId,
-          user_id: reviewData.userId,
-          rating: reviewData.rating,
-          title: reviewData.title,
-          comment: reviewData.comment,
-          helpful_count: reviewData.helpfulCount,
-          verified_purchase: reviewData.verifiedPurchase,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error creating review:", error);
-        return null;
-      }
-
-      // Update product rating and review count
-      await this.updateProductRating(reviewData.productId);
-
-      return {
-        id: data.id,
-        productId: data.product_id,
-        userId: data.user_id,
-        userName: "", // Would be fetched separately
-        userAvatar: "", // Would be fetched separately
-        rating: data.rating,
-        title: data.title || "",
-        comment: data.comment || "",
-        helpfulCount: data.helpful_count || 0,
-        verifiedPurchase: data.verified_purchase || false,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at)
-      };
-    } catch (error) {
-      console.error("Error in createReview:", error);
       return null;
     }
   }
@@ -399,6 +346,102 @@ export class MarketplaceService {
         .eq('id', productId);
     } catch (error) {
       console.error("Error updating product rating:", error);
+    }
+  }
+
+  // Update an existing product
+  static async updateProduct(productId: string, productData: Partial<Product>): Promise<Product | null> {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          name: productData.name,
+          description: productData.description,
+          price: productData.price,
+          discount_price: productData.discountPrice,
+          currency: productData.currency,
+          category_id: productData.categoryId,
+          subcategory_id: productData.subcategoryId,
+          image_url: productData.imageUrl,
+          in_stock: productData.inStock,
+          stock_quantity: productData.stockQuantity,
+          is_featured: productData.isFeatured,
+          is_sponsored: productData.isSponsored,
+          boost_until: productData.boostExpiresAt?.toISOString(),
+          tags: productData.tags,
+          // Digital product fields
+          digital_type: productData.digitalType,
+          system_requirements: productData.systemRequirements,
+          support_info: productData.supportInfo,
+          file_size: productData.fileSize,
+          format: productData.format,
+          authors: productData.authors,
+          publisher: productData.publisher,
+          publication_date: productData.publicationDate,
+          language: productData.language,
+          // Service product fields
+          service_type: productData.serviceType,
+          delivery_time: productData.deliveryTime,
+          hourly_rate: productData.hourlyRate,
+          requirements: productData.requirements,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', productId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating product:", error);
+        return null;
+      }
+
+      return {
+        id: data.id,
+        sellerId: data.seller_id,
+        name: data.name,
+        description: data.description || "",
+        price: data.price,
+        discountPrice: data.discount_price,
+        currency: data.currency || "USD",
+        image: data.image_url || "",
+        images: data.image_url ? [data.image_url] : [],
+        category: data.category || "",
+        subcategory: data.subcategory || undefined,
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        inStock: data.in_stock || false,
+        stockQuantity: data.stock_quantity || 0,
+        isNew: data.is_new || false,
+        isFeatured: data.is_featured || false,
+        isSponsored: data.is_sponsored || false,
+        tags: data.tags || [],
+        sellerName: "", // Would need to fetch seller data
+        sellerAvatar: "",
+        sellerVerified: false,
+        condition: data.condition || "new",
+        brand: data.brand || undefined,
+        model: data.model || undefined,
+        // Digital product fields
+        digitalType: data.digital_type,
+        systemRequirements: data.system_requirements,
+        supportInfo: data.support_info,
+        fileSize: data.file_size,
+        format: data.format,
+        authors: data.authors,
+        publisher: data.publisher,
+        publicationDate: data.publication_date,
+        language: data.language,
+        // Service product fields
+        serviceType: data.service_type,
+        deliveryTime: data.delivery_time,
+        hourlyRate: data.hourly_rate,
+        requirements: data.requirements,
+        createdAt: new Date(data.created_at).toISOString(),
+        updatedAt: new Date(data.updated_at).toISOString()
+      };
+    } catch (error) {
+      console.error("Error in updateProduct:", error);
+      return null;
     }
   }
 

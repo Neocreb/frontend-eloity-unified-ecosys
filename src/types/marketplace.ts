@@ -36,6 +36,23 @@ export interface Product {
   dimensions?: ProductDimensions;
   createdAt: string;
   updatedAt: string;
+  
+  // Digital product fields
+  digitalType?: "ebook" | "audio" | "video" | "software" | "game" | "template" | "other";
+  systemRequirements?: string;
+  supportInfo?: string;
+  fileSize?: string;
+  format?: string;
+  authors?: string;
+  publisher?: string;
+  publicationDate?: string;
+  language?: string;
+  
+  // Service product fields
+  serviceType?: "consulting" | "freelance" | "repair" | "training" | "other";
+  deliveryTime?: string;
+  hourlyRate?: number;
+  requirements?: string;
 }
 
 export interface ProductSpecification {

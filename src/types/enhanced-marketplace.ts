@@ -147,25 +147,38 @@ export interface Product {
   boostedUntil?: string;
   campaignIds?: string[];
 
-  // Digital product specific
+  // Digital product specific fields
+  digitalType?: "ebook" | "audio" | "video" | "software" | "game" | "template" | "other";
+  systemRequirements?: string;
+  supportInfo?: string;
+  fileSize?: string;
+  format?: string;
+  authors?: string;
+  publisher?: string;
+  publicationDate?: string;
+  language?: string;
   downloadUrl?: string;
   licenseType?: "single" | "multiple" | "unlimited";
   downloadLimit?: number;
 
-  // Service specific
-  serviceDeliveryTime?: string;
-  serviceType?: "one_time" | "recurring" | "hourly";
+  // Service specific fields
+  serviceType?: "consulting" | "freelance" | "repair" | "training" | "other";
+  deliveryTime?: string;
   hourlyRate?: number;
+  serviceDeliveryTime?: string;
+  requirements?: string;
+
+  // Physical product specific fields
+  weight?: number;
+  dimensions?: ProductDimensions;
+  returnPolicy?: string;
+  warranty?: string;
 
   // Legacy fields for compatibility
   isNew?: boolean;
   condition?: "new" | "used" | "refurbished";
   brand?: string;
   model?: string;
-  weight?: number;
-  dimensions?: ProductDimensions;
-  returnPolicy?: string;
-  warranty?: string;
 
   // Metadata
   metadata?: Record<string, any>;
