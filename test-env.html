@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Environment Variables Test</title>
+    <script type="module">
+        // Test what environment variables are available
+        console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+        console.log('VITE_SUPABASE_PUBLISHABLE_KEY:', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+        
+        // Display in the page
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('supabase-url').textContent = import.meta.env.VITE_SUPABASE_URL || 'NOT SET';
+            document.getElementById('supabase-key').textContent = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY 
+                ? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY.substring(0, 30) + '...'
+                : 'NOT SET';
+            
+            // Check if we're using placeholder values
+            if (import.meta.env.VITE_SUPABASE_URL === 'your_supabase_project_url') {
+                document.getElementById('url-status').textContent = '❌ Using placeholder value!';
+                document.getElementById('url-status').style.color = 'red';
+            } else if (import.meta.env.VITE_SUPABASE_URL) {
+                document.getElementById('url-status').textContent = '✅ Properly set';
+                document.getElementById('url-status').style.color = 'green';
+            }
+            
+            if (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY === 'your_supabase_anon_key') {
+                document.getElementById('key-status').textContent = '❌ Using placeholder value!';
+                document.getElementById('key-status').style.color = 'red';
+            } else if (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+                document.getElementById('key-status').textContent = '✅ Properly set';
+                document.getElementById('key-status').style.color = 'green';
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Environment Variables Test</h1>
+    <div>
+        <h2>VITE_SUPABASE_URL</h2>
+        <p id="supabase-url">Loading...</p>
+        <p id="url-status">Checking...</p>
+    </div>
+    <div>
+        <h2>VITE_SUPABASE_PUBLISHABLE_KEY</h2>
+        <p id="supabase-key">Loading...</p>
+        <p id="key-status">Checking...</p>
+    </div>
+</body>
+</html>

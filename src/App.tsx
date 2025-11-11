@@ -167,6 +167,8 @@ import LandingPage from "./pages/LandingPage";
 import TestComponent from "./pages/TestComponent";
 import SupabaseDebug from "./pages/SupabaseDebug";
 import UnifiedNotifications from "./pages/UnifiedNotifications";
+import TestEnvVars from "./test-env-vars";
+import SupabaseTest from "./supabase-test";
 // import Create from "./pages/Create";
 // import EnhancedPlatform from "./pages/EnhancedPlatform";
 import EnhancedRewards from "./pages/EnhancedRewards";
@@ -331,6 +333,8 @@ const AppRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/test" element={<TestComponent />} />
       <Route path="/supabase-debug" element={<SupabaseDebug />} />
+      <Route path="/test-env" element={<TestEnvVars />} />
+      <Route path="/supabase-test" element={<SupabaseTest />} />
       <Route path="/home" element={<Home />} />
       {/* Commented out route for missing MemeGifDemo component */}
       {/* <Route path="/meme-gif-demo" element={<MemeGifDemo />} /> */}

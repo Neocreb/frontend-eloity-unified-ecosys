@@ -3,8 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Check if we're in a browser environment before accessing import.meta.env
-const SUPABASE_URL = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_URL : process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY : process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+let SUPABASE_URL = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_URL : process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+let SUPABASE_PUBLISHABLE_KEY = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY : process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+
+// If we're getting placeholder values, try to load from process.env (which might be loaded from .env.local)
+if (SUPABASE_URL === 'your_supabase_project_url' && typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL) {
+  SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+}
+
+if (SUPABASE_PUBLISHABLE_KEY === 'your_supabase_anon_key' && typeof process !== 'undefined' && process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+  SUPABASE_PUBLISHABLE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
