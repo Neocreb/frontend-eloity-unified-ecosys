@@ -1432,7 +1432,19 @@ const Videos: React.FC = () => {
       {showControls && !isFullscreen && (
         <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
           <div className="grid grid-cols-6 items-center gap-2 p-3 pt-8 md:p-4 md:pt-8 max-w-screen-xl mx-auto">
-            {/* 1. Search Icon (left side) */}
+            {/* 1. Back Arrow (left side) */}
+            <div className="flex justify-start">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+              >
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+            </div>
+            
+            {/* 2. Search Icon (left side) */}
             <div className="flex justify-start">
               <Button
                 variant="ghost"
@@ -1641,7 +1653,7 @@ const Videos: React.FC = () => {
       </div>
 
       {/* Enhanced Create Button Group - Moved to left side */}
-      <div className="fixed bottom-32 md:bottom-24 left-4 md:left-8 z-50 flex flex-col gap-3">
+      <div className="fixed top-32 left-4 md:left-8 z-50 flex flex-col gap-3">
         <AccessibilityFAB
           videoElement={currentVideoElement}
           className="w-12 h-12"
