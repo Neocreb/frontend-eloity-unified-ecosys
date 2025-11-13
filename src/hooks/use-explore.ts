@@ -24,6 +24,12 @@ export const useExplore = () => {
             page: 1,
             limit: 20
           });
+          
+          // Validate search response
+          if (!searchResponse) {
+            console.warn('Search API returned null response');
+            throw new Error('Invalid search response');
+          }
 
           // Categorize results by type
           const topics: any[] = [];
@@ -32,31 +38,40 @@ export const useExplore = () => {
           const groups: any[] = [];
           const pages: any[] = [];
 
-          searchResponse.results.forEach((result: any) => {
+          // Validate results array
+          const results = Array.isArray(searchResponse.results) ? searchResponse.results : [];
+          
+          results.forEach((result: any) => {
+            // Validate each result
+            if (!result || !result.type) {
+              console.warn('Skipping invalid search result:', result);
+              return;
+            }
+            
             switch (result.type) {
               case "post":
               case "video":
                 topics.push({
-                  id: result.id,
-                  title: result.title,
-                  category: result.category,
+                  id: result.id || `topic-${Date.now()}-${Math.random()}`,
+                  title: result.title || 'Untitled',
+                  category: result.category || 'General',
                   posts: result.stats?.views || 0
                 });
                 break;
               case "user":
                 users.push({
-                  id: result.id,
-                  name: result.title,
+                  id: result.id || `user-${Date.now()}-${Math.random()}`,
+                  name: result.title || 'Unknown User',
                   username: result.description?.startsWith('@') ? result.description.substring(1) : result.author?.name ? result.author.name.toLowerCase().replace(/\s+/g, '') : result.title.toLowerCase().replace(/\s+/g, ''),
-                  full_name: result.title,
-                  avatar_url: result.image,
+                  full_name: result.title || 'Unknown User',
+                  avatar_url: result.image || '/placeholder.svg',
                   bio: result.description?.startsWith('@') ? '' : result.description || 'No bio available',
                   is_verified: result.author?.verified || false,
                   reputation: result.stats?.views || 0,
                   profile: {
                     username: result.description?.startsWith('@') ? result.description.substring(1) : result.author?.name ? result.author.name.toLowerCase().replace(/\s+/g, '') : result.title.toLowerCase().replace(/\s+/g, ''),
-                    full_name: result.title,
-                    avatar_url: result.image,
+                    full_name: result.title || 'Unknown User',
+                    avatar_url: result.image || '/placeholder.svg',
                     is_verified: result.author?.verified || false,
                     reputation: result.stats?.views || 0
                   }
@@ -65,32 +80,32 @@ export const useExplore = () => {
               case "product":
               case "service":
                 hashtags.push({
-                  id: result.id,
-                  tag: `#${result.title.toLowerCase().replace(/\s+/g, '')}`,
+                  id: result.id || `hashtag-${Date.now()}-${Math.random()}`,
+                  tag: `#${(result.title || 'untitled').toLowerCase().replace(/\s+/g, '')}`,
                   count: result.stats?.views || 0
                 });
                 break;
               case "group":
                 groups.push({
-                  id: result.id,
-                  name: result.title,
+                  id: result.id || `group-${Date.now()}-${Math.random()}`,
+                  name: result.title || 'Unnamed Group',
                   members: result.stats?.views || 0,
-                  category: result.category
+                  category: result.category || 'General'
                 });
                 break;
               case "page":
                 pages.push({
-                  id: result.id,
-                  name: result.title,
+                  id: result.id || `page-${Date.now()}-${Math.random()}`,
+                  name: result.title || 'Unnamed Page',
                   followers: result.stats?.views || 0,
-                  category: result.category
+                  category: result.category || 'General'
                 });
                 break;
               default:
                 // Default to topics for other types
                 topics.push({
-                  id: result.id,
-                  title: result.title,
+                  id: result.id || `topic-${Date.now()}-${Math.random()}`,
+                  title: result.title || 'Untitled',
                   category: result.category || 'General',
                   posts: result.stats?.views || 0
                 });

@@ -36,6 +36,12 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PostActionsMenuProps {
   postId: string;
@@ -124,24 +130,45 @@ export const PostActionsMenu = ({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Post actions</p>
+          </TooltipContent>
+        </Tooltip>
         <DropdownMenuContent align="end" className="w-56">
           {isOwnPost ? (
             <>
-              <DropdownMenuItem onClick={onEdit}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit post
-              </DropdownMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuItem onClick={onEdit}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit post
+                  </DropdownMenuItem>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Edit this post</p>
+                </TooltipContent>
+              </Tooltip>
 
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Privacy
-                </DropdownMenuSubTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuSubTrigger>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Privacy
+                    </DropdownMenuSubTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Change post privacy settings</p>
+                  </TooltipContent>
+                </Tooltip>
                 <DropdownMenuSubContent>
                   <DropdownMenuItem
                     onClick={() => handlePrivacyChange("public")}
@@ -174,13 +201,20 @@ export const PostActionsMenu = ({
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete post
-              </DropdownMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuItem
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete post
+                  </DropdownMenuItem>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete this post permanently</p>
+                </TooltipContent>
+              </Tooltip>
             </>
           ) : (
             <>
@@ -206,10 +240,10 @@ export const PostActionsMenu = ({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete post?</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Post Deletion</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your post
-              and remove it from our servers.
+              Are you sure you want to delete this post? This action cannot be undone. 
+              The post will be permanently removed from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -219,7 +253,7 @@ export const PostActionsMenu = ({
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "Deleting..." : "Yes, Delete Post"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

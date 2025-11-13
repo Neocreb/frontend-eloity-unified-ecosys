@@ -42,6 +42,12 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useNotificationCount } from "@/contexts/UnifiedNotificationContext";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface HeaderProps {
   mobileMenuOpen: boolean;
@@ -142,14 +148,21 @@ const Header = ({ mobileMenuOpen, setMobileMenuOpen }: HeaderProps) => {
       <div className="flex h-14 items-center justify-between px-4">
         {/* Left section - Logo and Mobile Menu */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Toggle menu</p>
+            </TooltipContent>
+          </Tooltip>
 
           <Link to="/app/feed" className="flex items-center gap-2">
             <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Eloity</span>
@@ -183,29 +196,43 @@ const Header = ({ mobileMenuOpen, setMobileMenuOpen }: HeaderProps) => {
           <div className="hidden lg:block w-64">
             <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search Eloity..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-muted/50 border-0 focus:bg-background focus:ring-2 focus:ring-primary/20"
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Input
+                    type="search"
+                    placeholder="Search Eloity..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-muted/50 border-0 focus:bg-background focus:ring-2 focus:ring-primary/20"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Search for users, posts, products, and more</p>
+                </TooltipContent>
+              </Tooltip>
             </form>
           </div>
 
           {/* Create button */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="default"
-                size="sm"
-                className="hidden sm:flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="hidden sm:flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create new content</p>
+              </TooltipContent>
+            </Tooltip>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => navigate("/app/feed")}>
                 <MessageSquare className="h-4 w-4 mr-2" />
@@ -227,37 +254,51 @@ const Header = ({ mobileMenuOpen, setMobileMenuOpen }: HeaderProps) => {
           </DropdownMenu>
 
           {/* Quick Actions */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/app/notifications")}
-            className="relative"
-          >
-            <Bell className="h-5 w-5" />
-            {notificationCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/app/notifications")}
+                className="relative"
               >
-                {notificationCount > 99 ? "99+" : notificationCount}
-              </Badge>
-            )}
-          </Button>
+                <Bell className="h-5 w-5" />
+                {notificationCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                  >
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </Badge>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Notifications</p>
+            </TooltipContent>
+          </Tooltip>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/app/chat")}
-            className="relative"
-          >
-            <MessageSquare className="h-5 w-5" />
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
-            >
-              5
-            </Badge>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/app/chat")}
+                className="relative"
+              >
+                <MessageSquare className="h-5 w-5" />
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                >
+                  5
+                </Badge>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Messages</p>
+            </TooltipContent>
+          </Tooltip>
 
           {/* User menu */}
           <DropdownMenu>

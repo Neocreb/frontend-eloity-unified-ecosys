@@ -66,8 +66,21 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
           setLoading(true);
           const response = await apiClient.getSuggestedUsers(maxUsers);
           
+          // Validate response
+          if (!response) {
+            console.warn('Received null response from getSuggestedUsers API');
+            setUsers([]);
+            return;
+          }
+          
           if (response?.users) {
-            setUsers(response.users);
+            // Validate that users is an array
+            if (Array.isArray(response.users)) {
+              setUsers(response.users);
+            } else {
+              console.warn('Expected users to be an array, received:', typeof response.users);
+              setUsers([]);
+            }
           } else {
             // Following project specification: return empty results when API fails
             console.warn('No suggested users data received from API');
@@ -75,7 +88,8 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
           }
         } catch (error) {
           // Following project specification: log warnings and return empty results
-          console.warn('Failed to fetch suggested users:', error);
+          console.error('Failed to fetch suggested users:', error);
+          // Show user-friendly message in a toast or notification
           setUsers([]);
         } finally {
           setLoading(false);
@@ -87,10 +101,28 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
   }, [maxUsers, shouldFetchUsers]);
 
   const handleUserClick = (username: string) => {
-    if (onUserClick) {
-      onUserClick(username);
-    } else {
-      navigate(`/app/profile/${username}`);
+    // Validate username
+    if (!username || typeof username !== 'string') {
+      console.warn('Cannot navigate to user: invalid username provided', username);
+      return;
+    }
+    
+    // Sanitize username to prevent potential security issues
+    const sanitizedUsername = username.trim();
+    if (!sanitizedUsername) {
+      console.warn('Cannot navigate to user: username is empty after trimming');
+      return;
+    }
+    
+    try {
+      if (onUserClick) {
+        onUserClick(sanitizedUsername);
+      } else {
+        navigate(`/app/profile/${encodeURIComponent(sanitizedUsername)}`);
+      }
+    } catch (error) {
+      console.error('Error navigating to user profile:', error);
+      // Optionally show user-friendly error message
     }
   };
 
@@ -217,9 +249,14 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
           <div
             key={user.id || index}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-            onClick={() =>
-              handleUserClick(user.username || user.profile?.username || user.name || `user-${index}`)
-            }
+            onClick={() => {
+              const username = user.username || user.profile?.username || user.name;
+              if (username) {
+                handleUserClick(username);
+              } else {
+                console.warn('User has no identifiable username:', user);
+              }
+            }}
           >
             <Avatar className="w-12 h-12">
               <AvatarImage

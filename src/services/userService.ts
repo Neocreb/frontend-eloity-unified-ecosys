@@ -505,6 +505,12 @@ export class UserService {
   // Search users
   static async searchUsers(query: string, limit = 20): Promise<UserWithProfile[]> {
     try {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        console.warn('Invalid search query provided for users:', query);
+        return [];
+      }
+      
       // Search in profiles table with email, username, and full_name
       const profilesResponse = await supabaseClient
         .from('profiles')
@@ -516,14 +522,20 @@ export class UserService {
         console.error("Error searching users:", profilesResponse.error);
         return [];
       }
+      
+      // Validate response data
+      if (!profilesResponse.data || !Array.isArray(profilesResponse.data)) {
+        console.warn('Invalid user data received from search:', profilesResponse.data);
+        return [];
+      }
 
       return profilesResponse.data.map((profile: any) => ({
-        id: profile.user_id,
+        id: profile.user_id || `user-${Date.now()}-${Math.random()}`,
         username: profile.username || null,
-        full_name: profile.full_name || null,
-        name: profile.name || null,
-        avatar: profile.avatar || null,
-        avatar_url: profile.avatar_url || null,
+        full_name: profile.full_name || profile.name || null,
+        name: profile.name || profile.full_name || null,
+        avatar: profile.avatar || profile.avatar_url || null,
+        avatar_url: profile.avatar_url || profile.avatar || null,
         bio: profile.bio || null,
         is_verified: profile.is_verified || false,
         points: profile.points || 0,

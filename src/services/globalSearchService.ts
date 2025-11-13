@@ -494,12 +494,23 @@ class GlobalSearchService {
   // Real API search methods
   private async searchUsers(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        console.warn('Invalid search query provided:', query);
+        return [];
+      }
+      
       // Use UserService to search for real users
       const { UserService } = await import('@/services/userService');
       const users = await UserService.searchUsers(query, 20);
       
+      if (!Array.isArray(users)) {
+        console.warn('UserService.searchUsers returned invalid data:', users);
+        return [];
+      }
+      
       return users.map((user) => ({
-        id: user.id,
+        id: user.id || `user-${Date.now()}-${Math.random()}`,
         type: 'user' as const,
         title: user.full_name || user.username || 'Unknown User',
         description: user.bio || (user.username ? `@${user.username}` : 'No bio available'),
@@ -510,150 +521,257 @@ class GlobalSearchService {
         stats: { views: 0 },
       })) || [];
     } catch (error) {
-      console.warn('Users search failed:', error);
+      console.error('Users search failed:', error);
+      // Return empty array instead of failing completely
       return [];
     }
   }
 
   private async searchProducts(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        console.warn('Invalid search query provided for products:', query);
+        return [];
+      }
+      
       const response = await fetch(`${this.baseUrl}/products/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Products search API failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Products search API failed with status ${response.status}: ${errorText}`);
+      }
 
       const data = await response.json();
-      return data.products?.map((product: any) => ({
-        id: product.id,
+      
+      // Validate response data
+      if (!data || !Array.isArray(data.products)) {
+        console.warn('Invalid products data received:', data);
+        return [];
+      }
+      
+      return data.products.map((product: any) => ({
+        id: product.id || `product-${Date.now()}-${Math.random()}`,
         type: 'product' as const,
-        title: product.name,
-        description: product.description,
-        image: product.images?.[0],
-        price: product.price,
-        rating: product.rating,
-        category: product.category,
-        tags: product.tags,
-        author: { name: product.seller?.name, verified: product.seller?.verified },
-        stats: { views: product.views, likes: product.likes },
+        title: product.name || 'Untitled Product',
+        description: product.description || 'No description available',
+        image: product.images?.[0] || '/placeholder.svg',
+        price: product.price || 0,
+        rating: product.rating || 0,
+        category: product.category || 'Uncategorized',
+        tags: Array.isArray(product.tags) ? product.tags : [],
+        author: { 
+          name: product.seller?.name || 'Unknown Seller', 
+          verified: product.seller?.verified || false 
+        },
+        stats: { 
+          views: product.views || 0, 
+          likes: product.likes || 0 
+        },
       })) || [];
     } catch (error) {
-      console.warn('Products search failed:', error);
+      console.error('Products search failed:', error);
+      // Return empty array instead of failing completely
       return [];
     }
   }
 
   private async searchFreelance(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        console.warn('Invalid search query provided for freelance:', query);
+        return [];
+      }
+      
       const response = await fetch(`${this.baseUrl}/freelance/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Freelance search API failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Freelance search API failed with status ${response.status}: ${errorText}`);
+      }
 
       const data = await response.json();
+      
+      // Validate response data
+      if (!data) {
+        console.warn('Invalid freelance data received:', data);
+        return [];
+      }
 
-      const jobResults = data.jobs?.map((job: any) => ({
-        id: job.id,
+      const jobResults = Array.isArray(data.jobs) ? data.jobs.map((job: any) => ({
+        id: job.id || `job-${Date.now()}-${Math.random()}`,
         type: 'job' as const,
-        title: job.title,
-        description: job.description,
-        price: job.budget,
-        category: job.category,
-        location: job.location,
-        tags: job.skills,
-        author: { name: job.client?.name, verified: job.client?.verified },
-        stats: { views: job.views },
-      })) || [];
+        title: job.title || 'Untitled Job',
+        description: job.description || 'No description available',
+        price: job.budget || 0,
+        category: job.category || 'Uncategorized',
+        location: job.location || 'Remote',
+        tags: Array.isArray(job.skills) ? job.skills : [],
+        author: { 
+          name: job.client?.name || 'Unknown Client', 
+          verified: job.client?.verified || false 
+        },
+        stats: { views: job.views || 0 },
+      })) : [];
 
-      const serviceResults = data.services?.map((service: any) => ({
-        id: service.id,
+      const serviceResults = Array.isArray(data.services) ? data.services.map((service: any) => ({
+        id: service.id || `service-${Date.now()}-${Math.random()}`,
         type: 'service' as const,
-        title: service.title,
-        description: service.description,
-        image: service.images?.[0],
-        price: service.price,
-        rating: service.rating,
-        category: service.category,
-        tags: service.tags,
-        author: { name: service.freelancer?.name, verified: service.freelancer?.verified },
-        stats: { views: service.views, likes: service.likes },
-      })) || [];
+        title: service.title || 'Untitled Service',
+        description: service.description || 'No description available',
+        image: service.images?.[0] || '/placeholder.svg',
+        price: service.price || 0,
+        rating: service.rating || 0,
+        category: service.category || 'Uncategorized',
+        tags: Array.isArray(service.tags) ? service.tags : [],
+        author: { 
+          name: service.freelancer?.name || 'Unknown Freelancer', 
+          verified: service.freelancer?.verified || false 
+        },
+        stats: { 
+          views: service.views || 0, 
+          likes: service.likes || 0 
+        },
+      })) : [];
 
       return [...jobResults, ...serviceResults];
     } catch (error) {
-      console.warn('Freelance search failed:', error);
+      console.error('Freelance search failed:', error);
+      // Return empty array instead of failing completely
       return [];
     }
   }
 
   private async searchPosts(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        console.warn('Invalid search query provided for posts:', query);
+        return [];
+      }
+      
       const response = await fetch(`${this.baseUrl}/posts/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Posts search API failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Posts search API failed with status ${response.status}: ${errorText}`);
+      }
 
       const data = await response.json();
-      return data.posts?.map((post: any) => ({
-        id: post.id,
+      
+      // Validate response data
+      if (!data || !Array.isArray(data.posts)) {
+        console.warn('Invalid posts data received:', data);
+        return [];
+      }
+      
+      return data.posts.map((post: any) => ({
+        id: post.id || `post-${Date.now()}-${Math.random()}`,
         type: 'post' as const,
-        title: post.title || post.content.substring(0, 50) + '...',
-        description: post.content,
-        timestamp: new Date(post.createdAt),
-        category: post.category,
-        tags: post.hashtags,
+        title: post.title || (post.content ? post.content.substring(0, 50) + '...' : 'Untitled Post'),
+        description: post.content || 'No content available',
+        timestamp: post.createdAt ? new Date(post.createdAt) : new Date(),
+        category: post.category || 'General',
+        tags: Array.isArray(post.hashtags) ? post.hashtags : [],
         author: {
-          name: post.author?.name,
-          avatar: post.author?.avatar,
-          verified: post.author?.verified
+          name: post.author?.name || 'Anonymous',
+          avatar: post.author?.avatar || '/placeholder.svg',
+          verified: post.author?.verified || false
         },
         stats: {
-          views: post.views,
-          likes: post.likes,
-          comments: post.commentsCount,
-          shares: post.sharesCount
+          views: post.views || 0,
+          likes: post.likes || 0,
+          comments: post.commentsCount || 0,
+          shares: post.sharesCount || 0
         },
       })) || [];
     } catch (error) {
-      console.warn('Posts search failed:', error);
+      console.error('Posts search failed:', error);
+      // Return empty array instead of failing completely
       return [];
     }
   }
 
   private async searchVideos(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        console.warn('Invalid search query provided for videos:', query);
+        return [];
+      }
+      
       const response = await fetch(`${this.baseUrl}/videos/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Videos search API failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Videos search API failed with status ${response.status}: ${errorText}`);
+      }
 
       const data = await response.json();
-      return data.videos?.map((video: any) => ({
-        id: video.id,
+      
+      // Validate response data
+      if (!data || !Array.isArray(data.videos)) {
+        console.warn('Invalid videos data received:', data);
+        return [];
+      }
+      
+      return data.videos.map((video: any) => ({
+        id: video.id || `video-${Date.now()}-${Math.random()}`,
         type: 'video' as const,
-        title: video.title,
-        description: video.description,
-        image: video.thumbnail,
-        author: { name: video.creator?.name, verified: video.creator?.verified },
-        category: video.category,
-        tags: video.tags,
-        stats: { views: video.views, likes: video.likes, comments: video.commentsCount },
+        title: video.title || 'Untitled Video',
+        description: video.description || 'No description available',
+        image: video.thumbnail || '/placeholder.svg',
+        author: { 
+          name: video.creator?.name || 'Unknown Creator', 
+          verified: video.creator?.verified || false 
+        },
+        category: video.category || 'General',
+        tags: Array.isArray(video.tags) ? video.tags : [],
+        stats: { 
+          views: video.views || 0, 
+          likes: video.likes || 0, 
+          comments: video.commentsCount || 0 
+        },
       })) || [];
     } catch (error) {
-      console.warn('Videos search failed:', error);
+      console.error('Videos search failed:', error);
+      // Return empty array instead of failing completely
       return [];
     }
   }
 
   private async searchCrypto(query: string, filters: SearchFilters): Promise<SearchResult[]> {
     try {
+      // Validate input
+      if (!query || typeof query !== 'string') {
+        console.warn('Invalid search query provided for crypto:', query);
+        return [];
+      }
+      
       const response = await fetch(`${this.baseUrl}/crypto/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Crypto search API failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Crypto search API failed with status ${response.status}: ${errorText}`);
+      }
 
       const data = await response.json();
-      return data.cryptos?.map((crypto: any) => ({
-        id: crypto.id,
+      
+      // Validate response data
+      if (!data || !Array.isArray(data.cryptos)) {
+        console.warn('Invalid crypto data received:', data);
+        return [];
+      }
+      
+      return data.cryptos.map((crypto: any) => ({
+        id: crypto.id || `crypto-${Date.now()}-${Math.random()}`,
         type: 'crypto' as const,
-        title: `${crypto.name} (${crypto.symbol})`,
-        description: crypto.description,
-        price: crypto.price,
+        title: `${crypto.name || 'Unknown'} (${crypto.symbol || 'N/A'})`,
+        description: crypto.description || 'No description available',
+        price: crypto.price || 0,
         category: 'Cryptocurrency',
-        tags: [crypto.symbol, crypto.name, 'crypto'],
-        stats: { views: crypto.views },
+        tags: [crypto.symbol || '', crypto.name || '', 'crypto'].filter(tag => tag),
+        stats: { views: crypto.views || 0 },
       })) || [];
     } catch (error) {
-      console.warn('Crypto search failed:', error);
+      console.error('Crypto search failed:', error);
+      // Return empty array instead of failing completely
       return [];
     }
   }

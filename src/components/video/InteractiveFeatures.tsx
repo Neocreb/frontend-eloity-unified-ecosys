@@ -50,6 +50,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { mobileAnimations, zIndex, viewportHeight } from "@/utils/mobileOptimization";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
 
 interface Comment {
@@ -535,7 +536,7 @@ const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
 
       {/* Comments Dialog */}
       <Dialog open={showComments} onOpenChange={setShowComments}>
-        <DialogContent className="bg-black border-gray-800 text-white max-w-md h-[600px] flex flex-col">
+        <DialogContent className={`bg-black border-gray-800 text-white max-w-md flex flex-col ${viewportHeight.safe} max-h-[70vh]`}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />

@@ -104,6 +104,7 @@ import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useVideoPlayback } from "@/hooks/use-video-playback";
 import { useAuth } from "@/contexts/AuthContext";
+import { mobileAnimations, zIndex, viewportHeight } from "@/utils/mobileOptimization";
 import { InVideoAd } from "@/components/ads/InVideoAd";
 import { VideoInterstitialAd } from "@/components/ads/VideoInterstitialAd";
 import { adSettings } from "../../config/adSettings";
@@ -1370,7 +1371,7 @@ const Videos: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black text-white flex items-center justify-center">
+      <div className={`fixed inset-0 bg-black text-white flex items-center justify-center ${viewportHeight.screen}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p>Loading videos...</p>
@@ -1381,7 +1382,7 @@ const Videos: React.FC = () => {
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-black text-white flex items-center justify-center">
+      <div className={`fixed inset-0 bg-black text-white flex items-center justify-center ${viewportHeight.screen}`}>
         <div className="text-center">
           <p className="text-red-500 mb-4">Error loading videos: {error}</p>
           <Button onClick={() => window.location.reload()}>Retry</Button>
@@ -1391,20 +1392,8 @@ const Videos: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black text-white overflow-hidden z-10">
+    <div className={`fixed inset-0 bg-black text-white overflow-hidden z-10 ${viewportHeight.safe}`}>
       <style jsx>{`
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up {
-          animation: slideUp 0.3s ease-out forwards;
-        }
-        
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -1581,7 +1570,7 @@ const Videos: React.FC = () => {
       {/* Full-screen video container */}
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-auto snap-y snap-mandatory"
+        className={`w-full overflow-y-auto snap-y snap-mandatory ${viewportHeight.screen} max-h-screen`}
         style={{
           scrollBehavior: "smooth",
           paddingTop: showControls && !isFullscreen ? "120px" : "0",
@@ -1733,7 +1722,7 @@ const Videos: React.FC = () => {
       {/* Comments Section - TikTok Style (slides up from bottom) */}
       {showComments && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-0">
-          <div className="bg-gray-900 rounded-tl-2xl rounded-tr-2xl w-full h-2/3 max-w-md flex flex-col animate-slide-up shadow-2xl">
+          <div className={`bg-gray-900 rounded-tl-2xl rounded-tr-2xl w-full max-w-md flex flex-col shadow-2xl ${mobileAnimations.slideUp} ${viewportHeight.safe} max-h-[70vh]`}>
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <h3 className="text-white font-semibold">Comments ({comments.length})</h3>
