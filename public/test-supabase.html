@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="results">Loading...</div>
+    <div id="search-results"></div>
+
+    <script>
+        // Get environment variables from the server
+        const SUPABASE_URL = 'https://hjebzdekquczudhrygns.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqZWJ6ZGVrcXVjenVkaHJ5Z25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2MjIzMjksImV4cCI6MjA2MDE5ODMyOX0.bUXtDIV-QReFFgv6UoOGovH2zi2q68HKe2E4Kkbhc7U';
+        
+        // Create Supabase client
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        document.getElementById('results').innerHTML = '<p>Testing Supabase connection...</p>';
+        
+        // Test the connection
+        async function testConnection() {
+            try {
+                console.log('Supabase client created');
+                
+                // Try to query the profiles table
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    console.error('Error:', error);
+                    document.getElementById('results').innerHTML = `<p>Error: ${error.message}</p>`;
+                } else {
+                    console.log('Data:', data);
+                    document.getElementById('results').innerHTML = `<p>Success! Found ${data.length} records</p>`;
+                }
+                
+                // Test search functionality
+                await testSearch();
+            } catch (error) {
+                console.error('Exception:', error);
+                document.getElementById('results').innerHTML = `<p>Exception: ${error.message}</p>`;
+            }
+        }
+        
+        async function testSearch() {
+            try {
+                document.getElementById('search-results').innerHTML = '<p>Testing search...</p>';
+                
+                // Try to search for users
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .or('username.ilike.%test%,full_name.ilike.%test%')
+                    .limit(5);
+                
+                if (error) {
+                    console.error('Search Error:', error);
+                    document.getElementById('search-results').innerHTML = `<p>Search Error: ${error.message}</p>`;
+                } else {
+                    console.log('Search Results:', data);
+                    document.getElementById('search-results').innerHTML = `
+                        <h2>Search Results</h2>
+                        <p>Found ${data.length} users</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('Search Exception:', error);
+                document.getElementById('search-results').innerHTML = `<p>Search Exception: ${error.message}</p>`;
+            }
+        }
+        
+        // Run the tests
+        testConnection();
+    </script>
+</body>
+</html>

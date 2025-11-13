@@ -47,11 +47,19 @@ export const useExplore = () => {
                 users.push({
                   id: result.id,
                   name: result.title,
-                  username: result.description?.startsWith('@') ? result.description.substring(1) : result.author?.name ? result.author.name.toLowerCase().replace(/\s+/g, '') : '',
-                  avatar: result.image,
-                  bio: result.description,
-                  verified: result.author?.verified || false,
-                  followers: result.stats?.views || 0
+                  username: result.description?.startsWith('@') ? result.description.substring(1) : result.author?.name ? result.author.name.toLowerCase().replace(/\s+/g, '') : result.title.toLowerCase().replace(/\s+/g, ''),
+                  full_name: result.title,
+                  avatar_url: result.image,
+                  bio: result.description?.startsWith('@') ? '' : result.description || 'No bio available',
+                  is_verified: result.author?.verified || false,
+                  reputation: result.stats?.views || 0,
+                  profile: {
+                    username: result.description?.startsWith('@') ? result.description.substring(1) : result.author?.name ? result.author.name.toLowerCase().replace(/\s+/g, '') : result.title.toLowerCase().replace(/\s+/g, ''),
+                    full_name: result.title,
+                    avatar_url: result.image,
+                    is_verified: result.author?.verified || false,
+                    reputation: result.stats?.views || 0
+                  }
                 });
                 break;
               case "product":

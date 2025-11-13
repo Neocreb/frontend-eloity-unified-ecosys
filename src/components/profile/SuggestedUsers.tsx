@@ -27,6 +27,8 @@ interface SuggestedUsersProps {
   onUserClick?: (username: string) => void;
   showGiftButton?: boolean;
   onSendGift?: (user: any) => void;
+  users?: any[]; // Add custom users prop
+  loading?: boolean; // Add loading prop
 }
 
 // Simple badge component since import is failing
@@ -44,35 +46,45 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
   onUserClick,
   showGiftButton = false,
   onSendGift,
+  users: customUsers, // Accept custom users
+  loading: customLoading, // Accept custom loading state
 }) => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSuggestedUsers = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.getSuggestedUsers(maxUsers);
-        
-        if (response?.users) {
-          setUsers(response.users);
-        } else {
-          // Following project specification: return empty results when API fails
-          console.warn('No suggested users data received from API');
-          setUsers([]);
-        }
-      } catch (error) {
-        // Following project specification: log warnings and return empty results
-        console.warn('Failed to fetch suggested users:', error);
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Use custom users if provided, otherwise fetch suggested users
+  const shouldFetchUsers = !customUsers;
+  const displayUsers = customUsers || users;
+  const displayLoading = customLoading !== undefined ? customLoading : loading;
 
-    fetchSuggestedUsers();
-  }, [maxUsers]);
+  useEffect(() => {
+    // Only fetch if custom users are not provided
+    if (shouldFetchUsers) {
+      const fetchSuggestedUsers = async () => {
+        try {
+          setLoading(true);
+          const response = await apiClient.getSuggestedUsers(maxUsers);
+          
+          if (response?.users) {
+            setUsers(response.users);
+          } else {
+            // Following project specification: return empty results when API fails
+            console.warn('No suggested users data received from API');
+            setUsers([]);
+          }
+        } catch (error) {
+          // Following project specification: log warnings and return empty results
+          console.warn('Failed to fetch suggested users:', error);
+          setUsers([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchSuggestedUsers();
+    }
+  }, [maxUsers, shouldFetchUsers]);
 
   const handleUserClick = (username: string) => {
     if (onUserClick) {
@@ -144,7 +156,7 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
   };
 
   // Early return for loading state
-  if (loading) {
+  if (displayLoading) {
     return (
       <Card>
         {showTitle && (
@@ -171,7 +183,7 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
   }
 
   // Early return for empty state
-  if (users.length === 0) {
+  if (displayUsers.length === 0) {
     return (
       <Card>
         {showTitle && (
@@ -201,7 +213,7 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
         </CardHeader>
       )}
       <CardContent className="space-y-4">
-        {users.map((user, index) => (
+        {displayUsers.map((user, index) => (
           <div
             key={user.id || index}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"

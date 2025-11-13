@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Search Test</h1>
+    <input type="text" id="searchInput" placeholder="Enter search term">
+    <button onclick="performSearch()">Search</button>
+    <div id="results"></div>
+
+    <script>
+        // Get environment variables from the server
+        const SUPABASE_URL = 'https://hjebzdekquczudhrygns.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqZWJ6ZGVrcXVjenVkaHJ5Z25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2MjIzMjksImV4cCI6MjA2MDE5ODMyOX0.bUXtDIV-QReFFgv6UoOGovH2zi2q68HKe2E4Kkbhc7U';
+        
+        // Create Supabase client
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        async function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            if (!searchTerm) {
+                document.getElementById('results').innerHTML = '<p>Please enter a search term</p>';
+                return;
+            }
+            
+            try {
+                document.getElementById('results').innerHTML = '<p>Searching...</p>';
+                
+                // Try to search for users
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
+                    .limit(10);
+                
+                if (error) {
+                    console.error('Search Error:', error);
+                    document.getElementById('results').innerHTML = `<p>Search Error: ${error.message}</p>`;
+                } else {
+                    console.log('Search Results:', data);
+                    if (data.length > 0) {
+                        let html = `<h2>Found ${data.length} users:</h2><ul>`;
+                        data.forEach(user => {
+                            html += `<li>${user.full_name || user.username} (@${user.username})</li>`;
+                        });
+                        html += '</ul>';
+                        document.getElementById('results').innerHTML = html;
+                    } else {
+                        document.getElementById('results').innerHTML = '<p>No users found</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Search Exception:', error);
+                document.getElementById('results').innerHTML = `<p>Search Exception: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

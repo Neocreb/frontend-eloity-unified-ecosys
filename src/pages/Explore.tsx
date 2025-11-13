@@ -363,6 +363,8 @@ const Explore = () => {
                 }
                 variant="grid"
                 maxUsers={12}
+                users={filteredUsers}
+                loading={isLoading}
               />
             </div>
           </div>

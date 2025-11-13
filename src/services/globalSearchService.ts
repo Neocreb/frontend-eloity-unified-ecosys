@@ -502,7 +502,7 @@ class GlobalSearchService {
         id: user.id,
         type: 'user' as const,
         title: user.full_name || user.username || 'Unknown User',
-        description: user.bio || `@${user.username || 'user'}`,
+        description: user.bio || (user.username ? `@${user.username}` : 'No bio available'),
         image: user.avatar_url || user.avatar || '/placeholder.svg',
         location: '',
         tags: [],
