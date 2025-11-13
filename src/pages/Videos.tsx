@@ -1430,10 +1430,10 @@ const Videos: React.FC = () => {
 
       {/* Enhanced 6-Element TikTok-style header */}
       {showControls && !isFullscreen && (
-        <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
-          <div className="grid grid-cols-6 items-center gap-2 p-3 pt-8 md:p-4 md:pt-8 max-w-screen-xl mx-auto">
-            {/* 1. Back Arrow (left side) */}
-            <div className="flex justify-start">
+        <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/70 via-black/40 to-transparent">
+          <div className="flex items-center justify-between p-3 pt-8 md:p-4 md:pt-8 max-w-screen-xl mx-auto">
+            {/* Left side - Back Arrow and Search */}
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -1442,10 +1442,6 @@ const Videos: React.FC = () => {
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
-            </div>
-            
-            {/* 2. Search Icon (left side) */}
-            <div className="flex justify-start">
               <Button
                 variant="ghost"
                 size="icon"
@@ -1456,8 +1452,8 @@ const Videos: React.FC = () => {
               </Button>
             </div>
             
-            {/* 2-5. Central tabs (Live, Battle, For You, Following) + Create Menu */}
-            <div className="col-span-4 flex justify-center">
+            {/* Center - Main tabs (Live, Battle, For You, Following) */}
+            <div className="flex-1 max-w-md mx-4">
               <Tabs
                 value={activeTab}
                 onValueChange={(value) => {
@@ -1470,7 +1466,7 @@ const Videos: React.FC = () => {
                 }}
                 className="w-full"
               >
-                <TabsList className="grid w-full grid-cols-5 bg-black/40 border border-white/10 rounded-full p-1">
+                <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-white/10 rounded-full p-1">
                   <TabsTrigger
                     value="live"
                     className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-full py-1 px-2 sm:px-3 transition-all duration-300 shadow-lg"
@@ -1499,73 +1495,20 @@ const Videos: React.FC = () => {
                     <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     <span className="hidden sm:inline">Following</span>
                   </TabsTrigger>
-                  {/* Create Menu Tab */}
-                  <TabsTrigger
-                    value="create"
-                    className="text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-full py-1 px-2 sm:px-3 cursor-pointer transition-all duration-300 shadow-lg"
-                    onClick={() => setShowCreateMenu(true)}
-                  >
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </TabsTrigger>
                 </TabsList>
               </Tabs>
-              
-              {/* Create Menu Dropdown - Positioned absolutely next to tabs */}
-              {showCreateMenu && (
-                <div className="absolute top-16 md:top-20 right-1/2 transform translate-x-1/2 z-50 animate-fade-in">
-                  <div className="bg-gray-900 border border-gray-700 rounded-xl w-56 py-3 shadow-2xl backdrop-blur-lg">
-                    <div 
-                      className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
-                      onClick={() => {
-                        setShowCreateMenu(false);
-                        setIsAdvancedRecorderOpen(true);
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                        <Camera className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Create Video</div>
-                        <div className="text-xs text-gray-400">Record or upload a video</div>
-                      </div>
-                    </div>
-                    <div 
-                      className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
-                      onClick={() => {
-                        setShowCreateMenu(false);
-                        setShowLiveStreamModal(true);
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
-                        <Radio className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Go Live</div>
-                        <div className="text-xs text-gray-400">Start live streaming</div>
-                      </div>
-                    </div>
-                    <div 
-                      className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
-                      onClick={() => {
-                        setShowCreateMenu(false);
-                        setShowBattleCreationModal(true);
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
-                        <Swords className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Start Battle</div>
-                        <div className="text-xs text-gray-400">Create a creator battle</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
             
-            {/* 6. Profile/Menu (right side) */}
-            <div className="flex justify-end">
+            {/* Right side - Create Menu and Profile */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowCreateMenu(true)}
+                className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1576,6 +1519,59 @@ const Videos: React.FC = () => {
               </Button>
             </div>
           </div>
+          
+          {/* Create Menu Dropdown - Positioned below header */}
+          {showCreateMenu && (
+            <div className="absolute top-16 right-4 z-50 animate-fade-in">
+              <div className="bg-gray-900 border border-gray-700 rounded-xl w-56 py-3 shadow-2xl backdrop-blur-lg">
+                <div 
+                  className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
+                  onClick={() => {
+                    setShowCreateMenu(false);
+                    setIsAdvancedRecorderOpen(true);
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Create Video</div>
+                    <div className="text-xs text-gray-400">Record or upload a video</div>
+                  </div>
+                </div>
+                <div 
+                  className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
+                  onClick={() => {
+                    setShowCreateMenu(false);
+                    setShowLiveStreamModal(true);
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
+                    <Radio className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Go Live</div>
+                    <div className="text-xs text-gray-400">Start live streaming</div>
+                  </div>
+                </div>
+                <div 
+                  className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
+                  onClick={() => {
+                    setShowCreateMenu(false);
+                    setShowBattleCreationModal(true);
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
+                    <Swords className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Start Battle</div>
+                    <div className="text-xs text-gray-400">Create a creator battle</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1585,7 +1581,7 @@ const Videos: React.FC = () => {
         className={`w-full overflow-y-auto snap-y snap-mandatory ${viewportHeight.screen} max-h-screen`}
         style={{
           scrollBehavior: "smooth",
-          paddingTop: showControls && !isFullscreen ? "120px" : "0",
+          paddingTop: showControls && !isFullscreen ? "100px" : "0",
           paddingBottom: isMobile ? "80px" : "20px",
         }}
         onClick={() => setShowControls(!showControls)}
@@ -1653,7 +1649,7 @@ const Videos: React.FC = () => {
       </div>
 
       {/* Enhanced Create Button Group - Moved to left side */}
-      <div className="fixed top-32 left-4 md:left-8 z-50 flex flex-col gap-3">
+      <div className="fixed top-1/3 left-4 md:left-8 z-50 flex flex-col gap-3">
         <AccessibilityFAB
           videoElement={currentVideoElement}
           className="w-12 h-12"
