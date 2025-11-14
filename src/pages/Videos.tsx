@@ -218,7 +218,6 @@ const VideoCard: React.FC<{
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const { safePlay, safePause, togglePlayback } = useVideoPlayback();
