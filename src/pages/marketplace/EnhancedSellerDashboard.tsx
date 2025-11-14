@@ -1,77 +1,98 @@
 // @ts-nocheck
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Eye,
+  Heart,
+  MessageCircle,
+  Edit,
+  Trash2,
+  Sparkle,
+  Plus,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Package,
+  Users,
+  Star,
+  Calendar,
+  BarChart3,
+  Settings,
+  FileText,
+  Truck,
+  CreditCard,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Download,
+  Upload,
+  Filter,
+  Search,
+  RefreshCw,
+  MoreHorizontal,
+  Zap,
+  Copy,
+  ShoppingCart,
+  Target,
+  Activity,
+  BarChart3 as BarChartIcon,
+} from "lucide-react";
 import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { Product, ProductBoost, BoostOption, Order, OrderStatus } from "@/types/enhanced-marketplace";
 import {
-  Product,
-  ProductBoost,
-  BoostOption,
-  Order,
-  OrderStatus,
-} from "@/types/enhanced-marketplace";
-import { 
-  Activity, 
-  BarChart3, 
-  CheckCircle, 
-  Copy, 
-  DollarSign, 
-  Edit, 
-  Eye, 
-  Heart, 
-  MoreHorizontal, 
-  Package, 
-  Plus, 
-  ShoppingCart, 
-  Sparkles, 
-  Star, 
-  Target, 
-  Trash2, 
-  Zap,
-  Download,
-  BookOpen,
-  FileText
-} from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PageLoading } from "@/components/ui/loading-states";
+import { Progress } from "@/components/ui/progress";
+
+interface Analytics {
+  totalSales: number;
+  totalOrders: number;
+  totalProducts: number;
+  averageRating: number;
+  monthlyRevenue: number[];
+  topSellingProducts: Product[];
+  recentOrders: Order[];
+}
 
 export default function EnhancedSellerDashboard() {
-  // Inline Badge component to avoid import issues
-  const Badge = ({ 
-    children, 
-    variant = "default",
-    className = ""
-  }: { 
-    children: React.ReactNode; 
-    variant?: "default" | "secondary" | "outline" | "success" | "destructive";
-    className?: string;
-  }) => {
-    const variantClasses = {
-      default: "bg-primary text-primary-foreground",
-      secondary: "bg-secondary text-secondary-foreground",
-      outline: "border border-input bg-background",
-      success: "bg-green-100 text-green-800",
-      destructive: "bg-destructive text-destructive-foreground",
-    };
-    
-    return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variantClasses[variant]} ${className}`}>
-        {children}
-      </span>
-    );
-  };
-  
   const {
     myListings,
     deleteProduct,
@@ -215,192 +236,407 @@ export default function EnhancedSellerDashboard() {
     : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Seller Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Manage your products, orders, and performance
-          </p>
-        </div>
-        <Button onClick={handleCreateListing} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Add New Product
+    <div className="space-y-6 p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-xl md:text-2xl font-semibold">Seller Dashboard</h2>
+        <Button
+          onClick={handleCreateListing}
+          className="flex items-center gap-2 w-full sm:w-auto"
+        >
+          <Plus className="h-4 w-4" />
+          <span>List New Product</span>
         </Button>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="rounded-full bg-blue-100 p-3">
-                <Package className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Products</p>
-                <p className="text-2xl font-semibold">{totalProducts}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="rounded-full bg-green-100 p-3">
-                <ShoppingCart className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                <p className="text-2xl font-semibold">{totalSales}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="rounded-full bg-yellow-100 p-3">
-                <DollarSign className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-semibold">${totalRevenue.toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="rounded-full bg-purple-100 p-3">
-                <Star className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg. Rating</p>
-                <p className="text-2xl font-semibold">{averageRating.toFixed(1)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Product Type Tabs */}
-      <Tabs defaultValue="all" className="mb-8">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">All Products ({myListings.length})</TabsTrigger>
-          <TabsTrigger value="physical">Physical ({physicalProducts.length})</TabsTrigger>
-          <TabsTrigger value="digital">Digital ({digitalProducts.length})</TabsTrigger>
-          <TabsTrigger value="service">Services ({serviceProducts.length})</TabsTrigger>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto">
+          <TabsTrigger value="overview" className="text-xs md:text-sm">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="products" className="text-xs md:text-sm">
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="text-xs md:text-sm">
+            Orders
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs md:text-sm">
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="boosts" className="text-xs md:text-sm">
+            Boosts
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs md:text-sm">
+            Settings
+          </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="all">
-          <ProductListings 
-            products={myListings} 
-            onEdit={handleEditListing}
-            onDelete={handleOpenDeleteDialog}
-            onDuplicate={handleDuplicateProduct}
-            onBoost={handleOpenBoostDialog}
-          />
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Total Sales
+                    </p>
+                    <p className="text-lg font-bold">
+                      ${totalRevenue.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-blue-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Orders</p>
+                    <p className="text-lg font-bold">
+                      {totalSales}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-purple-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Products
+                    </p>
+                    <p className="text-lg font-bold">
+                      {totalProducts}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-yellow-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Rating</p>
+                    <p className="text-lg font-bold">
+                      {averageRating.toFixed(1)}/5
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingOrders ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : sellerOrders.length > 0 ? (
+                <div className="space-y-4">
+                  {sellerOrders.slice(0, 5).map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-2"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">#{order.orderNumber}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {order.customerName}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge 
+                          variant={order.status === "completed" ? "success" : order.status === "cancelled" ? "destructive" : "default"}
+                        >
+                          {order.status}
+                        </Badge>
+                        <span className="font-semibold">${order.totalAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No orders yet</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    When customers place orders, they'll appear here.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
-        
-        <TabsContent value="physical">
-          <ProductListings 
-            products={physicalProducts} 
-            onEdit={handleEditListing}
-            onDelete={handleOpenDeleteDialog}
-            onDuplicate={handleDuplicateProduct}
-            onBoost={handleOpenBoostDialog}
-          />
+
+        {/* Products Tab */}
+        <TabsContent value="products" className="space-y-6">
+          {/* Product Type Filter Tabs */}
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all">All Products ({myListings.length})</TabsTrigger>
+              <TabsTrigger value="physical">Physical ({physicalProducts.length})</TabsTrigger>
+              <TabsTrigger value="digital">Digital ({digitalProducts.length})</TabsTrigger>
+              <TabsTrigger value="service">Services ({serviceProducts.length})</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              <ProductListings 
+                products={myListings} 
+                onEdit={handleEditListing}
+                onDelete={handleOpenDeleteDialog}
+                onDuplicate={handleDuplicateProduct}
+                onBoost={handleOpenBoostDialog}
+              />
+            </TabsContent>
+            
+            <TabsContent value="physical">
+              <ProductListings 
+                products={physicalProducts} 
+                onEdit={handleEditListing}
+                onDelete={handleOpenDeleteDialog}
+                onDuplicate={handleDuplicateProduct}
+                onBoost={handleOpenBoostDialog}
+              />
+            </TabsContent>
+            
+            <TabsContent value="digital">
+              <ProductListings 
+                products={digitalProducts} 
+                onEdit={handleEditListing}
+                onDelete={handleOpenDeleteDialog}
+                onDuplicate={handleDuplicateProduct}
+                onBoost={handleOpenBoostDialog}
+              />
+            </TabsContent>
+            
+            <TabsContent value="service">
+              <ProductListings 
+                products={serviceProducts} 
+                onEdit={handleEditListing}
+                onDelete={handleOpenDeleteDialog}
+                onDuplicate={handleDuplicateProduct}
+                onBoost={handleOpenBoostDialog}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
-        
-        <TabsContent value="digital">
-          <ProductListings 
-            products={digitalProducts} 
-            onEdit={handleEditListing}
-            onDelete={handleOpenDeleteDialog}
-            onDuplicate={handleDuplicateProduct}
-            onBoost={handleOpenBoostDialog}
-          />
+
+        {/* Orders Tab */}
+        <TabsContent value="orders" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Management</CardTitle>
+              <CardDescription>
+                Manage your recent orders and fulfillment
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingOrders ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : sellerOrders.length > 0 ? (
+                <div className="space-y-4">
+                  {sellerOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg gap-4"
+                    >
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <p className="font-medium">#{order.orderNumber}</p>
+                          <Badge 
+                            variant={order.status === "completed" ? "success" : order.status === "cancelled" ? "destructive" : "default"}
+                          >
+                            {order.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Customer: {order.customerName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Items: {order.items.length}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Date: {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <span className="font-semibold text-lg">
+                          ${order.totalAmount.toFixed(2)}
+                        </span>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => navigate(`/marketplace/orders/${order.id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No orders yet</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    When customers place orders, they'll appear here.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
-        
-        <TabsContent value="service">
-          <ProductListings 
-            products={serviceProducts} 
-            onEdit={handleEditListing}
-            onDelete={handleOpenDeleteDialog}
-            onDuplicate={handleDuplicateProduct}
-            onBoost={handleOpenBoostDialog}
-          />
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  <BarChartIcon className="h-8 w-8 mr-2" />
+                  Revenue chart would be implemented here
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Selling Products</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {myListings
+                    .sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0))
+                    .slice(0, 3)
+                    .map((product, index) => (
+                      <div key={product.id} className="flex items-center gap-3">
+                        <span className="text-sm font-medium">#{index + 1}</span>
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium line-clamp-1">
+                            {product.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            ${product.price} • {product.totalSales || 0} sales
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Boosts Tab */}
+        <TabsContent value="boosts" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Active Boosts</CardTitle>
+              <CardDescription>
+                Manage your product visibility boosts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {activeBoosts.length > 0 ? (
+                <div className="space-y-4">
+                  {activeBoosts.map((boost) => (
+                    <div
+                      key={boost.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-4"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{boost.productName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Boosted until {new Date(boost.endTime).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant="success">
+                          Active
+                        </Badge>
+                        <span className="font-semibold">${boost.amount}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Zap className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No active boosts</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Boost your products to increase visibility and sales.
+                  </p>
+                  <div className="mt-6">
+                    <Button onClick={() => navigate("/marketplace/products")}>
+                      <Zap className="mr-2 h-4 w-4" />
+                      Boost Products
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Store Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="storeName">Store Name</Label>
+                  <Input id="storeName" placeholder="Your Store Name" />
+                </div>
+                <div>
+                  <Label htmlFor="storeEmail">Contact Email</Label>
+                  <Input
+                    id="storeEmail"
+                    type="email"
+                    placeholder="store@example.com"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="storeDescription">Store Description</Label>
+                <Textarea
+                  id="storeDescription"
+                  placeholder="Describe your store..."
+                />
+              </div>
+              <div className="flex gap-4">
+                <Button>Save Changes</Button>
+                <Button variant="outline">Reset</Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Orders Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5" />
-            Recent Orders
-          </CardTitle>
-          <CardDescription>
-            Manage your recent orders and fulfillment
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loadingOrders ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-          ) : sellerOrders.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sellerOrders.slice(0, 5).map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">#{order.orderNumber}</TableCell>
-                    <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{order.customerName}</TableCell>
-                    <TableCell>{order.items.length} items</TableCell>
-                    <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge variant={order.status === "completed" ? "success" : order.status === "cancelled" ? "destructive" : "default"}>
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/marketplace/orders/${order.id}`)}>
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8">
-              <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No orders yet</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                When customers place orders, they'll appear here.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Boost Dialog */}
       <Dialog open={showBoostDialog} onOpenChange={setShowBoostDialog}>
