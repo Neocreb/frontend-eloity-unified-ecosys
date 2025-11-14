@@ -769,7 +769,7 @@ const VideoCard: React.FC<{
       </div>
       
       {/* Enhanced Controls Bar */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2 md:gap-3">
+      <div className="absolute top-16 right-4 flex flex-col gap-2 md:gap-3">
         {/* Connection Quality Indicator */}
         <div className="flex items-center gap-1">
           {connectionQuality === "good" && (
@@ -813,7 +813,7 @@ const VideoCard: React.FC<{
 
       {/* Advanced Controls Panel */}
       {showAdvancedControls && (
-        <div className="absolute top-20 right-4 md:top-24 md:right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 space-y-3 min-w-[200px] z-10 shadow-2xl">
+        <div className="absolute top-32 right-4 md:top-36 md:right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 space-y-3 min-w-[200px] z-10 shadow-2xl">
           {/* Quality Selector */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-white text-sm">
@@ -929,7 +929,7 @@ const VideoCard: React.FC<{
       )}
 
       {/* Views count */}
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-16 left-4">
         <Badge
           variant="secondary"
           className="bg-black/40 text-white border-none text-[10px] md:text-xs px-2 py-1"
