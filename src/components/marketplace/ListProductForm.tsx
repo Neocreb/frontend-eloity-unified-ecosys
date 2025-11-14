@@ -25,9 +25,9 @@ import { ImagePlus, Loader2, Sparkles } from 'lucide-react';
 import { useMarketplace } from '@/contexts/MarketplaceContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { storageService } from '@/services/storageService';
 import { categoryService } from '@/services/categoryService';
 import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ListProductFormProps {
   onSuccess: () => void;
@@ -85,8 +85,19 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
     if (!file) return;
     
     try {
-      // Upload image to storage service
-      const imageUrl = await storageService.uploadImage(file, `products/${user?.id}/${Date.now()}_${file.name}`);
+      // Upload image to Supabase storage
+      const bucket = 'products';
+      const path = `${user?.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+        upsert: false,
+        cacheControl: '3600',
+        contentType: file.type,
+      });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      const imageUrl = data.publicUrl;
       
       // Set preview and form value
       const objectUrl = URL.createObjectURL(file);
@@ -115,7 +126,7 @@ const ListProductForm = ({ onSuccess, editProductId }: ListProductFormProps) => 
     // In a full implementation, you would:
     // 1. Fetch the content from the URL
     // 2. Convert it to a File object
-    // 3. Upload it using storageService.uploadImage
+    // 3. Upload it using Supabase storage
     // 4. Set the preview image and form value
   };
   

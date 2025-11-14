@@ -24,14 +24,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { ImagePlus, Video, FileText, BookOpen, Play, Music, Palette, Code, File, Download } from 'lucide-react';
+import { ImagePlus, Video, FileText, BookOpen, Play, Music, Palette, Code, File, Download, Package, Sparkles } from 'lucide-react';
 import { useMarketplace } from '@/contexts/MarketplaceContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { storageService } from '@/services/storageService';
 import { categoryService } from '@/services/categoryService';
 import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 import { Product } from '@/types/marketplace';
+import { supabase } from "@/integrations/supabase/client";
 
 interface EnhancedProductListingFormProps {
   onSuccess: () => void;
@@ -110,7 +110,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
   const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [productType, setProductType] = useState<"physical" | "digital" | "service">("physical");
   const [digitalProductType, setDigitalProductType] = useState<string>("");
-  
+
   // Load categories
   useEffect(() => {
     const loadCategories = async () => {
@@ -122,10 +122,10 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
         setCategories([]);
       }
     };
-    
+
     loadCategories();
   }, []);
-  
+
   const form = useForm<FormValues>({
     defaultValues: {
       // Basic info
@@ -136,20 +136,20 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       category: editProduct?.category || '',
       subcategory: editProduct?.subcategory || '',
       tags: editProduct?.tags?.join(', ') || '',
-      
+
       // Product type
       productType: editProduct?.productType || 'physical',
-      
+
       // Media
       mainImage: editProduct?.image || '',
       additionalImages: editProduct?.images || [],
       videos: [],
-      
+
       // Inventory
       inStock: editProduct?.inStock ?? true,
       stockQuantity: editProduct?.stockQuantity?.toString() || '',
       isNew: editProduct?.isNew ?? true,
-      
+
       // Digital product fields
       digitalProductType: editProduct?.digitalProductType || undefined,
       downloadUrl: editProduct?.downloadUrl || undefined,
@@ -170,7 +170,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       courseDuration: editProduct?.courseDuration || undefined,
       courseModules: editProduct?.courseModules?.toString() || undefined,
       includesSourceFiles: editProduct?.includesSourceFiles || undefined,
-      
+
       // Physical product fields
       weight: editProduct?.weight?.toString() || undefined,
       length: editProduct?.dimensions?.length?.toString() || undefined,
@@ -188,7 +188,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       packageWeight: editProduct?.packageWeight?.toString() || undefined,
     }
   });
-  
+
   // Set product type when form loads
   useEffect(() => {
     if (editProduct) {
@@ -196,16 +196,27 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       setDigitalProductType(editProduct.digitalProductType || '');
     }
   }, [editProduct]);
-  
+
   // For image preview and upload
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     try {
-      // Upload image to storage service
-      const imageUrl = await storageService.uploadImage(file, `products/${user?.id}/${Date.now()}_${file.name}`);
-      
+      // Upload image to Supabase storage
+      const bucket = 'products';
+      const path = `${user?.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+        upsert: false,
+        cacheControl: '3600',
+        contentType: file.type,
+      });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      const imageUrl = data.publicUrl;
+
       // Set preview and form value
       const objectUrl = URL.createObjectURL(file);
       setPreviewImage(objectUrl);
@@ -219,14 +230,14 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       });
     }
   };
-  
+
   const handleAIContentGenerated = (content: { type: "image" | "video"; url: string; prompt: string }) => {
     toast({
       title: "AI Content Generated!",
       description: `Your ${content.type} has been generated. You can now use it for your product.`,
     });
   };
-  
+
   const onSubmit = async (data: FormValues) => {
     if (!user) {
       toast({
@@ -236,13 +247,13 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const price = parseFloat(data.price);
       const discountPrice = data.discountPrice ? parseFloat(data.discountPrice) : undefined;
-      
+
       if (isNaN(price) || price <= 0) {
         toast({
           title: "Invalid Price",
@@ -252,7 +263,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
         setIsSubmitting(false);
         return;
       }
-      
+
       if (discountPrice && (isNaN(discountPrice) || discountPrice <= 0 || discountPrice >= price)) {
         toast({
           title: "Invalid Discount Price",
@@ -262,10 +273,10 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
         setIsSubmitting(false);
         return;
       }
-      
+
       // Use the uploaded image URL or a placeholder
       const imageUrl = data.mainImage || 'https://placehold.co/600x400?text=Product+Image';
-      
+
       const productData: any = {
         name: data.name,
         description: data.description,
@@ -283,7 +294,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
         rating: 0,
         reviewCount: 0,
       };
-      
+
       // Add digital product fields if applicable
       if (data.productType === 'digital' && data.digitalProductType) {
         productData.digitalProductType = data.digitalProductType;
@@ -306,7 +317,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
         productData.courseModules = data.courseModules ? parseInt(data.courseModules) : undefined;
         productData.includesSourceFiles = data.includesSourceFiles;
       }
-      
+
       // Add physical product fields if applicable
       if (data.productType === 'physical') {
         productData.weight = data.weight ? parseFloat(data.weight) : undefined;
@@ -316,7 +327,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
         productData.careInstructions = data.careInstructions;
         productData.assemblyRequired = data.assemblyRequired;
         productData.assemblyTime = data.assemblyTime;
-        
+
         if (data.length && data.width && data.height) {
           productData.dimensions = {
             length: parseFloat(data.length),
@@ -325,7 +336,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
             unit: "cm"
           };
         }
-        
+
         if (data.packageLength && data.packageWidth && data.packageHeight) {
           productData.packageDimensions = {
             length: parseFloat(data.packageLength),
@@ -334,14 +345,14 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
             unit: "cm"
           };
         }
-        
+
         productData.packageWeight = data.packageWeight ? parseFloat(data.packageWeight) : undefined;
       }
-      
+
       if (editProduct) {
         // Update existing product
         await updateProduct(editProduct.id, productData);
-        
+
         toast({
           title: "Product Updated",
           description: "Your product has been updated successfully"
@@ -349,13 +360,13 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       } else {
         // Create new product
         await createProduct(productData);
-        
+
         toast({
           title: "Product Created",
           description: "Your product has been listed successfully"
         });
       }
-      
+
       form.reset();
       setPreviewImage('');
       onSuccess();
@@ -374,7 +385,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">{editProduct ? 'Edit Product' : 'List a New Product'}</h2>
-      
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Product Type Selection */}
@@ -414,7 +425,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                             </div>
                           </div>
                         </div>
-                        
+
                         <div 
                           className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                             productType === 'digital' 
@@ -436,7 +447,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                             </div>
                           </div>
                         </div>
-                        
+
                         <div 
                           className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                             productType === 'service' 
@@ -465,7 +476,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
               />
             </CardContent>
           </Card>
-          
+
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -490,7 +501,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="category"
@@ -523,7 +534,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                   )}
                 />
               </div>
-              
+
               <FormField
                 control={form.control}
                 name="description"
@@ -545,7 +556,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -571,7 +582,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="discountPrice"
@@ -592,7 +603,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="tags"
@@ -615,7 +626,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Product-Specific Fields */}
           {productType === 'digital' && (
             <DigitalProductFields 
@@ -624,11 +635,11 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
               setDigitalProductType={setDigitalProductType} 
             />
           )}
-          
+
           {productType === 'physical' && (
             <PhysicalProductFields form={form} />
           )}
-          
+
           {/* Media */}
           <Card>
             <CardHeader>
@@ -705,7 +716,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                   </FormItem>
                 )}
               />
-              
+
               <div>
                 <Label>Additional Images</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
@@ -716,7 +727,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <Label>Videos</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
@@ -729,7 +740,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Inventory */}
           <Card>
             <CardHeader>
@@ -760,7 +771,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="isNew"
@@ -782,7 +793,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
                   )}
                 />
               </div>
-              
+
               {productType !== 'digital' && (
                 <FormField
                   control={form.control}
@@ -807,7 +818,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
               )}
             </CardContent>
           </Card>
-          
+
           <div className="flex justify-end gap-3">
             <Button
               type="button"
@@ -832,7 +843,7 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
           </div>
         </form>
       </Form>
-      
+
       {/* Edith AI Generator Modal */}
       {showAIGenerator && (
         <EdithAIGenerator
@@ -940,7 +951,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
             </FormItem>
           )}
         />
-        
+
         {digitalProductType && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -960,7 +971,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="fileSize"
@@ -975,7 +986,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                 )}
               />
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -990,7 +1001,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="licenseType"
@@ -1014,7 +1025,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                 )}
               />
             </div>
-            
+
             {digitalProductType === 'ebook' && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1031,7 +1042,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="coAuthor"
@@ -1046,7 +1057,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                     )}
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
@@ -1061,7 +1072,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="language"
@@ -1075,7 +1086,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="ageGroup"
@@ -1102,7 +1113,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                 </div>
               </>
             )}
-            
+
             {digitalProductType === 'online_course' && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1119,7 +1130,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="courseModules"
@@ -1134,7 +1145,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                     )}
                   />
                 </div>
-                
+
                 <FormField
                   control={form.control}
                   name="skillLevel"
@@ -1158,7 +1169,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="includesSourceFiles"
@@ -1213,7 +1224,7 @@ const PhysicalProductFields = ({ form }: any) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="size"
@@ -1228,7 +1239,7 @@ const PhysicalProductFields = ({ form }: any) => {
             )}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -1243,7 +1254,7 @@ const PhysicalProductFields = ({ form }: any) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="width"
@@ -1257,7 +1268,7 @@ const PhysicalProductFields = ({ form }: any) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="height"
@@ -1272,7 +1283,7 @@ const PhysicalProductFields = ({ form }: any) => {
             )}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -1287,7 +1298,7 @@ const PhysicalProductFields = ({ form }: any) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="material"
@@ -1302,7 +1313,7 @@ const PhysicalProductFields = ({ form }: any) => {
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="careInstructions"
@@ -1316,7 +1327,7 @@ const PhysicalProductFields = ({ form }: any) => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="assemblyRequired"
@@ -1337,7 +1348,7 @@ const PhysicalProductFields = ({ form }: any) => {
             </FormItem>
           )}
         />
-        
+
         {form.watch('assemblyRequired') && (
           <FormField
             control={form.control}
@@ -1356,74 +1367,67 @@ const PhysicalProductFields = ({ form }: any) => {
             )}
           />
         )}
-        
-        <Card className="border border-dashed">
-          <CardHeader>
-            <CardTitle className="text-lg">Packaging Information</CardTitle>
-            <CardDescription>
-              Details about how the product will be packaged for shipping
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="packageLength"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Package Length (cm)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" placeholder="25" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="packageWidth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Package Width (cm)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" placeholder="20" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="packageHeight"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Package Height (cm)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" placeholder="15" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
+
+        <div className="border-t pt-4">
+          <h3 className="font-medium mb-4">Packaging Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
-              name="packageWeight"
+              name="packageLength"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Package Weight (kg)</FormLabel>
+                  <FormLabel>Package Length (cm)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="2.0" {...field} />
+                    <Input type="number" step="0.1" placeholder="25" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </CardContent>
-        </Card>
+
+            <FormField
+              control={form.control}
+              name="packageWidth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Package Width (cm)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.1" placeholder="20" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="packageHeight"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Package Height (cm)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.1" placeholder="15" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="packageWeight"
+            render={({ field }) => (
+              <FormItem className="mt-4">
+                <FormLabel>Package Weight (kg)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="2.0" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </CardContent>
     </Card>
   );
