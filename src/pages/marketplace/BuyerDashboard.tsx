@@ -101,7 +101,7 @@ interface Review {
 export default function BuyerDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getSellerOrders, getSellerAnalytics } = useEnhancedMarketplace();
+  useEnhancedMarketplace();
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<EnhancedOrder | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);

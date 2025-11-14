@@ -42,6 +42,7 @@ import SellerDashboard from "@/components/marketplace/SellerDashboard";
 import ListProductForm from "@/components/marketplace/ListProductForm";
 import WishlistProducts from "@/components/marketplace/WishlistProducts";
 import EnhancedProductDetail from "@/components/marketplace/EnhancedProductDetail";
+import ProductCard from "@/components/marketplace/ProductCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BannerAd } from "@/components/ads/BannerAd";
