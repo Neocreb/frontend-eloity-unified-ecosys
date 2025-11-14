@@ -418,6 +418,76 @@ export const videoService = {
     }
   },
 
+  async saveVideo(videoId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('video_saves')
+      .insert({
+        video_id: videoId,
+        user_id: user.id
+      });
+
+    if (error) throw error;
+
+    // Increment saves count
+    const { data: currentVideo } = await supabase
+      .from('videos')
+      .select('saves_count')
+      .eq('id', videoId)
+      .single();
+
+    if (currentVideo) {
+      await supabase
+        .from('videos')
+        .update({ saves_count: currentVideo.saves_count + 1 })
+        .eq('id', videoId);
+    }
+  },
+
+  async unsaveVideo(videoId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('video_saves')
+      .delete()
+      .eq('video_id', videoId)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    // Decrement saves count
+    const { data: currentVideo } = await supabase
+      .from('videos')
+      .select('saves_count')
+      .eq('id', videoId)
+      .single();
+
+    if (currentVideo && currentVideo.saves_count > 0) {
+      await supabase
+        .from('videos')
+        .update({ saves_count: currentVideo.saves_count - 1 })
+        .eq('id', videoId);
+    }
+  },
+
+  async isVideoSaved(videoId: string): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data, error } = await supabase
+      .from('video_saves')
+      .select('id')
+      .eq('video_id', videoId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) return false;
+    return !!data;
+  },
+
   // New method for sending a gift to a video creator
   async sendGift(params: {
     toUserId: string;

@@ -112,6 +112,7 @@ import { useVideos } from "@/hooks/use-videos";
 import { VideoItem } from "@/types/video";
 import { formatDistanceToNow } from "date-fns";
 import { videoService } from '@/services/videoService';
+import { duetService } from '@/services/duetService';
 import { liveStreamService, LiveStream } from "@/services/liveStreamService";
 import { supabase } from "@/integrations/supabase/client";
 import InVideoBannerAd from "@/components/ads/InVideoBannerAd";
@@ -217,6 +218,7 @@ const VideoCard: React.FC<{
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
   const { safePlay, safePause, togglePlayback } = useVideoPlayback();
@@ -456,6 +458,82 @@ const VideoCard: React.FC<{
       
     if (newShowComments && comments.length === 0) {
       loadComments();
+    }
+  };
+
+  // Check if user has saved the video
+  useEffect(() => {
+    const checkSaveStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const isSaved = await videoService.isVideoSaved(video.id);
+        setIsBookmarked(isSaved);
+      } catch (error) {
+        console.error("Error checking save status:", error);
+      }
+    };
+    
+    checkSaveStatus();
+  }, [video.id, user]);
+
+  // Handle save/unsave for the video
+  const toggleSave = async () => {
+    try {
+      if (isBookmarked) {
+        await videoService.unsaveVideo(video.id);
+      } else {
+        await videoService.saveVideo(video.id);
+      }
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error("Error toggling save:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save/unsave video",
+      });
+    }
+  };
+
+  // Handle duet creation
+  const handleDuet = async () => {
+    try {
+      // In a real implementation, this would open the duet creation interface
+      // For now, we'll just show a toast message
+      toast({
+        title: "Duet Feature",
+        description: "Duet creation would open here",
+      });
+      
+      // Example of how to use the duetService:
+      // const duetData = await duetService.createDuet(
+      //   video.id, 
+      //   "duet-video-id", 
+      //   "side-by-side"
+      // );
+    } catch (error) {
+      console.error("Error initiating duet:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start duet",
+      });
+    }
+  };
+
+  // Handle download
+  const handleDownload = async () => {
+    try {
+      // In a real implementation, this would trigger a download
+      toast({
+        title: "Download Started",
+        description: "Video download in progress",
+      });
+    } catch (error) {
+      console.error("Error downloading video:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download video",
+      });
     }
   };
 
@@ -733,15 +811,16 @@ const VideoCard: React.FC<{
             </Avatar>
             <Button
               size="sm"
-              variant="default"
-              className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-xs font-bold shadow-lg transition-all duration-300 hover:scale-110"
+              variant={isFollowing ? "default" : "outline"}
+              className={cn(
+                "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm",
+                isFollowing 
+                  ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white" 
+                  : "bg-white/20 border-white/30 text-white hover:bg-white/30"
+              )}
               onClick={() => toggleFollow(video)}
             >
-              {isFollowing ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
+              {isFollowing ? "Following" : "Follow"}
             </Button>
           </div>
 
@@ -776,17 +855,65 @@ const VideoCard: React.FC<{
             </span>
           </div>
 
-          {/* Share Button */}
+          {/* Views Count */}
           <div className="flex flex-col items-center gap-1">
-            <Button
-              size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-              onClick={() => handleShare(video, 'web')}
-            >
-              <Share className="w-6 h-6 md:w-7 md:h-7" />
-            </Button>
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+              <Eye className="w-6 h-6 md:w-7 md:h-7 text-white" />
+            </div>
+            <span className="text-white text-xs font-medium">
+              {formatNumber(parseInt(video.stats.views))}
+            </span>
+          </div>
+
+          {/* Share, Save, Download Group */}
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-2">
+              {/* Share Button */}
+              <Button
+                size="icon"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                onClick={() => handleShare(video, 'web')}
+              >
+                <Share className="w-5 h-5 md:w-6 md:h-6" />
+              </Button>
+
+              {/* Save Button */}
+              <Button
+                size="icon"
+                className={cn(
+                  "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                  isBookmarked && "text-yellow-400"
+                )}
+                onClick={toggleSave}
+              >
+                <Bookmark className={cn("w-5 h-5 md:w-6 md:h-6", isBookmarked && "fill-current")} />
+              </Button>
+
+              {/* Download Button */}
+              <Button
+                size="icon"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                onClick={handleDownload}
+              >
+                <CloudDownload className="w-5 h-5 md:w-6 md:h-6" />
+              </Button>
+            </div>
             <span className="text-white text-xs font-medium">Share</span>
           </div>
+
+          {/* Duet Button */}
+          {video.allowDuets && (
+            <div className="flex flex-col items-center gap-1">
+              <Button
+                size="icon"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                onClick={handleDuet}
+              >
+                <Users className="w-6 h-6 md:w-7 md:h-7" />
+              </Button>
+              <span className="text-white text-xs font-medium">Duet</span>
+            </div>
+          )}
 
           {/* Gift Button */}
           <div className="flex flex-col items-center gap-1">
@@ -816,16 +943,6 @@ const VideoCard: React.FC<{
         </div>
       </div>
       
-      {/* Views count */}
-      <div className="absolute top-16 left-4">
-        <Badge
-          variant="secondary"
-          className="bg-black/40 text-white border-none text-[10px] md:text-xs px-2 py-1"
-        >
-          {video.stats.views} views
-        </Badge>
-      </div>
-
       {/* In-Video Banner Ad Overlay */}
       {showInVideoBannerAd && bannerAdData && (
         <InVideoBannerAd
@@ -909,6 +1026,7 @@ const Videos: React.FC = () => {
           comments: 0,
           shares: 0,
           views: "0",
+          saves: 0,
         },
         hashtags: [],
         videoUrl: "", // No video for ads
@@ -942,6 +1060,7 @@ const Videos: React.FC = () => {
         comments: videoItem.comments,
         shares: videoItem.shares,
         views: videoItem.views?.toString() || "0",
+        saves: videoItem.saves || 0,
       },
       hashtags: videoItem.tags || ["video", "trending"],
       videoUrl: videoItem.url,
