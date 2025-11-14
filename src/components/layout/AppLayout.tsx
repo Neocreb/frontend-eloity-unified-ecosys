@@ -67,7 +67,7 @@ const AppLayout = () => {
             isMobile ? "pt-0 pb-28 px-2 safe-area-pb" : "pt-4 pb-4 px-4 xl:px-6 2xl:px-8"
           }`}
         >
-          <div className="w-full max-w-none 2xl:max-w-7xl 3xl:max-w-[1600px] mx-auto">
+          <div className="w-full">
             <div className={`${isMobile ? "py-1" : "py-2"}`}>
               <Outlet />
             </div>

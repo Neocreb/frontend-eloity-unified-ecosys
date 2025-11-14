@@ -290,7 +290,7 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Top Promotional Banner */}
       <div className="bg-black text-white py-3 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <span>
               Summer Sale For All Swim Suits And Free Express Delivery - OFF
@@ -320,7 +320,7 @@ const EnhancedMarketplaceHomepage: React.FC = () => {
       />
 
       {/* Main Content */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-8">
           {/* Sidebar Categories */}
           <div className="hidden lg:block lg:col-span-1 pt-6 lg:pt-8">
