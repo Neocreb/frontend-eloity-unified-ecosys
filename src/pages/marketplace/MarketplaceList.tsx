@@ -35,6 +35,7 @@ import * as z from "zod";
 import { ChevronLeft, Upload, PlusCircle, X } from "lucide-react";
 import { useMarketplace } from "@/contexts/MarketplaceContext";
 import { Product } from "@/types/marketplace";
+import EnhancedProductListingForm from "@/components/marketplace/EnhancedProductListingForm";
 
 const categories = [
   { id: "electronics", label: "Electronics" },
@@ -72,6 +73,7 @@ const MarketplaceList = () => {
   const [currentProductId, setCurrentProductId] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [currentImage, setCurrentImage] = useState<string>("");
+  const [useEnhancedForm, setUseEnhancedForm] = useState(true);
 
   // Initialize form
   const form = useForm<z.infer<typeof productSchema>>({
@@ -137,6 +139,7 @@ const MarketplaceList = () => {
         isFeatured: false,
         tags: [],
         specifications: [],
+        productType: "physical", // Default to physical for backward compatibility
       };
 
       if (isEditing && currentProductId) {
@@ -183,8 +186,12 @@ const MarketplaceList = () => {
     }
   };
 
+  const handleSuccess = () => {
+    navigate("/app/marketplace/my");
+  };
+
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
       <div className="flex items-center gap-4 mb-6">
         <Button
           variant="ghost"
@@ -207,62 +214,41 @@ const MarketplaceList = () => {
         </div>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <h2 className="text-lg font-medium">Product Information</h2>
-                </CardHeader>
+      {/* Toggle between old and new form */}
+      <div className="mb-6 flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setUseEnhancedForm(!useEnhancedForm)}
+        >
+          {useEnhancedForm ? "Use Simple Form" : "Use Enhanced Form"}
+        </Button>
+      </div>
 
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Product Name*</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter product name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+      {useEnhancedForm ? (
+        <EnhancedProductListingForm 
+          onSuccess={handleSuccess} 
+          editProduct={isEditing && currentProductId ? getProduct(currentProductId) || undefined : undefined} 
+        />
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <Card>
+                  <CardHeader>
+                    <h2 className="text-lg font-medium">Product Information</h2>
+                  </CardHeader>
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description*</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe your product..."
-                            className="min-h-[100px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <CardContent className="space-y-6">
                     <FormField
                       control={form.control}
-                      name="price"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Price*</FormLabel>
+                          <FormLabel>Product Name*</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0.00"
-                              step="0.01"
-                              {...field}
-                            />
+                            <Input placeholder="Enter product name" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -271,15 +257,14 @@ const MarketplaceList = () => {
 
                     <FormField
                       control={form.control}
-                      name="discountPrice"
+                      name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Discount Price (Optional)</FormLabel>
+                          <FormLabel>Description*</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0.00"
-                              step="0.01"
+                            <Textarea
+                              placeholder="Describe your product..."
+                              className="min-h-[100px]"
                               {...field}
                             />
                           </FormControl>
@@ -287,165 +272,205 @@ const MarketplaceList = () => {
                         </FormItem>
                       )}
                     />
-                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category*</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="image"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Main Product Image*</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter image URL" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Primary image that will be displayed for your product
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="inStock"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                          <div className="space-y-0.5">
-                            <FormLabel>In Stock</FormLabel>
-                            <FormDescription>
-                              Is this product currently available?
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="isNew"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                          <div className="space-y-0.5">
-                            <FormLabel>New Product</FormLabel>
-                            <FormDescription>
-                              Mark as a new arrival
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div>
-              <Card>
-                <CardHeader>
-                  <h2 className="text-lg font-medium">Additional Images</h2>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Add More Images</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter image URL"
-                        value={currentImage}
-                        onChange={(e) => setCurrentImage(e.target.value)}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Price*</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                step="0.01"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleImageInput(currentImage)}
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
 
-                  {productImages.length > 0 && (
+                      <FormField
+                        control={form.control}
+                        name="discountPrice"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Discount Price (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                step="0.01"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category*</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Main Product Image*</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter image URL" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Primary image that will be displayed for your product
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="inStock"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <div className="space-y-0.5">
+                              <FormLabel>In Stock</FormLabel>
+                              <FormDescription>
+                                Is this product currently available?
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="h-4 w-4"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="isNew"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <div className="space-y-0.5">
+                              <FormLabel>New Product</FormLabel>
+                              <FormDescription>
+                                Mark as a new arrival
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="h-4 w-4"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div>
+                <Card>
+                  <CardHeader>
+                    <h2 className="text-lg font-medium">Additional Images</h2>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Product Images ({productImages.length})</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {productImages.map((image, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={image}
-                              alt={`Product ${index + 1}`}
-                              className="w-full h-20 object-cover rounded border"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
-                              onClick={() => removeImage(index)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
+                      <Label>Add More Images</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter image URL"
+                          value={currentImage}
+                          onChange={(e) => setCurrentImage(e.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleImageInput(currentImage)}
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                  )}
-                </CardContent>
 
-                <CardFooter>
-                  <Button type="submit" className="w-full">
-                    {isEditing ? "Update Product" : "List Product"}
-                  </Button>
-                </CardFooter>
-              </Card>
+                    {productImages.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Product Images ({productImages.length})</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {productImages.map((image, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={image}
+                                alt={`Product ${index + 1}`}
+                                className="w-full h-20 object-cover rounded border"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                                onClick={() => removeImage(index)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+
+                  <CardFooter>
+                    <Button type="submit" className="w-full">
+                      {isEditing ? "Update Product" : "List Product"}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
             </div>
-          </div>
-        </form>
-      </Form>
+          </form>
+        </Form>
+      )}
     </div>
   );
 };

@@ -36,6 +36,40 @@ export interface Product {
   dimensions?: ProductDimensions;
   createdAt: string;
   updatedAt: string;
+  
+  // Enhanced product type fields
+  productType: "physical" | "digital" | "service";
+  
+  // Digital product specific fields
+  digitalProductType?: "ebook" | "online_course" | "template" | "digital_art" | "software" | "audio" | "video" | "license" | "worksheet" | "printable";
+  downloadUrl?: string;
+  licenseType?: "single" | "multiple" | "unlimited";
+  downloadLimit?: number;
+  downloadExpiryDays?: number;
+  fileSize?: number;
+  fileFormat?: string;
+  author?: string;
+  coAuthor?: string;
+  publisher?: string;
+  publicationDate?: string;
+  isbn?: string;
+  pages?: number;
+  language?: string;
+  ageGroup?: string;
+  skillLevel?: string;
+  courseDuration?: string;
+  courseModules?: number;
+  includesSourceFiles?: boolean;
+  
+  // Physical product specific fields
+  size?: string;
+  color?: string;
+  material?: string;
+  careInstructions?: string;
+  assemblyRequired?: boolean;
+  assemblyTime?: string;
+  packageDimensions?: ProductDimensions;
+  packageWeight?: number;
 }
 
 export interface ProductSpecification {
