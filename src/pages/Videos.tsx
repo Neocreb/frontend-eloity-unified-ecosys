@@ -568,8 +568,51 @@ const VideoCard: React.FC<{
 
       {/* Content overlay */}
       <div className="absolute inset-0 flex">
-        {/* Left side - user info and description */}
+        {/* Left side - user info and description with moved controls */}
         <div className="flex-1 flex flex-col justify-end p-3 md:p-4 pb-28 md:pb-4">
+          {/* Moved audio, auto, and settings controls to left side */}
+          <div className="absolute top-16 left-4 flex flex-col gap-2 md:gap-3">
+            {/* Connection Quality Indicator */}
+            <div className="flex items-center gap-1">
+              {connectionQuality === "good" && (
+                <Wifi className="w-4 h-4 text-green-400" />
+              )}
+              {connectionQuality === "poor" && (
+                <WifiOff className="w-4 h-4 text-yellow-400" />
+              )}
+              {connectionQuality === "offline" && isOfflineAvailable && (
+                <CloudDownload className="w-4 h-4 text-blue-400" />
+              )}
+              <Badge variant="secondary" className="bg-black/40 text-white text-xs">
+                {currentQuality}
+              </Badge>
+            </div>
+
+            {/* Volume control */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none shadow-lg"
+              onClick={() => setIsMuted(!isMuted)}
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              ) : (
+                <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              )}
+            </Button>
+
+            {/* Advanced Controls Toggle */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none shadow-lg"
+              onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+            >
+              <Settings className="w-4 h-4 md:w-5 md:h-5 text-white" />
+            </Button>
+          </div>
+          
           <div className="space-y-2 md:space-y-3">
             {/* User info */}
             <div className="flex items-center gap-2 md:gap-3">
@@ -768,166 +811,6 @@ const VideoCard: React.FC<{
         </div>
       </div>
       
-      {/* Enhanced Controls Bar */}
-      <div className="absolute top-16 right-4 flex flex-col gap-2 md:gap-3">
-        {/* Connection Quality Indicator */}
-        <div className="flex items-center gap-1">
-          {connectionQuality === "good" && (
-            <Wifi className="w-4 h-4 text-green-400" />
-          )}
-          {connectionQuality === "poor" && (
-            <WifiOff className="w-4 h-4 text-yellow-400" />
-          )}
-          {connectionQuality === "offline" && isOfflineAvailable && (
-            <CloudDownload className="w-4 h-4 text-blue-400" />
-          )}
-          <Badge variant="secondary" className="bg-black/40 text-white text-xs">
-            {currentQuality}
-          </Badge>
-        </div>
-
-        {/* Volume control */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none shadow-lg"
-          onClick={() => setIsMuted(!isMuted)}
-        >
-          {isMuted ? (
-            <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-white" />
-          ) : (
-            <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
-          )}
-        </Button>
-
-        {/* Advanced Controls Toggle */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 border-none shadow-lg"
-          onClick={() => setShowAdvancedControls(!showAdvancedControls)}
-        >
-          <Settings className="w-4 h-4 md:w-5 md:h-5 text-white" />
-        </Button>
-      </div>
-
-      {/* Advanced Controls Panel */}
-      {showAdvancedControls && (
-        <div className="absolute top-32 right-4 md:top-36 md:right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 space-y-3 min-w-[200px] z-10 shadow-2xl">
-          {/* Quality Selector */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-white text-sm">
-              <MonitorSpeaker className="w-4 h-4" />
-              <span>Quality</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1">
-              {["auto", "720p", "1080p"].map((quality) => (
-                <Button
-                  key={quality}
-                  size="sm"
-                  variant={currentQuality === quality ? "default" : "ghost"}
-                  className="text-xs h-8"
-                  onClick={() => setCurrentQuality(quality)}
-                >
-                  {quality}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Playback Speed */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-white text-sm">
-              <Gauge className="w-4 h-4" />
-              <span>Speed</span>
-            </div>
-            <div className="grid grid-cols-4 gap-1">
-              {[0.5, 1, 1.5, 2].map((speed) => (
-                <Button
-                  key={speed}
-                  size="sm"
-                  variant={playbackSpeed === speed ? "default" : "ghost"}
-                  className="text-xs h-8"
-                  onClick={() => {
-                    setPlaybackSpeed(speed);
-                    if (videoRef.current) {
-                      videoRef.current.playbackRate = speed;
-                    }
-                  }}
-                >
-                  {speed}x
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Additional Features */}
-          <div className="space-y-2 border-t border-gray-600 pt-3">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-full justify-start text-white text-xs"
-              onClick={() => {
-                // Enable Picture-in-Picture
-                if (videoRef.current && "requestPictureInPicture" in videoRef.current) {
-                  videoRef.current.requestPictureInPicture();
-                }
-              }}
-            >
-              <PictureInPicture2 className="w-4 h-4 mr-2" />
-              Picture-in-Picture
-            </Button>
-
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-full justify-start text-white text-xs"
-            >
-              <Subtitles className="w-4 h-4 mr-2" />
-              Captions
-            </Button>
-
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-full justify-start text-white text-xs"
-              onClick={() => {
-                setDownloadProgress(1);
-                // Simulate download progress
-                const interval = setInterval(() => {
-                  setDownloadProgress(prev => {
-                    if (prev >= 100) {
-                      clearInterval(interval);
-                      setIsOfflineAvailable(true);
-                      return 100;
-                    }
-                    return prev + 10;
-                  });
-                }, 200);
-              }}
-            >
-              <CloudDownload className="w-4 h-4 mr-2" />
-              Download Offline
-              {downloadProgress > 0 && downloadProgress < 100 && (
-                <span className="ml-auto text-xs">{downloadProgress}%</span>
-              )}
-              {isOfflineAvailable && (
-                <span className="ml-auto text-xs text-green-400">✓</span>
-              )}
-            </Button>
-
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-full justify-start text-white text-xs"
-            >
-              <Cast className="w-4 h-4 mr-2" />
-              Cast to Device
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Views count */}
       <div className="absolute top-16 left-4">
         <Badge
