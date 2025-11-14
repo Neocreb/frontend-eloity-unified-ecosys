@@ -249,26 +249,34 @@ export default function EnhancedSellerDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto">
-          <TabsTrigger value="overview" className="text-xs md:text-sm">
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="products" className="text-xs md:text-sm">
-            Products
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="text-xs md:text-sm">
-            Orders
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs md:text-sm">
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="boosts" className="text-xs md:text-sm">
-            Boosts
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs md:text-sm">
-            Settings
-          </TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-2">
+          <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground min-w-fit">
+            <TabsTrigger value="overview" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <BarChart3 className="w-4 h-4" />
+              <span>Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <Package className="w-4 h-4" />
+              <span>Products</span>
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Orders</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <BarChartIcon className="w-4 h-4" />
+              <span>Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="boosts" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <Zap className="w-4 h-4" />
+              <span>Boosts</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2 whitespace-nowrap px-3">
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
