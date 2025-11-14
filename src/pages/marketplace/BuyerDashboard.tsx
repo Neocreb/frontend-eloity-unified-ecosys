@@ -251,7 +251,7 @@ export default function BuyerDashboard() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="px-4 py-6">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
@@ -263,7 +263,7 @@ export default function BuyerDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <div className="px-4 py-6">
       {/* Enhanced Header with proper layout */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>

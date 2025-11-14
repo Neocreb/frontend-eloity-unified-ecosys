@@ -191,7 +191,7 @@ const MarketplaceList = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
+    <div className="px-4 py-6">
       <div className="flex items-center gap-4 mb-6">
         <Button
           variant="ghost"

@@ -142,7 +142,7 @@ const MarketplaceContent = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="space-y-8 px-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Marketplace</h1>
       </div>
