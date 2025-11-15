@@ -231,6 +231,39 @@ export class MarketplaceService {
           is_sponsored: productData.isSponsored,
           boost_until: productData.boostExpiresAt?.toISOString(),
           tags: productData.tags,
+          // Digital product fields
+          product_type: productData.productType,
+          digital_product_type: productData.digitalProductType,
+          download_url: productData.downloadUrl,
+          license_type: productData.licenseType,
+          download_limit: productData.downloadLimit,
+          download_expiry_days: productData.downloadExpiryDays,
+          file_size: productData.fileSize,
+          file_format: productData.fileFormat,
+          author: productData.author,
+          co_author: productData.coAuthor,
+          publisher: productData.publisher,
+          publication_date: productData.publicationDate,
+          isbn: productData.isbn,
+          pages: productData.pages,
+          language: productData.language,
+          age_group: productData.ageGroup,
+          skill_level: productData.skillLevel,
+          course_duration: productData.courseDuration,
+          course_modules: productData.courseModules,
+          includes_source_files: productData.includesSourceFiles,
+          // Physical product fields
+          weight: productData.weight,
+          size: productData.size,
+          color: productData.color,
+          material: productData.material,
+          care_instructions: productData.careInstructions,
+          assembly_required: productData.assemblyRequired,
+          assembly_time: productData.assemblyTime,
+          package_length: productData.packageDimensions?.length,
+          package_width: productData.packageDimensions?.width,
+          package_height: productData.packageDimensions?.height,
+          package_weight: productData.packageWeight,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }])
@@ -268,11 +301,188 @@ export class MarketplaceService {
         condition: data.condition || "new",
         brand: data.brand || undefined,
         model: data.model || undefined,
+        // Digital product fields
+        productType: data.product_type || "physical",
+        digitalProductType: data.digital_product_type,
+        downloadUrl: data.download_url,
+        licenseType: data.license_type,
+        downloadLimit: data.download_limit,
+        downloadExpiryDays: data.download_expiry_days,
+        fileSize: data.file_size,
+        fileFormat: data.file_format,
+        author: data.author,
+        coAuthor: data.co_author,
+        publisher: data.publisher,
+        publicationDate: data.publication_date,
+        isbn: data.isbn,
+        pages: data.pages,
+        language: data.language,
+        ageGroup: data.age_group,
+        skillLevel: data.skill_level,
+        courseDuration: data.course_duration,
+        courseModules: data.course_modules,
+        includesSourceFiles: data.includes_source_files,
+        // Physical product fields
+        weight: data.weight,
+        size: data.size,
+        color: data.color,
+        material: data.material,
+        careInstructions: data.care_instructions,
+        assemblyRequired: data.assembly_required,
+        assemblyTime: data.assembly_time,
+        packageDimensions: data.package_length && data.package_width && data.package_height ? {
+          length: data.package_length,
+          width: data.package_width,
+          height: data.package_height,
+          unit: "cm"
+        } : undefined,
+        packageWeight: data.package_weight,
         createdAt: new Date(data.created_at).toISOString(),
         updatedAt: new Date(data.updated_at).toISOString()
       };
     } catch (error) {
       console.error("Error in createProduct:", error);
+      return null;
+    }
+  }
+
+  static async updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
+    try {
+      const updateData: any = {
+        name: updates.name,
+        description: updates.description,
+        price: updates.price,
+        discount_price: updates.discountPrice,
+        currency: updates.currency,
+        category_id: updates.categoryId,
+        subcategory_id: updates.subcategoryId,
+        image_url: updates.imageUrl,
+        in_stock: updates.inStock,
+        stock_quantity: updates.stockQuantity,
+        is_featured: updates.isFeatured,
+        is_sponsored: updates.isSponsored,
+        boost_until: updates.boostExpiresAt?.toISOString(),
+        tags: updates.tags,
+        // Digital product fields
+        product_type: updates.productType,
+        digital_product_type: updates.digitalProductType,
+        download_url: updates.downloadUrl,
+        license_type: updates.licenseType,
+        download_limit: updates.downloadLimit,
+        download_expiry_days: updates.downloadExpiryDays,
+        file_size: updates.fileSize,
+        file_format: updates.fileFormat,
+        author: updates.author,
+        co_author: updates.coAuthor,
+        publisher: updates.publisher,
+        publication_date: updates.publicationDate,
+        isbn: updates.isbn,
+        pages: updates.pages,
+        language: updates.language,
+        age_group: updates.ageGroup,
+        skill_level: updates.skillLevel,
+        course_duration: updates.courseDuration,
+        course_modules: updates.courseModules,
+        includes_source_files: updates.includesSourceFiles,
+        // Physical product fields
+        weight: updates.weight,
+        size: updates.size,
+        color: updates.color,
+        material: updates.material,
+        care_instructions: updates.careInstructions,
+        assembly_required: updates.assemblyRequired,
+        assembly_time: updates.assemblyTime,
+        package_length: updates.packageDimensions?.length,
+        package_width: updates.packageDimensions?.width,
+        package_height: updates.packageDimensions?.height,
+        package_weight: updates.packageWeight,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined values
+      Object.keys(updateData).forEach(key => 
+        updateData[key] === undefined && delete updateData[key]
+      );
+
+      const { data, error } = await supabase
+        .from('products')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating product:", error);
+        return null;
+      }
+
+      return {
+        id: data.id,
+        sellerId: data.seller_id,
+        name: data.name,
+        description: data.description || "",
+        price: data.price,
+        discountPrice: data.discount_price,
+        currency: data.currency || "USD",
+        image: data.image_url || "",
+        images: data.image_url ? [data.image_url] : [],
+        category: data.category || "",
+        subcategory: data.subcategory || undefined,
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        inStock: data.in_stock || false,
+        stockQuantity: data.stock_quantity || 0,
+        isNew: data.is_new || false,
+        isFeatured: data.is_featured || false,
+        isSponsored: data.is_sponsored || false,
+        tags: data.tags || [],
+        sellerName: "", // Would need to fetch seller data
+        sellerAvatar: "",
+        sellerVerified: false,
+        condition: data.condition || "new",
+        brand: data.brand || undefined,
+        model: data.model || undefined,
+        // Digital product fields
+        productType: data.product_type || "physical",
+        digitalProductType: data.digital_product_type,
+        downloadUrl: data.download_url,
+        licenseType: data.license_type,
+        downloadLimit: data.download_limit,
+        downloadExpiryDays: data.download_expiry_days,
+        fileSize: data.file_size,
+        fileFormat: data.file_format,
+        author: data.author,
+        coAuthor: data.co_author,
+        publisher: data.publisher,
+        publicationDate: data.publication_date,
+        isbn: data.isbn,
+        pages: data.pages,
+        language: data.language,
+        ageGroup: data.age_group,
+        skillLevel: data.skill_level,
+        courseDuration: data.course_duration,
+        courseModules: data.course_modules,
+        includesSourceFiles: data.includes_source_files,
+        // Physical product fields
+        weight: data.weight,
+        size: data.size,
+        color: data.color,
+        material: data.material,
+        careInstructions: data.care_instructions,
+        assemblyRequired: data.assembly_required,
+        assemblyTime: data.assembly_time,
+        packageDimensions: data.package_length && data.package_width && data.package_height ? {
+          length: data.package_length,
+          width: data.package_width,
+          height: data.package_height,
+          unit: "cm"
+        } : undefined,
+        packageWeight: data.package_weight,
+        createdAt: new Date(data.created_at).toISOString(),
+        updatedAt: new Date(data.updated_at).toISOString()
+      };
+    } catch (error) {
+      console.error("Error in updateProduct:", error);
       return null;
     }
   }

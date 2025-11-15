@@ -32,6 +32,7 @@ import { categoryService } from '@/services';
 import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 import { Product } from '@/types/marketplace';
 import { supabase } from "@/integrations/supabase/client";
+import { DigitalProductService } from '@/services/digitalProductService';
 
 interface EnhancedProductListingFormProps {
   onSuccess: () => void;
@@ -226,6 +227,75 @@ const EnhancedProductListingForm = ({ onSuccess, editProduct }: EnhancedProductL
       toast({
         title: "Upload Error",
         description: "Failed to upload image. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // For digital product file upload
+  const handleDigitalProductFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const { url, error } = await DigitalProductService.uploadDigitalProductFile(file, user.id);
+      
+      if (error) {
+        toast({
+          title: "Upload Error",
+          description: error,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Set the download URL in the form
+      form.setValue('downloadUrl', url);
+      
+      toast({
+        title: "File Uploaded",
+        description: "Your digital product file has been uploaded successfully."
+      });
+    } catch (error) {
+      console.error("Error uploading digital product file:", error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload digital product file. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // For book cover upload
+  const handleBookCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const { url, error } = await DigitalProductService.uploadBookCover(file, user.id);
+      
+      if (error) {
+        toast({
+          title: "Upload Error",
+          description: error,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Set the main image URL in the form
+      form.setValue('mainImage', url);
+      setPreviewImage(url);
+      
+      toast({
+        title: "Cover Uploaded",
+        description: "Your book cover has been uploaded successfully."
+      });
+    } catch (error) {
+      console.error("Error uploading book cover:", error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload book cover. Please try again.",
         variant: "destructive"
       });
     }
@@ -952,6 +1022,48 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
           )}
         />
 
+        {/* Digital Product File Upload */}
+        <div className="space-y-2">
+          <Label htmlFor="digitalFile">Digital Product File *</Label>
+          <div className="mt-1">
+            <Card className="border-2 border-dashed rounded-lg cursor-pointer overflow-hidden">
+              <label className="flex flex-col items-center justify-center h-[150px] cursor-pointer">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <File className="w-8 h-8 text-gray-400 mb-3" />
+                  <p className="text-sm text-gray-500">
+                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    PDF, DOC, DOCX, MP3, MP4 or other supported formats (max. 100MB)
+                  </p>
+                </div>
+                <input 
+                  id="digitalFile"
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.txt,.mp3,.mp4,.wav,.jpg,.jpeg,.png,.zip"
+                  onChange={handleDigitalProductFileChange}
+                />
+              </label>
+            </Card>
+          </div>
+          <FormDescription>
+            Upload your digital product file that customers will download after purchase
+          </FormDescription>
+          
+          {/* Show current download URL if exists */}
+          {form.watch('downloadUrl') && (
+            <div className="mt-2 p-3 bg-green-50 rounded-lg">
+              <p className="text-sm text-green-800">
+                ✓ File uploaded successfully
+              </p>
+              <p className="text-xs text-green-600 truncate mt-1">
+                {form.watch('downloadUrl')}
+              </p>
+            </div>
+          )}
+        </div>
+
         {digitalProductType && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -962,7 +1074,7 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                   <FormItem>
                     <FormLabel>Download URL *</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://example.com/download/file.zip" {...field} />
+                      <Input placeholder="https://example.com/download/file.zip" {...field} readOnly />
                     </FormControl>
                     <FormDescription>
                       Secure link to your digital product file
@@ -1028,6 +1140,36 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
 
             {digitalProductType === 'ebook' && (
               <>
+                {/* Book Cover Upload for Ebooks */}
+                <div className="space-y-2">
+                  <Label htmlFor="bookCover">Book Cover *</Label>
+                  <div className="mt-1">
+                    <Card className="border-2 border-dashed rounded-lg cursor-pointer overflow-hidden">
+                      <label className="flex flex-col items-center justify-center h-[200px] cursor-pointer">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <ImagePlus className="w-8 h-8 text-gray-400 mb-3" />
+                          <p className="text-sm text-gray-500">
+                            <span className="font-semibold">Upload Book Cover</span>
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            JPG, PNG, GIF (max. 10MB)
+                          </p>
+                        </div>
+                        <input 
+                          id="bookCover"
+                          type="file"
+                          className="hidden"
+                          accept=".jpg,.jpeg,.png,.gif"
+                          onChange={handleBookCoverChange}
+                        />
+                      </label>
+                    </Card>
+                  </div>
+                  <FormDescription>
+                    Upload an attractive cover image for your ebook
+                  </FormDescription>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -1190,6 +1332,49 @@ const DigitalProductFields = ({ form, digitalProductType, setDigitalProductType 
                     </FormItem>
                   )}
                 />
+                
+                {/* Course Platform Integration */}
+                <Card className="border border-blue-200 bg-blue-50">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Course Platform Integration</CardTitle>
+                    <CardDescription>
+                      Connect your course to learning platforms
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                        <div className="p-2 bg-blue-100 rounded-full">
+                          <BookOpen className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Crypto Learn</h4>
+                          <p className="text-sm text-gray-600">Integrated with /app/crypto-learn</p>
+                        </div>
+                        <Switch defaultChecked />
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                        <div className="p-2 bg-green-100 rounded-full">
+                          <MessageCircle className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">App Chat</h4>
+                          <p className="text-sm text-gray-600">Integrated with /app/chat</p>
+                        </div>
+                        <Switch />
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2">
+                      <Label>External Platform Link</Label>
+                      <Input placeholder="https://your-course-platform.com/course" />
+                      <p className="text-sm text-gray-500 mt-1">
+                        Link to external course platform (e.g., Teachable, Udemy, etc.)
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </>
             )}
           </div>

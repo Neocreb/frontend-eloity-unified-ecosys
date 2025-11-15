@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ProductService } from '@/services/productService';
 import { ReviewService } from '@/services/reviewService';
 import { QAService } from '@/services/qaService';
+import DigitalProductDetail from './DigitalProductDetail';
 
 interface ProductImage {
   id: string;
@@ -442,6 +443,13 @@ const EnhancedProductDetail: React.FC<EnhancedProductDetailProps> = ({ productId
                     ))}
                   </ul>
                 </>
+              )}
+              
+              {/* Digital Product Details */}
+              {product.productType === 'digital' && (
+                <div className="mt-6">
+                  <DigitalProductDetail product={product} />
+                </div>
               )}
             </CardContent>
           </Card>
