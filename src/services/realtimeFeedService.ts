@@ -99,51 +99,64 @@ class RealtimeFeedService {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      const { data, error } = await supabase
+      // First get the posts
+      const { data: posts, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      if (error) {
-        console.error("Error fetching posts:", error);
+      if (postsError) {
+        console.error("Error fetching posts:", postsError);
         return [];
       }
 
-      return data.map(post => ({
-        id: post.id,
-        user_id: post.user_id,
-        content: post.content,
-        media_urls: post.media_urls,
-        media_types: post.media_types,
-        feeling: post.feeling,
-        location: post.location,
-        privacy: post.privacy,
-        likes_count: post.likes_count,
-        comments_count: post.comments_count,
-        shares_count: post.shares_count,
-        is_boosted: post.is_boosted,
-        boost_expires_at: post.boost_expires_at,
-        created_at: post.created_at,
-        updated_at: post.updated_at,
-        author: {
-          name: post.profiles?.full_name || 'User',
-          username: post.profiles?.username || 'user',
-          avatar: post.profiles?.avatar_url || '/placeholder.svg',
-          verified: !!post.profiles?.is_verified,
-        },
-        likes: post.likes_count,
-        comments: post.comments_count,
-        shares: post.shares_count,
-      })) as RealtimePost[];
+      // Get unique user IDs from posts
+      const userIds = [...new Set(posts.map(post => post.user_id))];
+
+      // Get profiles for all users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, is_verified')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return [];
+      }
+
+      // Create a map of user_id to profile for quick lookup
+      const profileMap = new Map(profiles.map(profile => [profile.user_id, profile]));
+
+      return posts.map(post => {
+        const userProfile = profileMap.get(post.user_id);
+        return {
+          id: post.id,
+          user_id: post.user_id,
+          content: post.content,
+          media_urls: post.media_urls,
+          media_types: post.media_types,
+          feeling: post.feeling,
+          location: post.location,
+          privacy: post.privacy,
+          likes_count: post.likes_count,
+          comments_count: post.comments_count,
+          shares_count: post.shares_count,
+          is_boosted: post.is_boosted,
+          boost_expires_at: post.boost_expires_at,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          author: {
+            name: userProfile?.full_name || 'User',
+            username: userProfile?.username || 'user',
+            avatar: userProfile?.avatar_url || '/placeholder.svg',
+            verified: !!userProfile?.is_verified,
+          },
+          likes: post.likes_count,
+          comments: post.comments_count,
+          shares: post.shares_count,
+        };
+      }) as RealtimePost[];
     } catch (error) {
       console.error("Error in getPosts:", error);
       return [];
@@ -248,20 +261,23 @@ class RealtimeFeedService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) {
         console.error("Error adding comment:", error);
         return null;
+      }
+
+      // Get the user's profile
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, username, avatar_url, is_verified')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching user profile:", profileError);
       }
 
       // Increment comments count on post
@@ -281,10 +297,10 @@ class RealtimeFeedService {
         created_at: data.created_at,
         updated_at: data.updated_at,
         user: {
-          name: data.profiles?.full_name || 'User',
-          username: data.profiles?.username || 'user',
-          avatar: data.profiles?.avatar_url || '/placeholder.svg',
-          is_verified: !!data.profiles?.is_verified,
+          name: userProfile?.full_name || 'User',
+          username: userProfile?.username || 'user',
+          avatar: userProfile?.avatar_url || '/placeholder.svg',
+          is_verified: !!userProfile?.is_verified,
         }
       } as RealtimeComment;
     } catch (error) {
@@ -293,283 +309,326 @@ class RealtimeFeedService {
     }
   }
 
-  // Get comments for a post
-  async getComments(postId: string): Promise<RealtimeComment[]> {
+  // Like/unlike a comment
+  async toggleCommentLike(commentId: string, userId: string): Promise<{ isLiked: boolean; likesCount: number } | null> {
     try {
-      const { data, error } = await supabase
-        .from('post_comments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
+      // Check if already liked
+      const { data: existingLike, error: checkError } = await supabase
+        .from('comment_likes')
+        .select('id')
+        .eq('comment_id', commentId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking comment like status:", checkError);
+        return null;
+      }
+
+      let likesCount = 0;
+
+      if (existingLike) {
+        // Unlike
+        const { error: deleteError } = await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('id', existingLike.id);
+
+        if (deleteError) {
+          console.error("Error unliking comment:", deleteError);
+          return null;
+        }
+
+        // Decrement likes count
+        const { data: updatedComment, error: updateError } = await supabase
+          .from('post_comments')
+          .update({ likes_count: supabase.rpc('post_comments.likes_count - 1') })
+          .eq('id', commentId)
+          .select('likes_count')
+          .single();
+
+        if (updateError) {
+          console.error("Error updating comment likes count:", updateError);
+        } else {
+          likesCount = updatedComment.likes_count;
+        }
+
+        return { isLiked: false, likesCount: Math.max(0, likesCount) };
+      } else {
+        // Like
+        const { data: newLike, error: insertError } = await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: userId,
+            created_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Error liking comment:", insertError);
+          return null;
+        }
+
+        // Increment likes count
+        const { data: updatedComment, error: updateError } = await supabase
+          .from('post_comments')
+          .update({ likes_count: supabase.rpc('post_comments.likes_count + 1') })
+          .eq('id', commentId)
+          .select('likes_count')
+          .single();
+
+        if (updateError) {
+          console.error("Error updating comment likes count:", updateError);
+        } else {
+          likesCount = updatedComment.likes_count;
+        }
+
+        return { isLiked: true, likesCount };
+      }
+    } catch (error) {
+      console.error("Error in toggleCommentLike:", error);
+      return null;
+    }
+  }
+
+  // Delete a post
+  async deletePost(postId: string, userId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId)
+        .eq('user_id', userId);
 
       if (error) {
-        console.error("Error fetching comments:", error);
+        console.error("Error deleting post:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in deletePost:", error);
+      return false;
+    }
+  }
+
+  // Edit a post
+  async editPost(postId: string, userId: string, content: string): Promise<RealtimePost | null> {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .update({
+          content,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', postId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error editing post:", error);
+        return null;
+      }
+
+      return data as RealtimePost;
+    } catch (error) {
+      console.error("Error in editPost:", error);
+      return null;
+    }
+  }
+
+  // Get comments for a post
+  async getComments(postId: string, page: number = 1, limit: number = 10): Promise<RealtimeComment[]> {
+    try {
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data: comments, error: commentsError } = await supabase
+        .from('post_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true })
+        .range(from, to);
+
+      if (commentsError) {
+        console.error("Error fetching comments:", commentsError);
         return [];
       }
 
-      return data.map(comment => ({
-        id: comment.id,
-        post_id: comment.post_id,
-        user_id: comment.user_id,
-        parent_id: comment.parent_id,
-        content: comment.content,
-        likes_count: comment.likes_count,
-        is_edited: comment.is_edited,
-        created_at: comment.created_at,
-        updated_at: comment.updated_at,
-        user: {
-          name: comment.profiles?.full_name || 'User',
-          username: comment.profiles?.username || 'user',
-          avatar: comment.profiles?.avatar_url || '/placeholder.svg',
-          is_verified: !!comment.profiles?.is_verified,
-        }
-      })) as RealtimeComment[];
+      // Get unique user IDs from comments
+      const userIds = [...new Set(comments.map(comment => comment.user_id))];
+
+      // Get profiles for all users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, is_verified')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return [];
+      }
+
+      // Create a map of user_id to profile for quick lookup
+      const profileMap = new Map(profiles.map(profile => [profile.user_id, profile]));
+
+      return comments.map(comment => {
+        const userProfile = profileMap.get(comment.user_id);
+        return {
+          id: comment.id,
+          post_id: comment.post_id,
+          user_id: comment.user_id,
+          parent_id: comment.parent_id,
+          content: comment.content,
+          likes_count: comment.likes_count,
+          is_edited: comment.is_edited,
+          created_at: comment.created_at,
+          updated_at: comment.updated_at,
+          user: {
+            name: userProfile?.full_name || 'User',
+            username: userProfile?.username || 'user',
+            avatar: userProfile?.avatar_url || '/placeholder.svg',
+            is_verified: !!userProfile?.is_verified,
+          }
+        };
+      }) as RealtimeComment[];
     } catch (error) {
       console.error("Error in getComments:", error);
       return [];
     }
   }
 
-  // Follow/unfollow a user
-  async toggleFollow(followerId: string, followingId: string): Promise<{ isFollowing: boolean } | null> {
+  // Delete a comment
+  async deleteComment(commentId: string, userId: string): Promise<boolean> {
     try {
-      // Check if already following
-      const { data: existingFollow, error: checkError } = await supabase
-        .from('user_follows')
-        .select('id')
-        .eq('follower_id', followerId)
-        .eq('following_id', followingId)
-        .maybeSingle();
+      const { error } = await supabase
+        .from('post_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', userId);
 
-      if (checkError) {
-        console.error("Error checking follow status:", checkError);
+      if (error) {
+        console.error("Error deleting comment:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in deleteComment:", error);
+      return false;
+    }
+  }
+
+  // Edit a comment
+  async editComment(commentId: string, userId: string, content: string): Promise<RealtimeComment | null> {
+    try {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .update({
+          content,
+          is_edited: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', commentId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error editing comment:", error);
         return null;
       }
 
-      if (existingFollow) {
-        // Unfollow
-        const { error: deleteError } = await supabase
-          .from('user_follows')
-          .delete()
-          .eq('id', existingFollow.id);
-
-        if (deleteError) {
-          console.error("Error unfollowing user:", deleteError);
-          return null;
-        }
-
-        return { isFollowing: false };
-      } else {
-        // Follow
-        const { error: insertError } = await supabase
-          .from('user_follows')
-          .insert({
-            follower_id: followerId,
-            following_id: followingId,
-            created_at: new Date().toISOString()
-          });
-
-        if (insertError) {
-          console.error("Error following user:", insertError);
-          return null;
-        }
-
-        return { isFollowing: true };
-      }
+      return data as RealtimeComment;
     } catch (error) {
-      console.error("Error in toggleFollow:", error);
+      console.error("Error in editComment:", error);
       return null;
     }
   }
 
+  // Follow a user
+  async followUser(followerId: string, followingId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('followers')
+        .insert({
+          follower_id: followerId,
+          following_id: followingId,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error("Error following user:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in followUser:", error);
+      return false;
+    }
+  }
+
+  // Unfollow a user
+  async unfollowUser(followerId: string, followingId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('followers')
+        .delete()
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId);
+
+      if (error) {
+        console.error("Error unfollowing user:", error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error in unfollowUser:", error);
+      return false;
+    }
+  }
+
   // Get user's followers
-  async getFollowers(userId: string): Promise<UserFollow[]> {
+  async getUserFollowers(userId: string): Promise<UserFollow[]> {
     try {
       const { data, error } = await supabase
-        .from('user_follows')
+        .from('followers')
         .select('*')
         .eq('following_id', userId);
 
       if (error) {
-        console.error("Error fetching followers:", error);
+        console.error("Error fetching user followers:", error);
         return [];
       }
 
       return data as UserFollow[];
     } catch (error) {
-      console.error("Error in getFollowers:", error);
+      console.error("Error in getUserFollowers:", error);
       return [];
     }
   }
 
   // Get user's following
-  async getFollowing(userId: string): Promise<UserFollow[]> {
+  async getUserFollowing(userId: string): Promise<UserFollow[]> {
     try {
       const { data, error } = await supabase
-        .from('user_follows')
+        .from('followers')
         .select('*')
         .eq('follower_id', userId);
 
       if (error) {
-        console.error("Error fetching following:", error);
+        console.error("Error fetching user following:", error);
         return [];
       }
 
       return data as UserFollow[];
     } catch (error) {
-      console.error("Error in getFollowing:", error);
-      return [];
-    }
-  }
-
-  // Save/unsave a post
-  async toggleSave(postId: string, userId: string): Promise<{ isSaved: boolean } | null> {
-    try {
-      // Check if already saved
-      const { data: existingSave, error: checkError } = await supabase
-        .from('saved_posts')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('post_id', postId)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error("Error checking save status:", checkError);
-        return null;
-      }
-
-      if (existingSave) {
-        // Unsave
-        const { error: deleteError } = await supabase
-          .from('saved_posts')
-          .delete()
-          .eq('id', existingSave.id);
-
-        if (deleteError) {
-          console.error("Error unsaving post:", deleteError);
-          return null;
-        }
-
-        return { isSaved: false };
-      } else {
-        // Save
-        const { error: insertError } = await supabase
-          .from('saved_posts')
-          .insert({
-            user_id: userId,
-            post_id: postId,
-            created_at: new Date().toISOString()
-          });
-
-        if (insertError) {
-          console.error("Error saving post:", insertError);
-          return null;
-        }
-
-        return { isSaved: true };
-      }
-    } catch (error) {
-      console.error("Error in toggleSave:", error);
-      return null;
-    }
-  }
-
-  // Share a post
-  async sharePost(postId: string, userId: string, sharedTo: string = 'public'): Promise<{ success: boolean; shareCount: number } | null> {
-    try {
-      // Add share record
-      const { error: insertError } = await supabase
-        .from('post_shares')
-        .insert({
-          user_id: userId,
-          post_id: postId,
-          shared_to: sharedTo,
-          created_at: new Date().toISOString()
-        });
-
-      if (insertError) {
-        console.error("Error sharing post:", insertError);
-        return null;
-      }
-
-      // Increment shares count on post
-      const { data: updatedPost, error: updateError } = await supabase
-        .from('posts')
-        .update({ shares_count: supabase.rpc('posts.shares_count + 1') })
-        .eq('id', postId)
-        .select('shares_count')
-        .single();
-
-      if (updateError) {
-        console.error("Error updating shares count:", updateError);
-        return { success: true, shareCount: 0 };
-      }
-
-      return { success: true, shareCount: updatedPost.shares_count };
-    } catch (error) {
-      console.error("Error in sharePost:", error);
-      return null;
-    }
-  }
-
-  // Add reaction to a post
-  async addReaction(postId: string, userId: string, reactionType: string): Promise<RealtimeReaction | null> {
-    try {
-      // Remove any existing reaction from this user on this post
-      await supabase
-        .from('post_reactions')
-        .delete()
-        .eq('post_id', postId)
-        .eq('user_id', userId);
-
-      // Add new reaction
-      const { data, error } = await supabase
-        .from('post_reactions')
-        .insert({
-          post_id: postId,
-          user_id: userId,
-          reaction_type: reactionType,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error adding reaction:", error);
-        return null;
-      }
-
-      return data as RealtimeReaction;
-    } catch (error) {
-      console.error("Error in addReaction:", error);
-      return null;
-    }
-  }
-
-  // Get reactions for a post
-  async getReactions(postId: string): Promise<RealtimeReaction[]> {
-    try {
-      const { data, error } = await supabase
-        .from('post_reactions')
-        .select('*')
-        .eq('post_id', postId);
-
-      if (error) {
-        console.error("Error fetching reactions:", error);
-        return [];
-      }
-
-      return data as RealtimeReaction[];
-    } catch (error) {
-      console.error("Error in getReactions:", error);
+      console.error("Error in getUserFollowing:", error);
       return [];
     }
   }
