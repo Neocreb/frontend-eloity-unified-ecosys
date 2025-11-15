@@ -276,14 +276,14 @@ export const messagingService = {
           if (otherUserId) {
             const { data: otherUserProfile } = await supabase
               .from("profiles")
-              .select("user_id, name, username, avatar_url")
+              .select("user_id, full_name, username, avatar_url")
               .eq("user_id", otherUserId)
               .single();
 
             if (otherUserProfile) {
               otherUser = {
                 id: otherUserProfile.user_id,
-                name: otherUserProfile.name || "Unknown",
+                name: otherUserProfile.full_name || "Unknown",
                 username: otherUserProfile.username || "unknown",
                 avatar: otherUserProfile.avatar_url || "/placeholder.svg",
               };
@@ -295,7 +295,7 @@ export const messagingService = {
           if (lastMessage) {
             const { data: senderProfile } = await supabase
               .from("profiles")
-              .select("name, username, avatar_url")
+              .select("full_name, username, avatar_url")
               .eq("user_id", lastMessage.sender_id)
               .single();
 
@@ -308,7 +308,7 @@ export const messagingService = {
               read: lastMessage.read,
               sender: senderProfile
                 ? {
-                    name: senderProfile.name || "Unknown",
+                    name: senderProfile.full_name || "Unknown",
                     username: senderProfile.username || "unknown",
                     avatar: senderProfile.avatar_url || "/placeholder.svg",
                   }
