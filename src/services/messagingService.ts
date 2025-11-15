@@ -95,7 +95,7 @@ export const messagingService = {
       // Get sender profile information
       const { data: senderProfile } = await supabase
         .from("profiles")
-        .select("name, username, avatar_url")
+        .select("full_name, username, avatar_url")
         .eq("user_id", senderId)
         .single();
 
@@ -108,7 +108,7 @@ export const messagingService = {
         read: data.read,
         sender: senderProfile
           ? {
-              name: senderProfile.name || "Unknown",
+              name: senderProfile.full_name || senderProfile.username || "Unknown",
               username: senderProfile.username || "unknown",
               avatar: senderProfile.avatar_url || "/placeholder.svg",
             }
@@ -163,7 +163,7 @@ export const messagingService = {
       }
 
       const { data: messages, error } = await supabase
-        .from("chat_messages")
+        .from("chat_messages_with_profiles")
         .select("*")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: false })
@@ -254,7 +254,7 @@ export const messagingService = {
         (conversations || []).map(async (conv) => {
           // Get last message
           const { data: lastMessage } = await supabase
-            .from("chat_messages")
+            .from("chat_messages_with_profiles")
             .select("*")
             .eq("conversation_id", conv.id)
             .order("created_at", { ascending: false })
@@ -263,7 +263,7 @@ export const messagingService = {
 
           // Get unread count
           const { count: unreadCount } = await supabase
-            .from("chat_messages")
+            .from("chat_messages_with_profiles")
             .select("*", { count: "exact", head: true })
             .eq("conversation_id", conv.id)
             .neq("sender_id", userId)

@@ -106,7 +106,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
           // Get unread count for this conversation
           const { count: unreadCount, error: countError } = await supabase
-            .from("chat_messages")
+            .from("chat_messages_with_profiles")
             .select("*", { count: "exact", head: true })
             .eq("conversation_id", conv.id)
             .eq("read", false)
@@ -119,7 +119,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           // Get the last message for this conversation
           const { data: lastMessageData, error: lastMessageError } =
             await supabase
-              .from("chat_messages")
+              .from("chat_messages_with_profiles")
               .select("*")
               .eq("conversation_id", conv.id)
               .order("created_at", { ascending: false })
@@ -279,6 +279,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
 
+      // Format the message with sender information from the view
       const newMessage: ChatMessage = {
         id: message.id,
         content: message.content,
@@ -287,8 +288,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         created_at: message.created_at,
         read: message.read,
         sender: {
-          name: user.name || "User",
-          avatar: user.avatar || "/placeholder.svg",
+          name: user.full_name || user.username || "User",
+          avatar: user.avatar_url || "/placeholder.svg",
         },
       };
 

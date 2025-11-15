@@ -603,7 +603,7 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
       }
       return item;
     }));
-  }, [setFeedItems]);
+  }, []);
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isLoading) {
@@ -693,7 +693,7 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
         onInteraction={handleInteraction}
       />
     ));
-  }, [feedItems]);
+  }, [feedItems, handleInteraction]);
 
   return (
     <div className="pb-4">
