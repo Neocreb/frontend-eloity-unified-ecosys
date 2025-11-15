@@ -1,0 +1,57 @@
+-- Migration: Fix chat_messages to profiles relationship
+-- This migration adds the missing foreign key constraint between chat_messages and profiles tables
+-- to enable proper JOIN operations in PostgREST
+
+-- Add foreign key constraint from chat_messages.sender_id to profiles.user_id
+-- First, we need to ensure the column exists in profiles that we can reference
+-- profiles.user_id references users.id, and chat_messages.sender_id references users.id
+-- So we can create a relationship through this common reference
+
+-- However, since profiles.user_id is not a primary key, we need to create an index first
+-- to ensure referential integrity can be enforced efficiently
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON public.profiles(user_id);
+
+-- Now add the foreign key constraint from chat_messages to profiles
+-- We'll add a new column to chat_messages to reference profiles directly
+ALTER TABLE public.chat_messages 
+ADD COLUMN IF NOT EXISTS profile_id UUID;
+
+-- Update the profile_id column with the corresponding profile IDs
+UPDATE public.chat_messages 
+SET profile_id = p.id
+FROM public.profiles p
+WHERE public.chat_messages.sender_id = p.user_id
+AND public.chat_messages.profile_id IS NULL;
+
+-- Add the foreign key constraint
+ALTER TABLE public.chat_messages 
+ADD CONSTRAINT chat_messages_profile_id_fkey 
+FOREIGN KEY (profile_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+
+-- Create an index for better performance
+CREATE INDEX IF NOT EXISTS idx_chat_messages_profile_id ON public.chat_messages(profile_id);
+
+-- Alternative approach: If we prefer to use the existing sender_id column
+-- we can create a view that joins these tables for PostgREST
+-- This approach doesn't require schema changes but provides the relationship
+
+-- Create a view that joins chat_messages with profiles
+CREATE OR REPLACE VIEW public.chat_messages_with_profiles AS
+SELECT 
+    cm.*,
+    p.id as profile_id,
+    p.username,
+    p.full_name,
+    p.avatar_url,
+    p.is_verified,
+    p.level,
+    p.points,
+    p.role
+FROM public.chat_messages cm
+LEFT JOIN public.profiles p ON cm.sender_id = p.user_id;
+
+-- Grant necessary permissions
+GRANT ALL ON public.chat_messages_with_profiles TO authenticated;
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';

@@ -192,14 +192,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loadMessages = async (conversationId: string) => {
     try {
+      // Updated to use the new chat_messages_with_profiles view instead of trying to join tables directly
       const { data, error } = await supabase
-        .from("chat_messages")
-        .select(
-          `
-          *,
-          sender:profiles!chat_messages_sender_id_fkey(*)
-        `,
-        )
+        .from("chat_messages_with_profiles")
+        .select("*")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
 
@@ -209,16 +205,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const formattedMessages: ChatMessage[] = data.map((msg) => {
-        // Check if sender exists and handle possible errors
-        let senderName = "Unknown";
-        let senderAvatar = "/placeholder.svg";
-
-        if (msg.sender && typeof msg.sender === "object") {
-          // Make sure to use optional chaining for all properties
-          const sender = msg.sender as Record<string, any>; // Type assertion to avoid null checks
-          senderName = sender?.full_name || sender?.username || "Unknown";
-          senderAvatar = sender?.avatar_url || "/placeholder.svg";
-        }
+        // Extract sender information from the view
+        const senderName = msg.full_name || msg.username || "Unknown";
+        const senderAvatar = msg.avatar_url || "/placeholder.svg";
 
         return {
           id: msg.id,
@@ -234,12 +223,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         };
       });
 
-      setMessages((prev) => ({
-        ...prev,
-        [conversationId]: formattedMessages,
-      }));
+      setMessages(formattedMessages);
     } catch (error) {
-      console.error("Error in loadMessages:", error);
+      console.error("Error loading messages:", error);
     }
   };
 
