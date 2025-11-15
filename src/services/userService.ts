@@ -29,20 +29,38 @@ export class UserService {
   // Get user by ID (try users table first, then profiles table)
   static async getUserById(userId: string): Promise<UserWithProfile | null> {
     try {
+      // Validate input
+      if (!userId || typeof userId !== 'string') {
+        console.warn('Invalid user ID provided:', userId);
+        return null;
+      }
+
       // First try to get from users table
-      const usersResponse = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      let usersResponse;
+      try {
+        usersResponse = await supabaseClient
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+      } catch (usersError) {
+        console.warn('Error fetching user from users table:', usersError);
+        usersResponse = { error: usersError, data: null };
+      }
 
       if (!usersResponse.error && usersResponse.data) {
         // Found in users table, now get profile if exists
-        const profilesResponse = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
+        let profilesResponse;
+        try {
+          profilesResponse = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        } catch (profilesError) {
+          console.warn('Error fetching user profile:', profilesError);
+          profilesResponse = { error: profilesError, data: null };
+        }
 
         // Check if profiles table exists
         if (profilesResponse.error) {
@@ -67,7 +85,7 @@ export class UserService {
               profile: null
             };
           }
-          console.error("Error fetching user profile:", profilesResponse.error);
+          console.warn("Error fetching user profile:", profilesResponse.error);
         }
 
         // Construct UserWithProfile object from user data
@@ -92,23 +110,33 @@ export class UserService {
 
       // If not found in users table, try profiles table
       try {
-        const profilesResponse = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
+        let profilesResponse;
+        try {
+          profilesResponse = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        } catch (profilesError) {
+          console.warn('Error fetching user from profiles table:', profilesError);
+          profilesResponse = { error: profilesError, data: null };
+        }
 
         if (profilesResponse.error) {
           if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
             console.warn("Profiles table does not exist in the database");
             return null;
           }
-          console.error("Error fetching user profile:", profilesResponse.error);
+          console.warn("Error fetching user profile:", profilesResponse.error);
           return null;
         }
 
         // Construct UserWithProfile object from profile data
         const profileData = profilesResponse.data;
+        if (!profileData) {
+          return null;
+        }
+        
         return {
           id: profileData.user_id,
           username: profileData.username || null,
@@ -126,11 +154,11 @@ export class UserService {
           profile: profileData
         };
       } catch (profileError) {
-        console.error("Error accessing profiles table:", profileError);
+        console.warn("Error accessing profiles table:", profileError);
         return null;
       }
     } catch (error) {
-      console.error("Error in getUserById:", error);
+      console.warn("Error in getUserById:", error);
       return null;
     }
   }

@@ -87,23 +87,50 @@ export class PostService {
   static async getFeedPosts(userId: string, limit = 10, offset = 0): Promise<PostWithAuthor[]> {
     try {
       // Get posts from users that the current user is following + their own posts
-      const { data: followingIds, error: followingError } = await supabase
-        .from("followers")
-        .select("following_id")
-        .eq("follower_id", userId);
+      let followingUserIds: string[] = [userId]; // Always include own posts
+      
+      try {
+        const { data: followingIds, error: followingError } = await supabase
+          .from("followers")
+          .select("following_id")
+          .eq("follower_id", userId);
 
-      if (followingError) {
-        console.error("Error fetching following IDs:", followingError);
+        if (followingError) {
+          console.warn("Warning fetching following IDs:", followingError);
+          // Continue with just own posts if following fetch fails
+        } else if (followingIds && followingIds.length > 0) {
+          // Add following user IDs to the list
+          followingIds.forEach((f: any) => {
+            if (f.following_id && typeof f.following_id === 'string') {
+              followingUserIds.push(f.following_id);
+            }
+          });
+        }
+      } catch (followingError) {
+        console.warn("Error fetching following IDs:", followingError);
+        // Continue with just own posts if following fetch fails
+      }
+
+      // Remove duplicates
+      followingUserIds = [...new Set(followingUserIds)];
+
+      // Validate that we have user IDs to query
+      if (!followingUserIds || followingUserIds.length === 0) {
+        console.warn("No user IDs to fetch posts for");
         return [];
       }
 
-      const followingUserIds = followingIds.map((f: any) => f.following_id);
-      followingUserIds.push(userId); // Include own posts
+      // Validate each user ID
+      const validUserIds = followingUserIds.filter(id => id && typeof id === 'string' && id.length > 0);
+      if (!validUserIds || validUserIds.length === 0) {
+        console.warn("No valid user IDs to fetch posts for");
+        return [];
+      }
 
       const { data, error } = await supabase
         .from("posts")
         .select("*")
-        .in("user_id", followingUserIds)
+        .in("user_id", validUserIds)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -112,35 +139,63 @@ export class PostService {
         return [];
       }
 
-      // Enhance posts with additional data
-      const enhancedPosts = await Promise.all(
-        data.map(async (post: any) => {
-          try {
-            const author = await UserService.getUserById(post.user_id);
-            const likesCount = await this.getPostLikesCount(post.id);
-            const commentsCount = await this.getPostCommentsCount(post.id);
-            const likedByUser = await this.isPostLikedByUser(post.id, userId);
+      // Handle case where no data is returned
+      if (!data || !Array.isArray(data)) {
+        return [];
+      }
 
-            return {
-              ...post,
-              author: author || null, // Ensure author is null if not found
-              likes_count: likesCount,
-              comments_count: commentsCount,
-              liked_by_user: likedByUser
-            };
-          } catch (enhanceError) {
-            console.error("Error enhancing post data:", enhanceError);
-            // Return post with minimal data if enhancement fails
-            return {
-              ...post,
-              author: null,
-              likes_count: 0,
-              comments_count: 0,
-              liked_by_user: false
-            };
+      // Enhance posts with additional data
+      const enhancedPosts = [];
+      
+      // Process posts sequentially to avoid overwhelming the database
+      for (const post of data) {
+        try {
+          if (!post || !post.id) {
+            console.warn("Skipping invalid post:", post);
+            continue;
           }
-        })
-      );
+          
+          let author = null;
+          let likesCount = 0;
+          let commentsCount = 0;
+          let likedByUser = false;
+          
+          try {
+            author = await UserService.getUserById(post.user_id);
+          } catch (authorError) {
+            console.warn("Failed to fetch author for post:", post.id, authorError);
+          }
+          
+          try {
+            likesCount = await this.getPostLikesCount(post.id);
+          } catch (likesError) {
+            console.warn("Failed to fetch likes count for post:", post.id, likesError);
+          }
+          
+          try {
+            commentsCount = await this.getPostCommentsCount(post.id);
+          } catch (commentsError) {
+            console.warn("Failed to fetch comments count for post:", post.id, commentsError);
+          }
+          
+          try {
+            likedByUser = await this.isPostLikedByUser(post.id, userId);
+          } catch (likeError) {
+            console.warn("Failed to check if post is liked by user:", post.id, likeError);
+          }
+
+          enhancedPosts.push({
+            ...post,
+            author: author || null, // Ensure author is null if not found
+            likes_count: likesCount,
+            comments_count: commentsCount,
+            liked_by_user: likedByUser
+          });
+        } catch (enhanceError) {
+          console.error("Error enhancing post data:", enhanceError);
+          // Skip this post and continue with others
+        }
+      }
 
       return enhancedPosts as PostWithAuthor[];
     } catch (error) {

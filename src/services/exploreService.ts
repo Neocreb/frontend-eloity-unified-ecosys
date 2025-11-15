@@ -58,7 +58,7 @@ export const exploreService = {
     let query = supabase
       .from('profiles')
       .select('*')
-      .order('followers_count', { ascending: false })
+      .order('followers_count', { ascending: false, nullsFirst: false })
       .limit(limit);
 
     if (user) {
@@ -72,7 +72,8 @@ export const exploreService = {
       if (following && following.length > 0) {
         const followingIds = (following.map((f: any) => f.following_id) as string[]).filter(Boolean);
         if (followingIds.length > 0) {
-          query = query.not('user_id', 'in', `(${followingIds.join(',')})`);
+          // Fix the query construction to avoid malformed parameters
+          query = query.not('user_id', 'in', `(${followingIds.map(id => `'${id}'`).join(',')})`);
         }
       }
 
@@ -82,7 +83,33 @@ export const exploreService = {
 
     const { data, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching suggested users:', error);
+      // Fallback to ordering by created_at if followers_count fails
+      const fallbackQuery = supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+      
+      if (fallbackError) {
+        console.error('Error fetching suggested users with fallback:', fallbackError);
+        throw fallbackError;
+      }
+      
+      return (fallbackData || []).map((profile: any) => ({
+        id: profile.user_id,
+        username: profile.username || 'unknown',
+        full_name: profile.full_name || 'Unknown User',
+        avatar_url: profile.avatar_url || '',
+        bio: profile.bio || '',
+        is_verified: profile.is_verified || false,
+        followers_count: profile.followers_count || 0
+      }));
+    }
+    
     return (data || []).map((profile: any) => ({
       id: profile.user_id,
       username: profile.username || 'unknown',

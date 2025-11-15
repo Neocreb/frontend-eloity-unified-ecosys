@@ -120,46 +120,66 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
   } = useFeed();
 
   const filteredAndSortedItems = useMemo(() => {
-    // Safety check for userPosts
-    if (!userPosts || !Array.isArray(userPosts) || userPosts.length === 0) {
+    // Safety check for userPosts - ensure it's an array
+    if (!userPosts || !Array.isArray(userPosts)) {
+      console.warn('userPosts is not an array:', userPosts);
       return [];
     }
 
     // Filter items based on feed type
-    let filteredItems = filterContentByFeedType(userPosts, feedType);
+    let filteredItems;
+    try {
+      filteredItems = filterContentByFeedType(userPosts, feedType);
+    } catch (error) {
+      console.error('Error filtering content by feed type:', error);
+      filteredItems = userPosts; // Fallback to original posts if filtering fails
+    }
 
     // Apply additional filtering based on tab selection for better content organization
-    if (feedType === 'groups') {
-      filteredItems = filteredItems.filter(item =>
-        item.type === 'group' ||
-        (item.type === 'post' && item.author?.id?.startsWith('group-')) ||
-        item.type === 'community_event'
-      );
-    } else if (feedType === 'pages') {
-      filteredItems = filteredItems.filter(item =>
-        item.type === 'page' ||
-        (item.type === 'post' && item.author?.id?.startsWith('page-')) ||
-        item.type === 'sponsored_post'
-      );
-    } else if (feedType === 'following') {
-      filteredItems = filteredItems.filter(item =>
-        item.type === 'post' ||
-        item.type === 'recommended_user' ||
-        item.type === 'story_recap'
-      );
+    try {
+      if (feedType === 'groups') {
+        filteredItems = filteredItems.filter(item =>
+          item && (item.type === 'group' ||
+          (item.type === 'post' && item.author?.id?.startsWith('group-')) ||
+          item.type === 'community_event')
+        );
+      } else if (feedType === 'pages') {
+        filteredItems = filteredItems.filter(item =>
+          item && (item.type === 'page' ||
+          (item.type === 'post' && item.author?.id?.startsWith('page-')) ||
+          item.type === 'sponsored_post')
+        );
+      } else if (feedType === 'following') {
+        filteredItems = filteredItems.filter(item =>
+          item && (item.type === 'post' ||
+          item.type === 'recommended_user' ||
+          item.type === 'story_recap')
+        );
+      }
+    } catch (error) {
+      console.error('Error applying additional feed filters:', error);
+      // Continue with filteredItems as is if additional filtering fails
     }
 
     // Safety check for filteredItems before sorting
     if (!filteredItems || !Array.isArray(filteredItems)) {
+      console.warn('filteredItems is not an array:', filteredItems);
       return [];
     }
 
     // Sort by timestamp (newest first)
-    return filteredItems.sort((a, b) => {
-      // Safety check for timestamp values
-      if (!a.timestamp || !b.timestamp) return 0;
-      return b.timestamp.getTime() - a.timestamp.getTime();
-    });
+    try {
+      return filteredItems.sort((a, b) => {
+        // Safety check for item existence
+        if (!a || !b) return 0;
+        // Safety check for timestamp values
+        if (!a.timestamp || !b.timestamp) return 0;
+        return b.timestamp.getTime() - a.timestamp.getTime();
+      });
+    } catch (error) {
+      console.error('Error sorting feed items:', error);
+      return filteredItems; // Return unsorted if sorting fails
+    }
   }, [feedType, userPosts]);
 
   useEffect(() => {

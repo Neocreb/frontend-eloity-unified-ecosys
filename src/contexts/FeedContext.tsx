@@ -94,47 +94,65 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
         return;
       }
 
-      // Fetch real data from PostService
-      const feedPosts = await PostService.getFeedPosts(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
+      // Fetch real data from PostService with error handling
+      let feedPosts: any[] = [];
+      try {
+        feedPosts = await PostService.getFeedPosts(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
+      } catch (serviceError) {
+        console.error('Error fetching feed posts from service:', serviceError);
+        // Continue with empty array to prevent complete failure
+      }
       
-      // Transform posts to UnifiedFeedItem format
-      const transformedPosts: UnifiedFeedItem[] = feedPosts.map((post: any) => {
-        // Ensure author data is properly structured
-        const authorData = post.author || {};
-        
-        return {
-          id: post.id,
-          type: "post",
-          timestamp: new Date(post.created_at),
-          priority: 5, // Default priority
-          author: {
-            id: authorData.id || "",
-            name: authorData.name || authorData.full_name || "Unknown User",
-            username: authorData.username || "unknown",
-            avatar: authorData.avatar || authorData.avatar_url || "/placeholder.svg",
-            verified: authorData.verified || authorData.is_verified || false,
-          },
-          content: {
-            text: post.content,
-            media: post.image ? [{
-              type: "image",
-              url: post.image,
-              alt: "Post image",
-            }] : [],
-          },
-          interactions: {
-            likes: post.likes_count || 0,
-            comments: post.comments_count || 0,
-            shares: post.shares_count || 0,
-          },
-          userInteracted: {
-            liked: post.liked_by_user || false,
-            commented: false,
-            shared: false,
-            saved: false,
-          },
-        };
-      });
+      // Transform posts to UnifiedFeedItem format with safety checks
+      const transformedPosts: UnifiedFeedItem[] = [];
+      
+      try {
+        feedPosts.forEach((post: any) => {
+          try {
+            // Ensure author data is properly structured
+            const authorData = post.author || {};
+            
+            transformedPosts.push({
+              id: post.id || `post-${Date.now()}-${Math.random()}`,
+              type: "post",
+              timestamp: post.created_at ? new Date(post.created_at) : new Date(),
+              priority: 5, // Default priority
+              author: {
+                id: authorData.id || "",
+                name: authorData.name || authorData.full_name || "Unknown User",
+                username: authorData.username || "unknown",
+                avatar: authorData.avatar || authorData.avatar_url || "/placeholder.svg",
+                verified: authorData.verified || authorData.is_verified || false,
+              },
+              content: {
+                text: post.content || "",
+                media: post.image ? [{
+                  type: "image",
+                  url: post.image,
+                  alt: "Post image",
+                }] : [],
+              },
+              interactions: {
+                likes: post.likes_count || 0,
+                comments: post.comments_count || 0,
+                shares: post.shares_count || 0,
+              },
+              userInteracted: {
+                liked: post.liked_by_user || false,
+                commented: false,
+                shared: false,
+                saved: false,
+              },
+            });
+          } catch (transformError) {
+            console.error('Error transforming post:', transformError, post);
+            // Skip this post and continue with others
+          }
+        });
+      } catch (transformError) {
+        console.error('Error transforming posts:', transformError);
+        // Continue with empty or partially transformed array
+      }
 
       if (append) {
         setUserPosts(prev => [...prev, ...transformedPosts]);
@@ -149,11 +167,14 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
     } catch (err) {
       console.error('Error loading feed:', err);
       setError('Failed to load feed content');
-      toast({
-        title: "Error loading feed",
-        description: "Unable to load posts. Please try again.",
-        variant: "destructive",
-      });
+      // Only show toast if we're in a browser environment
+      if (typeof window !== 'undefined') {
+        toast({
+          title: "Error loading feed",
+          description: "Unable to load posts. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
