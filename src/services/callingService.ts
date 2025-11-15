@@ -145,7 +145,10 @@ class CallingService {
         .eq('id', sessionId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching call session:', error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error('Error fetching call session:', error);
@@ -163,7 +166,10 @@ class CallingService {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching call history:', error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('Error fetching call history:', error);
@@ -179,7 +185,10 @@ class CallingService {
         .select('*')
         .eq('session_id', sessionId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching call quality metrics:', error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('Error fetching call quality metrics:', error);
@@ -199,7 +208,10 @@ class CallingService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error recording call quality metrics:', error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error('Error recording call quality metrics:', error);
@@ -218,7 +230,10 @@ class CallingService {
         `)
         .eq('session_id', sessionId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching call participants:', error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('Error fetching call participants:', error);
@@ -234,7 +249,10 @@ class CallingService {
         .update(updates)
         .eq('id', participantId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating participant status:', error);
+        return false;
+      }
       return true;
     } catch (error) {
       console.error('Error updating participant status:', error);
@@ -254,7 +272,10 @@ class CallingService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating call participant:', error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error('Error creating call participant:', error);

@@ -56,7 +56,10 @@ export const aiContentService = {
         .order('score', { ascending: false })
         .limit(limit);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting content recommendations:', error);
+        return [];
+      }
       return data || [];
     } catch (error) {
       console.error('Error getting content recommendations:', error);
@@ -107,7 +110,8 @@ export const aiContentService = {
         if (error.code === 'PGRST116') {
           return await this.createDefaultPreferences(userId);
         }
-        throw error;
+        console.error('Error getting user preferences:', error);
+        return null;
       }
       return data;
     } catch (error) {
@@ -131,7 +135,10 @@ export const aiContentService = {
         .select('*')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating default preferences:', error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error('Error creating default preferences:', error);
@@ -182,7 +189,10 @@ export const aiContentService = {
         .select('*')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error analyzing content:', error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error('Error analyzing content:', error);
@@ -203,7 +213,8 @@ export const aiContentService = {
         if (error.code === 'PGRST116') {
           return await this.createDefaultScores(userId);
         }
-        throw error;
+        console.error('Error getting user scores:', error);
+        return null;
       }
       return data;
     } catch (error) {
@@ -227,7 +238,10 @@ export const aiContentService = {
         .select('*')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating default scores:', error);
+        return null;
+      }
       return data;
     } catch (error) {
       console.error('Error creating default scores:', error);

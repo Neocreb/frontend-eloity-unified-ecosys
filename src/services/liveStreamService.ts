@@ -151,60 +151,82 @@ export const liveStreamService = {
   },
 
   async getActiveBattles(): Promise<(LiveStream & { battle: Battle })[]> {
-    const { data: battles, error } = await supabase
-      .from('battles')
-      .select('*')
-      .in('status', ['pending', 'active'])
-      .order('created_at', { ascending: false });
+    try {
+      const { data: battles, error } = await supabase
+        .from('battles')
+        .select('*')
+        .in('status', ['pending', 'active'])
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    if (!battles || battles.length === 0) return [];
-
-    const streamIds = battles.map((b: any) => b.live_stream_id);
-    const { data: streams } = await supabase
-      .from('live_streams')
-      .select('*')
-      .in('id', streamIds);
-
-    if (!streams) return [];
-
-    const userIds = Array.from(new Set(streams.map((s: any) => s.user_id)));
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, username, full_name, avatar_url, is_verified')
-      .in('user_id', userIds);
-
-    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
-    const streamMap = new Map(streams.map((s: any) => [s.id, s]));
-
-    return battles.map((battle: any) => {
-      const stream = streamMap.get(battle.live_stream_id);
-      if (!stream) return null;
-
-      const profile: any = profileMap.get((stream as any).user_id);
+      if (error) {
+        console.error('Error fetching battles:', error);
+        // Return empty array as fallback
+        return [];
+      }
       
-      return {
-        ...stream,
-        user: profile ? {
-          username: (profile as Profile).username || 'unknown',
-          full_name: (profile as Profile).full_name || 'Unknown User',
-          avatar_url: (profile as Profile).avatar_url || '',
-          is_verified: (profile as Profile).is_verified || false
-        } : undefined,
-        battle: {
-          id: battle.id,
-          live_stream_id: battle.live_stream_id,
-          challenger_id: battle.challenger_id,
-          opponent_id: battle.opponent_id,
-          battle_type: battle.battle_type as 'dance' | 'rap' | 'comedy' | 'general',
-          time_remaining: battle.time_remaining,
-          challenger_score: battle.challenger_score,
-          opponent_score: battle.opponent_score,
-          winner_id: battle.winner_id,
-          status: battle.status as 'pending' | 'active' | 'completed' | 'cancelled'
-        }
-      };
-    }).filter(Boolean) as (LiveStream & { battle: Battle })[];
+      if (!battles || battles.length === 0) return [];
+
+      const streamIds = battles.map((b: any) => b.live_stream_id);
+      const { data: streams, error: streamsError } = await supabase
+        .from('live_streams')
+        .select('*')
+        .in('id', streamIds);
+
+      if (streamsError) {
+        console.error('Error fetching live streams:', streamsError);
+        // Return empty array as fallback
+        return [];
+      }
+
+      if (!streams) return [];
+
+      const userIds = Array.from(new Set(streams.map((s: any) => s.user_id)));
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, username, full_name, avatar_url, is_verified')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Continue without profiles
+      }
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      const streamMap = new Map(streams.map((s: any) => [s.id, s]));
+
+      return battles.map((battle: any) => {
+        const stream = streamMap.get(battle.live_stream_id);
+        if (!stream) return null;
+
+        const profile: any = profileMap.get((stream as any).user_id);
+        
+        return {
+          ...stream,
+          user: profile ? {
+            username: (profile as Profile).username || 'unknown',
+            full_name: (profile as Profile).full_name || 'Unknown User',
+            avatar_url: (profile as Profile).avatar_url || '',
+            is_verified: (profile as Profile).is_verified || false
+          } : undefined,
+          battle: {
+            id: battle.id,
+            live_stream_id: battle.live_stream_id,
+            challenger_id: battle.challenger_id,
+            opponent_id: battle.opponent_id,
+            battle_type: battle.battle_type as 'dance' | 'rap' | 'comedy' | 'general',
+            time_remaining: battle.time_remaining,
+            challenger_score: battle.challenger_score,
+            opponent_score: battle.opponent_score,
+            winner_id: battle.winner_id,
+            status: battle.status as 'pending' | 'active' | 'completed' | 'cancelled'
+          }
+        };
+      }).filter(Boolean) as (LiveStream & { battle: Battle })[];
+    } catch (err) {
+      console.error('Network error fetching battles:', err);
+      // Return empty array as fallback for network errors
+      return [];
+    }
   },
 
   async createBattle(battleData: {

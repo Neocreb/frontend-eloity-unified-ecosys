@@ -896,7 +896,10 @@ export const fetchTopPerformingContent = async (): Promise<ContentAnalytics[]> =
       .order('views', { ascending: false })
       .limit(10);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching top performing content:', error);
+      return [];
+    }
     
     const result = data.map((item: any) => ({
       id: item.id,
@@ -954,7 +957,10 @@ const fetchFeedSocialDetails = async (): Promise<DetailedCategory[]> => {
       .from('posts')
       .select('id, content, created_at, post_likes(id), post_comments(id)');
     
-    if (postsError) throw postsError;
+    if (postsError) {
+      console.error('Error fetching posts for Feed & Social details:', postsError);
+      return [];
+    }
     
     const totalPosts = posts.length;
     const totalLikes = posts.reduce((sum: number, post: any) => sum + (post.post_likes?.length || 0), 0);
@@ -1008,7 +1014,10 @@ const fetchVideoDetails = async (): Promise<DetailedCategory[]> => {
       .from('videos')
       .select('id, title, views_count, likes_count, comments_count, created_at');
     
-    if (videosError) throw videosError;
+    if (videosError) {
+      console.error('Error fetching videos for Video details:', videosError);
+      return [];
+    }
     
     const totalVideos = videos.length;
     const totalViews = videos.reduce((sum: number, video: any) => sum + (video.views_count || 0), 0);
@@ -1063,7 +1072,10 @@ const fetchMarketplaceDetails = async (): Promise<DetailedCategory[]> => {
       .from('products')
       .select('id, name, price, total_sales, total_reviews, average_rating');
     
-    if (productsError) throw productsError;
+    if (productsError) {
+      console.error('Error fetching products for Marketplace details:', productsError);
+      return [];
+    }
     
     const totalProducts = products.length;
     const totalRevenue = products.reduce((sum: number, product: any) => sum + (product.price * (product.total_sales || 0)), 0);
@@ -1094,11 +1106,11 @@ const fetchMarketplaceDetails = async (): Promise<DetailedCategory[]> => {
             value: formatNumber(totalSales), 
             change: "+0%", 
             trend: "neutral", 
-            description: "Total units sold" 
+            description: "Total products sold" 
           },
           { 
-            name: "Avg Product Rating", 
-            value: avgRating, 
+            name: "Avg Rating", 
+            value: `${avgRating}/5`, 
             change: "+0%", 
             trend: "neutral", 
             description: "Average customer rating" 
