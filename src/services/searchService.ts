@@ -1,7 +1,7 @@
 import { globalSearchService } from "./globalSearchService";
 
 export class SearchService {
-  static async getRecentSearches(): Promise<string[]> {
+  async getRecentSearches(): Promise<string[]> {
     try {
       // For now, we'll return an empty array as a placeholder
       // In a real implementation, this would fetch recent searches from user data
@@ -12,7 +12,7 @@ export class SearchService {
     }
   }
 
-  static async getTrendingSearches(): Promise<string[]> {
+  async getTrendingSearches(): Promise<string[]> {
     try {
       return await globalSearchService.getTrendingTopics();
     } catch (error) {
@@ -21,7 +21,7 @@ export class SearchService {
     }
   }
 
-  static async getSearchSuggestions(query: string): Promise<Array<{id: string, text: string, type: string}>> {
+  async getSearchSuggestions(query: string): Promise<Array<{id: string, text: string, type: "product" | "category" | "brand" | "trending"}>> {
     try {
       const suggestions = await globalSearchService.getSuggestions(query);
       // Transform the suggestions to match the expected format
@@ -36,7 +36,7 @@ export class SearchService {
     }
   }
 
-  static async saveRecentSearch(query: string): Promise<void> {
+  async saveRecentSearch(query: string): Promise<void> {
     try {
       // In a real implementation, this would save the search to user data
       console.log("Saved recent search:", query);

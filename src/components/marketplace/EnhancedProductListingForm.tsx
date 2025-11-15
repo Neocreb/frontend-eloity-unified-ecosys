@@ -28,7 +28,7 @@ import { ImagePlus, Video, FileText, BookOpen, Play, Music, Palette, Code, File,
 import { useMarketplace } from '@/contexts/MarketplaceContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { categoryService } from '@/services/categoryService';
+import { categoryService } from '@/services';
 import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 import { Product } from '@/types/marketplace';
 import { supabase } from "@/integrations/supabase/client";

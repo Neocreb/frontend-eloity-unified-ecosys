@@ -33,7 +33,7 @@ import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { searchService } from "@/services/searchService";
-import { categoryService } from "@/services/categoryService";
+import { categoryService } from "@/services";
 
 interface SearchSuggestion {
   id: string;
@@ -119,7 +119,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
         try {
           setLoading(true);
           const searchSuggestions = await searchService.getSearchSuggestions(query);
-          setSuggestions(searchSuggestions.slice(0, 8));
+          setSuggestions(searchSuggestions.slice(0, 8) as SearchSuggestion[]);
         } catch (error) {
           console.error("Error fetching suggestions:", error);
           // Fallback to empty array if real data fetch fails

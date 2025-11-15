@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { categoryService } from '@/services/categoryService';
+import { categoryService } from '@/services';
 import { 
   BookOpen, 
   Play, 
