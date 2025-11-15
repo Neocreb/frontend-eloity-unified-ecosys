@@ -44,8 +44,10 @@ export const fetchContentPageSupabase = async (params: FetchContentParams) => {
     }
 
     if (search && search.trim()) {
-      // ILIKE for case-insensitive search
-      query.or(`title.ilike.%${search}% , description.ilike.%${search}%`);
+      // Sanitize search term to prevent complex parsing issues
+      const sanitizedSearch = search.trim().replace(/[^a-zA-Z0-9_\-.\s]/g, '');
+      // ILIKE for case-insensitive search with simpler query
+      query.or(`title.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`);
     }
 
     if (cutoff) {

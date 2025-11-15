@@ -509,10 +509,12 @@ export class MarketplaceService {
   // Search
   static async searchProducts(query: string, limit = 20): Promise<SearchResult[]> {
     try {
+      // Sanitize query to prevent complex parsing issues
+      const sanitizedQuery = query.trim().replace(/[^a-zA-Z0-9_\-.\s]/g, '');
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+        .or(`name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`)
         .limit(limit);
 
       if (error) {

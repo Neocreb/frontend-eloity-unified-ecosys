@@ -126,31 +126,34 @@ export const exploreService = {
   }> {
     const searchTerm = `%${query}%`;
 
+    // Sanitize search term to prevent complex parsing issues
+    const sanitizedSearchTerm = searchTerm.trim().replace(/[^a-zA-Z0-9_\-.\s]/g, '');
+    
     const [hashtagsResult, usersResult, groupsResult, pagesResult] = await Promise.all([
       supabase
         .from('hashtags')
         .select('*')
-        .ilike('name', searchTerm)
+        .ilike('tag', `%${sanitizedSearchTerm}%`)
         .limit(5),
       
       supabase
         .from('profiles')
         .select('*')
-        .or(`username.ilike.${searchTerm},full_name.ilike.${searchTerm}`)
+        .or(`username.ilike.%${sanitizedSearchTerm}%,full_name.ilike.%${sanitizedSearchTerm}%`)
         .limit(5),
       
       supabase
         .from('groups')
         .select('*')
         .eq('privacy', 'public')
-        .ilike('name', searchTerm)
+        .ilike('name', `%${sanitizedSearchTerm}%`)
         .limit(5),
       
       supabase
         .from('pages')
         .select('*')
         .eq('privacy', 'public')
-        .ilike('name', searchTerm)
+        .ilike('name', `%${sanitizedSearchTerm}%`)
         .limit(5)
     ]);
 

@@ -511,11 +511,14 @@ export class UserService {
         return [];
       }
       
-      // Search in profiles table with email, username, and full_name
+      // Sanitize query to prevent complex parsing issues
+      const sanitizedQuery = query.trim().replace(/[^a-zA-Z0-9_\-.\s@]/g, '');
+      
+      // Use a simpler query approach to avoid complex parsing issues
       const profilesResponse = await supabaseClient
         .from('profiles')
         .select('*')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .or(`username.ilike.%${sanitizedQuery}%,full_name.ilike.%${sanitizedQuery}%`)
         .limit(limit);
 
       if (profilesResponse.error) {

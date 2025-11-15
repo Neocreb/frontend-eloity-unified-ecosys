@@ -1,58 +1,38 @@
+// Test script for UserService
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-// We'll test the search functionality directly with Supabase
-import { createClient } from '@supabase/supabase-js';
+// Test the UserService directly
+import { UserService } from './src/services/userService.ts';
 
-async function testUserSearch() {
-  console.log('Testing user search functionality...');
+async function testUserService() {
+  console.log('Testing UserService...');
   
   try {
-    // Create Supabase client
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-    );
-    
-    // Test the exact query used in UserService.searchUsers
-    console.log('Testing search query similar to UserService...');
+    // Test searchUsers method
+    console.log('Testing searchUsers...');
     const query = 'test';
-    const limit = 20;
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,email.ilike.%${query}%`)
-      .limit(limit);
-
-    if (error) {
-      console.error('Error searching users:', error);
-      return;
-    }
-
-    console.log('Search results:', data.length);
-    console.log('Results:', data);
+    // Sanitize query to prevent complex parsing issues
+    const sanitizedQuery = query.trim().replace(/[^a-zA-Z0-9_\-.\s@]/g, '');
+    
+    const searchResults = await UserService.searchUsers(sanitizedQuery);
+    console.log('Search results:', searchResults.length);
+    console.log('Results:', searchResults);
     
     // Test with another query
     console.log('\nTesting with "user" query...');
-    const { data: userResults, error: userError } = await supabase
-      .from('profiles')
-      .select('*')
-      .or(`username.ilike.%user%,full_name.ilike.%user%,email.ilike.%user%`)
-      .limit(limit);
-
-    if (userError) {
-      console.error('Error searching users with "user":', userError);
-      return;
-    }
-
+    const userQuery = 'user';
+    const sanitizedUserQuery = userQuery.trim().replace(/[^a-zA-Z0-9_\-.\s@]/g, '');
+    
+    const userResults = await UserService.searchUsers(sanitizedUserQuery);
     console.log('"user" query results:', userResults.length);
     console.log('"user" results:', userResults);
     
   } catch (error) {
-    console.error('Error testing user search:', error);
+    console.error('Error testing UserService:', error);
     console.error('Error details:', error.message);
   }
 }
 
-testUserSearch();
+testUserService();

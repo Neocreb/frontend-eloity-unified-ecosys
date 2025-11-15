@@ -500,9 +500,12 @@ class GlobalSearchService {
         return [];
       }
       
-      // Use UserService to search for real users
+      // Sanitize query to prevent complex parsing issues
+      const sanitizedQuery = query.trim().replace(/[^a-zA-Z0-9_\-.\s@]/g, '');
+      
+      // Use UserService to search for real users with sanitized query
       const { UserService } = await import('@/services/userService');
-      const users = await UserService.searchUsers(query, 20);
+      const users = await UserService.searchUsers(sanitizedQuery, 20);
       
       if (!Array.isArray(users)) {
         console.warn('UserService.searchUsers returned invalid data:', users);

@@ -369,10 +369,12 @@ export class EventService {
   // Search events
   static async searchEvents(query: string, limit = 20): Promise<EventWithDetails[]> {
     try {
+      // Sanitize query to prevent complex parsing issues
+      const sanitizedQuery = query.trim().replace(/[^a-zA-Z0-9_\-.\s]/g, '');
       const { data, error } = await supabase
         .from("events")
         .select("*")
-        .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+        .or(`title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`)
         .gte("start_date", new Date().toISOString()) // Only future events
         .order("start_date", { ascending: true })
         .limit(limit);

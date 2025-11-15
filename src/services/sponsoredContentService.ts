@@ -321,11 +321,13 @@ class SponsoredContentService {
     filters?: any,
   ): Promise<SponsoredContent[]> {
     try {
+      // Sanitize query to prevent complex parsing issues
+      const sanitizedQuery = query.trim().replace(/[^a-zA-Z0-9_\-.\s]/g, '');
       const { data, error } = await (supabase as any)
         .from("sponsored_content")
         .select("*")
         .or(
-          `title.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`,
+          `title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%,category.ilike.%${sanitizedQuery}%`,
         )
         .eq("status", "active")
         .order("created_at", { ascending: false });

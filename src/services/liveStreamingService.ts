@@ -335,12 +335,14 @@ class LiveStreamingService {
 
   async searchStreams(query: string, category?: string): Promise<LiveStream[]> {
     try {
-      let dbQuery = (supabase as any)
+      // Sanitize query to prevent complex parsing issues
+      const sanitizedQuery = query.trim().replace(/[^a-zA-Z0-9_\-.\s]/g, '');
+      let dbQuery = supabase
         .from("live_streams")
         .select("*")
         .eq("is_private", false)
         .or(
-          `title.ilike.%${query}%,description.ilike.%${query}%,tags.cs.{${query}}`,
+          `title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`,
         );
 
       if (category && category !== "all") {
