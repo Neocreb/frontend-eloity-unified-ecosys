@@ -97,7 +97,7 @@ export class PostService {
         return [];
       }
 
-      const followingUserIds = followingIds.map((f) => f.following_id);
+      const followingUserIds = followingIds.map((f: any) => f.following_id);
       followingUserIds.push(userId); // Include own posts
 
       const { data, error } = await supabase
@@ -114,19 +114,31 @@ export class PostService {
 
       // Enhance posts with additional data
       const enhancedPosts = await Promise.all(
-        data.map(async (post) => {
-          const author = await UserService.getUserById(post.user_id);
-          const likesCount = await this.getPostLikesCount(post.id);
-          const commentsCount = await this.getPostCommentsCount(post.id);
-          const likedByUser = await this.isPostLikedByUser(post.id, userId);
+        data.map(async (post: any) => {
+          try {
+            const author = await UserService.getUserById(post.user_id);
+            const likesCount = await this.getPostLikesCount(post.id);
+            const commentsCount = await this.getPostCommentsCount(post.id);
+            const likedByUser = await this.isPostLikedByUser(post.id, userId);
 
-          return {
-            ...post,
-            author,
-            likes_count: likesCount,
-            comments_count: commentsCount,
-            liked_by_user: likedByUser
-          };
+            return {
+              ...post,
+              author: author || null, // Ensure author is null if not found
+              likes_count: likesCount,
+              comments_count: commentsCount,
+              liked_by_user: likedByUser
+            };
+          } catch (enhanceError) {
+            console.error("Error enhancing post data:", enhanceError);
+            // Return post with minimal data if enhancement fails
+            return {
+              ...post,
+              author: null,
+              likes_count: 0,
+              comments_count: 0,
+              liked_by_user: false
+            };
+          }
         })
       );
 
@@ -157,17 +169,29 @@ export class PostService {
 
       // Enhance posts with additional data
       const enhancedPosts = await Promise.all(
-        data.map(async (post) => {
-          const likesCount = await this.getPostLikesCount(post.id);
-          const commentsCount = await this.getPostCommentsCount(post.id);
+        data.map(async (post: any) => {
+          try {
+            const likesCount = await this.getPostLikesCount(post.id);
+            const commentsCount = await this.getPostCommentsCount(post.id);
 
-          return {
-            ...post,
-            author,
-            likes_count: likesCount,
-            comments_count: commentsCount,
-            liked_by_user: false
-          };
+            return {
+              ...post,
+              author,
+              likes_count: likesCount,
+              comments_count: commentsCount,
+              liked_by_user: false
+            };
+          } catch (enhanceError) {
+            console.error("Error enhancing user post data:", enhanceError);
+            // Return post with minimal data if enhancement fails
+            return {
+              ...post,
+              author: author || null,
+              likes_count: 0,
+              comments_count: 0,
+              liked_by_user: false
+            };
+          }
         })
       );
 
@@ -356,7 +380,7 @@ export class PostService {
 
       // Enhance comments with additional data
       const enhancedComments = await Promise.all(
-        data.map(async (comment) => {
+        data.map(async (comment: any) => {
           // Get author profile
           const author = await UserService.getUserById(comment.user_id);
           
@@ -421,7 +445,7 @@ export class PostService {
 
       // Enhance posts with additional data
       const enhancedPosts = await Promise.all(
-        data.map(async (post) => {
+        data.map(async (post: any) => {
           const author = await UserService.getUserById(post.user_id);
           const likesCount = await this.getPostLikesCount(post.id);
           const commentsCount = await this.getPostCommentsCount(post.id);

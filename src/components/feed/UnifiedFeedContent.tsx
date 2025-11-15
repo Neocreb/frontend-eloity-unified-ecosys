@@ -150,7 +150,7 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
 
     // Sort by timestamp (newest first)
     return filteredItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  }, [feedType, userPosts, filterContentByFeedType]);
+  }, [feedType, userPosts]);
 
   useEffect(() => {
     setFeedItems(filteredAndSortedItems);

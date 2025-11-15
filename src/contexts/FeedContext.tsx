@@ -98,38 +98,43 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
       const feedPosts = await PostService.getFeedPosts(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
       
       // Transform posts to UnifiedFeedItem format
-      const transformedPosts: UnifiedFeedItem[] = feedPosts.map((post: any) => ({
-        id: post.id,
-        type: "post",
-        timestamp: new Date(post.created_at),
-        priority: 5, // Default priority
-        author: {
-          id: post.author?.id || "",
-          name: post.author?.name || "Unknown User",
-          username: post.author?.username || "unknown",
-          avatar: post.author?.avatar || "/placeholder.svg",
-          verified: post.author?.verified || false,
-        },
-        content: {
-          text: post.content,
-          media: post.image ? [{
-            type: "image",
-            url: post.image,
-            alt: "Post image",
-          }] : [],
-        },
-        interactions: {
-          likes: post.likes_count || 0,
-          comments: post.comments_count || 0,
-          shares: post.shares_count || 0,
-        },
-        userInteracted: {
-          liked: post.liked_by_user || false,
-          commented: false,
-          shared: false,
-          saved: false,
-        },
-      }));
+      const transformedPosts: UnifiedFeedItem[] = feedPosts.map((post: any) => {
+        // Ensure author data is properly structured
+        const authorData = post.author || {};
+        
+        return {
+          id: post.id,
+          type: "post",
+          timestamp: new Date(post.created_at),
+          priority: 5, // Default priority
+          author: {
+            id: authorData.id || "",
+            name: authorData.name || authorData.full_name || "Unknown User",
+            username: authorData.username || "unknown",
+            avatar: authorData.avatar || authorData.avatar_url || "/placeholder.svg",
+            verified: authorData.verified || authorData.is_verified || false,
+          },
+          content: {
+            text: post.content,
+            media: post.image ? [{
+              type: "image",
+              url: post.image,
+              alt: "Post image",
+            }] : [],
+          },
+          interactions: {
+            likes: post.likes_count || 0,
+            comments: post.comments_count || 0,
+            shares: post.shares_count || 0,
+          },
+          userInteracted: {
+            liked: post.liked_by_user || false,
+            commented: false,
+            shared: false,
+            saved: false,
+          },
+        };
+      });
 
       if (append) {
         setUserPosts(prev => [...prev, ...transformedPosts]);

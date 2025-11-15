@@ -44,6 +44,32 @@ export class UserService {
           .eq('user_id', userId)
           .single();
 
+        // Check if profiles table exists
+        if (profilesResponse.error) {
+          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
+            console.warn("Profiles table does not exist in the database");
+            // Return user data without profile
+            const userData = usersResponse.data;
+            return {
+              id: userData.id,
+              username: userData.username || null,
+              full_name: userData.full_name || null,
+              name: userData.full_name || null,
+              avatar: userData.avatar_url || null,
+              avatar_url: userData.avatar_url || null,
+              bio: userData.bio || null,
+              is_verified: userData.is_verified || false,
+              points: userData.points || 0,
+              level: userData.level || null,
+              role: userData.role || null,
+              created_at: userData.created_at || null,
+              updated_at: userData.updated_at || null,
+              profile: null
+            };
+          }
+          console.error("Error fetching user profile:", profilesResponse.error);
+        }
+
         // Construct UserWithProfile object from user data
         const userData = usersResponse.data;
         return {
@@ -65,35 +91,44 @@ export class UserService {
       }
 
       // If not found in users table, try profiles table
-      const profilesResponse = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      try {
+        const profilesResponse = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
 
-      if (profilesResponse.error) {
-        console.error("Error fetching user profile:", profilesResponse.error);
+        if (profilesResponse.error) {
+          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
+            console.warn("Profiles table does not exist in the database");
+            return null;
+          }
+          console.error("Error fetching user profile:", profilesResponse.error);
+          return null;
+        }
+
+        // Construct UserWithProfile object from profile data
+        const profileData = profilesResponse.data;
+        return {
+          id: profileData.user_id,
+          username: profileData.username || null,
+          full_name: profileData.full_name || null,
+          name: profileData.name || null,
+          avatar: profileData.avatar || null,
+          avatar_url: profileData.avatar_url || null,
+          bio: profileData.bio || null,
+          is_verified: profileData.is_verified || false,
+          points: profileData.points || 0,
+          level: profileData.level || null,
+          role: profileData.role || null,
+          created_at: profileData.created_at || null,
+          updated_at: profileData.updated_at || null,
+          profile: profileData
+        };
+      } catch (profileError) {
+        console.error("Error accessing profiles table:", profileError);
         return null;
       }
-
-      // Construct UserWithProfile object from profile data
-      const profileData = profilesResponse.data;
-      return {
-        id: profileData.user_id,
-        username: profileData.username || null,
-        full_name: profileData.full_name || null,
-        name: profileData.name || null,
-        avatar: profileData.avatar || null,
-        avatar_url: profileData.avatar_url || null,
-        bio: profileData.bio || null,
-        is_verified: profileData.is_verified || false,
-        points: profileData.points || 0,
-        level: profileData.level || null,
-        role: profileData.role || null,
-        created_at: profileData.created_at || null,
-        updated_at: profileData.updated_at || null,
-        profile: profileData
-      };
     } catch (error) {
       console.error("Error in getUserById:", error);
       return null;
@@ -118,6 +153,32 @@ export class UserService {
           .eq('user_id', usersResponse.data.id)
           .single();
 
+        // Check if profiles table exists
+        if (profilesResponse.error) {
+          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
+            console.warn("Profiles table does not exist in the database");
+            // Return user data without profile
+            const userData = usersResponse.data;
+            return {
+              id: userData.id,
+              username: userData.username || null,
+              full_name: userData.full_name || null,
+              name: userData.full_name || null,
+              avatar: userData.avatar_url || null,
+              avatar_url: userData.avatar_url || null,
+              bio: userData.bio || null,
+              is_verified: userData.is_verified || false,
+              points: userData.points || 0,
+              level: userData.level || null,
+              role: userData.role || null,
+              created_at: userData.created_at || null,
+              updated_at: userData.updated_at || null,
+              profile: null
+            };
+          }
+          console.error("Error fetching user profile:", profilesResponse.error);
+        }
+
         // Construct UserWithProfile object from user data
         const userData = usersResponse.data;
         return {
@@ -139,35 +200,44 @@ export class UserService {
       }
 
       // If not found in users table, try profiles table
-      const profilesResponse = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('username', username)
-        .single();
+      try {
+        const profilesResponse = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .eq('username', username)
+          .single();
 
-      if (profilesResponse.error) {
-        console.error("Error fetching user by username:", profilesResponse.error);
+        if (profilesResponse.error) {
+          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
+            console.warn("Profiles table does not exist in the database");
+            return null;
+          }
+          console.error("Error fetching user by username:", profilesResponse.error);
+          return null;
+        }
+
+        // Construct UserWithProfile object from profile data
+        const profileData = profilesResponse.data;
+        return {
+          id: profileData.user_id,
+          username: profileData.username || null,
+          full_name: profileData.full_name || null,
+          name: profileData.name || null,
+          avatar: profileData.avatar || null,
+          avatar_url: profileData.avatar_url || null,
+          bio: profileData.bio || null,
+          is_verified: profileData.is_verified || false,
+          points: profileData.points || 0,
+          level: profileData.level || null,
+          role: profileData.role || null,
+          created_at: profileData.created_at || null,
+          updated_at: profileData.updated_at || null,
+          profile: profileData
+        };
+      } catch (profileError) {
+        console.error("Error accessing profiles table:", profileError);
         return null;
       }
-
-      // Construct UserWithProfile object from profile data
-      const profileData = profilesResponse.data;
-      return {
-        id: profileData.user_id,
-        username: profileData.username || null,
-        full_name: profileData.full_name || null,
-        name: profileData.name || null,
-        avatar: profileData.avatar || null,
-        avatar_url: profileData.avatar_url || null,
-        bio: profileData.bio || null,
-        is_verified: profileData.is_verified || false,
-        points: profileData.points || 0,
-        level: profileData.level || null,
-        role: profileData.role || null,
-        created_at: profileData.created_at || null,
-        updated_at: profileData.updated_at || null,
-        profile: profileData
-      };
     } catch (error) {
       console.error("Error in getUserByUsername:", error);
       return null;
@@ -184,6 +254,11 @@ export class UserService {
         .single();
 
       if (response.error) {
+        // Check if it's a 404 error (table not found) or 400 error (bad request)
+        if (response.error.code === '42P01' || response.error.message.includes('not exist')) {
+          console.warn("Profiles table does not exist in the database");
+          return null;
+        }
         console.error("Error fetching user profile:", response.error);
         return null;
       }
@@ -204,6 +279,14 @@ export class UserService {
         .select('user_id')
         .eq('user_id', userId)
         .single();
+
+      // Check if profiles table exists
+      if (checkResponse.error) {
+        if (checkResponse.error.code === '42P01' || checkResponse.error.message.includes('not exist')) {
+          console.warn("Profiles table does not exist in the database");
+          return null;
+        }
+      }
 
       let result;
       if (checkResponse.data) {
@@ -228,6 +311,10 @@ export class UserService {
       }
 
       if (result.error) {
+        if (result.error.code === '42P01' || result.error.message.includes('not exist')) {
+          console.warn("Profiles table does not exist in the database");
+          return null;
+        }
         console.error("Error updating user profile:", result.error);
         return null;
       }
@@ -420,7 +507,12 @@ export class UserService {
           .select('*')
           .in('user_id', followerIds);
 
+        // Check if profiles table exists
         if (profilesResponse.error) {
+          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
+            console.warn("Profiles table does not exist in the database");
+            return [];
+          }
           console.error("Error fetching follower profiles:", profilesResponse.error);
           return [];
         }
@@ -472,7 +564,12 @@ export class UserService {
           .select('*')
           .in('user_id', followingIds);
 
+        // Check if profiles table exists
         if (profilesResponse.error) {
+          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
+            console.warn("Profiles table does not exist in the database");
+            return [];
+          }
           console.error("Error fetching following profiles:", profilesResponse.error);
           return [];
         }
@@ -521,7 +618,12 @@ export class UserService {
         .or(`username.ilike.%${sanitizedQuery}%,full_name.ilike.%${sanitizedQuery}%`)
         .limit(limit);
 
+      // Check if profiles table exists
       if (profilesResponse.error) {
+        if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
+          console.warn("Profiles table does not exist in the database");
+          return [];
+        }
         console.error("Error searching users:", profilesResponse.error);
         return [];
       }
