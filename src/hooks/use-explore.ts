@@ -67,6 +67,7 @@ export const useExplore = () => {
                   avatar_url: result.image || '/placeholder.svg',
                   bio: result.description?.startsWith('@') ? '' : result.description || 'No bio available',
                   is_verified: result.author?.verified || false,
+                  followers: result.stats?.views || 0, // Using views as a proxy for followers count
                   reputation: result.stats?.views || 0,
                   profile: {
                     username: result.description?.startsWith('@') ? result.description.substring(1) : result.author?.name ? result.author.name.toLowerCase().replace(/\s+/g, '') : result.title.toLowerCase().replace(/\s+/g, ''),

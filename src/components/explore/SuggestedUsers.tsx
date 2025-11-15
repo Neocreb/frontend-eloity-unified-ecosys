@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/utils/formatters";
@@ -10,7 +9,7 @@ interface SuggestedUser {
   avatar: string;
   bio: string;
   verified: boolean;
-  followers: number;
+  followers: number; // Restored followers field
 }
 
 interface SuggestedUsersProps {
@@ -50,7 +49,7 @@ const SuggestedUsers = ({ users }: SuggestedUsersProps) => {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground">@{user.username}</p>
-                <p className="text-xs text-muted-foreground">{formatNumber(user.followers)} followers</p>
+                <p className="text-xs text-muted-foreground">{formatNumber(user.followers)} followers</p> {/* Restored followers display */}
               </div>
             </div>
             <button className="text-sm font-semibold text-blue-500">Follow</button>

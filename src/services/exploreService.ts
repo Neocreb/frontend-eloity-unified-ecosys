@@ -90,7 +90,7 @@ export const exploreService = {
       avatar_url: profile.avatar_url || '',
       bio: profile.bio || '',
       is_verified: profile.is_verified || false,
-      followers_count: 0
+      followers_count: profile.followers_count || 0
     }));
   },
 
@@ -156,14 +156,14 @@ export const exploreService = {
 
     return {
       hashtags: hashtagsResult.data || [],
-      users: (usersResult.data || []).map(profile => ({
+      users: (usersResult.data || []).map((profile: any) => ({
         id: profile.user_id,
         username: profile.username || 'unknown',
         full_name: profile.full_name || 'Unknown User',
         avatar_url: profile.avatar_url || '',
         bio: profile.bio || '',
         is_verified: profile.is_verified || false,
-        followers_count: 0
+        followers_count: profile.followers_count || 0
       })),
       groups: groupsResult.data || [],
       pages: pagesResult.data || []
