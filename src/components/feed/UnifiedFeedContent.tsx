@@ -120,7 +120,8 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
   } = useFeed();
 
   const filteredAndSortedItems = useMemo(() => {
-    if (!userPosts || userPosts.length === 0) {
+    // Safety check for userPosts
+    if (!userPosts || !Array.isArray(userPosts) || userPosts.length === 0) {
       return [];
     }
 
@@ -148,8 +149,17 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
       );
     }
 
+    // Safety check for filteredItems before sorting
+    if (!filteredItems || !Array.isArray(filteredItems)) {
+      return [];
+    }
+
     // Sort by timestamp (newest first)
-    return filteredItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return filteredItems.sort((a, b) => {
+      // Safety check for timestamp values
+      if (!a.timestamp || !b.timestamp) return 0;
+      return b.timestamp.getTime() - a.timestamp.getTime();
+    });
   }, [feedType, userPosts]);
 
   useEffect(() => {
@@ -244,18 +254,29 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
 
   // Memoized feed items rendering
   const feedItemsRender = useMemo(() => {
-    return feedItems.map((item) => (
-      <UnifiedFeedItemCard
-        key={item.id}
-        item={item}
-        onInteraction={handleInteraction}
-      />
-    ));
+    // Safety check for feedItems
+    if (!feedItems || !Array.isArray(feedItems) || feedItems.length === 0) {
+      return null;
+    }
+    
+    return feedItems.map((item) => {
+      // Safety check for each item
+      if (!item || !item.id) {
+        return null;
+      }
+      return (
+        <UnifiedFeedItemCard
+          key={item.id}
+          item={item}
+          onInteraction={handleInteraction}
+        />
+      );
+    }).filter(Boolean); // Remove any null items
   }, [feedItems]); // Removed handleInteraction from dependencies since it's a stable useCallback
 
   return (
     <div className="pb-4">
-      {feedItemsRender}
+      {feedItemsRender || null}
 
       {/* Load More Button or Loading Indicator */}
       {hasMore && (

@@ -71,9 +71,9 @@ export const exploreService = {
 
       if (following && following.length > 0) {
         const followingIds = (following.map((f: any) => f.following_id) as string[]).filter(Boolean);
-        // PostgREST expects a parenthesized list; string/UUID values must be quoted
-        const formatted = followingIds.map((id) => `'${id}'`).join(',');
-        query = query.not('user_id', 'in', `(${formatted})`);
+        if (followingIds.length > 0) {
+          query = query.not('user_id', 'in', `(${followingIds.join(',')})`);
+        }
       }
 
       // Exclude current user
