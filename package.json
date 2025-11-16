@@ -33,6 +33,7 @@
     "get:supabase-credentials": "node scripts/get-supabase-credentials.js",
     "verify:setup": "node scripts/verify-secure-setup.js",
     "grant-super-admin": "npx tsx scripts/grant-super-admin.ts",
+    "create-pioneers-group": "npx tsx src/scripts/createPioneersGroup.ts",
     "clear-cache": "node scripts/clear-cache.cjs",
     "verify-notification-service": "node scripts/verify-notification-service.cjs",
     "restart-dev": "node scripts/restart-dev.cjs"

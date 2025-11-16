@@ -59,6 +59,7 @@ import { CreateGroupModal } from "./group/CreateGroupModal";
 import { groupChatService } from "@/services/groupChatService";
 import { ChatParticipant } from "@/types/chat";
 import { CreateGroupRequest } from "@/types/group-chat";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UnifiedChatInterfaceProps {
   className?: string;
@@ -495,6 +496,47 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
         ...thread,
         type: thread.type as UnifiedChatType,
       }));
+
+      // Always show the default "Pioneers" group in the list
+      if (user?.id) {
+        try {
+          // Check if the Pioneers group exists
+          const { data: existingGroups } = await supabase
+            .from('group_chat_threads')
+            .select('*')
+            .eq('name', 'Pioneers');
+
+          if (existingGroups && existingGroups.length > 0) {
+            const existingGroup = existingGroups[0];
+            
+            // Add the Pioneers group to the conversation list if not already there
+            const pioneersInThreads = unifiedThreads.find(thread => 
+              thread.isGroup && thread.id === existingGroup.id
+            );
+
+            if (!pioneersInThreads) {
+              unifiedThreads.push({
+                id: existingGroup.id,
+                type: "social",
+                referenceId: null,
+                participants: [],
+                lastMessage: existingGroup.description || "Welcome to the Pioneers group!",
+                lastMessageAt: existingGroup.last_activity || new Date().toISOString(),
+                updatedAt: existingGroup.updated_at || new Date().toISOString(),
+                isGroup: true,
+                groupName: existingGroup.name,
+                groupAvatar: existingGroup.avatar,
+                createdAt: existingGroup.created_at || new Date().toISOString(),
+                unreadCount: 0,
+                contextData: {},
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error loading Pioneers group:", error);
+          // Continue even if we can't load the group
+        }
+      }
 
       setConversations(unifiedThreads);
 
