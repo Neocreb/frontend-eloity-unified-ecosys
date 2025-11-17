@@ -75,6 +75,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
   // State management
   const [activeTab, setActiveTab] = useState<UnifiedChatType>("social");
+  const [activeSocialSubTab, setActiveSocialSubTab] = useState<"all" | "groups" | "private">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChat, setSelectedChat] = useState<UnifiedChatThread | null>(
     null,
@@ -457,6 +458,22 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       filtered = filtered.filter((conv) => conv.type === activeTab);
     }
 
+    // Additional filtering for social tab sub-tabs
+    if (activeTab === "social") {
+      switch (activeSocialSubTab) {
+        case "groups":
+          filtered = filtered.filter((conv) => conv.isGroup === true);
+          break;
+        case "private":
+          filtered = filtered.filter((conv) => conv.isGroup !== true);
+          break;
+        case "all":
+        default:
+          // No additional filtering for "all"
+          break;
+      }
+    }
+
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -479,7 +496,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
         new Date(b.lastMessageAt).getTime() -
         new Date(a.lastMessageAt).getTime(),
     );
-  }, [conversations, activeTab, searchQuery, showUnreadOnly]);
+  }, [conversations, activeTab, activeSocialSubTab, searchQuery, showUnreadOnly]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -687,6 +704,11 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     setActiveTab(tab);
     setSelectedChat(null);
     setSearchQuery("");
+    
+    // Reset social sub-tab when switching away from social tab
+    if (tab !== "social") {
+      setActiveSocialSubTab("all");
+    }
   };
 
   const handleChatSelect = (chat: UnifiedChatThread) => {
@@ -1040,6 +1062,34 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                       />
                     </div>
                     <div className="flex justify-between items-center mt-2 gap-2">
+                      {activeTab === "social" && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant={activeSocialSubTab === "all" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setActiveSocialSubTab("all")}
+                            className={isMobile ? "text-xs px-2" : "text-xs px-3"}
+                          >
+                            All
+                          </Button>
+                          <Button
+                            variant={activeSocialSubTab === "groups" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setActiveSocialSubTab("groups")}
+                            className={isMobile ? "text-xs px-2" : "text-xs px-3"}
+                          >
+                            Groups
+                          </Button>
+                          <Button
+                            variant={activeSocialSubTab === "private" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setActiveSocialSubTab("private")}
+                            className={isMobile ? "text-xs px-2" : "text-xs px-3"}
+                          >
+                            Private
+                          </Button>
+                        </div>
+                      )}
                       <Button
                         variant={showUnreadOnly ? "default" : "outline"}
                         size="sm"
