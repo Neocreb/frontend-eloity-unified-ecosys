@@ -515,6 +515,43 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
         type: thread.type as UnifiedChatType,
       }));
 
+      // Load group chats
+      if (user?.id) {
+        try {
+          // Load all public groups, not just user groups
+          const { data: publicGroups, error: publicGroupsError } = await supabase
+            .from('group_chat_threads')
+            .select('*')
+            .eq('privacy', 'public');
+            
+          if (publicGroupsError) {
+            console.error("Error loading public groups:", publicGroupsError);
+          } else if (publicGroups) {
+            // Convert public groups to unified chat threads
+            const unifiedPublicGroups: UnifiedChatThread[] = publicGroups.map(group => ({
+              id: group.id,
+              type: "social" as UnifiedChatType,
+              referenceId: null,
+              participants: [],
+              lastMessage: group.description || "Welcome to the group!",
+              lastMessageAt: group.last_activity || new Date().toISOString(),
+              updatedAt: group.updated_at || new Date().toISOString(),
+              isGroup: true,
+              groupName: group.name,
+              groupAvatar: group.avatar,
+              createdAt: group.created_at || new Date().toISOString(),
+              unreadCount: 0,
+              contextData: {},
+            }));
+            
+            // Merge public groups with regular threads
+            unifiedThreads.push(...unifiedPublicGroups);
+          }
+        } catch (error) {
+          console.error("Error loading public groups:", error);
+        }
+      }
+
       // Always show the default "Pioneers" group in the list
       if (user?.id) {
         try {
@@ -566,7 +603,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
           // Continue even if we can't load the group
         }
       }
-
+      
       setConversations(unifiedThreads);
 
       // Load messages for each conversation
@@ -1175,104 +1212,109 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                         </div>
                       </div>
                     ) : filteredConversations.length > 0 ? (
-                      filteredConversations.map((conv) => (
-                        <div
-                          key={conv.id}
-                          className={cn(
-                            "flex items-start cursor-pointer transition-all duration-200 border-b border-border/30 last:border-b-0",
-                            "touch-optimized active:bg-muted/70", // Touch optimizations
-                            isMobile ? "gap-2 p-3 min-h-[60px]" : "gap-3 p-4", // Minimum touch target
-                            selectedChat?.id === conv.id
-                              ? "bg-primary/5 border-l-2 border-l-primary"
-                              : "hover:bg-muted/50 hover:border-l-2 hover:border-l-muted-foreground/20",
-                          )}
-                          onClick={() => handleChatSelect(conv)}
-                        >
-                          <div className="relative flex-shrink-0">
-                            <Avatar
-                              className={isMobile ? "h-10 w-10" : "h-12 w-12"}
-                            >
-                              <AvatarImage
-                                src={conv.participant_profile?.avatar}
-                              />
-                              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
-                                {conv.participant_profile?.name?.charAt(0) ||
+                      <div>
+                        <div className="p-2 text-xs text-muted-foreground">
+                          Showing {filteredConversations.length} conversations
+                        </div>
+                        {filteredConversations.map((conv) => (
+                          <div
+                            key={conv.id}
+                            className={cn(
+                              "flex items-start cursor-pointer transition-all duration-200 border-b border-border/30 last:border-b-0",
+                              "touch-optimized active:bg-muted/70", // Touch optimizations
+                              isMobile ? "gap-2 p-3 min-h-[60px]" : "gap-3 p-4", // Minimum touch target
+                              selectedChat?.id === conv.id
+                                ? "bg-primary/5 border-l-2 border-l-primary"
+                                : "hover:bg-muted/50 hover:border-l-2 hover:border-l-muted-foreground/20",
+                            )}
+                            onClick={() => handleChatSelect(conv)}
+                          >
+                            <div className="relative flex-shrink-0">
+                              <Avatar
+                                className={isMobile ? "h-10 w-10" : "h-12 w-12"}
+                              >
+                                <AvatarImage
+                                  src={conv.participant_profile?.avatar}
+                                />
+                                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
+                                  {conv.participant_profile?.name?.charAt(0) ||
                                   "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="absolute -bottom-0.5 -right-0.5">
-                              <OnlineStatusIndicator
-                                isOnline={conv.participant_profile?.is_online || false}
-                                lastSeen={conv.participant_profile?.last_seen}
-                                size={isMobile ? "sm" : "md"}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-1">
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <div
-                                  className={`rounded bg-muted/50 ${isMobile ? "p-0.5" : "p-1"}`}
-                                >
-                                  {getTypeIcon(conv.type)}
-                                </div>
-                                <h4
-                                  className={`font-semibold truncate text-foreground ${
-                                    isMobile ? "text-sm" : "text-sm"
-                                  }`}
-                                >
-                                  {conv.isGroup ? conv.groupName : conv.participant_profile?.name}
-                                </h4>
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="absolute -bottom-0.5 -right-0.5">
+                                <OnlineStatusIndicator
+                                  isOnline={conv.participant_profile?.is_online || false}
+                                  lastSeen={conv.participant_profile?.last_seen}
+                                  size={isMobile ? "sm" : "md"}
+                                />
                               </div>
-                              <div className="flex flex-col items-end gap-1 ml-2">
-                                <p
-                                  className={`text-muted-foreground ${
-                                    isMobile ? "text-xs" : "text-xs"
-                                  }`}
-                                >
-                                  {formatMessageDate(conv.lastMessageAt)}
-                                </p>
-                                {(conv.unreadCount || 0) > 0 && (
-                                  <Badge
-                                    variant="destructive"
-                                    className={`text-xs ${
-                                      isMobile
-                                        ? "h-4 min-w-[16px] px-1"
-                                        : "h-5 min-w-[20px] px-1.5"
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start mb-1">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <div
+                                    className={`rounded bg-muted/50 ${isMobile ? "p-0.5" : "p-1"}`}
+                                  >
+                                    {getTypeIcon(conv.type)}
+                                  </div>
+                                  <h4
+                                    className={`font-semibold truncate text-foreground ${
+                                      isMobile ? "text-sm" : "text-sm"
                                     }`}
                                   >
-                                    {(conv.unreadCount || 0) > 99
-                                      ? "99+"
-                                      : (conv.unreadCount || 0)}
-                                  </Badge>
-                                )}
+                                    {conv.isGroup ? conv.groupName : conv.participant_profile?.name}
+                                  </h4>
+                                </div>
+                                <div className="flex flex-col items-end gap-1 ml-2">
+                                  <p
+                                    className={`text-muted-foreground ${
+                                      isMobile ? "text-xs" : "text-xs"
+                                    }`}
+                                  >
+                                    {formatMessageDate(conv.lastMessageAt)}
+                                  </p>
+                                  {(conv.unreadCount || 0) > 0 && (
+                                    <Badge
+                                      variant="destructive"
+                                      className={`text-xs ${
+                                        isMobile
+                                          ? "h-4 min-w-[16px] px-1"
+                                          : "h-5 min-w-[20px] px-1.5"
+                                      }`}
+                                    >
+                                      {(conv.unreadCount || 0) > 99
+                                        ? "99+"
+                                        : (conv.unreadCount || 0)}
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
+
+                              {/* Context info */}
+                              {getContextInfo(conv) && (
+                                <div className="flex items-center gap-1 mb-1">
+                                  <div className="w-1 h-1 bg-primary rounded-full"></div>
+                                  <p
+                                    className={`text-primary font-medium ${
+                                      isMobile ? "text-xs" : "text-xs"
+                                    }`}
+                                  >
+                                    {getContextInfo(conv)}
+                                  </p>
+                                </div>
+                              )}
+
+                              <p
+                                className={`text-muted-foreground truncate leading-relaxed ${
+                                  isMobile ? "text-xs" : "text-sm"
+                                }`}
+                              >
+                                {conv.lastMessage || "No messages yet"}
+                              </p>
                             </div>
-
-                            {/* Context info */}
-                            {getContextInfo(conv) && (
-                              <div className="flex items-center gap-1 mb-1">
-                                <div className="w-1 h-1 bg-primary rounded-full"></div>
-                                <p
-                                  className={`text-primary font-medium ${
-                                    isMobile ? "text-xs" : "text-xs"
-                                  }`}
-                                >
-                                  {getContextInfo(conv)}
-                                </p>
-                              </div>
-                            )}
-
-                            <p
-                              className={`text-muted-foreground truncate leading-relaxed ${
-                                isMobile ? "text-xs" : "text-sm"
-                              }`}
-                            >
-                              {conv.lastMessage || "No messages yet"}
-                            </p>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     ) : (
                       <div
                         className={`${isMobile ? "p-3" : "p-4"} text-center text-muted-foreground`}
