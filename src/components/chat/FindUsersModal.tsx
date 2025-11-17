@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,9 +32,14 @@ export const FindUsersModal: React.FC<FindUsersModalProps> = ({
       >
         <DialogHeader className={isMobile ? "p-4" : "p-6 pb-0"}>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-semibold">
-              Find People
-            </DialogTitle>
+            <div>
+              <DialogTitle className="text-lg font-semibold">
+                Find People
+              </DialogTitle>
+              <DialogDescription>
+                Search and connect with users on the platform
+              </DialogDescription>
+            </div>
             <Button
               variant="ghost"
               size="sm"

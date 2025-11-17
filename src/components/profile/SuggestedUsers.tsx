@@ -68,7 +68,7 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
           
           // Validate response
           if (!response) {
-            console.warn('Received null response from getSuggestedUsers API');
+            console.debug('Received null response from getSuggestedUsers API - this may be expected during initial load');
             setUsers([]);
             return;
           }
@@ -83,7 +83,7 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
             }
           } else {
             // Following project specification: return empty results when API fails
-            console.warn('No suggested users data received from API');
+            console.debug('No suggested users data received from API - showing empty state');
             setUsers([]);
           }
         } catch (error) {
