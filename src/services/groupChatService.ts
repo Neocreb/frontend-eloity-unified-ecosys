@@ -16,83 +16,160 @@ export class GroupChatService {
   // Group CRUD Operations
   async createGroup(request: CreateGroupRequest): Promise<GroupChatThread> {
     try {
-      // Create the group chat thread
-      const { data: groupThread, error: groupError } = await supabase
-        .from('group_chat_threads')
-        .insert({
-          name: request.name,
-          description: request.description || '',
-          avatar: request.avatar,
-          created_by: request.createdBy,
-          privacy: request.settings?.isPrivate ? 'private' : 'public',
-          member_count: 1, // Creator is the first member
-          last_activity: new Date().toISOString()
-        })
-        .select()
-        .single();
+      // Check if we should use the Supabase function endpoint
+      const useFunctionEndpoint = import.meta.env?.VITE_USE_GROUP_FUNCTION === 'true';
+      
+      if (useFunctionEndpoint && import.meta.env?.VITE_SUPABASE_URL) {
+        // Use the Supabase function endpoint
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        if (!token) {
+          throw new Error('User not authenticated');
+        }
 
-      if (groupError) throw groupError;
-
-      // Add creator as the first participant
-      const { error: participantError } = await supabase
-        .from('group_participants')
-        .insert({
-          group_id: groupThread.id,
-          user_id: request.createdBy,
-          role: 'admin',
-          status: 'active',
-          joined_at: new Date().toISOString(),
-          permissions: this.getAdminPermissions()
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-group-with-participants`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: request.name,
+            description: request.description || '',
+            avatar: request.avatar,
+            participants: [request.createdBy, ...request.participants.filter(p => p !== request.createdBy)],
+            settings: request.settings
+          })
         });
 
-      if (participantError) throw participantError;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create group via function endpoint');
+        }
 
-      // Add other participants if provided
-      if (request.participants && request.participants.length > 0) {
-        const participantInserts = request.participants
-          .filter(userId => userId !== request.createdBy) // Exclude creator as they're already added
-          .map(userId => ({
+        const result = await response.json();
+        
+        return {
+          id: result.group.id,
+          type: 'group',
+          groupName: result.group.name,
+          groupDescription: result.group.description,
+          groupAvatar: result.group.avatar,
+          participants: [], // Will be populated when needed
+          settings: request.settings || {
+            isPrivate: result.group.privacy === 'private',
+            allowInvites: true,
+            allowMessaging: true
+          },
+          createdBy: result.group.created_by,
+          createdAt: result.group.created_at,
+          lastActivity: result.group.last_activity,
+          totalMembers: result.group.member_count,
+          onlineMembers: 0,
+          pinnedMessages: [],
+          inviteLinks: [],
+          adminIds: [],
+          maxParticipants: 256,
+          groupType: result.group.privacy === 'private' ? 'private' : 'public',
+          isGroup: true
+        };
+      } else {
+        // Use the existing database approach
+        // Create the group chat thread
+        const { data: groupThread, error: groupError } = await supabase
+          .from('group_chat_threads')
+          .insert({
+            name: request.name,
+            description: request.description || '',
+            avatar: request.avatar,
+            created_by: request.createdBy,
+            privacy: request.settings?.isPrivate ? 'private' : 'public',
+            member_count: 1, // Creator is the first member
+            last_activity: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (groupError) {
+          // Handle the specific infinite recursion error
+          if (groupError.code === '42P17' && groupError.message.includes('infinite recursion')) {
+            throw new Error('There is a database configuration issue preventing group creation. Please contact support.');
+          }
+          throw groupError;
+        }
+
+        // Add creator as the first participant
+        const { error: participantError } = await supabase
+          .from('group_participants')
+          .insert({
             group_id: groupThread.id,
-            user_id: userId,
-            role: 'member',
+            user_id: request.createdBy,
+            role: 'admin',
             status: 'active',
             joined_at: new Date().toISOString(),
-            permissions: this.getMemberPermissions()
-          }));
+            permissions: this.getAdminPermissions()
+          });
 
-        if (participantInserts.length > 0) {
-          const { error: participantsError } = await supabase
-            .from('group_participants')
-            .insert(participantInserts);
-
-          if (participantsError) throw participantsError;
+        if (participantError) {
+          // Handle the specific infinite recursion error
+          if (participantError.code === '42P17' && participantError.message.includes('infinite recursion')) {
+            throw new Error('There is a database configuration issue preventing group creation. Please contact support.');
+          }
+          throw participantError;
         }
-      }
 
-      return {
-        id: groupThread.id,
-        type: 'group',
-        groupName: groupThread.name,
-        groupDescription: groupThread.description,
-        groupAvatar: groupThread.avatar,
-        participants: [], // Will be populated when needed
-        settings: request.settings || {
-          isPrivate: groupThread.privacy === 'private',
-          allowInvites: true,
-          allowMessaging: true
-        },
-        createdBy: groupThread.created_by,
-        createdAt: groupThread.created_at,
-        lastActivity: groupThread.last_activity,
-        totalMembers: groupThread.member_count,
-        onlineMembers: 0,
-        pinnedMessages: [],
-        inviteLinks: [],
-        adminIds: [],
-        maxParticipants: 256,
-        groupType: groupThread.privacy === 'private' ? 'private' : 'public',
-        isGroup: true
-      };
+        // Add other participants if provided
+        if (request.participants && request.participants.length > 0) {
+          const participantInserts = request.participants
+            .filter(userId => userId !== request.createdBy) // Exclude creator as they're already added
+            .map(userId => ({
+              group_id: groupThread.id,
+              user_id: userId,
+              role: 'member',
+              status: 'active',
+              joined_at: new Date().toISOString(),
+              permissions: this.getMemberPermissions()
+            }));
+
+          if (participantInserts.length > 0) {
+            const { error: participantsError } = await supabase
+              .from('group_participants')
+              .insert(participantInserts);
+
+            if (participantsError) {
+              // Handle the specific infinite recursion error
+              if (participantsError.code === '42P17' && participantsError.message.includes('infinite recursion')) {
+                throw new Error('There is a database configuration issue preventing group creation. Please contact support.');
+              }
+              throw participantsError;
+            }
+          }
+        }
+
+        return {
+          id: groupThread.id,
+          type: 'group',
+          groupName: groupThread.name,
+          groupDescription: groupThread.description,
+          groupAvatar: groupThread.avatar,
+          participants: [], // Will be populated when needed
+          settings: request.settings || {
+            isPrivate: groupThread.privacy === 'private',
+            allowInvites: true,
+            allowMessaging: true
+          },
+          createdBy: groupThread.created_by,
+          createdAt: groupThread.created_at,
+          lastActivity: groupThread.last_activity,
+          totalMembers: groupThread.member_count,
+          onlineMembers: 0,
+          pinnedMessages: [],
+          inviteLinks: [],
+          adminIds: [],
+          maxParticipants: 256,
+          groupType: groupThread.privacy === 'private' ? 'private' : 'public',
+          isGroup: true
+        };
+      }
     } catch (error) {
       console.error('Error creating group:', error);
       throw error;
