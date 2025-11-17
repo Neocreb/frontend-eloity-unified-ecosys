@@ -3,8 +3,11 @@
 -- Issue: The existing RLS policy on group_participants table causes infinite recursion
 -- Solution: Fix the policy to reference the parent group_chat_threads table instead of self-referencing
 
--- Drop the problematic policy
+-- Drop the problematic policy if it exists
 DROP POLICY IF EXISTS "Users can view group participants for groups they belong to" ON public.group_participants;
+
+-- Also drop any other potentially conflicting policies
+DROP POLICY IF EXISTS "Users can view own banking info" ON public.user_banking_info;
 
 -- Create a new policy that avoids self-reference
 CREATE POLICY "Users can view group participants for groups they belong to" ON public.group_participants
@@ -21,6 +24,11 @@ CREATE POLICY "Users can view group participants for groups they belong to" ON p
             WHERE gt.id = group_participants.group_id
         )
     );
+
+-- Recreate the banking info policy
+CREATE POLICY "Users can view own banking info" ON public.user_banking_info
+    FOR SELECT
+    USING (auth.uid() = user_id);
 
 -- Refresh the PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
