@@ -91,8 +91,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
   const [loading, setLoading] = useState(true);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [typingUsers, setTypingUsers] = useState<{[chatId: string]: Array<{id: string, name: string, avatar?: string}>}>({});
-  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-  const [showSocialChatModal, setShowSocialChatModal] = useState(false);
+
   const [contacts, setContacts] = useState<ChatParticipant[]>([]);
 
   // Voice/Video call state
@@ -727,8 +726,6 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       
       // Refresh conversations to show the new group
       // This would typically trigger a refresh of the chat list
-      // For now, we'll just close the modal
-      setShowCreateGroupModal(false);
       
       // Navigate to the new group chat
       navigate(`/chat/group/${newGroup.id}`);
@@ -784,10 +781,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       }
     };
 
-    if (showCreateGroupModal) {
-      fetchContacts();
-    }
-  }, [showCreateGroupModal, user?.id]);
+  }, []);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as UnifiedChatType);
@@ -1093,15 +1087,13 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>New Chat</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setShowSocialChatModal(true)}>
-                        Start Social Chat
+                      <DropdownMenuItem onClick={() => navigate('/app/chat/find-users')}>
+                        Find Users
                       </DropdownMenuItem>
-                      {activeTab === "social" && (
-                        <DropdownMenuItem onClick={() => setShowCreateGroupModal(true)}>
-                          <Users className="h-4 w-4 mr-2" />
-                          Create Group
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem onClick={() => navigate('/app/chat/create-group')}>
+                        <Users className="h-4 w-4 mr-2" />
+                        Create Group
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/app/freelance')}>Find Freelancer</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/app/marketplace')}>Message Seller</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate('/app/crypto')}>P2P Trade Chat</DropdownMenuItem>
@@ -1693,20 +1685,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
           </div>
         </div>
         
-        {/* Add Social Chat Modal */}
-        <FindUsersModal 
-          isOpen={showSocialChatModal}
-          onOpenChange={setShowSocialChatModal}
-        />
-        
-        {/* Add Create Group Modal */}
-        <CreateGroupModal
-          trigger={null}
-          contacts={contacts}
-          onCreateGroup={handleCreateGroup}
-          isOpen={showCreateGroupModal}
-          onOpenChange={setShowCreateGroupModal}
-        />
+
       </div>
     </div>
   );
