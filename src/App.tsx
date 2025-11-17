@@ -162,6 +162,7 @@ import Chat from "./pages/Chat";
 import ChatTest from "./pages/ChatTest";
 // import Messages from "./pages/Messages";
 import Explore from "./pages/Explore";
+import FindUsers from "./pages/FindUsers";
 import GlobalSearch from "./pages/GlobalSearch";
 import LandingPage from "./pages/LandingPage";
 import TestComponent from "./pages/TestComponent";
@@ -435,6 +436,7 @@ const AppRoutes = () => {
           <Route path="chat/:threadId" element={<ChatRoom />} />
           <Route path="chat-test/:threadId" element={<ChatTest />} />
           <Route path="chat-simple/:threadId" element={<SimpleChatRoom />} />
+          <Route path="find-users" element={<FindUsers />} />
           <Route
             path="messages"
             element={<Navigate to="/app/chat" replace />}
