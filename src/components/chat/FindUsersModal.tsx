@@ -22,12 +22,10 @@ export const FindUsersModal: React.FC<FindUsersModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-md mx-auto max-h-[90vh] flex flex-col"
+        className="flex flex-col max-w-full md:max-w-md mx-0 md:mx-auto h-screen md:h-[90vh] md:rounded-lg p-0 max-h-[100vh] md:max-h-[90vh]"
         style={{
-          maxHeight: isMobile ? '100vh' : '90vh',
-          height: isMobile ? '100vh' : 'auto',
-          margin: isMobile ? '0' : '1.5rem',
-          borderRadius: isMobile ? '0' : undefined,
+          margin: 0,
+          borderRadius: isMobile ? 0 : '0.5rem',
         }}
       >
         <DialogHeader className={isMobile ? "p-4" : "p-6 pb-0"}>
@@ -64,8 +62,8 @@ export const FindUsersModal: React.FC<FindUsersModalProps> = ({
           </div>
         </DialogHeader>
         
-        {/* Suggested Users */}
-        <div className="flex-1 min-h-0">
+        {/* Suggested Users - Scrollable content area */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollArea className="h-full">
             <div className="p-4">
               <SuggestedUsers

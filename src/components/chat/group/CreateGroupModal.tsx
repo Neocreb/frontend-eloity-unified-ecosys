@@ -129,8 +129,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {trigger}
-      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="flex flex-col max-w-full md:max-w-md mx-0 md:mx-auto h-screen md:h-[90vh] md:rounded-lg p-0 max-h-[100vh] md:max-h-[90vh]">
+        <DialogHeader className="p-4 md:p-6 pb-0">
           <div>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -163,14 +163,14 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           <div className="flex-1 overflow-hidden">
             {step === 'participants' && (
               <div className="space-y-4 h-full flex flex-col">
-                <div>
+                <div className="px-4 md:px-6">
                   <Label>Add Participants</Label>
                   <p className="text-sm text-muted-foreground">
                     Select contacts to add to your group
                   </p>
                 </div>
 
-                <div className="relative">
+                <div className="relative px-4 md:px-6">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search contacts..."
@@ -181,7 +181,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                 </div>
 
                 {selectedParticipants.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 px-4 md:px-6">
                     <Label className="text-sm">Selected ({selectedParticipants.length})</Label>
                     <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
                       {selectedParticipants.map(participantId => {
@@ -208,7 +208,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                 )}
 
                 <ScrollArea className="flex-1">
-                  <div className="space-y-1 pr-4">
+                  <div className="space-y-1 pr-4 pl-4 md:pl-6">
                     {filteredContacts.map((contact) => (
                       <div
                         key={contact.id}
@@ -237,70 +237,72 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             )}
 
             {step === 'info' && (
-              <div className="space-y-4">
-                <div>
-                  <Label>Group Information</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Set up your group's basic information
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={groupInfo.avatar} alt="Group" />
-                      <AvatarFallback>
-                        <Camera className="h-6 w-6 text-muted-foreground" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full p-0"
-                      onClick={() => {
-                        // Handle image upload
-                      }}
-                    >
-                      <Camera className="h-3 w-3" />
-                    </Button>
+              <ScrollArea className="h-full">
+                <div className="space-y-4 p-4 md:p-6">
+                  <div>
+                    <Label>Group Information</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Set up your group's basic information
+                    </p>
                   </div>
-                  <div className="flex-1 space-y-2">
-                    <div>
-                      <Label htmlFor="group-name">Group Name *</Label>
-                      <Input
-                        id="group-name"
-                        placeholder="Enter group name..."
-                        value={groupInfo.name}
-                        onChange={(e) => setGroupInfo(prev => ({ ...prev, name: e.target.value }))}
-                        maxLength={50}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {groupInfo.name.length}/50
-                      </p>
+
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={groupInfo.avatar} alt="Group" />
+                        <AvatarFallback>
+                          <Camera className="h-6 w-6 text-muted-foreground" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full p-0"
+                        onClick={() => {
+                          // Handle image upload
+                        }}
+                      >
+                        <Camera className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <Label htmlFor="group-name">Group Name *</Label>
+                        <Input
+                          id="group-name"
+                          placeholder="Enter group name..."
+                          value={groupInfo.name}
+                          onChange={(e) => setGroupInfo(prev => ({ ...prev, name: e.target.value }))}
+                          maxLength={50}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {groupInfo.name.length}/50
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <Label htmlFor="group-description">Description (Optional)</Label>
-                  <Textarea
-                    id="group-description"
-                    placeholder="What's this group about?"
-                    value={groupInfo.description}
-                    onChange={(e) => setGroupInfo(prev => ({ ...prev, description: e.target.value }))}
-                    maxLength={200}
-                    rows={3}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {groupInfo.description.length}/200
-                  </p>
+                  <div>
+                    <Label htmlFor="group-description">Description (Optional)</Label>
+                    <Textarea
+                      id="group-description"
+                      placeholder="What's this group about?"
+                      value={groupInfo.description}
+                      onChange={(e) => setGroupInfo(prev => ({ ...prev, description: e.target.value }))}
+                      maxLength={200}
+                      rows={3}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {groupInfo.description.length}/200
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </ScrollArea>
             )}
 
             {step === 'settings' && (
               <ScrollArea className="h-full">
-                <div className="space-y-6 pr-4">
+                <div className="space-y-6 p-4 md:p-6">
                   <div>
                     <Label>Group Settings</Label>
                     <p className="text-sm text-muted-foreground">
@@ -415,7 +417,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-between pt-4 border-t">
+          <div className="flex justify-between pt-4 border-t p-4 md:p-6">
             <Button
               variant="outline"
               onClick={() => {
