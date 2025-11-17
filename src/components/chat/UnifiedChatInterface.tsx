@@ -1123,7 +1123,12 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>New Chat</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setShowUserSelection(true)}>Start Social Chat</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        setActiveTab("social");
+                        setShowUserSelection(true);
+                      }}>
+                        Start Social Chat
+                      </DropdownMenuItem>
                       {activeTab === "social" && (
                         <DropdownMenuItem onClick={() => setShowCreateGroupModal(true)}>
                           <Users className="h-4 w-4 mr-2" />
@@ -1404,602 +1409,502 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
             )}
           >
             <Card className="w-full border-0 shadow-none h-full flex flex-col">
-              <Tabs value={activeTab} className="h-full flex flex-col">
-                <TabsContent
-                  value="ai_assistant"
-                  className="h-full mt-0 flex flex-col"
-                >
-                  <div className="flex flex-col h-full">
-                    {/* Mobile back button for AI Assistant */}
-                    {isMobile && (
-                      <div className="border-b p-3 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setActiveTab("social")}
-                          className="flex items-center gap-2"
-                        >
-                          <ArrowLeft className="h-4 w-4" />
-                          Back to chats
-                        </Button>
-                      </div>
-                    )}
-                    <div className="flex-1 min-h-0">
-                      <AIAssistantChat />
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* User Selection Panel - Show when showUserSelection is true */}
-                {showUserSelection && (
+<Tabs value={activeTab} className="h-full flex flex-col">
                   <TabsContent
-                    value="user-selection"
+                    value="ai_assistant"
                     className="h-full mt-0 flex flex-col"
                   >
                     <div className="flex flex-col h-full">
-                      {/* Header with back button */}
-                      <div className="border-b p-3 flex-shrink-0">
-                        <div className="flex items-center gap-2">
-                          {isMobile && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowUserSelection(false)}
-                              className="p-1 flex-shrink-0"
-                            >
-                              <ArrowLeft className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <h3 className="text-lg font-semibold">Choose People</h3>
+                      {/* Mobile back button for AI Assistant */}
+                      {isMobile && (
+                        <div className="border-b p-3 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setActiveTab("social")}
+                            className="flex items-center gap-2"
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to chats
+                          </Button>
                         </div>
-                      </div>
-                      
-                      {/* Search Bar */}
-                      <div className="p-3 border-b">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search users..."
-                            className="pl-10"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Suggested Users */}
+                      )}
                       <div className="flex-1 min-h-0">
-                        <ScrollArea className="h-full">
-                          <div className="p-3">
-                            <SuggestedUsers
-                              title=""
-                              showTitle={false}
-                              variant="list"
-                              maxUsers={20}
-                              onUserClick={async (username) => {
-                                try {
-                                  if (!user?.id) {
-                                    toast({
-                                      title: "Error",
-                                      description: "You must be logged in to start a chat",
-                                      variant: "destructive",
+                        <AIAssistantChat />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* User Selection Panel - Show when showUserSelection is true */}
+                  {showUserSelection && (
+                    <TabsContent
+                      value="user-selection"
+                      className="h-full mt-0 flex flex-col"
+                    >
+                      <div className="flex flex-col h-full">
+                        {/* Header with back button */}
+                        <div className="border-b p-3 flex-shrink-0">
+                          <div className="flex items-center gap-2">
+                            {isMobile && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowUserSelection(false)}
+                                className="p-1 flex-shrink-0"
+                              >
+                                <ArrowLeft className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <h3 className="text-lg font-semibold">Choose People</h3>
+                            {!isMobile && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowUserSelection(false)}
+                                className="ml-auto p-1 flex-shrink-0"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Search Bar */}
+                        <div className="p-3 border-b">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search users..."
+                              className="pl-10"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Suggested Users */}
+                        <div className="flex-1 min-h-0">
+                          <ScrollArea className="h-full">
+                            <div className="p-3">
+                              <SuggestedUsers
+                                title=""
+                                showTitle={false}
+                                variant="list"
+                                maxUsers={20}
+                                onUserClick={async (username) => {
+                                  try {
+                                    if (!user?.id) {
+                                      toast({
+                                        title: "Error",
+                                        description: "You must be logged in to start a chat",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+
+                                    // Find the user by username
+                                    const targetUser = await UserService.getUserByUsername(username);
+                                    if (!targetUser) {
+                                      toast({
+                                        title: "Error",
+                                        description: "User not found",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+
+                                    // Check if chat already exists
+                                    const { data: existingConversations, error: conversationsError } = await supabase
+                                      .from('chat_conversations')
+                                      .select('*')
+                                      .contains('participants', [user.id, targetUser.id]);
+
+                                    if (conversationsError) {
+                                      console.error("Error checking existing conversations:", conversationsError);
+                                      toast({
+                                        title: "Error",
+                                        description: "Failed to check existing conversations",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+
+                                    // If chat exists, select it
+                                    if (existingConversations && existingConversations.length > 0) {
+                                      const existingChat = existingConversations[0];
+                                      const unifiedChat: UnifiedChatThread = {
+                                        id: existingChat.id,
+                                        type: existingChat.type as UnifiedChatType,
+                                        referenceId: existingChat.referenceId,
+                                        participants: existingChat.participants,
+                                        lastMessage: existingChat.lastMessage || "",
+                                        lastMessageAt: existingChat.last_activity || new Date().toISOString(),
+                                        updatedAt: existingChat.updated_at || new Date().toISOString(),
+                                        isGroup: existingChat.type === 'group',
+                                        groupName: existingChat.name,
+                                        groupAvatar: existingChat.avatar,
+                                        createdAt: existingChat.created_at || new Date().toISOString(),
+                                        unreadCount: 0,
+                                        contextData: existingChat.settings || {},
+                                        participant_profile: {
+                                          id: targetUser.id,
+                                          name: targetUser.full_name || targetUser.username || "Unknown User",
+                                          avatar: targetUser.avatar_url || undefined,
+                                        },
+                                      };
+                                      
+                                      handleChatSelect(unifiedChat);
+                                      setShowUserSelection(false);
+                                      return;
+                                    }
+
+                                    // Create new chat thread
+                                    const newChat = await chatService.createChatThread({
+                                      type: "social",
+                                      participants: [user.id, targetUser.id],
+                                      initialMessage: "",
                                     });
-                                    return;
-                                  }
 
-                                  // Find the user by username
-                                  const targetUser = await UserService.getUserByUsername(username);
-                                  if (!targetUser) {
-                                    toast({
-                                      title: "Error",
-                                      description: "User not found",
-                                      variant: "destructive",
-                                    });
-                                    return;
-                                  }
-
-                                  // Check if chat already exists
-                                  const { data: existingConversations, error: conversationsError } = await supabase
-                                    .from('chat_conversations')
-                                    .select('*')
-                                    .contains('participants', [user.id, targetUser.id]);
-
-                                  if (conversationsError) {
-                                    console.error("Error checking existing conversations:", conversationsError);
-                                    toast({
-                                      title: "Error",
-                                      description: "Failed to check existing conversations",
-                                      variant: "destructive",
-                                    });
-                                    return;
-                                  }
-
-                                  // If chat exists, select it
-                                  if (existingConversations && existingConversations.length > 0) {
-                                    const existingChat = existingConversations[0];
+                                    // Convert to UnifiedChatThread
                                     const unifiedChat: UnifiedChatThread = {
-                                      id: existingChat.id,
-                                      type: existingChat.type as UnifiedChatType,
-                                      referenceId: existingChat.referenceId,
-                                      participants: existingChat.participants,
-                                      lastMessage: existingChat.lastMessage || "",
-                                      lastMessageAt: existingChat.last_activity || new Date().toISOString(),
-                                      updatedAt: existingChat.updated_at || new Date().toISOString(),
-                                      isGroup: existingChat.type === 'group',
-                                      groupName: existingChat.name,
-                                      groupAvatar: existingChat.avatar,
-                                      createdAt: existingChat.created_at || new Date().toISOString(),
-                                      unreadCount: 0,
-                                      contextData: existingChat.settings || {},
+                                      id: newChat.id,
+                                      type: newChat.type as UnifiedChatType,
+                                      referenceId: newChat.referenceId,
+                                      participants: newChat.participants,
+                                      lastMessage: newChat.lastMessage,
+                                      lastMessageAt: newChat.lastMessageAt,
+                                      updatedAt: newChat.updatedAt,
+                                      isGroup: newChat.isGroup,
+                                      groupName: newChat.groupName,
+                                      groupAvatar: newChat.groupAvatar,
+                                      createdAt: newChat.createdAt,
+                                      unreadCount: newChat.unreadCount || 0,
+                                      contextData: newChat.contextData,
                                       participant_profile: {
                                         id: targetUser.id,
                                         name: targetUser.full_name || targetUser.username || "Unknown User",
                                         avatar: targetUser.avatar_url || undefined,
                                       },
                                     };
+
+                                    // Add to conversations list
+                                    setConversations(prev => [...prev, unifiedChat]);
                                     
+                                    // Select the new chat
                                     handleChatSelect(unifiedChat);
                                     setShowUserSelection(false);
-                                    return;
+                                    
+                                    toast({
+                                      title: "Success",
+                                      description: `Chat started with ${targetUser.full_name || targetUser.username}`,
+                                    });
+                                  } catch (error) {
+                                    console.error("Error creating chat:", error);
+                                    toast({
+                                      title: "Error",
+                                      description: "Failed to start chat with user",
+                                      variant: "destructive",
+                                    });
                                   }
-
-                                  // Create new chat thread
-                                  const newChat = await chatService.createChatThread({
-                                    type: "social",
-                                    participants: [user.id, targetUser.id],
-                                    initialMessage: "",
-                                  });
-
-                                  // Convert to UnifiedChatThread
-                                  const unifiedChat: UnifiedChatThread = {
-                                    id: newChat.id,
-                                    type: newChat.type as UnifiedChatType,
-                                    referenceId: newChat.referenceId,
-                                    participants: newChat.participants,
-                                    lastMessage: newChat.lastMessage,
-                                    lastMessageAt: newChat.lastMessageAt,
-                                    updatedAt: newChat.updatedAt,
-                                    isGroup: newChat.isGroup,
-                                    groupName: newChat.groupName,
-                                    groupAvatar: newChat.groupAvatar,
-                                    createdAt: newChat.createdAt,
-                                    unreadCount: newChat.unreadCount || 0,
-                                    contextData: newChat.contextData,
-                                    participant_profile: {
-                                      id: targetUser.id,
-                                      name: targetUser.full_name || targetUser.username || "Unknown User",
-                                      avatar: targetUser.avatar_url || undefined,
-                                    },
-                                  };
-
-                                  // Add to conversations list
-                                  setConversations(prev => [...prev, unifiedChat]);
-                                  
-                                  // Select the new chat
-                                  handleChatSelect(unifiedChat);
-                                  setShowUserSelection(false);
-                                  
-                                  toast({
-                                    title: "Success",
-                                    description: `Chat started with ${targetUser.full_name || targetUser.username}`,
-                                  });
-                                } catch (error) {
-                                  console.error("Error creating chat:", error);
-                                  toast({
-                                    title: "Error",
-                                    description: "Failed to start chat with user",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }}
-                            />
-                          </div>
-                        </ScrollArea>
+                                }}
+                              />
+                            </div>
+                          </ScrollArea>
+                        </div>
                       </div>
-                    </div>
-                  </TabsContent>
-                )}
+                    </TabsContent>
+                  )}
 
-                {/* Other chat types */}
-                {["social", "freelance", "marketplace", "p2p"].map(
-                  (chatType) => (
-                    <TabsContent
-                      key={chatType}
-                      value={chatType}
-                      className="h-full mt-0 flex flex-col"
-                    >
-                      {selectedChat ? (
-                        <>
-                          <CardHeader
-                            className={`pb-3 flex-shrink-0 ${isMobile ? "px-3 py-3" : "px-4 py-4"}`}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-3 min-w-0 flex-1">
-                                {/* Mobile back button */}
-                                {isMobile && (
+                  {/* Other chat types */}
+                  {["social", "freelance", "marketplace", "p2p"].map(
+                    (chatType) => (
+                      <TabsContent
+                        key={chatType}
+                        value={chatType}
+                        className="h-full mt-0 flex flex-col"
+                      >
+                        {selectedChat ? (
+                          <>
+                            <CardHeader
+                              className={`pb-3 flex-shrink-0 ${isMobile ? "px-3 py-3" : "px-4 py-4"}`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  {/* Mobile back button */}
+                                  {isMobile && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setSelectedChat(null)}
+                                      className="p-1 flex-shrink-0"
+                                    >
+                                      <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  <Avatar
+                                    className={isMobile ? "h-8 w-8" : "h-10 w-10"}
+                                  >
+                                    <AvatarImage
+                                      src={
+                                        selectedChat.participant_profile?.avatar
+                                      }
+                                    />
+                                    <AvatarFallback>
+                                      {selectedChat.participant_profile?.name?.charAt(
+                                        0,
+                                      ) || "?"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      {getTypeIcon(selectedChat.type)}
+                                      <CardTitle
+                                        className={`truncate ${
+                                          isMobile ? "text-sm" : "text-base"
+                                        }`}
+                                      >
+                                        {selectedChat.participant_profile?.name}
+                                      </CardTitle>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <OnlineStatusIndicator
+                                        isOnline={selectedChat.participant_profile?.is_online || false}
+                                        lastSeen={selectedChat.participant_profile?.last_seen}
+                                        size="sm"
+                                        showLabel={true}
+                                      />
+                                      {getContextInfo(selectedChat) && (
+                                        <>
+                                          <div className="w-1 h-1 bg-muted-foreground rounded-full" />
+                                          <p
+                                            className={`text-primary font-medium truncate ${
+                                              isMobile ? "text-xs" : "text-sm"
+                                            }`}
+                                          >
+                                            {getContextInfo(selectedChat)}
+                                          </p>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
                                   <Button
                                     variant="ghost"
-                                    size="sm"
-                                    onClick={() => setSelectedChat(null)}
-                                    className="p-1 flex-shrink-0"
+                                    size="icon"
+                                    className={isMobile ? "h-8 w-8" : "h-8 w-8"}
+                                    onClick={handleStartVoiceCall}
+                                    title="Start voice call"
+                                    disabled={!selectedChat || !user || loading}
                                   >
-                                    <ArrowLeft className="h-4 w-4" />
+                                    <Phone className="h-4 w-4" />
                                   </Button>
-                                )}
-                                <Avatar
-                                  className={isMobile ? "h-8 w-8" : "h-10 w-10"}
-                                >
-                                  <AvatarImage
-                                    src={
-                                      selectedChat.participant_profile?.avatar
-                                    }
-                                  />
-                                  <AvatarFallback>
-                                    {selectedChat.participant_profile?.name?.charAt(
-                                      0,
-                                    ) || "?"}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2">
-                                    {getTypeIcon(selectedChat.type)}
-                                    <CardTitle
-                                      className={`truncate ${
-                                        isMobile ? "text-sm" : "text-base"
-                                      }`}
-                                    >
-                                      {selectedChat.participant_profile?.name}
-                                    </CardTitle>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <OnlineStatusIndicator
-                                      isOnline={selectedChat.participant_profile?.is_online || false}
-                                      lastSeen={selectedChat.participant_profile?.last_seen}
-                                      size="sm"
-                                      showLabel={true}
-                                    />
-                                    {getContextInfo(selectedChat) && (
-                                      <>
-                                        <div className="w-1 h-1 bg-muted-foreground rounded-full" />
-                                        <p
-                                          className={`text-primary font-medium truncate ${
-                                            isMobile ? "text-xs" : "text-sm"
-                                          }`}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={isMobile ? "h-8 w-8" : "h-8 w-8"}
+                                    onClick={handleStartVideoCall}
+                                    title="Start video call"
+                                    disabled={!selectedChat || !user || loading}
+                                  >
+                                    <Video className="h-4 w-4" />
+                                  </Button>
+                                  {!isMobile && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className={isMobile ? "h-8 w-8" : "h-8 w-8"}
                                         >
-                                          {getContextInfo(selectedChat)}
-                                        </p>
-                                      </>
-                                    )}
-                                  </div>
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            setReplyToMessage({
+                                              id: "mock",
+                                              senderId: "other",
+                                              senderName: "Other User",
+                                              content: "Mock message for reply",
+                                              type: "text",
+                                              timestamp: new Date().toISOString(),
+                                              status: "sent",
+                                              reactions: [],
+                                            })
+                                          }
+                                        >
+                                          <MessageSquare className="h-4 w-4 mr-2" />
+                                          Reply
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem>
+                                          <UserPlus className="h-4 w-4 mr-2" />
+                                          Add to Contacts
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem>
+                                          <VideoIcon className="h-4 w-4 mr-2" />
+                                          Video Call
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className={isMobile ? "h-8 w-8" : "h-8 w-8"}
-                                  onClick={handleStartVoiceCall}
-                                  title="Start voice call"
-                                  disabled={!selectedChat || !user || loading}
+                            </CardHeader>
+                            <CardContent className="p-0 flex-1 overflow-hidden flex flex-col">
+                              <ScrollArea className="flex-1">
+                                <div
+                                  className={`flex flex-col py-4 ${isMobile ? "gap-3" : "gap-4"}`}
                                 >
-                                  <Phone className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className={isMobile ? "h-8 w-8" : "h-8 w-8"}
-                                  onClick={handleStartVideoCall}
-                                  title="Start video call"
-                                  disabled={!selectedChat || !user || loading}
-                                >
-                                  <Video className="h-4 w-4" />
-                                </Button>
-                                {!isMobile && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                      >
-                                        <MoreVertical className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                      <DropdownMenuItem
-                                        onClick={handleStartGroupVideo}
-                                      >
-                                        <Users className="w-4 h-4 mr-2" />
-                                        Start Group Video
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem>
-                                        <UserPlus className="w-4 h-4 mr-2" />
-                                        Add People
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem>
-                                        <MessageSquare className="w-4 h-4 mr-2" />
-                                        Chat Info
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                )}
-                              </div>
-                            </div>
-                          </CardHeader>
+                                  {messages[selectedChat.id] &&
+                                  messages[selectedChat.id].length > 0 ? (
+                                    messages[selectedChat.id].map(
+                                      (msg, index) => {
+                                        const prevMsg =
+                                          messages[selectedChat.id]?.[index - 1];
+                                        const isGrouped =
+                                          prevMsg &&
+                                          prevMsg.senderId === msg.senderId &&
+                                          new Date(msg.timestamp).getTime() -
+                                            new Date(
+                                              prevMsg.timestamp,
+                                            ).getTime() <
+                                            300000; // 5 minutes
 
-                          <CardContent className="p-0 flex-1 overflow-hidden flex flex-col">
-                            <ScrollArea
-                              className={cn(
-                                "flex-1 chat-scroll-area relative",
-                                isMobile ? "px-3" : "px-4",
-                              )}
-                              style={{
-                                height: isMobile
-                                  ? "calc(100vh - 180px)"
-                                  : "calc(100vh - 240px)",
-                                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f0f0f0' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                              }}
-                            >
-                              <div
-                                className={`flex flex-col py-4 ${isMobile ? "gap-3" : "gap-4"}`}
-                              >
-                                {messages[selectedChat.id] &&
-                                messages[selectedChat.id].length > 0 ? (
-                                  messages[selectedChat.id].map(
-                                    (msg, index) => {
-                                      const prevMsg =
-                                        messages[selectedChat.id]?.[index - 1];
-                                      const isGrouped =
-                                        prevMsg &&
-                                        prevMsg.senderId === msg.senderId &&
-                                        new Date(msg.timestamp).getTime() -
-                                          new Date(
-                                            prevMsg.timestamp,
-                                          ).getTime() <
-                                          300000; // 5 minutes
-
-                                      return (
-                                        <div
-                                          key={msg.id}
-                                          className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300"
-                                          style={{ animationDelay: `${index * 50}ms` }}
-                                        >
-                                          <EnhancedMessage
-                                            message={msg}
-                                            isCurrentUser={
-                                              msg.senderId === user.id
-                                            }
-                                            currentUserId={user.id}
-                                            isMobile={isMobile}
-                                            onReply={handleReplyToMessage}
-                                            onReact={handleReactToMessage}
-                                            onEdit={handleEditMessage}
-                                            onDelete={handleDeleteMessage}
-                                            showAvatar={!isGrouped}
-                                            groupWithPrevious={isGrouped}
-                                          />
-                                        </div>
-                                      );
-                                    },
-                                  )
-                                ) : (
-                                  <div
-                                    className={`text-center text-muted-foreground ${
-                                      isMobile ? "p-6" : "p-8"
-                                    }`}
-                                  >
-                                    <MessageSquare
-                                      className={`mx-auto mb-3 text-muted-foreground/50 ${
-                                        isMobile ? "h-8 w-8" : "h-12 w-12"
+                                        return (
+                                          <div
+                                            key={msg.id}
+                                            className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300"
+                                            style={{ animationDelay: `${index * 50}ms` }}
+                                          >
+                                            <EnhancedMessage
+                                              message={msg}
+                                              isCurrentUser={
+                                                msg.senderId === user.id
+                                              }
+                                              currentUserId={user.id}
+                                              isMobile={isMobile}
+                                              onReply={handleReplyToMessage}
+                                              onReact={handleReactToMessage}
+                                              onEdit={handleEditMessage}
+                                              onDelete={handleDeleteMessage}
+                                              showAvatar={!isGrouped}
+                                              groupWithPrevious={isGrouped}
+                                            />
+                                          </div>
+                                        );
+                                      },
+                                    )
+                                  ) : (
+                                    <div
+                                      className={`text-center text-muted-foreground ${
+                                        isMobile ? "p-6" : "p-8"
                                       }`}
-                                    />
-                                    <p
-                                      className={
-                                        isMobile ? "text-sm" : "text-base"
-                                      }
                                     >
-                                      No messages yet. Start the conversation!
+                                      <MessageSquare
+                                        className={`mx-auto mb-3 text-muted-foreground/50 ${
+                                          isMobile ? "h-8 w-8" : "h-12 w-12"
+                                        }`}
+                                      />
+                                      <p
+                                        className={
+                                          isMobile ? "text-sm" : "text-base"
+                                        }
+                                      >
+                                        No messages yet. Start the conversation!
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </ScrollArea>
+
+                              {/* Typing Indicator */}
+                              {typingUsers[selectedChat.id] && typingUsers[selectedChat.id].length > 0 && (
+                                <TypingIndicator
+                                  users={typingUsers[selectedChat.id]}
+                                  isMobile={isMobile}
+                                />
+                              )}
+                            </CardContent>
+
+                            {/* Reply indicator */}
+                            {replyToMessage && (
+                              <div className="border-t border-b bg-muted/30 p-3 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-1 h-8 bg-primary rounded-full" />
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-medium text-primary">
+                                      Replying to {replyToMessage.senderName}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate max-w-48">
+                                      {replyToMessage.content}
                                     </p>
                                   </div>
-                                )}
-                              </div>
-                            </ScrollArea>
-
-                            {/* Typing Indicator */}
-                            {typingUsers[selectedChat.id] && typingUsers[selectedChat.id].length > 0 && (
-                              <TypingIndicator
-                                users={typingUsers[selectedChat.id]}
-                                isMobile={isMobile}
-                              />
-                            )}
-                          </CardContent>
-
-                          {/* Reply indicator */}
-                          {replyToMessage && (
-                            <div className="border-t border-b bg-muted/30 p-3 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-1 h-8 bg-primary rounded-full" />
-                                <div className="min-w-0">
-                                  <p className="text-xs font-medium text-primary">
-                                    Replying to {replyToMessage.senderName}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground truncate max-w-48">
-                                    {replyToMessage.content}
-                                  </p>
                                 </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => setReplyToMessage(null)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => setReplyToMessage(null)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
+                            )}
 
-                          {/* WhatsApp-style Chat Input with Sticker Support */}
-                          <WhatsAppChatInput
-                            messageInput={messageInput}
-                            setMessageInput={setMessageInput}
-                            onSendMessage={handleSendEnhancedMessage}
-                            isMobile={isMobile}
-                            disabled={loading}
-                            placeholder={`Message ${selectedChat?.participant_profile?.name || 'chat'}...`}
-                          />
-                        </>
-                      ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center p-4">
-                          <div className="text-center space-y-3">
-                            <div
-                              className={`mx-auto mb-4 bg-muted rounded-full flex items-center justify-center ${
-                                isMobile ? "w-12 h-12" : "w-16 h-16"
-                              }`}
-                            >
-                              {getTypeIcon(activeTab as UnifiedChatType)}
+                            {/* WhatsApp-style Chat Input with Sticker Support */}
+                            <WhatsAppChatInput
+                              messageInput={messageInput}
+                              setMessageInput={setMessageInput}
+                              onSendMessage={handleSendEnhancedMessage}
+                              isMobile={isMobile}
+                              disabled={loading}
+                              placeholder={`Message ${selectedChat?.participant_profile?.name || 'chat'}...`}
+                            />
+                          </>
+                        ) : (
+                          <div className="flex-1 flex flex-col items-center justify-center p-4">
+                            <div className="text-center space-y-3">
+                              <div
+                                className={`mx-auto mb-4 bg-muted rounded-full flex items-center justify-center ${
+                                  isMobile ? "w-12 h-12" : "w-16 h-16"
+                                }`}
+                              >
+                                {getTypeIcon(activeTab as UnifiedChatType)}
+                              </div>
+                              <h3
+                                className={`font-medium ${
+                                  isMobile ? "text-base" : "text-lg"
+                                }`}
+                              >
+                                {isMobile
+                                  ? `Select ${activeTab} chat`
+                                  : `Select a ${activeTab} conversation`}
+                              </h3>
+                              <p
+                                className={`text-muted-foreground ${
+                                  isMobile ? "text-sm" : "text-base"
+                                }`}
+                              >
+                                {isMobile
+                                  ? "Choose a conversation or start new"
+                                  : "Choose a conversation from the list or start a new one"}
+                              </p>
                             </div>
-                            <h3
-                              className={`font-medium ${
-                                isMobile ? "text-base" : "text-lg"
-                              }`}
-                            >
-                              {isMobile
-                                ? `Select ${activeTab} chat`
-                                : `Select a ${activeTab} conversation`}
-                            </h3>
-                            <p
-                              className={`text-muted-foreground ${
-                                isMobile ? "text-sm" : "text-base"
-                              }`}
-                            >
-                              {isMobile
-                                ? "Choose a conversation or start new"
-                                : "Choose a conversation from the list or start a new one"}
-                            </p>
                           </div>
-                        </div>
-                      )}
-                    </TabsContent>
-                  ),
-                )}
-              </Tabs>
+                        )}
+                      </TabsContent>
+                    ),
+                  )}
+                </Tabs>
             </Card>
           </div>
         </div>
       </div>
-
-      {/* Voice/Video Call Modal */}
-      {activeCall && (
-        <VoiceVideoCall
-          isOpen={!!activeCall}
-          onClose={handleEndCall}
-          callType={activeCall.type}
-          participants={activeCall.participants}
-          currentUser={activeCall.currentUser}
-          onToggleAudio={handleToggleAudio}
-          onToggleVideo={handleToggleVideo}
-          onToggleScreenShare={handleToggleScreenShare}
-          onEndCall={handleEndCall}
-          chatName={activeCall.chatInfo?.title}
-        />
-      )}
-
-      {/* Incoming Call Modal */}
-      {incomingCall && (
-        <VoiceVideoCall
-          isOpen={!!incomingCall}
-          onClose={() => setIncomingCall(null)}
-          callType={incomingCall.type}
-          participants={[incomingCall.from]}
-          currentUser={{
-            id: user?.id || "",
-            name: user?.profile?.full_name || user?.email || "",
-            avatar: user?.profile?.avatar_url,
-            isAudioMuted: isAudioMuted,
-            isVideoEnabled:
-              incomingCall.type === "video" ? isVideoEnabled : false,
-            isScreenSharing: false,
-            connectionQuality: "excellent" as const,
-          }}
-          onToggleAudio={handleToggleAudio}
-          onToggleVideo={handleToggleVideo}
-          onToggleScreenShare={handleToggleScreenShare}
-          onEndCall={handleEndCall}
-          chatName={incomingCall.chatInfo?.title}
-          isIncoming={true}
-          onAcceptCall={() => {
-            // Accept the call and start the regular call interface
-            setActiveCall({
-              type: incomingCall.type,
-              participants: [incomingCall.from],
-              currentUser: {
-                id: user?.id || "",
-                name: user?.profile?.full_name || user?.email || "",
-                avatar: user?.profile?.avatar_url,
-                isAudioMuted: isAudioMuted,
-                isVideoEnabled:
-                  incomingCall.type === "video" ? isVideoEnabled : false,
-                isScreenSharing: false,
-                connectionQuality: "excellent" as const,
-              },
-              chatInfo: incomingCall.chatInfo,
-            });
-            setIncomingCall(null);
-            toast({
-              title: "Call Connected",
-              description: "You are now connected to the call.",
-            });
-          }}
-          onDeclineCall={() => {
-            setIncomingCall(null);
-            toast({
-              title: "Call Declined",
-              description: "You declined the incoming call.",
-            });
-          }}
-        />
-      )}
-
-      {/* Group Video Room Modal */}
-      {groupVideoRoom && (
-        <GroupVideoRoom
-          isOpen={!!groupVideoRoom}
-          onClose={() => setGroupVideoRoom(null)}
-          roomId={groupVideoRoom.roomId}
-          roomName={groupVideoRoom.roomName}
-          roomType={groupVideoRoom.roomType as any}
-          participants={groupVideoRoom.participants}
-          currentUser={groupVideoRoom.currentUser}
-          onToggleAudio={handleToggleAudio}
-          onToggleVideo={handleToggleVideo}
-          onToggleScreenShare={handleToggleScreenShare}
-          onLeaveRoom={() => {
-            setGroupVideoRoom(null);
-            toast({
-              title: "Left Video Room",
-              description: "You have left the group video room.",
-            });
-          }}
-          onInviteUsers={() => {
-            toast({
-              title: "Invite Feature",
-              description: "User invitation feature coming soon!",
-            });
-          }}
-          isHost={true}
-        />
-      )}
-
-      {/* Create Group Modal */}
-      <CreateGroupModal
-        trigger={<></>}
-        contacts={contacts}
-        onCreateGroup={handleCreateGroup}
-        isOpen={showCreateGroupModal}
-        onOpenChange={setShowCreateGroupModal}
-      />
     </div>
   );
 };
+
+export default UnifiedChatInterface;
