@@ -60,6 +60,8 @@ import { groupChatService } from "@/services/groupChatService";
 import { ChatParticipant } from "@/types/chat";
 import { CreateGroupRequest } from "@/types/group-chat";
 import { supabase } from "@/integrations/supabase/client";
+import { SuggestedUsers } from "@/components/profile/SuggestedUsers";
+import { UserService } from "@/services/userService";
 
 interface UnifiedChatInterfaceProps {
   className?: string;
@@ -90,6 +92,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
   const [typingUsers, setTypingUsers] = useState<{[chatId: string]: Array<{id: string, name: string, avatar?: string}>}>({});
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [contacts, setContacts] = useState<ChatParticipant[]>([]);
+  const [showUserSelection, setShowUserSelection] = useState(false); // New state for user selection
 
   // Voice/Video call state
   const [activeCall, setActiveCall] = useState<{
@@ -789,6 +792,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     setActiveTab(tab);
     setSelectedChat(null);
     setSearchQuery("");
+    setShowUserSelection(false); // Hide user selection when changing tabs
     
     // Reset social sub-tab when switching away from social tab
     if (tab !== "social") {
@@ -805,6 +809,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
     // On desktop, show in sidebar
     setSelectedChat(chat);
+    setShowUserSelection(false); // Hide user selection when selecting a chat
 
     // Simulate typing indicator occasionally
     if (Math.random() > 0.7) {
@@ -1118,16 +1123,16 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>New Chat</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate('/explore')}>Start Social Chat</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowUserSelection(true)}>Start Social Chat</DropdownMenuItem>
                       {activeTab === "social" && (
                         <DropdownMenuItem onClick={() => setShowCreateGroupModal(true)}>
                           <Users className="h-4 w-4 mr-2" />
                           Create Group
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => navigate('/freelance')}>Find Freelancer</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/marketplace')}>Message Seller</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/crypto')}>P2P Trade Chat</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/app/freelance')}>Find Freelancer</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/app/marketplace')}>Message Seller</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/app/crypto')}>P2P Trade Chat</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -1424,6 +1429,176 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                     </div>
                   </div>
                 </TabsContent>
+
+                {/* User Selection Panel - Show when showUserSelection is true */}
+                {showUserSelection && (
+                  <TabsContent
+                    value="user-selection"
+                    className="h-full mt-0 flex flex-col"
+                  >
+                    <div className="flex flex-col h-full">
+                      {/* Header with back button */}
+                      <div className="border-b p-3 flex-shrink-0">
+                        <div className="flex items-center gap-2">
+                          {isMobile && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowUserSelection(false)}
+                              className="p-1 flex-shrink-0"
+                            >
+                              <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <h3 className="text-lg font-semibold">Choose People</h3>
+                        </div>
+                      </div>
+                      
+                      {/* Search Bar */}
+                      <div className="p-3 border-b">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search users..."
+                            className="pl-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Suggested Users */}
+                      <div className="flex-1 min-h-0">
+                        <ScrollArea className="h-full">
+                          <div className="p-3">
+                            <SuggestedUsers
+                              title=""
+                              showTitle={false}
+                              variant="list"
+                              maxUsers={20}
+                              onUserClick={async (username) => {
+                                try {
+                                  if (!user?.id) {
+                                    toast({
+                                      title: "Error",
+                                      description: "You must be logged in to start a chat",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+
+                                  // Find the user by username
+                                  const targetUser = await UserService.getUserByUsername(username);
+                                  if (!targetUser) {
+                                    toast({
+                                      title: "Error",
+                                      description: "User not found",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+
+                                  // Check if chat already exists
+                                  const { data: existingConversations, error: conversationsError } = await supabase
+                                    .from('chat_conversations')
+                                    .select('*')
+                                    .contains('participants', [user.id, targetUser.id]);
+
+                                  if (conversationsError) {
+                                    console.error("Error checking existing conversations:", conversationsError);
+                                    toast({
+                                      title: "Error",
+                                      description: "Failed to check existing conversations",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
+
+                                  // If chat exists, select it
+                                  if (existingConversations && existingConversations.length > 0) {
+                                    const existingChat = existingConversations[0];
+                                    const unifiedChat: UnifiedChatThread = {
+                                      id: existingChat.id,
+                                      type: existingChat.type as UnifiedChatType,
+                                      referenceId: existingChat.referenceId,
+                                      participants: existingChat.participants,
+                                      lastMessage: existingChat.lastMessage || "",
+                                      lastMessageAt: existingChat.last_activity || new Date().toISOString(),
+                                      updatedAt: existingChat.updated_at || new Date().toISOString(),
+                                      isGroup: existingChat.type === 'group',
+                                      groupName: existingChat.name,
+                                      groupAvatar: existingChat.avatar,
+                                      createdAt: existingChat.created_at || new Date().toISOString(),
+                                      unreadCount: 0,
+                                      contextData: existingChat.settings || {},
+                                      participant_profile: {
+                                        id: targetUser.id,
+                                        name: targetUser.full_name || targetUser.username || "Unknown User",
+                                        avatar: targetUser.avatar_url || undefined,
+                                      },
+                                    };
+                                    
+                                    handleChatSelect(unifiedChat);
+                                    setShowUserSelection(false);
+                                    return;
+                                  }
+
+                                  // Create new chat thread
+                                  const newChat = await chatService.createChatThread({
+                                    type: "social",
+                                    participants: [user.id, targetUser.id],
+                                    initialMessage: "",
+                                  });
+
+                                  // Convert to UnifiedChatThread
+                                  const unifiedChat: UnifiedChatThread = {
+                                    id: newChat.id,
+                                    type: newChat.type as UnifiedChatType,
+                                    referenceId: newChat.referenceId,
+                                    participants: newChat.participants,
+                                    lastMessage: newChat.lastMessage,
+                                    lastMessageAt: newChat.lastMessageAt,
+                                    updatedAt: newChat.updatedAt,
+                                    isGroup: newChat.isGroup,
+                                    groupName: newChat.groupName,
+                                    groupAvatar: newChat.groupAvatar,
+                                    createdAt: newChat.createdAt,
+                                    unreadCount: newChat.unreadCount || 0,
+                                    contextData: newChat.contextData,
+                                    participant_profile: {
+                                      id: targetUser.id,
+                                      name: targetUser.full_name || targetUser.username || "Unknown User",
+                                      avatar: targetUser.avatar_url || undefined,
+                                    },
+                                  };
+
+                                  // Add to conversations list
+                                  setConversations(prev => [...prev, unifiedChat]);
+                                  
+                                  // Select the new chat
+                                  handleChatSelect(unifiedChat);
+                                  setShowUserSelection(false);
+                                  
+                                  toast({
+                                    title: "Success",
+                                    description: `Chat started with ${targetUser.full_name || targetUser.username}`,
+                                  });
+                                } catch (error) {
+                                  console.error("Error creating chat:", error);
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to start chat with user",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            />
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
 
                 {/* Other chat types */}
                 {["social", "freelance", "marketplace", "p2p"].map(
