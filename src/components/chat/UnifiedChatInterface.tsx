@@ -258,6 +258,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
   // Filter conversations based on active tab and search
   const filteredConversations = useMemo(() => {
     let filtered = conversations;
+    console.log("Filtering conversations:", { conversations, activeTab, activeSocialSubTab });
 
     // Filter by tab type (except AI assistant which is handled separately)
     if (activeTab !== "ai_assistant") {
@@ -266,16 +267,26 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
 
     // Additional filtering for social tab sub-tabs
     if (activeTab === "social") {
+      console.log("Filtering social tab with sub-tab:", activeSocialSubTab);
       switch (activeSocialSubTab) {
         case "groups":
-          filtered = filtered.filter((conv) => conv.isGroup === true);
+          filtered = filtered.filter((conv) => {
+            const isGroup = conv.isGroup === true;
+            console.log("Group filter - checking conversation:", { conv, isGroup });
+            return isGroup;
+          });
           break;
         case "private":
-          filtered = filtered.filter((conv) => conv.isGroup !== true);
+          filtered = filtered.filter((conv) => {
+            const isPrivate = conv.isGroup !== true;
+            console.log("Private filter - checking conversation:", { conv, isPrivate });
+            return isPrivate;
+          });
           break;
         case "all":
         default:
           // No additional filtering for "all"
+          console.log("Showing all social conversations");
           break;
       }
     }
@@ -298,11 +309,14 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       filtered = filtered.filter((conv) => (conv.unreadCount || 0) > 0);
     }
 
-    return filtered.sort(
+    const sorted = filtered.sort(
       (a, b) =>
         new Date(b.lastMessageAt).getTime() -
         new Date(a.lastMessageAt).getTime(),
     );
+    
+    console.log("Filtered and sorted conversations:", sorted);
+    return sorted;
   }, [conversations, activeTab, activeSocialSubTab, searchQuery, showUnreadOnly]);
 
   // Call handling functions
@@ -515,6 +529,9 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
         type: thread.type as UnifiedChatType,
       }));
 
+      console.log("Initial threads from chat service:", threads);
+      console.log("Converted unified threads:", unifiedThreads);
+
       // Load group chats
       if (user?.id) {
         try {
@@ -524,11 +541,15 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
             .select('*')
             .eq('privacy', 'public');
             
+          console.log("Public groups query result:", { publicGroups, publicGroupsError });
+            
           if (publicGroupsError) {
             console.error("Error loading public groups:", publicGroupsError);
           } else if (publicGroups) {
+            console.log("Found public groups:", publicGroups);
+            
             // Convert public groups to unified chat threads
-            const unifiedPublicGroups: UnifiedChatThread[] = publicGroups.map(group => ({
+            const unifiedPublicGroups: UnifiedChatThread[] = publicGroups.map((group: any) => ({
               id: group.id,
               type: "social" as UnifiedChatType,
               referenceId: null,
@@ -544,15 +565,23 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
               contextData: {},
             }));
             
-            // Merge public groups with regular threads
-            unifiedThreads.push(...unifiedPublicGroups);
+            console.log("Unified public groups:", unifiedPublicGroups);
+            
+            // Merge public groups with regular threads, avoiding duplicates
+            unifiedPublicGroups.forEach(publicGroup => {
+              if (!unifiedThreads.some(thread => thread.id === publicGroup.id)) {
+                unifiedThreads.push(publicGroup);
+              }
+            });
+            
+            console.log("Unified threads after adding public groups:", unifiedThreads);
           }
         } catch (error) {
           console.error("Error loading public groups:", error);
         }
       }
 
-      // Always show the default "Pioneers" group in the list
+      // Always show the default "Pioneers" group in the list (this is now redundant, but keeping for safety)
       if (user?.id) {
         try {
           // Check if the Pioneers group exists
@@ -560,6 +589,8 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
             .from('group_chat_threads')
             .select('*')
             .eq('name', 'Pioneers');
+
+          console.log("Pioneers group query result:", { existingGroups });
 
           if (existingGroups && existingGroups.length > 0) {
             const existingGroup = existingGroups[0];
@@ -569,6 +600,8 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
             const pioneersInThreads = unifiedThreads.find(thread => 
               thread.id === existingGroup.id
             );
+
+            console.log("Pioneers group in threads:", pioneersInThreads);
 
             if (!pioneersInThreads) {
               const pioneersGroup: UnifiedChatThread = {
@@ -587,9 +620,11 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                 contextData: {},
               };
               
+              console.log("Adding Pioneers group to conversations:", pioneersGroup);
               unifiedThreads.push(pioneersGroup);
             } else {
               // Update the existing group information if needed
+              console.log("Updating existing Pioneers group in conversations");
               pioneersInThreads.lastMessage = existingGroup.description || "Welcome to the Pioneers group!";
               pioneersInThreads.lastMessageAt = existingGroup.last_activity || new Date().toISOString();
               pioneersInThreads.updatedAt = existingGroup.updated_at || new Date().toISOString();
@@ -604,6 +639,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
         }
       }
       
+      console.log("Final unified threads:", unifiedThreads);
       setConversations(unifiedThreads);
 
       // Load messages for each conversation
@@ -1230,9 +1266,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                             onClick={() => handleChatSelect(conv)}
                           >
                             <div className="relative flex-shrink-0">
-                              <Avatar
-                                className={isMobile ? "h-10 w-10" : "h-12 w-12"}
-                              >
+                              <Avatar className={isMobile ? "h-10 w-10" : "h-12 w-12"}>
                                 <AvatarImage
                                   src={conv.participant_profile?.avatar}
                                 />
