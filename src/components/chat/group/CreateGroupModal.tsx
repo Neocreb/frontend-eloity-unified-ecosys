@@ -129,32 +129,32 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {trigger}
-      <DialogContent className="flex flex-col max-w-full md:max-w-md mx-0 md:mx-auto h-screen md:h-[90vh] md:rounded-lg p-0 max-h-[100vh] md:max-h-[90vh]">
-        <DialogHeader className="p-4 md:p-6 pb-0">
+      <DialogContent className="flex flex-col max-w-full mx-0 h-screen p-0 rounded-none">
+        <DialogHeader className="p-4 flex-shrink-0">
           <div>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-lg">
               <Users className="h-5 w-5" />
-              Create New Group
+              Create Group
             </DialogTitle>
-            <DialogDescription>
-              Create a group chat with your contacts
+            <DialogDescription className="text-xs">
+              Add participants to your group
             </DialogDescription>
           </div>
         </DialogHeader>
 
         <div className="flex flex-col h-full">
           {/* Step Navigation */}
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
             <div className={cn(
-              "h-2 w-8 rounded-full transition-colors",
+              "h-1.5 w-6 rounded-full transition-colors",
               step === 'participants' ? "bg-primary" : "bg-muted"
             )} />
             <div className={cn(
-              "h-2 w-8 rounded-full transition-colors",
+              "h-1.5 w-6 rounded-full transition-colors",
               step === 'info' ? "bg-primary" : "bg-muted"
             )} />
             <div className={cn(
-              "h-2 w-8 rounded-full transition-colors",
+              "h-1.5 w-6 rounded-full transition-colors",
               step === 'settings' ? "bg-primary" : "bg-muted"
             )} />
           </div>
@@ -162,28 +162,28 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           {/* Step Content */}
           <div className="flex-1 overflow-hidden">
             {step === 'participants' && (
-              <div className="space-y-4 h-full flex flex-col">
-                <div className="px-4 md:px-6">
-                  <Label>Add Participants</Label>
-                  <p className="text-sm text-muted-foreground">
+              <div className="space-y-3 h-full flex flex-col">
+                <div className="px-4">
+                  <Label className="text-sm">Add Participants</Label>
+                  <p className="text-xs text-muted-foreground">
                     Select contacts to add to your group
                   </p>
                 </div>
 
-                <div className="relative px-4 md:px-6">
+                <div className="relative px-4">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search contacts..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-9 text-sm"
                   />
                 </div>
 
                 {selectedParticipants.length > 0 && (
-                  <div className="space-y-2 px-4 md:px-6">
-                    <Label className="text-sm">Selected ({selectedParticipants.length})</Label>
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                  <div className="space-y-2 px-4">
+                    <Label className="text-xs">Selected ({selectedParticipants.length})</Label>
+                    <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
                       {selectedParticipants.map(participantId => {
                         const participant = contacts.find(c => c.id === participantId);
                         if (!participant) return null;
@@ -191,9 +191,9 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                           <Badge
                             key={participantId}
                             variant="secondary"
-                            className="flex items-center gap-1 pr-1"
+                            className="flex items-center gap-1 pr-1 py-1"
                           >
-                            <span className="truncate max-w-20">{participant.name}</span>
+                            <span className="truncate max-w-16 text-xs">{participant.name}</span>
                             <button
                               onClick={() => handleParticipantToggle(participantId)}
                               className="h-3 w-3 rounded-full bg-muted-foreground/20 flex items-center justify-center hover:bg-muted-foreground/40"
@@ -208,7 +208,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                 )}
 
                 <ScrollArea className="flex-1">
-                  <div className="space-y-1 pr-4 pl-4 md:pl-6">
+                  <div className="space-y-1 pr-2 pl-4">
                     {filteredContacts.map((contact) => (
                       <div
                         key={contact.id}
@@ -218,10 +218,11 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                         <Checkbox
                           checked={selectedParticipants.includes(contact.id)}
                           onChange={() => handleParticipantToggle(contact.id)}
+                          className="h-4 w-4"
                         />
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={contact.avatar} alt={contact.name} />
-                          <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                          <AvatarFallback className="text-xs">{contact.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{contact.name}</p>
@@ -238,42 +239,43 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
             {step === 'info' && (
               <ScrollArea className="h-full">
-                <div className="space-y-4 p-4 md:p-6">
+                <div className="space-y-4 p-4">
                   <div>
-                    <Label>Group Information</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <Label className="text-sm">Group Information</Label>
+                    <p className="text-xs text-muted-foreground">
                       Set up your group's basic information
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="h-16 w-16">
+                      <Avatar className="h-12 w-12">
                         <AvatarImage src={groupInfo.avatar} alt="Group" />
                         <AvatarFallback>
-                          <Camera className="h-6 w-6 text-muted-foreground" />
+                          <Camera className="h-5 w-5 text-muted-foreground" />
                         </AvatarFallback>
                       </Avatar>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full p-0"
+                        className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full p-0"
                         onClick={() => {
                           // Handle image upload
                         }}
                       >
-                        <Camera className="h-3 w-3" />
+                        <Camera className="h-2.5 w-2.5" />
                       </Button>
                     </div>
                     <div className="flex-1 space-y-2">
                       <div>
-                        <Label htmlFor="group-name">Group Name *</Label>
+                        <Label htmlFor="group-name" className="text-xs">Group Name *</Label>
                         <Input
                           id="group-name"
                           placeholder="Enter group name..."
                           value={groupInfo.name}
                           onChange={(e) => setGroupInfo(prev => ({ ...prev, name: e.target.value }))}
                           maxLength={50}
+                          className="h-8 text-sm"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
                           {groupInfo.name.length}/50
@@ -283,14 +285,15 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                   </div>
 
                   <div>
-                    <Label htmlFor="group-description">Description (Optional)</Label>
+                    <Label htmlFor="group-description" className="text-xs">Description (Optional)</Label>
                     <Textarea
                       id="group-description"
                       placeholder="What's this group about?"
                       value={groupInfo.description}
                       onChange={(e) => setGroupInfo(prev => ({ ...prev, description: e.target.value }))}
                       maxLength={200}
-                      rows={3}
+                      rows={2}
+                      className="text-sm"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       {groupInfo.description.length}/200
@@ -302,24 +305,24 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
             {step === 'settings' && (
               <ScrollArea className="h-full">
-                <div className="space-y-6 p-4 md:p-6">
+                <div className="space-y-5 p-4">
                   <div>
-                    <Label>Group Settings</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Configure permissions and features for your group
+                    <Label className="text-sm">Group Settings</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Configure permissions and features
                     </p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-sm font-medium">Who can send messages</Label>
+                      <Label className="text-xs font-medium">Who can send messages</Label>
                       <Select
                         value={groupSettings.whoCanSendMessages}
                         onValueChange={(value: 'everyone' | 'admins_only') =>
                           setGroupSettings(prev => ({ ...prev, whoCanSendMessages: value }))
                         }
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -330,14 +333,14 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                     </div>
 
                     <div>
-                      <Label className="text-sm font-medium">Who can add members</Label>
+                      <Label className="text-xs font-medium">Who can add members</Label>
                       <Select
                         value={groupSettings.whoCanAddMembers}
                         onValueChange={(value: 'everyone' | 'admins_only') =>
                           setGroupSettings(prev => ({ ...prev, whoCanAddMembers: value }))
                         }
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -352,9 +355,9 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm">Allow member invites</Label>
+                          <Label className="text-xs">Allow member invites</Label>
                           <p className="text-xs text-muted-foreground">
-                            Let members share invite links
+                            Members can share invite links
                           </p>
                         </div>
                         <Switch
@@ -367,7 +370,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm">Show join notifications</Label>
+                          <Label className="text-xs">Join notifications</Label>
                           <p className="text-xs text-muted-foreground">
                             Notify when someone joins
                           </p>
@@ -382,7 +385,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-sm">Show leave notifications</Label>
+                          <Label className="text-xs">Leave notifications</Label>
                           <p className="text-xs text-muted-foreground">
                             Notify when someone leaves
                           </p>
@@ -394,21 +397,6 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                           }
                         />
                       </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-sm">Disappearing messages</Label>
-                          <p className="text-xs text-muted-foreground">
-                            Auto-delete messages after time
-                          </p>
-                        </div>
-                        <Switch
-                          checked={groupSettings.disappearingMessages}
-                          onCheckedChange={(checked) =>
-                            setGroupSettings(prev => ({ ...prev, disappearingMessages: checked }))
-                          }
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -417,9 +405,10 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-between pt-4 border-t p-4 md:p-6">
+          <div className="flex justify-between pt-3 border-t p-4 flex-shrink-0">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 if (step === 'participants') {
                   onOpenChange(false);
@@ -429,14 +418,17 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                   setStep('info');
                 }
               }}
+              className="h-8 px-3 text-sm"
             >
               {step === 'participants' ? 'Cancel' : 'Back'}
             </Button>
 
             {step === 'participants' && (
               <Button
+                size="sm"
                 onClick={() => setStep('info')}
                 disabled={!canProceedFromParticipants}
+                className="h-8 px-4 text-sm"
               >
                 Next
               </Button>
@@ -444,8 +436,10 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
             {step === 'info' && (
               <Button
+                size="sm"
                 onClick={() => setStep('settings')}
                 disabled={!canProceedFromInfo}
+                className="h-8 px-4 text-sm"
               >
                 Next
               </Button>
@@ -453,9 +447,10 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
             {step === 'settings' && (
               <Button
+                size="sm"
                 onClick={handleCreateGroup}
                 disabled={!canCreateGroup || isCreating}
-                className="min-w-20"
+                className="h-8 px-4 text-sm"
               >
                 {isCreating ? 'Creating...' : 'Create'}
               </Button>

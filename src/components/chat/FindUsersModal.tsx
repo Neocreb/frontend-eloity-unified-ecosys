@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, X } from "lucide-react";
 import { SuggestedUsers } from "@/components/profile/SuggestedUsers";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -22,20 +21,19 @@ export const FindUsersModal: React.FC<FindUsersModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="flex flex-col max-w-full md:max-w-md mx-0 md:mx-auto h-screen md:h-[90vh] md:rounded-lg p-0 max-h-[100vh] md:max-h-[90vh]"
+        className="flex flex-col max-w-full mx-0 h-screen p-0 rounded-none"
         style={{
           margin: 0,
-          borderRadius: isMobile ? 0 : '0.5rem',
         }}
       >
-        <DialogHeader className={isMobile ? "p-4" : "p-6 pb-0"}>
+        <DialogHeader className="p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-lg font-semibold">
                 Find People
               </DialogTitle>
-              <DialogDescription>
-                Search and connect with users on the platform
+              <DialogDescription className="text-xs">
+                Search and connect with users
               </DialogDescription>
             </div>
             <Button
@@ -49,12 +47,12 @@ export const FindUsersModal: React.FC<FindUsersModalProps> = ({
           </div>
           
           {/* Search Bar */}
-          <div className="pt-4">
+          <div className="pt-3">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search users..."
-                className="pl-10"
+                className="pl-10 h-9 text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -63,22 +61,20 @@ export const FindUsersModal: React.FC<FindUsersModalProps> = ({
         </DialogHeader>
         
         {/* Suggested Users - Scrollable content area */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <ScrollArea className="h-full">
-            <div className="p-4">
-              <SuggestedUsers
-                title=""
-                showTitle={false}
-                variant="list"
-                maxUsers={20}
-                onUserClick={async (username: string) => {
-                  // TODO: Implement user selection logic
-                  console.log("Selected user:", username);
-                  onOpenChange(false);
-                }}
-              />
-            </div>
-          </ScrollArea>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="p-3">
+            <SuggestedUsers
+              title=""
+              showTitle={false}
+              variant="list"
+              maxUsers={20}
+              onUserClick={async (username: string) => {
+                // TODO: Implement user selection logic
+                console.log("Selected user:", username);
+                onOpenChange(false);
+              }}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
