@@ -40,6 +40,7 @@ import { CreateGroupRequest, GroupChatSettings } from '@/types/group-chat';
 import { ChatParticipant } from '@/types/chat';
 import { groupChatService } from '@/services/groupChatService';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserService } from '@/services/userService';
 
 const CreateGroup = () => {
   const navigate = useNavigate();
@@ -67,54 +68,72 @@ const CreateGroup = () => {
   });
   const [isCreating, setIsCreating] = useState(false);
   const [contacts, setContacts] = useState<ChatParticipant[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(true);
 
-  // Mock contacts data - in a real app, this would come from an API
+  // Fetch real contacts (followers and followings) instead of mock data
   useEffect(() => {
-    const mockContacts: ChatParticipant[] = [
-      {
-        id: "1",
-        name: "John Doe",
-        username: "johndoe",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-        status: "online",
-        lastSeen: new Date().toISOString()
-      },
-      {
-        id: "2",
-        name: "Jane Smith",
-        username: "janesmith",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
-        status: "away",
-        lastSeen: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: "3",
-        name: "Bob Johnson",
-        username: "bobjohnson",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
-        status: "offline",
-        lastSeen: new Date(Date.now() - 86400000).toISOString()
-      },
-      {
-        id: "4",
-        name: "Alice Williams",
-        username: "alicewilliams",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice",
-        status: "online",
-        lastSeen: new Date().toISOString()
-      },
-      {
-        id: "5",
-        name: "Charlie Brown",
-        username: "charliebrown",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie",
-        status: "away",
-        lastSeen: new Date(Date.now() - 7200000).toISOString()
+    const fetchContacts = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoadingContacts(true);
+        // Fetch followers and followings for the current user
+        const [followers, following] = await Promise.all([
+          UserService.getUserFollowers(user.id),
+          UserService.getUserFollowing(user.id)
+        ]);
+        
+        // Combine and deduplicate followers and followings
+        const allContactsMap = new Map();
+        
+        // Add followers
+        followers.forEach((follower: any) => {
+          const contactId = follower.id;
+          if (contactId && contactId !== user.id) {
+            allContactsMap.set(contactId, {
+              id: contactId,
+              name: follower.full_name || follower.username || 'Unknown User',
+              username: follower.username || '',
+              avatar: follower.avatar_url || follower.avatar || '',
+              status: 'online', // In a real app, this would come from presence service
+              lastSeen: new Date().toISOString()
+            });
+          }
+        });
+        
+        // Add following
+        following.forEach((followed: any) => {
+          const contactId = followed.id;
+          if (contactId && contactId !== user.id) {
+            allContactsMap.set(contactId, {
+              id: contactId,
+              name: followed.full_name || followed.username || 'Unknown User',
+              username: followed.username || '',
+              avatar: followed.avatar_url || followed.avatar || '',
+              status: 'online', // In a real app, this would come from presence service
+              lastSeen: new Date().toISOString()
+            });
+          }
+        });
+        
+        // Convert map to array
+        const allContacts = Array.from(allContactsMap.values());
+        setContacts(allContacts);
+      } catch (error) {
+        console.error('Error fetching contacts:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load your contacts. Please try again.",
+          variant: "destructive"
+        });
+        setContacts([]);
+      } finally {
+        setLoadingContacts(false);
       }
-    ];
-    
-    setContacts(mockContacts);
-  }, []);
+    };
+
+    fetchContacts();
+  }, [user?.id]);
 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -281,31 +300,59 @@ const CreateGroup = () => {
               )}
 
               <div className="flex-1 min-h-0 overflow-y-auto">
-                <div className="space-y-1 pr-2 pl-4 pb-4">
-                  {filteredContacts.map((contact) => (
-                    <div
-                      key={contact.id}
-                      className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
-                      onClick={() => handleParticipantToggle(contact.id)}
-                    >
-                      <Checkbox
-                        checked={selectedParticipants.includes(contact.id)}
-                        onCheckedChange={() => handleParticipantToggle(contact.id)}
-                        className="h-4 w-4"
-                      />
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={contact.avatar} alt={contact.name} />
-                        <AvatarFallback className="text-xs">{contact.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{contact.name}</p>
-                        {contact.username && (
-                          <p className="text-xs text-muted-foreground">@{contact.username}</p>
-                        )}
-                      </div>
+                {loadingContacts ? (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading your contacts...</p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ) : filteredContacts.length > 0 ? (
+                  <div className="space-y-1 pr-2 pl-4 pb-4">
+                    {filteredContacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
+                        onClick={() => handleParticipantToggle(contact.id)}
+                      >
+                        <Checkbox
+                          checked={selectedParticipants.includes(contact.id)}
+                          onCheckedChange={() => handleParticipantToggle(contact.id)}
+                          className="h-4 w-4"
+                        />
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={contact.avatar} alt={contact.name} />
+                          <AvatarFallback className="text-xs">
+                            {contact.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{contact.name}</p>
+                          {contact.username && (
+                            <p className="text-xs text-muted-foreground">@{contact.username}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">
+                        {searchQuery ? 'No contacts found matching your search' : 'You have no contacts yet'}
+                      </p>
+                      {!searchQuery && (
+                        <Button 
+                          variant="link" 
+                          className="mt-2 text-sm"
+                          onClick={() => navigate('/app/explore')}
+                        >
+                          Find people to connect with
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -500,7 +547,7 @@ const CreateGroup = () => {
             <Button
               size="sm"
               onClick={() => setStep('info')}
-              disabled={!canProceedFromParticipants}
+              disabled={!canProceedFromParticipants || loadingContacts}
               className="h-8 px-4 text-sm"
             >
               Next
