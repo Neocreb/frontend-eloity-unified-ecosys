@@ -436,7 +436,7 @@ const AppRoutes = () => {
           <Route path="chat/:threadId" element={<ChatRoom />} />
           <Route path="chat-test/:threadId" element={<ChatTest />} />
           <Route path="chat-simple/:threadId" element={<SimpleChatRoom />} />
-          <Route path="find-users" element={<FindUsers />} />
+          <Route path="chat/find-users" element={<FindUsers />} />
           <Route
             path="messages"
             element={<Navigate to="/app/chat" replace />}
