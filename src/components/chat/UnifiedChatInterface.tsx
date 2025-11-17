@@ -255,6 +255,56 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     }
   }, [selectedChat, messages, user]);
 
+  // Filter conversations based on active tab and search
+  const filteredConversations = useMemo(() => {
+    let filtered = conversations;
+
+    // Filter by tab type (except AI assistant which is handled separately)
+    if (activeTab !== "ai_assistant") {
+      filtered = filtered.filter((conv) => conv.type === activeTab);
+    }
+
+    // Additional filtering for social tab sub-tabs
+    if (activeTab === "social") {
+      switch (activeSocialSubTab) {
+        case "groups":
+          filtered = filtered.filter((conv) => conv.isGroup === true);
+          break;
+        case "private":
+          filtered = filtered.filter((conv) => conv.isGroup !== true);
+          break;
+        case "all":
+        default:
+          // No additional filtering for "all"
+          break;
+      }
+    }
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (conv) =>
+          (conv.participant_profile?.name?.toLowerCase().includes(query) ||
+          conv.groupName?.toLowerCase().includes(query) ||
+          conv.lastMessage.toLowerCase().includes(query) ||
+          conv.contextData?.jobTitle?.toLowerCase().includes(query) ||
+          conv.contextData?.productName?.toLowerCase().includes(query)),
+      );
+    }
+
+    // Filter by unread status
+    if (showUnreadOnly) {
+      filtered = filtered.filter((conv) => (conv.unreadCount || 0) > 0);
+    }
+
+    return filtered.sort(
+      (a, b) =>
+        new Date(b.lastMessageAt).getTime() -
+        new Date(a.lastMessageAt).getTime(),
+    );
+  }, [conversations, activeTab, activeSocialSubTab, searchQuery, showUnreadOnly]);
+
   // Call handling functions
   const handleStartVoiceCall = () => {
     if (!selectedChat || !user) return;
@@ -449,55 +499,6 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
     });
   };
 
-  // Filter conversations based on active tab and search
-  const filteredConversations = useMemo(() => {
-    let filtered = conversations;
-
-    // Filter by tab type (except AI assistant which is handled separately)
-    if (activeTab !== "ai_assistant") {
-      filtered = filtered.filter((conv) => conv.type === activeTab);
-    }
-
-    // Additional filtering for social tab sub-tabs
-    if (activeTab === "social") {
-      switch (activeSocialSubTab) {
-        case "groups":
-          filtered = filtered.filter((conv) => conv.isGroup === true);
-          break;
-        case "private":
-          filtered = filtered.filter((conv) => conv.isGroup !== true);
-          break;
-        case "all":
-        default:
-          // No additional filtering for "all"
-          break;
-      }
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (conv) =>
-          conv.participant_profile?.name?.toLowerCase().includes(query) ||
-          conv.lastMessage.toLowerCase().includes(query) ||
-          conv.contextData?.jobTitle?.toLowerCase().includes(query) ||
-          conv.contextData?.productName?.toLowerCase().includes(query),
-      );
-    }
-
-    // Filter by unread status
-    if (showUnreadOnly) {
-      filtered = filtered.filter((conv) => (conv.unreadCount || 0) > 0);
-    }
-
-    return filtered.sort(
-      (a, b) =>
-        new Date(b.lastMessageAt).getTime() -
-        new Date(a.lastMessageAt).getTime(),
-    );
-  }, [conversations, activeTab, activeSocialSubTab, searchQuery, showUnreadOnly]);
-
   // Load conversations on mount
   useEffect(() => {
     if (user) {
@@ -527,14 +528,15 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
             const existingGroup = existingGroups[0];
             
             // Add the Pioneers group to the conversation list if not already there
+            // Fix: Check if the group is already in the unifiedThreads array by ID only
             const pioneersInThreads = unifiedThreads.find(thread => 
-              thread.isGroup && thread.id === existingGroup.id
+              thread.id === existingGroup.id
             );
 
             if (!pioneersInThreads) {
-              unifiedThreads.push({
+              const pioneersGroup: UnifiedChatThread = {
                 id: existingGroup.id,
-                type: "social",
+                type: "social" as UnifiedChatType,
                 referenceId: null,
                 participants: [],
                 lastMessage: existingGroup.description || "Welcome to the Pioneers group!",
@@ -546,7 +548,17 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                 createdAt: existingGroup.created_at || new Date().toISOString(),
                 unreadCount: 0,
                 contextData: {},
-              });
+              };
+              
+              unifiedThreads.push(pioneersGroup);
+            } else {
+              // Update the existing group information if needed
+              pioneersInThreads.lastMessage = existingGroup.description || "Welcome to the Pioneers group!";
+              pioneersInThreads.lastMessageAt = existingGroup.last_activity || new Date().toISOString();
+              pioneersInThreads.updatedAt = existingGroup.updated_at || new Date().toISOString();
+              pioneersInThreads.groupName = existingGroup.name;
+              pioneersInThreads.groupAvatar = existingGroup.avatar;
+              pioneersInThreads.isGroup = true;
             }
           }
         } catch (error) {
@@ -1209,7 +1221,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                                     isMobile ? "text-sm" : "text-sm"
                                   }`}
                                 >
-                                  {conv.participant_profile?.name}
+                                  {conv.isGroup ? conv.groupName : conv.participant_profile?.name}
                                 </h4>
                               </div>
                               <div className="flex flex-col items-end gap-1 ml-2">
