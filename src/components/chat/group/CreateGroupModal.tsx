@@ -37,7 +37,6 @@ import {
 import {
   Switch,
 } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -160,7 +159,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           </div>
 
           {/* Step Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {step === 'participants' && (
               <div className="space-y-3 h-full flex flex-col">
                 <div className="px-4">
@@ -207,8 +206,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                   </div>
                 )}
 
-                <ScrollArea className="flex-1">
-                  <div className="space-y-1 pr-2 pl-4">
+                <div className="flex-1 min-h-0 overflow-y-auto">
+                  <div className="space-y-1 pr-2 pl-4 pb-4">
                     {filteredContacts.map((contact) => (
                       <div
                         key={contact.id}
@@ -233,12 +232,12 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                       </div>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
             )}
 
             {step === 'info' && (
-              <ScrollArea className="h-full">
+              <div className="min-h-0">
                 <div className="space-y-4 p-4">
                   <div>
                     <Label className="text-sm">Group Information</Label>
@@ -300,11 +299,11 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                     </p>
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
             )}
 
             {step === 'settings' && (
-              <ScrollArea className="h-full">
+              <div className="min-h-0">
                 <div className="space-y-5 p-4">
                   <div>
                     <Label className="text-sm">Group Settings</Label>
@@ -400,7 +399,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                     </div>
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
             )}
           </div>
 

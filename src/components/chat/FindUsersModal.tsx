@@ -62,7 +62,7 @@ export const FindUsersModal: React.FC<FindUsersModalProps> = ({
         
         {/* Suggested Users - Scrollable content area */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="p-3">
+          <div className="p-3 pb-4">
             <SuggestedUsers
               title=""
               showTitle={false}
