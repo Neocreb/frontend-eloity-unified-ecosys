@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, Search, X } from "lucide-react";
-import { SuggestedUsers } from "@/components/social/SuggestedUsers";
+import { SuggestedUsers } from "@/components/profile/SuggestedUsers";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const FindUsers = () => {
@@ -70,7 +70,7 @@ const FindUsers = () => {
                 showTitle={false}
                 variant="list"
                 maxUsers={20}
-                onUserClick={async (username) => {
+                onUserClick={async (username: string) => {
                   // TODO: Implement user selection logic
                   console.log("Selected user:", username);
                 }}
