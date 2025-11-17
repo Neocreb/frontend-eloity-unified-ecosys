@@ -187,13 +187,23 @@ const CreateGroup = () => {
       
       // Navigate to the new group chat
       navigate(`/app/chat/${newGroup.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create group:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create group. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Handle the specific infinite recursion error
+      if (error.message && error.message.includes('database configuration issue')) {
+        toast({
+          title: "Database Configuration Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create group. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsCreating(false);
     }
