@@ -56,6 +56,7 @@ import { useNavigate } from "react-router-dom";
 import { TypingIndicator } from "./TypingIndicator";
 import { OnlineStatusIndicator } from "./OnlineStatusIndicator";
 import { CreateGroupModal } from "./group/CreateGroupModal";
+import { FindUsersModal } from "./FindUsersModal";
 import { groupChatService } from "@/services/groupChatService";
 import { ChatParticipant } from "@/types/chat";
 import { CreateGroupRequest } from "@/types/group-chat";
@@ -91,6 +92,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [typingUsers, setTypingUsers] = useState<{[chatId: string]: Array<{id: string, name: string, avatar?: string}>}>({});
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [showSocialChatModal, setShowSocialChatModal] = useState(false);
   const [contacts, setContacts] = useState<ChatParticipant[]>([]);
 
   // Voice/Video call state
@@ -1091,9 +1093,7 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>New Chat</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => {
-                        navigate('/app/chat/find-users');
-                      }}>
+                      <DropdownMenuItem onClick={() => setShowSocialChatModal(true)}>
                         Start Social Chat
                       </DropdownMenuItem>
                       {activeTab === "social" && (
@@ -1692,6 +1692,21 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
             </Card>
           </div>
         </div>
+        
+        {/* Add Social Chat Modal */}
+        <FindUsersModal 
+          isOpen={showSocialChatModal}
+          onOpenChange={setShowSocialChatModal}
+        />
+        
+        {/* Add Create Group Modal */}
+        <CreateGroupModal
+          trigger={null}
+          contacts={contacts}
+          onCreateGroup={handleCreateGroup}
+          isOpen={showCreateGroupModal}
+          onOpenChange={setShowCreateGroupModal}
+        />
       </div>
     </div>
   );
