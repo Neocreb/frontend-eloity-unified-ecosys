@@ -34,6 +34,7 @@
     "verify:setup": "node scripts/verify-secure-setup.js",
     "grant-super-admin": "npx tsx scripts/grant-super-admin.ts",
     "create-pioneers-group": "npx tsx src/scripts/createPioneersGroup.ts",
+    "create-pioneers-group-node": "node scripts/create-pioneers-group-node.cjs",
     "clear-cache": "node scripts/clear-cache.cjs",
     "verify-notification-service": "node scripts/verify-notification-service.cjs",
     "restart-dev": "node scripts/restart-dev.cjs"
