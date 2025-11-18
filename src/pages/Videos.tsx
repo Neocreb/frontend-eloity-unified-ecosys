@@ -644,7 +644,10 @@ const VideoCard: React.FC<{
       {/* Content overlay */}
       <div className="absolute inset-0 flex">
         {/* Left side - user info and description with moved controls */}
-        <div className="flex-1 flex flex-col justify-end p-3 md:p-4 pb-28 md:pb-4">
+        <div className={cn(
+          "flex-1 flex flex-col justify-end transition-all duration-300",
+          isMobile ? "p-2 pb-24" : "p-3 md:p-4 pb-28 md:pb-4"
+        )}>
           {/* Moved audio, auto, and settings controls to left side */}
           <div className="absolute top-16 left-4 flex flex-col gap-2 md:gap-3">
             {/* Connection Quality Indicator */}
