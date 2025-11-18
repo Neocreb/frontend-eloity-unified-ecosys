@@ -439,6 +439,7 @@ const SuggestedSidebar = () => {
 const EnhancedFeedWithTabs = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("for-you");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
