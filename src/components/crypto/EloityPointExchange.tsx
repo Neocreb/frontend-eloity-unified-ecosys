@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "../ui/card";
 import {
   Select,
   SelectContent,
@@ -13,11 +13,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "../ui/select";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import { ArrowRight, Info, RefreshCcw } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "../ui/use-toast";
 import CryptoDepositModal from "./CryptoDepositModal";
 import CryptoWithdrawModal from "./CryptoWithdrawModal";
 import CryptoKYCModal from "./CryptoKYCModal";
@@ -26,7 +26,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "../ui/tooltip";
 
 interface Currency {
   id: string;
@@ -35,8 +35,8 @@ interface Currency {
   icon: string;
 }
 
-const EloitExchange = () => {
-  const [fromCurrency, setFromCurrency] = useState("eloits");
+const EloityPointExchange = () => {
+  const [fromCurrency, setFromCurrency] = useState("eloitypoints");
   const [toCurrency, setToCurrency] = useState("btc");
   const [amount, setAmount] = useState("");
   const [convertedAmount, setConvertedAmount] = useState("0");
@@ -51,9 +51,9 @@ const EloitExchange = () => {
 
   const currencies: Currency[] = [
     {
-      id: "eloits",
-      name: "Eloits",
-      symbol: "ELO",
+      id: "eloitypoints",
+      name: "EloityPoints",
+      symbol: "EP",
       icon: "🔮"
     },
     { 
@@ -94,32 +94,32 @@ const EloitExchange = () => {
     
     // Mock conversion rates
     const rates: Record<string, Record<string, number>> = {
-      eloits: {
-        btc: 0.00000025, // 4,000,000 ELO = 1 BTC
-        eth: 0.000004, // 250,000 ELO = 1 ETH
-        usdt: 0.01, // 100 ELO = 1 USDT
-        sol: 0.0006, // 1666 ELO = 1 SOL
+      eloitypoints: {
+        btc: 0.00000035, // ~2,857,143 EP = 1 BTC
+        eth: 0.000005, // ~200,000 EP = 1 ETH
+        usdt: 0.015, // ~66.67 EP = 1 USDT
+        sol: 0.0008, // ~1,250 EP = 1 SOL
       },
       btc: {
-        eloits: 4000000, // 1 BTC = 4,000,000 ELO
+        eloitypoints: 2857143, // 1 BTC = ~2,857,143 EP
         eth: 16, // 1 BTC = 16 ETH
         usdt: 52800, // 1 BTC = $52,800
         sol: 335, // 1 BTC = 335 SOL
       },
       eth: {
-        eloits: 250000, // 1 ETH = 250,000 ELO
+        eloitypoints: 200000, // 1 ETH = 200,000 EP
         btc: 0.0625, // 1 ETH = 0.0625 BTC
         usdt: 3145, // 1 ETH = $3,145
         sol: 20, // 1 ETH = 20 SOL
       },
       usdt: {
-        eloits: 100, // 1 USDT = 100 ELO
+        eloitypoints: 66.67, // 1 USDT = ~66.67 EP
         btc: 0.000019, // 1 USDT = 0.000019 BTC
         eth: 0.00032, // 1 USDT = 0.00032 ETH
         sol: 0.00633, // 1 USDT = 0.00633 SOL
       },
       sol: {
-        eloits: 1666, // 1 SOL = 1,666 ELO
+        eloitypoints: 1250, // 1 SOL = 1,250 EP
         btc: 0.003, // 1 SOL = 0.003 BTC
         eth: 0.05, // 1 SOL = 0.05 ETH
         usdt: 157.83, // 1 SOL = $157.83
@@ -136,9 +136,9 @@ const EloitExchange = () => {
     }
 
     // Set fee percentage (mock)
-    // Higher fee for Eloits conversions
-    if (from === "eloits" || to === "eloits") {
-      setFee(0.025); // 2.5% fee
+    // Higher fee for EloityPoints conversions
+    if (from === "eloitypoints" || to === "eloitypoints") {
+      setFee(0.03); // 3% fee
     } else {
       setFee(0.015); // 1.5% standard fee
     }
@@ -238,9 +238,9 @@ const EloitExchange = () => {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-xl">Convert Crypto</CardTitle>
+              <CardTitle className="text-xl">Convert EloityPoints</CardTitle>
               <CardDescription>
-                Exchange Eloits for crypto or convert between cryptocurrencies
+                Exchange EloityPoints for crypto or convert between cryptocurrencies
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -367,7 +367,7 @@ const EloitExchange = () => {
                         <TooltipContent className="w-80">
                           <p>
                             A fee of {feePercentage}% is charged on all conversions. 
-                            Higher fees apply for Eloits conversions.
+                            Higher fees apply for EloityPoints conversions.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -445,4 +445,4 @@ const EloitExchange = () => {
   );
 };
 
-export default EloitExchange;
+export default EloityPointExchange;

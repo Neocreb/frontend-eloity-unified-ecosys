@@ -994,7 +994,7 @@ Markets updated in real-time.`;
     const enthusiasm = this.getRandomItem(this.personalityTraits.enthusiasm);
 
     // Search comprehensive knowledge base
-    const knowledgeResults = softChatKnowledgeService.searchKnowledge(query);
+    const knowledgeResults = eloityKnowledgeService.searchKnowledge(query);
 
     // If we found specific feature guides, use them
     if (knowledgeResults.features.length > 0) {
@@ -1068,7 +1068,7 @@ Markets updated in real-time.`;
     }
 
     // Generate personalized platform overview with recommendations
-    const dailyTips = softChatKnowledgeService.getDailyEngagementTips();
+    const dailyTips = eloityKnowledgeService.getDailyEngagementTips();
 
     return {
       message: `${greeting} ${user.name || "friend"}! ${enthusiasm} Eloity is your all-in-one platform where you can connect socially, trade crypto, buy/sell in the marketplace, find freelance work, and so much more! 

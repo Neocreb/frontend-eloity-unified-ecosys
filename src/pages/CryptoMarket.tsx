@@ -7,7 +7,7 @@ import CryptoList from "@/components/crypto/CryptoList";
 import CryptoTradePanel from "@/components/crypto/CryptoTradePanel";
 import CryptoPortfolio from "@/components/crypto/CryptoPortfolio";
 import P2PMarketplace from "@/components/crypto/P2PMarketplace";
-import EloitExchange from "@/components/crypto/SoftPointExchange";
+import EloitExchange from "@/components/crypto/EloityPointExchange";
 import CryptoWalletActions from "@/components/crypto/CryptoWalletActions";
 import AdvancedTradingInterface from "@/components/crypto/AdvancedTradingInterface";
 import EnhancedP2PMarketplace from "@/components/crypto/EnhancedP2PMarketplace";

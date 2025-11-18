@@ -3529,7 +3529,7 @@ export type Database = {
       }
       crypto_settings: {
         Row: {
-          conversion_rate_softpoints_to_usdt: number
+          conversion_rate_eloity_points_to_usdt: number
           id: string
           min_kyc_level_for_withdrawal: number
           p2p_fee_percentage: number
@@ -3539,7 +3539,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          conversion_rate_softpoints_to_usdt?: number
+          conversion_rate_eloity_points_to_usdt?: number
           id?: string
           min_kyc_level_for_withdrawal?: number
           p2p_fee_percentage?: number
@@ -3549,7 +3549,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          conversion_rate_softpoints_to_usdt?: number
+          conversion_rate_eloity_points_to_usdt?: number
           id?: string
           min_kyc_level_for_withdrawal?: number
           p2p_fee_percentage?: number
@@ -3715,7 +3715,7 @@ export type Database = {
           social_activities: number | null
           suspicious_activities: number | null
           total_activities: number | null
-          total_soft_points_earned: number | null
+          total_eloity_points_earned: number | null
           total_wallet_bonus_earned: number | null
           unique_action_types: number | null
           updated_at: string | null
@@ -3734,7 +3734,7 @@ export type Database = {
           social_activities?: number | null
           suspicious_activities?: number | null
           total_activities?: number | null
-          total_soft_points_earned?: number | null
+          total_eloity_points_earned?: number | null
           total_wallet_bonus_earned?: number | null
           unique_action_types?: number | null
           updated_at?: string | null
@@ -3753,7 +3753,7 @@ export type Database = {
           social_activities?: number | null
           suspicious_activities?: number | null
           total_activities?: number | null
-          total_soft_points_earned?: number | null
+          total_eloity_points_earned?: number | null
           total_wallet_bonus_earned?: number | null
           unique_action_types?: number | null
           updated_at?: string | null
@@ -8232,7 +8232,7 @@ export type Database = {
           location: string | null
           media_urls: Json | null
           privacy: string
-          softpoints: number | null
+          eloity_points: number | null
           tagged_users: string[] | null
           tags: string[] | null
           type: string | null
@@ -8249,7 +8249,7 @@ export type Database = {
           location?: string | null
           media_urls?: Json | null
           privacy?: string
-          softpoints?: number | null
+          eloity_points?: number | null
           tagged_users?: string[] | null
           tags?: string[] | null
           type?: string | null
@@ -8266,7 +8266,7 @@ export type Database = {
           location?: string | null
           media_urls?: Json | null
           privacy?: string
-          softpoints?: number | null
+          eloity_points?: number | null
           tagged_users?: string[] | null
           tags?: string[] | null
           type?: string | null
@@ -12489,7 +12489,7 @@ export type Database = {
           kyc_documents: Json | null
           kyc_level: number
           kyc_verified: boolean
-          softpoints_balance: number
+          eloity_points_balance: number
           sol_balance: number
           updated_at: string | null
           usdt_balance: number
@@ -12503,7 +12503,7 @@ export type Database = {
           kyc_documents?: Json | null
           kyc_level?: number
           kyc_verified?: boolean
-          softpoints_balance?: number
+          eloity_points_balance?: number
           sol_balance?: number
           updated_at?: string | null
           usdt_balance?: number
@@ -12517,7 +12517,7 @@ export type Database = {
           kyc_documents?: Json | null
           kyc_level?: number
           kyc_verified?: boolean
-          softpoints_balance?: number
+          eloity_points_balance?: number
           sol_balance?: number
           updated_at?: string | null
           usdt_balance?: number
@@ -12656,7 +12656,7 @@ export type Database = {
           location: string | null
           media_urls: Json | null
           privacy: string | null
-          softpoints: number | null
+          eloity_points: number | null
           tagged_users: string[] | null
           tags: string[] | null
           type: string | null

@@ -131,7 +131,7 @@ const displayNextSteps = () => {
 
 const main = async () => {
   try {
-    log("🚀 Starting Softchat platform setup...", "info");
+    log("🚀 Starting Eloity platform setup...", "info");
 
     checkRequirements();
     setupEnvironment();

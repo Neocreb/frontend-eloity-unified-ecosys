@@ -1,5 +1,6 @@
 // Supabase Edge Function to handle new user provisioning
 // This function is triggered when a new user signs up
+// @ts-nocheck - Supabase Edge Functions use Deno runtime, not Node.js
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
@@ -101,7 +102,7 @@ async function handleNewUser(user: any) {
           eth_balance: 0,
           sol_balance: 0,
           usdt_balance: 0,
-          softpoints_balance: 0,
+          eloity_points_balance: 0,
           kyc_verified: false,
           kyc_level: 0,
           kyc_documents: {},

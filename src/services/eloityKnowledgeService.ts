@@ -818,4 +818,4 @@ export class EloityKnowledgeService {
   }
 }
 
-export const softChatKnowledgeService = new EloityKnowledgeService();
+export const eloityKnowledgeService = new EloityKnowledgeService();

@@ -1,12 +1,24 @@
 #!/usr/bin/env npx tsx
 
 import { execSync } from "child_process";
-import { db } from "../server/db";
-import {
-  adminRoleOperations,
-  adminUserOperations,
-  initializeAdminSystem,
-} from "../server/database/admin-operations";
+import supabaseServer from "../server/supabaseServer";
+
+// Use dynamic imports to avoid module resolution issues
+let adminRoleOperations: any;
+let adminUserOperations: any;
+let initializeAdminSystem: any;
+
+const loadAdminOperations = async () => {
+  try {
+    const adminOps = await import("../server/database/admin-operations");
+    adminRoleOperations = adminOps.adminRoleOperations;
+    adminUserOperations = adminOps.adminUserOperations;
+    initializeAdminSystem = adminOps.initializeAdminSystem;
+  } catch (error) {
+    console.error("Failed to load admin operations:", error);
+    throw error;
+  }
+};
 
 const log = (
   message: string,
@@ -24,6 +36,9 @@ const log = (
 
 const createDefaultAdmin = async () => {
   try {
+    // Load admin operations dynamically
+    await loadAdminOperations();
+    
     log("🔧 Initializing admin system...");
 
     // Initialize the admin system (roles, etc.)
@@ -48,7 +63,7 @@ const createDefaultAdmin = async () => {
     // Create default admin user
     log("👤 Creating default admin user...");
 
-    const defaultPassword = "SoftChat2024!";
+    const defaultPassword = "Eloity2024!";
 
     const { user: adminUser } = await adminUserOperations.create({
       email: "admin@eloity.com",
@@ -78,7 +93,7 @@ const createDefaultAdmin = async () => {
 
 const main = async () => {
   try {
-    log("🚀 Creating default admin user for Softchat platform...", "info");
+    log("🚀 Creating default admin user for Eloity platform...", "info");
 
     await createDefaultAdmin();
 

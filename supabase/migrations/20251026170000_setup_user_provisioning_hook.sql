@@ -116,7 +116,7 @@ BEGIN
     eth_balance,
     sol_balance,
     usdt_balance,
-    softpoints_balance,
+    eloity_points_balance,
     kyc_verified,
     kyc_level,
     kyc_documents,
