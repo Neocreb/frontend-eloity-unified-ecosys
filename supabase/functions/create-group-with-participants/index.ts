@@ -57,7 +57,7 @@ const getMemberPermissions = (): GroupPermissions => ({
 
 // CORS headers for Vercel deployment
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // In production, replace with your specific domain
+    'Access-Control-Allow-Origin': 'https://frontend-eloity-unified-ecosyst.vercel.app', // In production, replace with your specific domain
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
