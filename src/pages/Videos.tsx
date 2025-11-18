@@ -1815,6 +1815,7 @@ const Videos: React.FC = () => {
                 onVideoElementReady={index === currentIndex ? setCurrentVideoElement : undefined}
                 onLike={handleVideoLike}
                 onComment={handleCommentClick}
+                onFollow={toggleFollow}
               />
             );
           })
