@@ -855,12 +855,15 @@ const VideoCard: React.FC<{
           <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+              className={cn(
+                "rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+              )}
               onClick={toggleComments}
             >
-              <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+              <MessageCircle className={isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} />
             </Button>
-            <span className="text-white text-xs font-medium">
+            <span className="text-white text-[10px] md:text-xs font-medium">
               {formatNumber(video.stats.comments)}
             </span>
           </div>
