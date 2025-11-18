@@ -793,11 +793,16 @@ const VideoCard: React.FC<{
                 variant={isFollowing ? "default" : "outline"}
                 className={cn(
                   "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm",
-                  isFollowing 
-                    ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white" 
+                  isFollowing
+                    ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white"
                     : "bg-white/20 border-white/30 text-white hover:bg-white/30"
                 )}
-                onClick={() => toggleFollow(video)}
+                onClick={() => {
+                  if (onFollow) {
+                    onFollow(video, isFollowing);
+                  }
+                  setIsFollowing(!isFollowing);
+                }}
               >
                 {isFollowing ? "Following" : "Follow"}
               </Button>
