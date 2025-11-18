@@ -85,7 +85,7 @@ export class MarketplaceService {
         .from('products')
         .select(`
           *,
-          seller:profiles!seller_id(full_name, username, avatar_url, is_verified)
+          seller:profiles(full_name, username, avatar_url, is_verified)
         `);
 
       if (filters.categoryId) {
@@ -165,7 +165,7 @@ export class MarketplaceService {
         .from('products')
         .select(`
           *,
-          seller:profiles!seller_id(full_name, username, avatar_url, is_verified)
+          seller:profiles(full_name, username, avatar_url, is_verified)
         `)
         .eq('id', id)
         .single();

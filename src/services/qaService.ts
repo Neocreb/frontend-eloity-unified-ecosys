@@ -1,14 +1,52 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the interface for product question data
+interface ProductQuestion {
+  id: string;
+  product_id: string;
+  question: string;
+  user_id: string;
+  created_at: string;
+  helpful_count?: number;
+  user?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+  answers?: Array<{
+    answer: string;
+    answered_by: string;
+    created_at: string;
+    user?: {
+      full_name?: string;
+    };
+  }>;
+}
+
+// Define the interface for the mapped question data
+interface MappedQuestion {
+  id: string;
+  productId: string;
+  question: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  answer?: string;
+  answeredBy?: string;
+  answeredByName?: string;
+  answeredAt?: string;
+  createdAt: string;
+  helpful: number;
+}
+
 export class QAService {
-  static async getProductQuestions(productId: string): Promise<any[]> {
+  static async getProductQuestions(productId: string): Promise<MappedQuestion[]> {
     try {
       const { data, error } = await supabase
         .from('product_questions')
         .select(`
           *,
-          user:profiles!user_id(full_name, avatar_url),
-          answers:product_answers(*, user:profiles!answered_by(full_name, avatar_url))
+          user:profiles(full_name, avatar_url),
+          answers:product_answers(*, user:profiles(full_name, avatar_url))
         `)
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
@@ -18,7 +56,8 @@ export class QAService {
         return [];
       }
 
-      return data.map(question => ({
+      // Explicitly type the question parameter
+      return data.map((question: ProductQuestion) => ({
         id: question.id,
         productId: question.product_id,
         question: question.question,

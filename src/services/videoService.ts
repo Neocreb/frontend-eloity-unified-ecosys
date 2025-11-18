@@ -42,7 +42,7 @@ export const videoService = {
       .from('videos')
       .select(`
         *,
-        profiles!videos_user_id_profiles_fkey(
+        profiles(
           user_id,
           username,
           full_name,
@@ -74,7 +74,7 @@ export const videoService = {
       .from('videos')
       .select(`
         *,
-        profiles!videos_user_id_profiles_fkey(
+        profiles(
           user_id,
           username,
           full_name,
@@ -208,7 +208,7 @@ export const videoService = {
       .from('video_comments')
       .select(`
         *,
-        user:profiles!user_id(
+        user:profiles(
           username,
           full_name,
           avatar_url
@@ -241,7 +241,7 @@ export const videoService = {
       })
       .select(`
         *,
-        user:profiles!user_id(
+        user:profiles(
           username,
           full_name,
           avatar_url
@@ -322,7 +322,7 @@ export const videoService = {
       .from('videos')
       .select(`
         *,
-        profiles!videos_user_id_profiles_fkey(
+        profiles(
           user_id,
           username,
           full_name,
@@ -365,7 +365,7 @@ export const videoService = {
       .from('videos')
       .select(`
         *,
-        profiles!videos_user_id_profiles_fkey(
+        profiles(
           user_id,
           username,
           full_name,

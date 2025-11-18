@@ -33,7 +33,7 @@ export class ProductService {
         .from('products')
         .select(`
           *,
-          seller:profiles!seller_id(full_name, username, avatar_url, is_verified)
+          seller:profiles(full_name, username, avatar_url, is_verified)
         `)
         .eq('category', product.category)
         .neq('id', productId)
