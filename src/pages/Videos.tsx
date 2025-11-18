@@ -911,7 +911,12 @@ const VideoCard: React.FC<{
                   ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white"
                   : "bg-white/20 border-white/30 text-white hover:bg-white/30"
               )}
-              onClick={() => toggleFollow(video)}
+              onClick={() => {
+                if (onFollow) {
+                  onFollow(video, isFollowing);
+                }
+                setIsFollowing(!isFollowing);
+              }}
             >
               {isFollowing ? "Following" : "Follow"}
             </Button>
