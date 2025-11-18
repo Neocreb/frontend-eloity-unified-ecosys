@@ -349,7 +349,7 @@ export class GroupChatService {
       if (!hasPermission) throw new Error('Insufficient permissions')
 
       const inviteCode = this.generateInviteCode()
-      const { data, error } = await supabase
+      const { data: inviteDataArray, error } = await supabase
         .from('group_invite_links')
         .insert({
           group_id: groupId,
@@ -362,8 +362,8 @@ export class GroupChatService {
         .select()
 
       if (error) throw error
-      if (!data?.[0]) throw new Error('Failed to create invite link')
-      const data = data?.[0]
+      if (!inviteDataArray?.[0]) throw new Error('Failed to create invite link')
+      const data = inviteDataArray[0]
 
       return {
         id: data.id,
