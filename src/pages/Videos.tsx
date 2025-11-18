@@ -1022,8 +1022,11 @@ const VideoCard: React.FC<{
 
           {/* Music Disc with Enhanced Animation */}
           <div className="flex flex-col items-center gap-1 group-hover:animate-spin-slow">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 animate-spin-slow">
-              <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            <div className={cn(
+              "rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 animate-spin-slow",
+              isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+            )}>
+              <Music className={cn("text-white", isMobile ? "w-5 h-5" : "w-5 h-5 md:w-6 md:h-6")} />
             </div>
           </div>
         </div>
