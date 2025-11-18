@@ -78,10 +78,10 @@ export const I18nProvider: FC<{ children: ReactNode }> = ({
     setHasError(false);
 
     try {
-      // Load saved preferences or detect automatically
-      const savedLanguage = localStorage.getItem("eloity_language");
-      const savedCurrency = localStorage.getItem("eloity_currency");
-      const savedRegion = localStorage.getItem("eloity_region");
+      // Load saved preferences or detect automatically (only in browser)
+      const savedLanguage = typeof window !== "undefined" ? localStorage.getItem("eloity_language") : null;
+      const savedCurrency = typeof window !== "undefined" ? localStorage.getItem("eloity_currency") : null;
+      const savedRegion = typeof window !== "undefined" ? localStorage.getItem("eloity_region") : null;
 
       if (savedLanguage) {
         i18nService.setLanguage(savedLanguage);
