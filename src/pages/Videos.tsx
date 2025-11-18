@@ -585,16 +585,34 @@ const VideoCard: React.FC<{
   // Handle download
   const handleDownload = async () => {
     try {
-      // In a real implementation, this would trigger a download
+      // Check if video has download permission
+      if (!video.allowDownload && video.allowDownload !== undefined) {
+        toast({
+          title: "Not Allowed",
+          description: "The creator has disabled downloads for this video",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Attempt to download the video
+      const link = document.createElement('a');
+      link.href = video.videoUrl;
+      link.download = `${video.user.username}-${video.id}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       toast({
         title: "Download Started",
-        description: "Video download in progress",
+        description: `Downloading "${video.description.substring(0, 30)}..."`,
       });
     } catch (error) {
       console.error("Error downloading video:", error);
       toast({
         title: "Error",
-        description: "Failed to download video",
+        description: "Failed to download video. Please try again.",
+        variant: "destructive"
       });
     }
   };
