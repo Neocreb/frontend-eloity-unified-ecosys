@@ -864,39 +864,100 @@ const VideoCard: React.FC<{
             </span>
           </div>
 
-          {/* Share, Save, Download Group */}
+          {/* Share/Save/Download Dropdown Menu */}
           <div className="flex flex-col items-center gap-1">
-            <div className="flex gap-2">
-              {/* Share Button */}
-              <Button
-                size="icon"
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-                onClick={() => handleShare(video, 'web')}
-              >
-                <Share className="w-5 h-5 md:w-6 md:h-6" />
-              </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                  aria-label="Share options menu"
+                >
+                  <Share className="w-5 h-5 md:w-6 md:h-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-sm w-48" align="end">
+                {/* Share Option */}
+                <DropdownMenuItem
+                  onClick={() => handleShare(video, 'web')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Share className="w-4 h-4" />
+                  <span>Share to Web</span>
+                </DropdownMenuItem>
 
-              {/* Save Button */}
-              <Button
-                size="icon"
-                className={cn(
-                  "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
-                  isBookmarked && "text-yellow-400"
-                )}
-                onClick={toggleSave}
-              >
-                <Bookmark className={cn("w-5 h-5 md:w-6 md:h-6", isBookmarked && "fill-current")} />
-              </Button>
+                {/* Share to Twitter */}
+                <DropdownMenuItem
+                  onClick={() => handleShare(video, 'twitter')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Twitter className="w-4 h-4 text-sky-400" />
+                  <span>Share to Twitter</span>
+                </DropdownMenuItem>
 
-              {/* Download Button */}
-              <Button
-                size="icon"
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-                onClick={handleDownload}
-              >
-                <CloudDownload className="w-5 h-5 md:w-6 md:h-6" />
-              </Button>
-            </div>
+                {/* Share to Facebook */}
+                <DropdownMenuItem
+                  onClick={() => handleShare(video, 'facebook')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Facebook className="w-4 h-4 text-blue-600" />
+                  <span>Share to Facebook</span>
+                </DropdownMenuItem>
+
+                {/* Share to LinkedIn */}
+                <DropdownMenuItem
+                  onClick={() => handleShare(video, 'linkedin')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Linkedin className="w-4 h-4 text-blue-700" />
+                  <span>Share to LinkedIn</span>
+                </DropdownMenuItem>
+
+                {/* Copy Link */}
+                <DropdownMenuItem
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/app/video/${video.id}`);
+                    toast({
+                      title: "Link Copied",
+                      description: "Video link copied to clipboard"
+                    });
+                  }}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Copy Link</span>
+                </DropdownMenuItem>
+
+                {/* Divider */}
+                <div className="my-1 bg-white/10 h-px" />
+
+                {/* Save/Bookmark Option */}
+                <DropdownMenuItem
+                  onClick={toggleSave}
+                  className={cn(
+                    "cursor-pointer flex items-center gap-2",
+                    isBookmarked
+                      ? "text-yellow-400 hover:bg-yellow-400/10"
+                      : "text-white hover:bg-white/10"
+                  )}
+                >
+                  <Bookmark className={cn("w-4 h-4", isBookmarked && "fill-current")} />
+                  <span>{isBookmarked ? "Saved" : "Save Video"}</span>
+                </DropdownMenuItem>
+
+                {/* Divider */}
+                <div className="my-1 bg-white/10 h-px" />
+
+                {/* Download Option */}
+                <DropdownMenuItem
+                  onClick={handleDownload}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <CloudDownload className="w-4 h-4" />
+                  <span>Download Video</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <span className="text-white text-xs font-medium">Share</span>
           </div>
 
