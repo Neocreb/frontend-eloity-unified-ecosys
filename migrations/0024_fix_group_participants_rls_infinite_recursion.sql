@@ -26,6 +26,7 @@ CREATE POLICY "Users can view group participants for groups they belong to" ON p
     );
 
 -- Recreate the banking info policy
+DROP POLICY IF EXISTS "Users can view own banking info" ON public.user_banking_info;
 CREATE POLICY "Users can view own banking info" ON public.user_banking_info
     FOR SELECT
     USING (auth.uid() = user_id);

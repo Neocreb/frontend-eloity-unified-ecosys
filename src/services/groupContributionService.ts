@@ -39,6 +39,8 @@ export class GroupContributionService {
         endDate = now.toISOString();
       }
 
+      console.log('Creating group contribution:', { request, userId, endDate });
+
       const { data, error } = await supabase
         .from('group_contributions')
         .insert({
@@ -54,7 +56,12 @@ export class GroupContributionService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating group contribution in database:', error);
+        throw error;
+      }
+
+      console.log('Group contribution created successfully:', data);
 
       // Send notification to group members
       await notificationService.sendGroupNotification(
@@ -66,9 +73,10 @@ export class GroupContributionService {
       );
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating group contribution:', error);
-      return null;
+      // Return a more detailed error for debugging
+      throw new Error(`Failed to create group contribution: ${error.message || error}`);
     }
   }
 
@@ -142,6 +150,8 @@ export class GroupContributionService {
   // Contribute to a group contribution
   static async contributeToGroup(request: ContributeToGroupRequest, userId: string): Promise<GroupContributor | null> {
     try {
+      console.log('Contributing to group:', { request, userId });
+
       const { data, error } = await supabase
         .from('group_contributors')
         .insert({
@@ -153,7 +163,12 @@ export class GroupContributionService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error contributing to group in database:', error);
+        throw error;
+      }
+
+      console.log('Contribution successful:', data);
 
       // If payment method is wallet, transfer funds after recording the contribution
       let walletTxId: string | null = null;
@@ -216,9 +231,10 @@ export class GroupContributionService {
       }
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error contributing to group:', error);
-      return null;
+      // Return a more detailed error for debugging
+      throw new Error(`Failed to contribute to group: ${error.message || error}`);
     }
   }
 
