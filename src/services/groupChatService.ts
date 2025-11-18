@@ -114,13 +114,16 @@ export class GroupChatService {
 
   async getGroupById(groupId: string): Promise<GroupChatThread> {
     try {
-      const { data: groupThread, error: groupError } = await supabase
+      const { data: groupThreadArray, error: groupError } = await supabase
         .from('group_chat_threads')
         .select('*')
         .eq('id', groupId)
-        .single();
+        .limit(1);
+
+      const groupThread = groupThreadArray?.[0];
 
       if (groupError) throw groupError;
+      if (!groupThread) throw new Error('Group not found');
 
       // Get participants count
       const { count: memberCount, error: countError } = await supabase
