@@ -97,7 +97,7 @@ export const SUPPORTED_LANGUAGES: Language[] = [
     code: "ar",
     name: "Arabic",
     nativeName: "العربية",
-    flag: "🇸🇦",
+    flag: "🇸��",
     rtl: true,
   },
 ];
@@ -460,10 +460,16 @@ class I18nService {
   private translations: Map<string, any> = new Map();
 
   constructor() {
-    this.detectUserLanguage();
-    this.detectUserCurrency();
-    this.detectUserRegion();
-    this.loadTranslations();
+    // Defer initialization to avoid issues with SSR and early module loading
+    if (typeof window !== "undefined") {
+      try {
+        this.detectUserLanguage();
+        this.detectUserCurrency();
+        this.detectUserRegion();
+      } catch (error) {
+        console.warn("Failed to auto-detect locale settings:", error);
+      }
+    }
   }
 
   // Language Management
