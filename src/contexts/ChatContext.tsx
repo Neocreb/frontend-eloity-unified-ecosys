@@ -106,7 +106,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
           // Get unread count for this conversation
           const { count: unreadCount, error: countError } = await supabase
-            .from("chat_messages_with_profiles")
+            .from("chat_messages")
             .select("*", { count: "exact", head: true })
             .eq("conversation_id", conv.id)
             .eq("read", false)
@@ -117,14 +117,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           }
 
           // Get the last message for this conversation
-          const { data: lastMessageData, error: lastMessageError } =
+          const { data: lastMessageArray, error: lastMessageError } =
             await supabase
-              .from("chat_messages_with_profiles")
+              .from("chat_messages")
               .select("*")
               .eq("conversation_id", conv.id)
               .order("created_at", { ascending: false })
-              .limit(1)
-              .single();
+              .limit(1);
+
+          const lastMessageData = lastMessageArray?.[0] || null;
 
           formattedConversations.push({
             id: conv.id,
@@ -192,10 +193,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loadMessages = async (conversationId: string) => {
     try {
-      // Updated to use the new chat_messages_with_profiles view instead of trying to join tables directly
       const { data, error } = await supabase
-        .from("chat_messages_with_profiles")
-        .select("*")
+        .from("chat_messages")
+        .select("*, sender:sender_id(full_name, username, avatar_url)")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
 
