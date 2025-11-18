@@ -835,14 +835,18 @@ const VideoCard: React.FC<{
             <Button
               size="icon"
               className={cn(
-                "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300 shadow-lg hover:scale-110",
+                "rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300 shadow-lg hover:scale-110",
+                isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14",
                 isLiked ? "text-red-500 scale-110" : "text-white"
               )}
               onClick={toggleLike}
             >
-              <Heart className={cn("w-6 h-6 md:w-7 md:h-7", isLiked && "fill-current")} />
+              <Heart className={cn(
+                isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7",
+                isLiked && "fill-current"
+              )} />
             </Button>
-            <span className="text-white text-xs font-medium">
+            <span className="text-white text-[10px] md:text-xs font-medium">
               {formatNumber(video.stats.likes + (isLiked ? 1 : 0))}
             </span>
           </div>
