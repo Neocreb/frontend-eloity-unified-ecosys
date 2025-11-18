@@ -528,7 +528,7 @@ export class GroupChatService {
         .getPublicUrl(fileName)
 
       // Save file metadata
-      const { data: fileData, error: fileError } = await supabase
+      const { data: fileDataArray, error: fileError } = await supabase
         .from('group_media_files')
         .insert({
           group_id: groupId,
