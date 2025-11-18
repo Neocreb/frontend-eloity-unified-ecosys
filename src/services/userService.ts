@@ -43,7 +43,7 @@ export class UserService {
           .select('*')
           .eq('id', userId)
           .single();
-      } catch (usersError) {
+      } catch (usersError: any) {
         console.warn('Error fetching user from users table:', usersError);
         usersResponse = { error: usersError, data: null };
       }
@@ -57,7 +57,7 @@ export class UserService {
             .select('*')
             .eq('user_id', userId)
             .single();
-        } catch (profilesError) {
+        } catch (profilesError: any) {
           console.warn('Error fetching user profile:', profilesError);
           profilesResponse = { error: profilesError, data: null };
         }
@@ -117,7 +117,7 @@ export class UserService {
             .select('*')
             .eq('user_id', userId)
             .single();
-        } catch (profilesError) {
+        } catch (profilesError: any) {
           console.warn('Error fetching user from profiles table:', profilesError);
           profilesResponse = { error: profilesError, data: null };
         }

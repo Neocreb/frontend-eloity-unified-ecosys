@@ -98,8 +98,10 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
       let feedPosts: any[] = [];
       try {
         feedPosts = await PostService.getFeedPosts(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
-      } catch (serviceError) {
+      } catch (serviceError: any) {
         console.error('Error fetching feed posts from service:', serviceError);
+        const errorMessage = serviceError.message || 'Failed to load feed content';
+        setError(errorMessage);
         // Continue with empty array to prevent complete failure
       }
       
@@ -107,48 +109,50 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
       const transformedPosts: UnifiedFeedItem[] = [];
       
       try {
-        feedPosts.forEach((post: any) => {
-          try {
-            // Ensure author data is properly structured
-            const authorData = post.author || {};
-            
-            transformedPosts.push({
-              id: post.id || `post-${Date.now()}-${Math.random()}`,
-              type: "post",
-              timestamp: post.created_at ? new Date(post.created_at) : new Date(),
-              priority: 5, // Default priority
-              author: {
-                id: authorData.id || "",
-                name: authorData.name || authorData.full_name || "Unknown User",
-                username: authorData.username || "unknown",
-                avatar: authorData.avatar || authorData.avatar_url || "/placeholder.svg",
-                verified: authorData.verified || authorData.is_verified || false,
-              },
-              content: {
-                text: post.content || "",
-                media: post.image ? [{
-                  type: "image",
-                  url: post.image,
-                  alt: "Post image",
-                }] : [],
-              },
-              interactions: {
-                likes: post.likes_count || 0,
-                comments: post.comments_count || 0,
-                shares: post.shares_count || 0,
-              },
-              userInteracted: {
-                liked: post.liked_by_user || false,
-                commented: false,
-                shared: false,
-                saved: false,
-              },
-            });
-          } catch (transformError) {
-            console.error('Error transforming post:', transformError, post);
-            // Skip this post and continue with others
-          }
-        });
+        if (Array.isArray(feedPosts)) {
+          feedPosts.forEach((post: any) => {
+            try {
+              // Ensure author data is properly structured
+              const authorData = post.author || {};
+              
+              transformedPosts.push({
+                id: post.id || `post-${Date.now()}-${Math.random()}`,
+                type: "post",
+                timestamp: post.created_at ? new Date(post.created_at) : new Date(),
+                priority: 5, // Default priority
+                author: {
+                  id: authorData.id || "",
+                  name: authorData.name || authorData.full_name || "Unknown User",
+                  username: authorData.username || "unknown",
+                  avatar: authorData.avatar || authorData.avatar_url || "/placeholder.svg",
+                  verified: authorData.verified || authorData.is_verified || false,
+                },
+                content: {
+                  text: post.content || "",
+                  media: post.image ? [{
+                    type: "image",
+                    url: post.image,
+                    alt: "Post image",
+                  }] : [],
+                },
+                interactions: {
+                  likes: post.likes_count || 0,
+                  comments: post.comments_count || 0,
+                  shares: post.shares_count || 0,
+                },
+                userInteracted: {
+                  liked: post.liked_by_user || false,
+                  commented: false,
+                  shared: false,
+                  saved: false,
+                },
+              });
+            } catch (transformError) {
+              console.error('Error transforming post:', transformError, post);
+              // Skip this post and continue with others
+            }
+          });
+        }
       } catch (transformError) {
         console.error('Error transforming posts:', transformError);
         // Continue with empty or partially transformed array
@@ -161,12 +165,13 @@ export const FeedProvider: React.FC<FeedProviderProps> = ({ children }) => {
       }
 
       // Set pagination
-      setHasMore(feedPosts.length === PAGE_SIZE);
+      setHasMore(Array.isArray(feedPosts) && feedPosts.length === PAGE_SIZE);
       setCurrentPage(page);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading feed:', err);
-      setError('Failed to load feed content');
+      const errorMessage = err.message || 'Failed to load feed content';
+      setError(errorMessage);
       // Only show toast if we're in a browser environment
       if (typeof window !== 'undefined') {
         toast({

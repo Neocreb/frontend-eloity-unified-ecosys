@@ -106,7 +106,7 @@ export class PostService {
             }
           });
         }
-      } catch (followingError) {
+      } catch (followingError: any) {
         console.warn("Error fetching following IDs:", followingError);
         // Continue with just own posts if following fetch fails
       }
@@ -136,7 +136,7 @@ export class PostService {
 
       if (error) {
         console.error("Error fetching feed posts:", error);
-        return [];
+        throw new Error(error.message || "Failed to fetch feed posts");
       }
 
       // Handle case where no data is returned
@@ -198,9 +198,9 @@ export class PostService {
       }
 
       return enhancedPosts as PostWithAuthor[];
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in getFeedPosts:", error);
-      return [];
+      throw new Error(error.message || "Failed to fetch feed posts");
     }
   }
 

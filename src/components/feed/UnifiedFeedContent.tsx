@@ -120,107 +120,128 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
   } = useFeed();
 
   const filteredAndSortedItems = useMemo(() => {
-    // Safety check for userPosts - ensure it's an array
-    if (!userPosts || !Array.isArray(userPosts)) {
-      console.warn('userPosts is not an array:', userPosts);
-      return [];
-    }
-
-    // Filter items based on feed type
-    let filteredItems;
     try {
-      filteredItems = filterContentByFeedType(userPosts, feedType);
-    } catch (error) {
-      console.error('Error filtering content by feed type:', error);
-      filteredItems = userPosts; // Fallback to original posts if filtering fails
-    }
+      // Safety check for userPosts - ensure it's an array
+      if (!userPosts || !Array.isArray(userPosts)) {
+        console.warn('userPosts is not an array:', userPosts);
+        return [];
+      }
 
-    // Apply additional filtering based on tab selection for better content organization
-    try {
-      if (feedType === 'groups') {
-        filteredItems = filteredItems.filter(item =>
-          item && (item.type === 'group' ||
-          (item.type === 'post' && item.author?.id?.startsWith('group-')) ||
-          item.type === 'community_event')
-        );
-      } else if (feedType === 'pages') {
-        filteredItems = filteredItems.filter(item =>
-          item && (item.type === 'page' ||
-          (item.type === 'post' && item.author?.id?.startsWith('page-')) ||
-          item.type === 'sponsored_post')
-        );
-      } else if (feedType === 'following') {
-        filteredItems = filteredItems.filter(item =>
-          item && (item.type === 'post' ||
-          item.type === 'recommended_user' ||
-          item.type === 'story_recap')
-        );
+      // Filter items based on feed type
+      let filteredItems;
+      try {
+        filteredItems = filterContentByFeedType(userPosts, feedType);
+      } catch (error) {
+        console.error('Error filtering content by feed type:', error);
+        filteredItems = userPosts; // Fallback to original posts if filtering fails
+      }
+
+      // Apply additional filtering based on tab selection for better content organization
+      try {
+        if (feedType === 'groups') {
+          filteredItems = filteredItems.filter(item =>
+            item && (item.type === 'group' ||
+            (item.type === 'post' && item.author?.id?.startsWith('group-')) ||
+            item.type === 'community_event')
+          );
+        } else if (feedType === 'pages') {
+          filteredItems = filteredItems.filter(item =>
+            item && (item.type === 'page' ||
+            (item.type === 'post' && item.author?.id?.startsWith('page-')) ||
+            item.type === 'sponsored_post')
+          );
+        } else if (feedType === 'following') {
+          filteredItems = filteredItems.filter(item =>
+            item && (item.type === 'post' ||
+            item.type === 'recommended_user' ||
+            item.type === 'story_recap')
+          );
+        }
+      } catch (error) {
+        console.error('Error applying additional feed filters:', error);
+        // Continue with filteredItems as is if additional filtering fails
+      }
+
+      // Safety check for filteredItems before sorting
+      if (!filteredItems || !Array.isArray(filteredItems)) {
+        console.warn('filteredItems is not an array:', filteredItems);
+        return [];
+      }
+
+      // Sort by timestamp (newest first)
+      try {
+        return filteredItems.sort((a, b) => {
+          // Safety check for item existence
+          if (!a || !b) return 0;
+          // Safety check for timestamp values
+          if (!a.timestamp || !b.timestamp) return 0;
+          return b.timestamp.getTime() - a.timestamp.getTime();
+        });
+      } catch (error) {
+        console.error('Error sorting feed items:', error);
+        return filteredItems; // Return unsorted if sorting fails
       }
     } catch (error) {
-      console.error('Error applying additional feed filters:', error);
-      // Continue with filteredItems as is if additional filtering fails
-    }
-
-    // Safety check for filteredItems before sorting
-    if (!filteredItems || !Array.isArray(filteredItems)) {
-      console.warn('filteredItems is not an array:', filteredItems);
-      return [];
-    }
-
-    // Sort by timestamp (newest first)
-    try {
-      return filteredItems.sort((a, b) => {
-        // Safety check for item existence
-        if (!a || !b) return 0;
-        // Safety check for timestamp values
-        if (!a.timestamp || !b.timestamp) return 0;
-        return b.timestamp.getTime() - a.timestamp.getTime();
-      });
-    } catch (error) {
-      console.error('Error sorting feed items:', error);
-      return filteredItems; // Return unsorted if sorting fails
+      console.error('Error in filteredAndSortedItems useMemo:', error);
+      return []; // Return empty array on any error
     }
   }, [feedType, userPosts]);
 
   useEffect(() => {
-    setFeedItems(filteredAndSortedItems);
+    try {
+      setFeedItems(filteredAndSortedItems);
+    } catch (error) {
+      console.error('Error setting feed items:', error);
+    }
   }, [filteredAndSortedItems]);
 
   const handleInteraction = useCallback((itemId: string, type: string) => {
-    setFeedItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const updatedItem = { ...item };
-        if (type === "like") {
-          updatedItem.userInteracted.liked = !item.userInteracted.liked;
-          updatedItem.interactions.likes += item.userInteracted.liked ? -1 : 1;
-        } else if (type === "save") {
-          updatedItem.userInteracted.saved = !item.userInteracted.saved;
+    try {
+      setFeedItems(prev => prev.map(item => {
+        if (item.id === itemId) {
+          const updatedItem = { ...item };
+          if (type === "like") {
+            updatedItem.userInteracted.liked = !item.userInteracted.liked;
+            updatedItem.interactions.likes += item.userInteracted.liked ? -1 : 1;
+          } else if (type === "save") {
+            updatedItem.userInteracted.saved = !item.userInteracted.saved;
+          }
+          return updatedItem;
         }
-        return updatedItem;
-      }
-      return item;
-    }));
+        return item;
+      }));
+    } catch (error) {
+      console.error('Error handling interaction:', error);
+    }
   }, []);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMore && !isLoading) {
-      loadMorePosts();
+    try {
+      if (hasMore && !isLoading) {
+        loadMorePosts();
+      }
+    } catch (error) {
+      console.error('Error handling load more:', error);
     }
   }, [hasMore, isLoading, loadMorePosts]);
 
   // Handle infinite scroll
   useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 1000
-      ) {
-        handleLoadMore();
-      }
-    };
+    try {
+      const handleScroll = () => {
+        if (
+          window.innerHeight + document.documentElement.scrollTop >=
+          document.documentElement.offsetHeight - 1000
+        ) {
+          handleLoadMore();
+        }
+      };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    } catch (error) {
+      console.error('Error setting up scroll handler:', error);
+    }
   }, [handleLoadMore]); // Only depend on handleLoadMore
 
   // Handle error state
@@ -274,24 +295,29 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
 
   // Memoized feed items rendering
   const feedItemsRender = useMemo(() => {
-    // Safety check for feedItems
-    if (!feedItems || !Array.isArray(feedItems) || feedItems.length === 0) {
-      return null;
-    }
-    
-    return feedItems.map((item) => {
-      // Safety check for each item
-      if (!item || !item.id) {
+    try {
+      // Safety check for feedItems
+      if (!feedItems || !Array.isArray(feedItems) || feedItems.length === 0) {
         return null;
       }
-      return (
-        <UnifiedFeedItemCard
-          key={item.id}
-          item={item}
-          onInteraction={handleInteraction}
-        />
-      );
-    }).filter(Boolean); // Remove any null items
+      
+      return feedItems.map((item) => {
+        // Safety check for each item
+        if (!item || !item.id) {
+          return null;
+        }
+        return (
+          <UnifiedFeedItemCard
+            key={item.id}
+            item={item}
+            onInteraction={handleInteraction}
+          />
+        );
+      }).filter(Boolean); // Remove any null items
+    } catch (error) {
+      console.error('Error rendering feed items:', error);
+      return null;
+    }
   }, [feedItems]); // Removed handleInteraction from dependencies since it's a stable useCallback
 
   return (
