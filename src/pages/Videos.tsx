@@ -1008,13 +1008,16 @@ const VideoCard: React.FC<{
               trigger={
                 <Button
                   size="icon"
-                  className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                  className={cn(
+                    "rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                    isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+                  )}
                 >
-                  <Gift className="w-6 h-6 md:w-7 md:h-7" />
+                  <Gift className={isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} />
                 </Button>
               }
             />
-            <span className="text-white text-xs font-medium">Gift</span>
+            <span className="text-white text-[10px] md:text-xs font-medium">Gift</span>
           </div>
 
           {/* Music Disc with Enhanced Animation */}
