@@ -591,7 +591,13 @@ class I18nService {
     const region = REGIONAL_CONFIG.find((r) => r.code === regionCode);
     if (region) {
       this.currentRegion = regionCode;
-      localStorage.setItem("eloity_region", regionCode);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("eloity_region", regionCode);
+        } catch (error) {
+          console.warn("Failed to save region preference:", error);
+        }
+      }
     }
   }
 
