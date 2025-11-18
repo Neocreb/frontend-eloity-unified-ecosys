@@ -234,13 +234,14 @@ export class GroupChatService {
   async addMember(groupId: string, userId: string, addedBy: string): Promise<void> {
     try {
       // Check if user is already a member
-      const { data: existingMember } = await supabase
+      const { data: existingMemberArray } = await supabase
         .from('group_participants')
         .select('id')
         .eq('group_id', groupId)
         .eq('user_id', userId)
-        .single();
+        .limit(1);
 
+      const existingMember = existingMemberArray?.[0];
       if (existingMember) {
         throw new Error('User is already a member of this group');
       }
@@ -359,9 +360,10 @@ export class GroupChatService {
           created_at: new Date().toISOString()
         })
         .select()
-        .single()
 
       if (error) throw error
+      if (!data?.[0]) throw new Error('Failed to create invite link')
+      const data = data?.[0]
 
       return {
         id: data.id,
@@ -398,13 +400,14 @@ export class GroupChatService {
   async joinViaInviteLink(inviteCode: string, userId: string): Promise<GroupChatThread> {
     try {
       // Get invite link
-      const { data: linkData, error: linkError } = await supabase
+      const { data: linkDataArray, error: linkError } = await supabase
         .from('group_invite_links')
         .select('*')
         .eq('code', inviteCode)
         .eq('is_active', true)
-        .single()
+        .limit(1)
 
+      const linkData = linkDataArray?.[0];
       if (linkError || !linkData) throw new Error('Invalid or expired invite link')
 
       // Check if link is expired
