@@ -79,7 +79,6 @@ import {
   Wallet,
   BookOpen as Stories,
   Rocket,
-  Lightbulb,
   Share2,
 } from "lucide-react";
 import { Line } from "react-chartjs-2";
@@ -1838,7 +1837,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       {demographics?.locationDistribution?.map((location: any, index: number) => (
                         <div key={index} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{index === 0 ? '🇺🇸' : index === 1 ? '🇬🇧' : index === 2 ? '🇨🇦' : index === 3 ? '🇩🇪' : index === 4 ? '🇦🇺' : '🌐'}</span>
+                            <span className="text-lg">{index === 0 ? '🇺🇸' : index === 1 ? '🇬🇧' : index === 2 ? '🇨🇦' : index === 3 ? '🇩🇪' : index === 4 ? '🇦����' : '🌐'}</span>
                             <span className="font-medium">{location.location}</span>
                           </div>
                           <span className="text-gray-600 dark:text-gray-400">{location.percentage}%</span>
@@ -2236,7 +2235,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                         </div>
                         <div>
                           <p className="font-medium">Smart Watch</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Order #ORD-7835 • Processing</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Order #ORD-7835 ��� Processing</p>
                         </div>
                       </div>
                       <div className="text-right">
