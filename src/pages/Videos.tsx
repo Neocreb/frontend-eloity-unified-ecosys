@@ -534,15 +534,25 @@ const VideoCard: React.FC<{
     try {
       if (isBookmarked) {
         await videoService.unsaveVideo(video.id);
+        setIsBookmarked(false);
+        toast({
+          title: "Removed",
+          description: "Video removed from your saved videos",
+        });
       } else {
         await videoService.saveVideo(video.id);
+        setIsBookmarked(true);
+        toast({
+          title: "Saved",
+          description: "Video added to your saved videos",
+        });
       }
-      setIsBookmarked(!isBookmarked);
     } catch (error) {
       console.error("Error toggling save:", error);
       toast({
         title: "Error",
         description: "Failed to save/unsave video",
+        variant: "destructive"
       });
     }
   };
