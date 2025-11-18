@@ -1341,22 +1341,40 @@ const Videos: React.FC = () => {
 
   // Handle liking a comment
   const handleLikeComment = async (commentId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to like comments",
+      });
+      return;
+    }
+
     try {
-      // In a real implementation, this would update the comment likes in the database
-      console.log("Liking comment:", commentId);
+      // Try to update in the service
+      try {
+        await videoService.likeComment(commentId);
+      } catch (serviceError) {
+        console.warn("Video service unavailable, using local state:", serviceError);
+      }
+
       // Update the comments state to reflect the like change
       setComments(prev => prev.map(comment => {
         if (comment.id === commentId) {
+          const wasLiked = comment.isLiked;
           return {
             ...comment,
-            isLiked: !comment.isLiked,
-            likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1
+            isLiked: !wasLiked,
+            likes_count: wasLiked ? (comment.likes_count || 0) - 1 : (comment.likes_count || 0) + 1
           };
         }
         return comment;
       }));
     } catch (error) {
       console.error("Error liking comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to like comment",
+      });
     }
   };
 
