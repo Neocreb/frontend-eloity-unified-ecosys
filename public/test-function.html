@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Group Creation Function</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+        <h1 class="text-2xl font-bold text-center mb-6">Test Group Creation Function</h1>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="access-token">
+                Access Token
+            </label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                   id="access-token" type="password" placeholder="Enter your access token">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="group-name">
+                Group Name
+            </label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                   id="group-name" type="text" placeholder="Test Group" value="Test Group">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="group-description">
+                Description
+            </label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                   id="group-description" type="text" placeholder="A test group" value="A test group created via function">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="participants">
+                Participants (comma separated UUIDs)
+            </label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                   id="participants" type="text" placeholder="user-uuid-1,user-uuid-2">
+        </div>
+        
+        <button onclick="testFunction()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+            Test Function
+        </button>
+        
+        <div id="result" class="mt-4 p-4 rounded hidden"></div>
+    </div>
+
+    <script type="module">
+        // Import Supabase client
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        // Initialize Supabase client
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://hjebzdekquczudhrygns.supabase.co';
+        const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqZWJ6ZGVrcXVjenVkaHJ5Z25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2MjIzMjksImV4cCI6MjA2MDE5ODMyOX0.bUXtDIV-QReFFgv6UoOGovH2zi2q68HKe2E4Kkbhc7U';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        async function testFunction() {
+            const accessToken = document.getElementById('access-token').value;
+            const groupName = document.getElementById('group-name').value;
+            const groupDescription = document.getElementById('group-description').value;
+            const participantsInput = document.getElementById('participants').value;
+            
+            const participants = participantsInput.split(',').map(p => p.trim()).filter(p => p);
+            
+            if (!accessToken) {
+                showResult('Please enter an access token', 'bg-red-100 text-red-700');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${supabaseUrl}/functions/v1/create-group-with-participants`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: groupName,
+                        description: groupDescription,
+                        participants: participants
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Success! Group created with ID: ${result.group.id}`, 'bg-green-100 text-green-700');
+                    console.log('Group created:', result.group);
+                } else {
+                    showResult(`❌ Error: ${result.error}`, 'bg-red-100 text-red-700');
+                    console.error('Error:', result.error);
+                }
+            } catch (error) {
+                showResult(`❌ Network error: ${error.message}`, 'bg-red-100 text-red-700');
+                console.error('Network error:', error);
+            }
+        }
+        
+        function showResult(message, classes) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `mt-4 p-4 rounded ${classes} block`;
+        }
+    </script>
+</body>
+</html>
