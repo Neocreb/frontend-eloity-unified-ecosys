@@ -803,25 +803,27 @@ const VideoCard: React.FC<{
             </div>
 
             {/* Video metadata */}
-            <div className="flex items-center gap-3 text-white/60 text-[10px] md:text-xs mt-1">
-              {video.timestamp && <span>{video.timestamp}</span>}
-              {video.category && (
-                <Badge
-                  variant="secondary"
-                  className="bg-black/40 text-white text-[10px]"
-                >
-                  {video.category}
-                </Badge>
-              )}
-              {video.isSponsored && (
-                <Badge
-                  variant="secondary"
-                  className="bg-yellow-500/20 text-yellow-400 text-[10px]"
-                >
-                  Sponsored
-                </Badge>
-              )}
-            </div>
+            {!isMobile && (
+              <div className="flex items-center gap-3 text-white/60 text-[10px] md:text-xs mt-1">
+                {video.timestamp && <span>{video.timestamp}</span>}
+                {video.category && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-black/40 text-white text-[10px]"
+                  >
+                    {video.category}
+                  </Badge>
+                )}
+                {video.isSponsored && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-yellow-500/20 text-yellow-400 text-[10px]"
+                  >
+                    Sponsored
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
