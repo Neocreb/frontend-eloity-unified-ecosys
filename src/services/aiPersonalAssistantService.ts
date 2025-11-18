@@ -130,11 +130,13 @@ class AIPersonalAssistantService {
     preferences?: Partial<AIPersonalAssistant>,
   ): Promise<AIPersonalAssistant> {
     // Try to fetch existing assistant from database
-    const { data: existingAssistant, error } = await supabase
+    const { data: assistantArray, error } = await supabase
       .from("ai_assistants")
       .select("*")
       .eq("user_id", userId)
-      .single();
+      .limit(1);
+
+    const existingAssistant = assistantArray?.[0] || null;
 
     if (existingAssistant && !error) {
       const assistant: AIPersonalAssistant = {
@@ -211,11 +213,13 @@ class AIPersonalAssistantService {
     limit: number = 5,
   ): Promise<ContentSuggestion[]> {
     // Fetch real user data
-    const { data: userData, error: userError } = await supabase
+    const { data: userDataArray, error: userError } = await supabase
       .from("profiles")
       .select("*, posts(*), videos(*), products(*)")
       .eq("id", userId)
-      .single();
+      .limit(1);
+
+    const userData = userDataArray?.[0] || null;
 
     if (userError || !userData) {
       // Fallback to mock data if real data unavailable
