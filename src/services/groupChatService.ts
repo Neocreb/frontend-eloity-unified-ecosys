@@ -26,27 +26,44 @@ export class GroupChatService {
           throw new Error('User not authenticated');
         }
 
+        const requestBody = {
+          name: request.name,
+          description: request.description || '',
+          avatar: request.avatar,
+          participants: [request.createdBy, ...request.participants.filter(p => p !== request.createdBy)],
+          settings: request.settings
+        };
+
+        console.log('Sending group creation request:', requestBody);
+
         const response = await fetch(`${supabaseUrl}/functions/v1/create-group-with-participants`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            name: request.name,
-            description: request.description || '',
-            avatar: request.avatar,
-            participants: [request.createdBy, ...request.participants.filter(p => p !== request.createdBy)],
-            settings: request.settings
-          })
+          body: JSON.stringify(requestBody)
         });
 
+        console.log('Group creation response status:', response.status);
+
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create group via function endpoint');
+          const errorText = await response.text();
+          console.error('Group creation failed with response:', errorText);
+          
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            errorData = { error: errorText };
+          }
+          
+          const errorMessage = errorData.error || 'Failed to create group via function endpoint';
+          throw new Error(`${errorMessage} (Status: ${response.status})`);
         }
 
         const result = await response.json();
+        console.log('Group creation successful:', result);
         
         return {
           id: result.group.id,
@@ -77,7 +94,7 @@ export class GroupChatService {
       }
     } catch (error) {
       console.error('Error creating group:', error);
-      throw error;
+      throw new Error(`Failed to create group due to database configuration issue. Please contact support. Details: ${error.message}`);
     }
   }
 

@@ -150,21 +150,40 @@ Deno.serve(async (req) => {
       name: body.name,
       createdBy: user.id,
       participantCount: body.participants.length,
-      participants: body.participants
+      participants: body.participants,
+      userAgent: req.headers.get('user-agent'),
+      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip')
     });
 
     // Check if the user exists in auth.users (debugging)
-    const { data: userData, error: userCheckError } = await supabase
+    const { data: authUserData, error: authUserCheckError } = await supabase
+      .from('auth.users')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (authUserCheckError && authUserCheckError.code !== '42501') {
+      console.error('Auth user existence check failed:', authUserCheckError);
+    } else {
+      console.log('User exists in auth.users table:', !!authUserData);
+    }
+
+    // Check if the user exists in application users table
+    const { data: appUserData, error: appUserCheckError } = await supabase
       .from('users')
       .select('id')
       .eq('id', user.id)
       .single();
 
-    if (userCheckError) {
-      console.error('User existence check failed:', userCheckError);
+    if (appUserCheckError && appUserCheckError.code !== '42501') {
+      console.error('App user existence check failed:', appUserCheckError);
     } else {
-      console.log('User exists in users table:', !!userData);
+      console.log('User exists in application users table:', !!appUserData);
     }
+
+    // If user doesn't exist in either table, we should still allow group creation
+    // since the RLS policy should handle authorization
+    console.log('Proceeding with group creation regardless of user table existence');
 
     // Create the group chat thread
     const { data: groupThread, error: groupError } = await supabase
@@ -188,15 +207,29 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: 'Database constraint violation. Please ensure all referenced users exist.',
-            details: groupError.message 
+            details: groupError.message,
+            code: groupError.code
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      // Check for RLS policy violation
+      if (groupError.code === '42501') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Permission denied. The user may not have permission to create a group.',
+            details: groupError.message,
+            code: groupError.code,
+            userId: user.id
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
         );
       }
       return new Response(
         JSON.stringify({ 
           error: 'Failed to create group due to database configuration issue. Please contact support.',
-          details: groupError.message 
+          details: groupError.message,
+          code: groupError.code
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
@@ -230,16 +263,30 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: 'One or more participants do not exist. Please verify all user IDs.',
-            details: participantsError.message 
+            details: participantsError.message,
+            code: participantsError.code
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      
+      // Check for RLS policy violation
+      if (participantsError.code === '42501') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Permission denied when adding participants.',
+            details: participantsError.message,
+            code: participantsError.code
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
         );
       }
       
       return new Response(
         JSON.stringify({ 
           error: 'Failed to add participants due to database configuration issue. Please contact support.',
-          details: participantsError.message 
+          details: participantsError.message,
+          code: participantsError.code
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
