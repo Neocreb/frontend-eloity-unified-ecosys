@@ -701,11 +701,13 @@ class AIPersonalAssistantService {
     userId: string,
   ): Promise<SchedulingOptimization> {
     // Fetch real engagement data
-    const { data: engagementData, error } = await supabase
+    const { data: analyticsArray, error } = await supabase
       .from("user_analytics")
-      .select("engagement_by_hour, engagement_by_day")
+      .select("*")
       .eq("user_id", userId)
-      .single();
+      .limit(1);
+
+    const engagementData = analyticsArray?.[0] || null;
 
     if (error || !engagementData) {
       // Fallback to mock data if real data unavailable
