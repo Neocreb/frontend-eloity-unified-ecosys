@@ -1523,21 +1523,30 @@ const Videos: React.FC = () => {
 
   
   // Handle follow/unfollow
-  const toggleFollow = async (video: VideoData) => {
+  const toggleFollow = async (video: VideoData, isCurrentlyFollowing: boolean) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to follow users",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      if (isFollowing) {
+      if (isCurrentlyFollowing) {
         await videoService.unfollowUser(video.user.id);
+        toast({
+          title: "Unfollowed",
+          description: `You have unfollowed @${video.user.username}`
+        });
       } else {
         await videoService.followUser(video.user.id);
+        toast({
+          title: "Following",
+          description: `You are now following @${video.user.username}`
+        });
       }
-      setIsFollowing(!isFollowing);
-      
-      toast({
-        title: isFollowing ? "Unfollowed" : "Following",
-        description: isFollowing 
-          ? `You have unfollowed @${video.user.username}` 
-          : `You are now following @${video.user.username}`
-      });
     } catch (error) {
       console.error('Error toggling follow:', error);
       toast({
