@@ -26,12 +26,6 @@ export default defineConfig(({ mode }) => ({
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
     },
-    dedupe: [
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
-      "react/jsx-dev-runtime",
-    ],
   },
   optimizeDeps: {
     include: [
@@ -47,14 +41,18 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Never split critical rendering dependencies
+          // Never split critical rendering dependencies - keep in main bundle
           if (
-            id.includes("react") ||
-            id.includes("react-dom") ||
-            id.includes("lucide-react") ||
-            id.includes("react-router-dom")
+            id.includes("node_modules/react") ||
+            id.includes("node_modules/react-dom") ||
+            id.includes("node_modules/react-router-dom")
           ) {
-            return undefined; // Keep in main bundle
+            return "react-vendor"; // Separate stable chunk for React libraries
+          }
+
+          // Keep UI frameworks together
+          if (id.includes("@radix-ui") || id.includes("lucide-react")) {
+            return "ui-vendor";
           }
 
           // Optional splitting for large vendor libraries
