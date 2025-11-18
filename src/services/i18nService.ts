@@ -494,12 +494,27 @@ class I18nService {
     );
     if (supported) {
       this.currentLanguage = langCode;
-      localStorage.setItem("eloity_language", langCode);
-      this.loadTranslations();
 
-      // Update document direction for RTL languages
-      document.dir = supported.rtl ? "rtl" : "ltr";
-      document.documentElement.lang = langCode;
+      // Only access browser APIs if available
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("eloity_language", langCode);
+        } catch (error) {
+          console.warn("Failed to save language preference:", error);
+        }
+        try {
+          this.loadTranslations();
+        } catch (error) {
+          console.warn("Failed to load translations:", error);
+        }
+        try {
+          // Update document direction for RTL languages
+          document.dir = supported.rtl ? "rtl" : "ltr";
+          document.documentElement.lang = langCode;
+        } catch (error) {
+          console.warn("Failed to update document language:", error);
+        }
+      }
     }
   }
 
