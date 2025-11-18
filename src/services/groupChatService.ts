@@ -543,18 +543,18 @@ export class GroupChatService {
         .select()
 
       if (fileError) throw fileError
-      const fileData = fileDataArray?.[0];
-      if (!fileData) throw new Error('Failed to upload file')
+      if (!fileDataArray?.[0]) throw new Error('Failed to upload file')
 
+      const uploadedFileData = fileDataArray[0];
       return {
-        id: fileData.id,
-        groupId: fileData.group_id,
-        fileName: fileData.file_name,
-        fileUrl: fileData.file_url,
-        fileType: fileData.file_type,
-        fileSize: fileData.file_size,
-        uploadedBy: fileData.uploaded_by,
-        uploadedAt: fileData.uploaded_at
+        id: uploadedFileData.id,
+        groupId: uploadedFileData.group_id,
+        fileName: uploadedFileData.file_name,
+        fileUrl: uploadedFileData.file_url,
+        fileType: uploadedFileData.file_type,
+        fileSize: uploadedFileData.file_size,
+        uploadedBy: uploadedFileData.uploaded_by,
+        uploadedAt: uploadedFileData.uploaded_at
       }
     } catch (error) {
       console.error('Error uploading group file:', error)
