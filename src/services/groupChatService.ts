@@ -416,13 +416,14 @@ export class GroupChatService {
       }
 
       // Check if user is already a member
-      const { data: existingMember } = await supabase
+      const { data: existingMemberArray } = await supabase
         .from('group_participants')
         .select('id')
         .eq('group_id', linkData.group_id)
         .eq('user_id', userId)
-        .single()
+        .limit(1)
 
+      const existingMember = existingMemberArray?.[0];
       if (existingMember) {
         throw new Error('You are already a member of this group')
       }
@@ -540,9 +541,10 @@ export class GroupChatService {
           uploaded_at: new Date().toISOString()
         })
         .select()
-        .single()
 
       if (fileError) throw fileError
+      const fileData = fileDataArray?.[0];
+      if (!fileData) throw new Error('Failed to upload file')
 
       return {
         id: fileData.id,
@@ -631,15 +633,16 @@ export class GroupChatService {
   // Helper Methods
   private async checkPermission(groupId: string, userId: string, permission: keyof GroupPermissions): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      const { data: participantArray, error } = await supabase
         .from('group_participants')
         .select('permissions')
         .eq('group_id', groupId)
         .eq('user_id', userId)
-        .single()
+        .limit(1)
 
-      if (error) return false
-      return data.permissions[permission] || false
+      const participant = participantArray?.[0];
+      if (error || !participant) return false
+      return participant.permissions?.[permission] || false
     } catch {
       return false
     }
