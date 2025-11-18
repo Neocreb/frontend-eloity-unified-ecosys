@@ -1895,6 +1895,7 @@ const Videos: React.FC = () => {
                 onLike={handleVideoLike}
                 onComment={handleCommentClick}
                 onFollow={toggleFollow}
+                onShare={handleShare}
               />
             );
           })
