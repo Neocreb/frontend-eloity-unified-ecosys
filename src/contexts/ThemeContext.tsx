@@ -31,32 +31,22 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
-  let theme: Theme = "light";
-  let isDark = false;
-  let setTheme: (theme: Theme) => void = () => {};
-  let setIsDark: (isDark: boolean) => void = () => {};
-
-  try {
-    // Initialize theme state with immediate localStorage check to avoid hydration issues
-    [theme, setTheme] = useState<Theme>(() => {
-      try {
-        if (typeof window !== "undefined" && window.localStorage) {
-          const savedTheme = localStorage.getItem("theme") as Theme;
-          if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) {
-            return savedTheme;
-          }
+  // Initialize theme state with immediate localStorage check to avoid hydration issues
+  const [theme, setTheme] = useState<Theme>(() => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        const savedTheme = localStorage.getItem("theme") as Theme;
+        if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) {
+          return savedTheme;
         }
-      } catch (error) {
-        console.warn("Failed to read theme from localStorage:", error);
       }
-      return "light"; // Default fallback
-    });
+    } catch (error) {
+      console.warn("Failed to read theme from localStorage:", error);
+    }
+    return "light"; // Default fallback
+  });
 
-    [isDark, setIsDark] = useState(false);
-  } catch (error) {
-    console.error("Error initializing theme state:", error);
-    // Continue with defaults if hooks fail
-  }
+  const [isDark, setIsDark] = useState(false);
 
   // Remove the initialization effect since we're handling it in useState
 
