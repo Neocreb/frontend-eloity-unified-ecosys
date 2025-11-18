@@ -489,16 +489,26 @@ const VideoCard: React.FC<{
     try {
       if (isLiked) {
         await videoService.unlikeVideo(video.id);
+        setIsLiked(false);
+        toast({
+          title: "Unliked",
+          description: "Removed from your liked videos",
+        });
       } else {
         await videoService.likeVideo(video.id);
+        setIsLiked(true);
+        toast({
+          title: "Liked",
+          description: "Added to your liked videos",
+        });
       }
-      setIsLiked(!isLiked);
       if (onLike) onLike(video.id, !isLiked);
     } catch (error) {
       console.error("Error toggling like:", error);
       toast({
         title: "Error",
         description: "Failed to like/unlike video",
+        variant: "destructive"
       });
     }
   };
