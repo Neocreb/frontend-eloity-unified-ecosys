@@ -767,7 +767,7 @@ const App = () => {
               </div>
             }
           >
-            <I18nProvider>
+            <SafeI18nProvider>
               <CurrencyProvider>
                 <AuthProvider>
                   <UserCollectionsProvider>
@@ -799,7 +799,7 @@ const App = () => {
                   </UserCollectionsProvider>
                 </AuthProvider>
               </CurrencyProvider>
-            </I18nProvider>
+            </SafeI18nProvider>
           </ErrorBoundary>
         </SafeThemeProvider>
       </QueryClientProvider>
