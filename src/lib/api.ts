@@ -331,7 +331,7 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     : endpoint.startsWith("/")
       ? `/api${endpoint}`
       : `/api/${endpoint}`;
-  
+
   const token = getAuthToken();
   const config: RequestInit = {
     headers: {
@@ -344,14 +344,22 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
 
   const response = await fetch(url, config);
 
-  if (!response.ok) {
-    const errorData = await response
-      .json()
-      .catch(() => ({ error: "Unknown error" }));
-    throw new Error(errorData.error || `HTTP ${response.status}`);
+  // Read body once to avoid "body stream already read" errors
+  const text = await response.text();
+  let data: any;
+
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (e) {
+    data = { error: text || "Unknown error" };
   }
 
-  return response.json();
+  if (!response.ok) {
+    const errorMessage = (data && data.error) || `HTTP ${response.status}`;
+    throw new Error(errorMessage);
+  }
+
+  return data;
 }
 
 // Export token helper for other modules

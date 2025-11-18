@@ -94,14 +94,19 @@ async function createPioneersGroup() {
       last_activity: new Date().toISOString()
     };
     
-    const { data: newGroup, error: insertError } = await supabase
+    const { data: newGroupArray, error: insertError } = await supabase
       .from('group_chat_threads')
       .insert(insertData)
-      .select()
-      .single();
+      .select();
 
     if (insertError) {
       console.error("Error creating Pioneers group:", insertError);
+      return;
+    }
+
+    const newGroup = newGroupArray?.[0];
+    if (!newGroup) {
+      console.error("Error creating Pioneers group: No data returned");
       return;
     }
 

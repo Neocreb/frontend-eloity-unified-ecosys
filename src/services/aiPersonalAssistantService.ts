@@ -130,11 +130,13 @@ class AIPersonalAssistantService {
     preferences?: Partial<AIPersonalAssistant>,
   ): Promise<AIPersonalAssistant> {
     // Try to fetch existing assistant from database
-    const { data: existingAssistant, error } = await supabase
+    const { data: assistantArray, error } = await supabase
       .from("ai_assistants")
       .select("*")
       .eq("user_id", userId)
-      .single();
+      .limit(1);
+
+    const existingAssistant = assistantArray?.[0] || null;
 
     if (existingAssistant && !error) {
       const assistant: AIPersonalAssistant = {
@@ -211,11 +213,13 @@ class AIPersonalAssistantService {
     limit: number = 5,
   ): Promise<ContentSuggestion[]> {
     // Fetch real user data
-    const { data: userData, error: userError } = await supabase
+    const { data: userDataArray, error: userError } = await supabase
       .from("profiles")
       .select("*, posts(*), videos(*), products(*)")
       .eq("id", userId)
-      .single();
+      .limit(1);
+
+    const userData = userDataArray?.[0] || null;
 
     if (userError || !userData) {
       // Fallback to mock data if real data unavailable
@@ -701,11 +705,13 @@ class AIPersonalAssistantService {
     userId: string,
   ): Promise<SchedulingOptimization> {
     // Fetch real engagement data
-    const { data: engagementData, error } = await supabase
+    const { data: analyticsArray, error } = await supabase
       .from("user_analytics")
-      .select("engagement_by_hour, engagement_by_day")
+      .select("*")
       .eq("user_id", userId)
-      .single();
+      .limit(1);
+
+    const engagementData = analyticsArray?.[0] || null;
 
     if (error || !engagementData) {
       // Fallback to mock data if real data unavailable
@@ -791,11 +797,13 @@ class AIPersonalAssistantService {
       const platformAnalytics = await fetchPlatformAnalytics();
       
       // Find user's specific analytics data
-      const { data: userAnalytics, error } = await supabase
+      const { data: analyticsArray, error } = await supabase
         .from("user_analytics")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .limit(1);
+
+      const userAnalytics = analyticsArray?.[0] || null;
 
       if (!error && userAnalytics) {
         // Return real user analytics data
@@ -1353,11 +1361,13 @@ class AIPersonalAssistantService {
       const platformAnalytics = await fetchPlatformAnalytics();
       
       // Get user-specific data
-      const { data: userProfile, error: profileError } = await supabase
+      const { data: profileArray, error: profileError } = await supabase
         .from("profiles")
         .select("*, user_analytics(*)")
         .eq("id", userId)
-        .single();
+        .limit(1);
+
+      const userProfile = profileArray?.[0] || null;
 
       if (!profileError && userProfile) {
         const userAnalytics = userProfile.user_analytics?.[0];

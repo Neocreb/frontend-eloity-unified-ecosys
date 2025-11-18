@@ -163,7 +163,7 @@ export const messagingService = {
       }
 
       const { data: messages, error } = await supabase
-        .from("chat_messages_with_profiles")
+        .from("chat_messages")
         .select("*")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: false })
@@ -253,17 +253,18 @@ export const messagingService = {
       const conversationsWithDetails = await Promise.all(
         (conversations || []).map(async (conv) => {
           // Get last message
-          const { data: lastMessage } = await supabase
-            .from("chat_messages_with_profiles")
+          const { data: messages } = await supabase
+            .from("chat_messages")
             .select("*")
             .eq("conversation_id", conv.id)
             .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+            .limit(1);
+
+          const lastMessage = messages?.[0] || null;
 
           // Get unread count
           const { count: unreadCount } = await supabase
-            .from("chat_messages_with_profiles")
+            .from("chat_messages")
             .select("*", { count: "exact", head: true })
             .eq("conversation_id", conv.id)
             .neq("sender_id", userId)

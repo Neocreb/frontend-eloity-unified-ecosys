@@ -47,22 +47,36 @@ export class GroupChatService {
 
         console.log('Group creation response status:', response.status);
 
+        let result;
+        const contentType = response.headers.get('content-type');
+
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Group creation failed with response:', errorText);
-          
           let errorData;
           try {
-            errorData = JSON.parse(errorText);
+            if (contentType?.includes('application/json')) {
+              errorData = await response.json();
+            } else {
+              const errorText = await response.text();
+              errorData = { error: errorText };
+            }
           } catch (e) {
-            errorData = { error: errorText };
+            errorData = { error: `HTTP ${response.status}` };
           }
-          
+
           const errorMessage = errorData.error || 'Failed to create group via function endpoint';
           throw new Error(`${errorMessage} (Status: ${response.status})`);
         }
 
-        const result = await response.json();
+        try {
+          if (contentType?.includes('application/json')) {
+            result = await response.json();
+          } else {
+            const text = await response.text();
+            result = JSON.parse(text);
+          }
+        } catch (e) {
+          throw new Error('Failed to parse group creation response');
+        }
         console.log('Group creation successful:', result);
         
         return {
@@ -100,13 +114,16 @@ export class GroupChatService {
 
   async getGroupById(groupId: string): Promise<GroupChatThread> {
     try {
-      const { data: groupThread, error: groupError } = await supabase
+      const { data: groupThreadArray, error: groupError } = await supabase
         .from('group_chat_threads')
         .select('*')
         .eq('id', groupId)
-        .single();
+        .limit(1);
+
+      const groupThread = groupThreadArray?.[0];
 
       if (groupError) throw groupError;
+      if (!groupThread) throw new Error('Group not found');
 
       // Get participants count
       const { count: memberCount, error: countError } = await supabase
@@ -217,13 +234,14 @@ export class GroupChatService {
   async addMember(groupId: string, userId: string, addedBy: string): Promise<void> {
     try {
       // Check if user is already a member
-      const { data: existingMember } = await supabase
+      const { data: existingMemberArray } = await supabase
         .from('group_participants')
         .select('id')
         .eq('group_id', groupId)
         .eq('user_id', userId)
-        .single();
+        .limit(1);
 
+      const existingMember = existingMemberArray?.[0];
       if (existingMember) {
         throw new Error('User is already a member of this group');
       }
@@ -331,7 +349,7 @@ export class GroupChatService {
       if (!hasPermission) throw new Error('Insufficient permissions')
 
       const inviteCode = this.generateInviteCode()
-      const { data, error } = await supabase
+      const { data: inviteDataArray, error } = await supabase
         .from('group_invite_links')
         .insert({
           group_id: groupId,
@@ -342,9 +360,10 @@ export class GroupChatService {
           created_at: new Date().toISOString()
         })
         .select()
-        .single()
 
       if (error) throw error
+      if (!inviteDataArray?.[0]) throw new Error('Failed to create invite link')
+      const data = inviteDataArray[0]
 
       return {
         id: data.id,
@@ -381,13 +400,14 @@ export class GroupChatService {
   async joinViaInviteLink(inviteCode: string, userId: string): Promise<GroupChatThread> {
     try {
       // Get invite link
-      const { data: linkData, error: linkError } = await supabase
+      const { data: linkDataArray, error: linkError } = await supabase
         .from('group_invite_links')
         .select('*')
         .eq('code', inviteCode)
         .eq('is_active', true)
-        .single()
+        .limit(1)
 
+      const linkData = linkDataArray?.[0];
       if (linkError || !linkData) throw new Error('Invalid or expired invite link')
 
       // Check if link is expired
@@ -396,13 +416,14 @@ export class GroupChatService {
       }
 
       // Check if user is already a member
-      const { data: existingMember } = await supabase
+      const { data: existingMemberArray } = await supabase
         .from('group_participants')
         .select('id')
         .eq('group_id', linkData.group_id)
         .eq('user_id', userId)
-        .single()
+        .limit(1)
 
+      const existingMember = existingMemberArray?.[0];
       if (existingMember) {
         throw new Error('You are already a member of this group')
       }
@@ -507,7 +528,7 @@ export class GroupChatService {
         .getPublicUrl(fileName)
 
       // Save file metadata
-      const { data: fileData, error: fileError } = await supabase
+      const { data: fileDataArray, error: fileError } = await supabase
         .from('group_media_files')
         .insert({
           group_id: groupId,
@@ -520,19 +541,20 @@ export class GroupChatService {
           uploaded_at: new Date().toISOString()
         })
         .select()
-        .single()
 
       if (fileError) throw fileError
+      if (!fileDataArray?.[0]) throw new Error('Failed to upload file')
 
+      const uploadedFileData = fileDataArray[0];
       return {
-        id: fileData.id,
-        groupId: fileData.group_id,
-        fileName: fileData.file_name,
-        fileUrl: fileData.file_url,
-        fileType: fileData.file_type,
-        fileSize: fileData.file_size,
-        uploadedBy: fileData.uploaded_by,
-        uploadedAt: fileData.uploaded_at
+        id: uploadedFileData.id,
+        groupId: uploadedFileData.group_id,
+        fileName: uploadedFileData.file_name,
+        fileUrl: uploadedFileData.file_url,
+        fileType: uploadedFileData.file_type,
+        fileSize: uploadedFileData.file_size,
+        uploadedBy: uploadedFileData.uploaded_by,
+        uploadedAt: uploadedFileData.uploaded_at
       }
     } catch (error) {
       console.error('Error uploading group file:', error)
@@ -611,15 +633,16 @@ export class GroupChatService {
   // Helper Methods
   private async checkPermission(groupId: string, userId: string, permission: keyof GroupPermissions): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      const { data: participantArray, error } = await supabase
         .from('group_participants')
         .select('permissions')
         .eq('group_id', groupId)
         .eq('user_id', userId)
-        .single()
+        .limit(1)
 
-      if (error) return false
-      return data.permissions[permission] || false
+      const participant = participantArray?.[0];
+      if (error || !participant) return false
+      return participant.permissions?.[permission] || false
     } catch {
       return false
     }
