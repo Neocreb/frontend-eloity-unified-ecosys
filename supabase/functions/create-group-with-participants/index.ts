@@ -1,5 +1,5 @@
 // Supabase Edge Function for creating a group with participants
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-nocheck - Supabase Edge Functions use Deno runtime, not Node.js
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 interface CreateGroupRequest {
@@ -55,7 +55,7 @@ const getMemberPermissions = (): GroupPermissions => ({
   canMentionEveryone: false
 });
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   try {
     // Validate request method
     if (req.method !== 'POST') {
