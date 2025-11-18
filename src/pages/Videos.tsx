@@ -801,7 +801,10 @@ const VideoCard: React.FC<{
         </div>
 
         {/* Right side - Enhanced Interactive Features */}
-        <div className="flex flex-col items-center justify-end gap-4 p-3 pb-32">
+        <div className={cn(
+          "flex flex-col items-center justify-end p-2 md:p-3 transition-all duration-300",
+          isMobile ? "gap-3 pb-24" : "gap-4 pb-32"
+        )}>
           {/* User Avatar with Follow Button */}
           <div className="flex flex-col items-center gap-2">
             <Avatar className="w-12 h-12 md:w-14 md:h-14 border-2 border-white/20 cursor-pointer hover:scale-105 transition-transform duration-300">
