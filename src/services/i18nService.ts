@@ -474,11 +474,18 @@ class I18nService {
 
   // Language Management
   detectUserLanguage(): void {
-    const browserLang = navigator.language.split("-")[0];
-    const supportedLang = SUPPORTED_LANGUAGES.find(
-      (lang) => lang.code === browserLang,
-    );
-    this.currentLanguage = supportedLang ? browserLang : "en";
+    if (typeof window === "undefined" || !navigator) {
+      return; // Default to "en" set in initial state
+    }
+    try {
+      const browserLang = navigator.language.split("-")[0];
+      const supportedLang = SUPPORTED_LANGUAGES.find(
+        (lang) => lang.code === browserLang,
+      );
+      this.currentLanguage = supportedLang ? browserLang : "en";
+    } catch (error) {
+      console.warn("Failed to detect user language:", error);
+    }
   }
 
   setLanguage(langCode: string): void {
