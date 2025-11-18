@@ -793,11 +793,13 @@ class AIPersonalAssistantService {
       const platformAnalytics = await fetchPlatformAnalytics();
       
       // Find user's specific analytics data
-      const { data: userAnalytics, error } = await supabase
+      const { data: analyticsArray, error } = await supabase
         .from("user_analytics")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .limit(1);
+
+      const userAnalytics = analyticsArray?.[0] || null;
 
       if (!error && userAnalytics) {
         // Return real user analytics data
