@@ -370,9 +370,33 @@ const VideoCard: React.FC<{
   const loadComments = async () => {
     try {
       const videoComments = await videoService.getVideoComments(video.id);
-      setComments(videoComments);
+      setComments(Array.isArray(videoComments) ? videoComments : []);
     } catch (error) {
       console.error("Error loading comments:", error);
+      setComments([]);
+    }
+  };
+
+  // Handle music selection (for future music API integration)
+  const handleMusicSelect = async () => {
+    try {
+      // Store the selected music
+      setSelectedMusic({
+        id: video.music.id || `music-${Date.now()}`,
+        title: video.music.title,
+        artist: video.music.artist
+      });
+
+      toast({
+        title: "Music Added",
+        description: `"${video.music.title}" by ${video.music.artist} added to your selection`,
+      });
+    } catch (error) {
+      console.error("Error selecting music:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select music",
+      });
     }
   };
 
