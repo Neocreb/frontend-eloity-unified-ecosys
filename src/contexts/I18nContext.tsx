@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, FC, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, FC, ReactNode } from "react";
 import {
   i18nService,
   type Language,
