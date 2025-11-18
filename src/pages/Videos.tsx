@@ -1030,7 +1030,7 @@ const VideoCard: React.FC<{
               <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-sm w-48" align="end">
                 {/* Share Option */}
                 <DropdownMenuItem
-                  onClick={() => handleShare(video, 'web')}
+                  onClick={() => onShare?.(video, 'web')}
                   className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
                 >
                   <Share className="w-4 h-4" />
@@ -1039,7 +1039,7 @@ const VideoCard: React.FC<{
 
                 {/* Share to Twitter */}
                 <DropdownMenuItem
-                  onClick={() => handleShare(video, 'twitter')}
+                  onClick={() => onShare?.(video, 'twitter')}
                   className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
                 >
                   <Twitter className="w-4 h-4 text-sky-400" />
@@ -1048,7 +1048,7 @@ const VideoCard: React.FC<{
 
                 {/* Share to Facebook */}
                 <DropdownMenuItem
-                  onClick={() => handleShare(video, 'facebook')}
+                  onClick={() => onShare?.(video, 'facebook')}
                   className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
                 >
                   <Facebook className="w-4 h-4 text-blue-600" />
@@ -1057,7 +1057,7 @@ const VideoCard: React.FC<{
 
                 {/* Share to LinkedIn */}
                 <DropdownMenuItem
-                  onClick={() => handleShare(video, 'linkedin')}
+                  onClick={() => onShare?.(video, 'linkedin')}
                   className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
                 >
                   <Linkedin className="w-4 h-4 text-blue-700" />
