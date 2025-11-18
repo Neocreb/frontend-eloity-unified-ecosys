@@ -1559,22 +1559,53 @@ const Videos: React.FC = () => {
   
   // Handle sharing
   const handleShare = async (video: VideoData, platform: string) => {
-    try {
-      await videoService.shareVideo(video.id, platform);
-      
-      // Show share success message
+    if (!user) {
       toast({
-        title: "Shared Successfully",
-        description: `Video shared to ${platform}`
+        title: "Error",
+        description: "You must be logged in to share videos",
+        variant: "destructive"
       });
-      
-      // Copy link to clipboard for web sharing
+      return;
+    }
+
+    try {
+      const videoUrl = `${window.location.origin}/app/video/${video.id}`;
+      const shareText = `Check out this video by @${video.user.username}: "${video.description}"`;
+
+      // Track share in service
+      try {
+        await videoService.shareVideo(video.id, platform);
+      } catch (serviceError) {
+        console.warn("Share tracking unavailable:", serviceError);
+      }
+
+      // Handle platform-specific sharing
       if (platform === 'web') {
-        const videoUrl = `${window.location.origin}/app/video/${video.id}`;
         await navigator.clipboard.writeText(videoUrl);
         toast({
           title: "Link Copied",
           description: "Video link copied to clipboard"
+        });
+      } else if (platform === 'twitter') {
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(videoUrl)}`;
+        window.open(twitterUrl, '_blank', 'width=600,height=400');
+        toast({
+          title: "Opening Twitter",
+          description: "Share your video on Twitter"
+        });
+      } else if (platform === 'facebook') {
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(videoUrl)}`;
+        window.open(fbUrl, '_blank', 'width=600,height=400');
+        toast({
+          title: "Opening Facebook",
+          description: "Share your video on Facebook"
+        });
+      } else if (platform === 'linkedin') {
+        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(videoUrl)}`;
+        window.open(linkedinUrl, '_blank', 'width=600,height=400');
+        toast({
+          title: "Opening LinkedIn",
+          description: "Share your video on LinkedIn"
         });
       }
     } catch (error) {
