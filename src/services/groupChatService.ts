@@ -47,22 +47,36 @@ export class GroupChatService {
 
         console.log('Group creation response status:', response.status);
 
+        let result;
+        const contentType = response.headers.get('content-type');
+
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Group creation failed with response:', errorText);
-          
           let errorData;
           try {
-            errorData = JSON.parse(errorText);
+            if (contentType?.includes('application/json')) {
+              errorData = await response.json();
+            } else {
+              const errorText = await response.text();
+              errorData = { error: errorText };
+            }
           } catch (e) {
-            errorData = { error: errorText };
+            errorData = { error: `HTTP ${response.status}` };
           }
-          
+
           const errorMessage = errorData.error || 'Failed to create group via function endpoint';
           throw new Error(`${errorMessage} (Status: ${response.status})`);
         }
 
-        const result = await response.json();
+        try {
+          if (contentType?.includes('application/json')) {
+            result = await response.json();
+          } else {
+            const text = await response.text();
+            result = JSON.parse(text);
+          }
+        } catch (e) {
+          throw new Error('Failed to parse group creation response');
+        }
         console.log('Group creation successful:', result);
         
         return {
