@@ -97,7 +97,7 @@ export const SUPPORTED_LANGUAGES: Language[] = [
     code: "ar",
     name: "Arabic",
     nativeName: "العربية",
-    flag: "🇸🇦",
+    flag: "🇸��",
     rtl: true,
   },
 ];
@@ -460,19 +460,32 @@ class I18nService {
   private translations: Map<string, any> = new Map();
 
   constructor() {
-    this.detectUserLanguage();
-    this.detectUserCurrency();
-    this.detectUserRegion();
-    this.loadTranslations();
+    // Defer initialization to avoid issues with SSR and early module loading
+    if (typeof window !== "undefined") {
+      try {
+        this.detectUserLanguage();
+        this.detectUserCurrency();
+        this.detectUserRegion();
+      } catch (error) {
+        console.warn("Failed to auto-detect locale settings:", error);
+      }
+    }
   }
 
   // Language Management
   detectUserLanguage(): void {
-    const browserLang = navigator.language.split("-")[0];
-    const supportedLang = SUPPORTED_LANGUAGES.find(
-      (lang) => lang.code === browserLang,
-    );
-    this.currentLanguage = supportedLang ? browserLang : "en";
+    if (typeof window === "undefined" || !navigator) {
+      return; // Default to "en" set in initial state
+    }
+    try {
+      const browserLang = navigator.language.split("-")[0];
+      const supportedLang = SUPPORTED_LANGUAGES.find(
+        (lang) => lang.code === browserLang,
+      );
+      this.currentLanguage = supportedLang ? browserLang : "en";
+    } catch (error) {
+      console.warn("Failed to detect user language:", error);
+    }
   }
 
   setLanguage(langCode: string): void {
@@ -481,12 +494,27 @@ class I18nService {
     );
     if (supported) {
       this.currentLanguage = langCode;
-      localStorage.setItem("eloity_language", langCode);
-      this.loadTranslations();
 
-      // Update document direction for RTL languages
-      document.dir = supported.rtl ? "rtl" : "ltr";
-      document.documentElement.lang = langCode;
+      // Only access browser APIs if available
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("eloity_language", langCode);
+        } catch (error) {
+          console.warn("Failed to save language preference:", error);
+        }
+        try {
+          this.loadTranslations();
+        } catch (error) {
+          console.warn("Failed to load translations:", error);
+        }
+        try {
+          // Update document direction for RTL languages
+          document.dir = supported.rtl ? "rtl" : "ltr";
+          document.documentElement.lang = langCode;
+        } catch (error) {
+          console.warn("Failed to update document language:", error);
+        }
+      }
     }
   }
 
@@ -533,7 +561,13 @@ class I18nService {
     );
     if (supported) {
       this.currentCurrency = currencyCode;
-      localStorage.setItem("eloity_currency", currencyCode);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("eloity_currency", currencyCode);
+        } catch (error) {
+          console.warn("Failed to save currency preference:", error);
+        }
+      }
     }
   }
 
@@ -557,7 +591,13 @@ class I18nService {
     const region = REGIONAL_CONFIG.find((r) => r.code === regionCode);
     if (region) {
       this.currentRegion = regionCode;
-      localStorage.setItem("eloity_region", regionCode);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("eloity_region", regionCode);
+        } catch (error) {
+          console.warn("Failed to save region preference:", error);
+        }
+      }
     }
   }
 

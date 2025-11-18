@@ -1,13 +1,9 @@
-import React, { Component, useEffect, useLayoutEffect, ReactNode } from "react";
+import React, { Component, useEffect, ReactNode } from "react";
 import { ThemeProvider } from "./ThemeContext";
-
-// Use useEffect instead of useLayoutEffect on the server
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 // Fallback theme provider that applies light theme
 function FallbackThemeProvider({ children }: { children: ReactNode }) {
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
     if (typeof document !== "undefined") {
       try {
         const root = document.documentElement;
