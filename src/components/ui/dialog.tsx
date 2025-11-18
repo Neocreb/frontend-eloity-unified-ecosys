@@ -53,6 +53,25 @@ const DialogContent = React.forwardRef<
     }
   }, [children]);
 
+  // Handle focus management on mount to prevent aria-hidden warnings
+  React.useEffect(() => {
+    // Blur any previously focused element when dialog opens
+    // This prevents aria-hidden warnings about hidden focused elements
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && activeElement !== document.body) {
+      // Store the active element to restore focus later if needed
+      const storedFocusElement = activeElement;
+      // Blur the currently focused element
+      activeElement.blur();
+
+      // Return a cleanup function that runs when dialog closes
+      return () => {
+        // Optionally restore focus if needed
+        // storedFocusElement?.focus();
+      };
+    }
+  }, []);
+
   return (
     <DialogPortal>
       <DialogOverlay />
