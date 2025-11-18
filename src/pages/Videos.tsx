@@ -887,10 +887,13 @@ const VideoCard: React.FC<{
               <DropdownMenuTrigger asChild>
                 <Button
                   size="icon"
-                  className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                  className={cn(
+                    "rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                    isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+                  )}
                   aria-label="Share options menu"
                 >
-                  <Share className="w-5 h-5 md:w-6 md:h-6" />
+                  <Share className={isMobile ? "w-5 h-5" : "w-5 h-5 md:w-6 md:h-6"} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-sm w-48" align="end">
