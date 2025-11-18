@@ -223,7 +223,8 @@ const VideoCard: React.FC<{
   const { safePlay, safePause, togglePlayback } = useVideoPlayback();
   const { user } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
-  
+  const [selectedMusic, setSelectedMusic] = useState<{id: string; title: string; artist: string} | null>(null);
+
   // Check if user has liked the video
   useEffect(() => {
     const checkLikeStatus = async () => {
