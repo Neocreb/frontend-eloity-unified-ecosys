@@ -723,7 +723,10 @@ const VideoCard: React.FC<{
                     </Badge>
                   )}
                 </div>
-                <div className="text-white/80 text-[10px] md:text-xs">
+                <div className={cn(
+                  "text-white/80",
+                  isMobile ? "text-[9px]" : "text-[10px] md:text-xs"
+                )}>
                   {video.user.displayName}
                   {video.user.followerCount && (
                     <span className="ml-1">
