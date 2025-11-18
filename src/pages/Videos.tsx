@@ -771,17 +771,22 @@ const VideoCard: React.FC<{
               </p>
 
               {/* Hashtags */}
-              <div className="flex flex-wrap gap-1 mt-1 md:mt-2">
-                {video.hashtags.slice(0, 3).map((tag, index) => (
-                  <span key={tag} className="text-blue-300 text-xs md:text-sm hover:text-blue-100 cursor-pointer">
-                    #{tag}{index < video.hashtags.slice(0, 3).length - 1 ? ' ' : ''}
-                  </span>
-                ))}
-              </div>
+              {!isMobile && (
+                <div className="flex flex-wrap gap-1 mt-1 md:mt-2">
+                  {video.hashtags.slice(0, 3).map((tag, index) => (
+                    <span key={tag} className="text-blue-300 text-xs md:text-sm hover:text-blue-100 cursor-pointer">
+                      #{tag}{index < video.hashtags.slice(0, 3).length - 1 ? ' ' : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Music info */}
-            <div className="flex items-center gap-1 md:gap-2 text-white/80 text-[10px] md:text-xs">
+            <div className={cn(
+              "flex items-center gap-1 text-white/80",
+              isMobile ? "text-[9px] md:gap-2 md:text-[10px]" : "text-[10px] md:gap-2 md:text-xs"
+            )}>
               <Music className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">
                 {video.music.title} - {video.music.artist}
