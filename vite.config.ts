@@ -22,27 +22,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
   resolve: {
-    preserveSymlinks: false,
     alias: {
       "@": path.resolve(__dirname, "src"),
-      // update/remove these if you don't have shared or attached_assets in root
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
-      // Ensure single React instance everywhere
-      react: path.resolve(__dirname, "node_modules/react"),
-      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
-      "react-dom/client": path.resolve(
-        __dirname,
-        "node_modules/react-dom/client",
-      ),
-      "react/jsx-runtime": path.resolve(
-        __dirname,
-        "node_modules/react/jsx-runtime",
-      ),
-      "react/jsx-dev-runtime": path.resolve(
-        __dirname,
-        "node_modules/react/jsx-dev-runtime",
-      ),
     },
     dedupe: [
       "react",
