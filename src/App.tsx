@@ -19,7 +19,7 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { WalletProvider } from "./contexts/WalletContext";
 import { LiveContentProvider } from "./contexts/LiveContentContext";
 import SafeThemeProvider from "./contexts/SafeThemeProvider";
-import { I18nProvider } from "./contexts/I18nContext";
+import SafeI18nProvider from "./contexts/SafeI18nProvider";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { UnifiedNotificationProvider } from "./contexts/UnifiedNotificationContext";
 import { FeedProvider } from "./contexts/FeedContext";
@@ -767,7 +767,7 @@ const App = () => {
               </div>
             }
           >
-            <I18nProvider>
+            <SafeI18nProvider>
               <CurrencyProvider>
                 <AuthProvider>
                   <UserCollectionsProvider>
@@ -799,7 +799,7 @@ const App = () => {
                   </UserCollectionsProvider>
                 </AuthProvider>
               </CurrencyProvider>
-            </I18nProvider>
+            </SafeI18nProvider>
           </ErrorBoundary>
         </SafeThemeProvider>
       </QueryClientProvider>
