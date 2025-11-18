@@ -114,37 +114,43 @@ const UserTrades: React.FC = () => {
         
         // Fetch trading stats
         try {
-          const statsResponse = await apiCall(`/trading-stats/${profileData.id}`);
-          setTradingStats(statsResponse.data);
+          const statsResponse = await apiCall(`/crypto/stats`);
+          if (statsResponse && typeof statsResponse === 'object') {
+            setTradingStats(statsResponse.data || statsResponse);
+          }
         } catch (statsError) {
           console.error("Failed to fetch trading stats:", statsError);
           setTradingStats(null);
         }
-        
+
         // Fetch payment methods
         try {
-          const paymentsResponse = await apiCall(`/payment-methods/${profileData.id}`);
-          setPaymentMethods(paymentsResponse.data);
+          const paymentsResponse = await apiCall(`/payment-methods`);
+          const methodsList = paymentsResponse?.paymentMethods || paymentsResponse?.data || [];
+          setPaymentMethods(Array.isArray(methodsList) ? methodsList : []);
         } catch (paymentsError) {
           console.error("Failed to fetch payment methods:", paymentsError);
           setPaymentMethods([]);
         }
-        
-        // Fetch crypto portfolio
+
+        // Fetch crypto portfolio (wallet balance)
         try {
-          const portfolioResponse = await apiCall(`/portfolio/${profileData.id}`);
-          setCryptoPortfolio(portfolioResponse.data);
+          const portfolioResponse = await apiCall(`/crypto/wallet/balance`);
+          const portfolio = portfolioResponse?.data || portfolioResponse || {};
+          setCryptoPortfolio(typeof portfolio === 'object' ? portfolio : []);
         } catch (portfolioError) {
           console.error("Failed to fetch crypto portfolio:", portfolioError);
           setCryptoPortfolio([]);
         }
-        
-        // Fetch reviews
+
+        // Fetch reviews - note: this endpoint may not exist, so we silently fail
         try {
-          const reviewsResponse = await apiCall(`/reviews/${profileData.id}`);
-          setReviews(reviewsResponse.data);
+          const reviewsResponse = await apiCall(`/reviews`);
+          const reviewsList = reviewsResponse?.data || reviewsResponse || [];
+          setReviews(Array.isArray(reviewsList) ? reviewsList : []);
         } catch (reviewsError) {
-          console.error("Failed to fetch reviews:", reviewsError);
+          // Reviews endpoint may not exist, this is expected
+          console.debug("Reviews not available:", reviewsError);
           setReviews([]);
         }
         
