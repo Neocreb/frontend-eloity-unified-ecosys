@@ -986,12 +986,15 @@ const VideoCard: React.FC<{
             <div className="flex flex-col items-center gap-1">
               <Button
                 size="icon"
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                className={cn(
+                  "rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                  isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+                )}
                 onClick={handleDuet}
               >
-                <Users className="w-6 h-6 md:w-7 md:h-7" />
+                <Users className={isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} />
               </Button>
-              <span className="text-white text-xs font-medium">Duet</span>
+              <span className="text-white text-[10px] md:text-xs font-medium">Duet</span>
             </div>
           )}
 
