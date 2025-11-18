@@ -791,13 +791,15 @@ const VideoCard: React.FC<{
               <span className="truncate">
                 {video.music.title} - {video.music.artist}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white/60 text-xs p-0 h-auto hover:text-white ml-2"
-              >
-                Use Sound
-              </Button>
+              {!isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/60 text-xs p-0 h-auto hover:text-white ml-2"
+                >
+                  Use Sound
+                </Button>
+              )}
             </div>
 
             {/* Video metadata */}
