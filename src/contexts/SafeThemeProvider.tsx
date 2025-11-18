@@ -1,9 +1,9 @@
-import React, { Component, useEffect, ReactNode } from "react";
+import React, { Component, ReactNode } from "react";
 import { ThemeProvider } from "./ThemeContext";
 
 // Fallback theme provider that applies light theme
-function FallbackThemeProvider({ children }: { children: ReactNode }) {
-  useEffect(() => {
+class FallbackThemeProvider extends Component<{ children: ReactNode }> {
+  componentDidMount() {
     if (typeof document !== "undefined") {
       try {
         const root = document.documentElement;
@@ -13,9 +13,11 @@ function FallbackThemeProvider({ children }: { children: ReactNode }) {
         console.warn("Failed to apply fallback theme:", error);
       }
     }
-  }, []);
+  }
 
-  return <>{children}</>;
+  render() {
+    return <>{this.props.children}</>;
+  }
 }
 
 interface SafeThemeProviderState {
