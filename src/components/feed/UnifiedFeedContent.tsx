@@ -225,6 +225,33 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
     }
   }, [hasMore, isLoading, loadMorePosts]);
 
+  // Memoized feed items rendering - MUST be before conditional returns
+  const feedItemsRender = useMemo(() => {
+    try {
+      // Safety check for feedItems
+      if (!feedItems || !Array.isArray(feedItems) || feedItems.length === 0) {
+        return null;
+      }
+
+      return feedItems.map((item) => {
+        // Safety check for each item
+        if (!item || !item.id) {
+          return null;
+        }
+        return (
+          <UnifiedFeedItemCard
+            key={item.id}
+            item={item}
+            onInteraction={handleInteraction}
+          />
+        );
+      }).filter(Boolean); // Remove any null items
+    } catch (error) {
+      console.error('Error rendering feed items:', error);
+      return null;
+    }
+  }, [feedItems, handleInteraction]);
+
   // Handle infinite scroll
   useEffect(() => {
     try {
@@ -242,7 +269,7 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
     } catch (error) {
       console.error('Error setting up scroll handler:', error);
     }
-  }, [handleLoadMore]); // Only depend on handleLoadMore
+  }, [handleLoadMore]);
 
   // Handle error state
   if (error) {
@@ -292,33 +319,6 @@ const UnifiedFeedContentComponent: React.FC<{ feedType: string }> = ({ feedType 
       </div>
     );
   }
-
-  // Memoized feed items rendering
-  const feedItemsRender = useMemo(() => {
-    try {
-      // Safety check for feedItems
-      if (!feedItems || !Array.isArray(feedItems) || feedItems.length === 0) {
-        return null;
-      }
-      
-      return feedItems.map((item) => {
-        // Safety check for each item
-        if (!item || !item.id) {
-          return null;
-        }
-        return (
-          <UnifiedFeedItemCard
-            key={item.id}
-            item={item}
-            onInteraction={handleInteraction}
-          />
-        );
-      }).filter(Boolean); // Remove any null items
-    } catch (error) {
-      console.error('Error rendering feed items:', error);
-      return null;
-    }
-  }, [feedItems]); // Removed handleInteraction from dependencies since it's a stable useCallback
 
   return (
     <div className="pb-4">
