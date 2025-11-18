@@ -691,16 +691,22 @@ const VideoCard: React.FC<{
             </Button>
           </div>
           
-          <div className="space-y-2 md:space-y-3">
+          <div className={isMobile ? "space-y-1" : "space-y-2 md:space-y-3"}>
             {/* User info */}
-            <div className="flex items-center gap-2 md:gap-3">
-              <Avatar className="w-10 h-10 md:w-12 md:h-12 border-2 border-white/20">
+            <div className={cn("flex items-center gap-2", isMobile ? "gap-2" : "md:gap-3")}>
+              <Avatar className={cn(
+                "border-2 border-white/20",
+                isMobile ? "w-9 h-9" : "w-10 h-10 md:w-12 md:h-12"
+              )}>
                 <AvatarImage src={video.user.avatar} />
                 <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 md:gap-2">
-                  <span className="text-white font-semibold text-xs md:text-sm truncate">
+                <div className={cn("flex items-center", isMobile ? "gap-1" : "gap-1 md:gap-2")}>
+                  <span className={cn(
+                    "text-white font-semibold truncate",
+                    isMobile ? "text-[11px]" : "text-xs md:text-sm"
+                  )}>
                     @{video.user.username}
                   </span>
                   {video.user.verified && (
