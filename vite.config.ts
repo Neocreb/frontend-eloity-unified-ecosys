@@ -46,30 +46,22 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Keep React and React-DOM in the main bundle to avoid duplication
-          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) {
-            return undefined; // Put in main bundle
-          }
-          // Split other vendor chunks
-          if (id.includes("node_modules/react-router-dom")) {
-            return "router";
-          }
-          if (id.includes("node_modules/@radix-ui")) {
-            return "ui";
-          }
-          if (id.includes("node_modules/@tanstack/react-query")) {
-            return "query";
-          }
-          if (id.includes("node_modules/@supabase")) {
-            return "supabase";
-          }
-          if (id.includes("node_modules/lucide-react")) {
-            return "icons";
-          }
-          if (id.includes("node_modules") && (id.includes("clsx") || id.includes("tailwind-merge"))) {
-            return "utils";
-          }
+        manualChunks: {
+          // Keep critical dependencies in main bundle
+          vendor: [
+            "react",
+            "react-dom",
+            "react-router-dom",
+            "lucide-react",
+          ],
+          // Optional larger chunks
+          ui: [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tabs",
+          ],
+          query: ["@tanstack/react-query"],
+          supabase: ["@supabase/supabase-js"],
         },
       },
     },
