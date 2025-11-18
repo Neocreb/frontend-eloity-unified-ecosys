@@ -129,6 +129,19 @@ cp .env.example .env
 nano .env  # or use your preferred editor
 ```
 
+### Supabase MCP Integration
+
+This platform is configured to work with the Supabase MCP server. For detailed setup instructions, see [Supabase MCP Integration Guide](./SUPABASE_MCP_INTEGRATION.md).
+
+Quick setup:
+```bash
+# Run the automated setup script for Supabase MCP integration
+npm run setup:supabase-mcp
+
+# Test the connection
+npm run test:supabase-mcp
+```
+
 ### 3. **Essential Environment Variables**
 
 ```
