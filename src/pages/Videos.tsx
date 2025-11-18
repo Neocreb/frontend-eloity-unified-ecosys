@@ -870,10 +870,13 @@ const VideoCard: React.FC<{
 
           {/* Views Count */}
           <div className="flex flex-col items-center gap-1">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-              <Eye className="w-6 h-6 md:w-7 md:h-7 text-white" />
+            <div className={cn(
+              "rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center",
+              isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+            )}>
+              <Eye className={cn("text-white", isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7")} />
             </div>
-            <span className="text-white text-xs font-medium">
+            <span className="text-white text-[10px] md:text-xs font-medium">
               {formatNumber(parseInt(video.stats.views))}
             </span>
           </div>
