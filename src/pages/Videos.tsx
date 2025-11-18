@@ -807,7 +807,10 @@ const VideoCard: React.FC<{
         )}>
           {/* User Avatar with Follow Button */}
           <div className="flex flex-col items-center gap-2">
-            <Avatar className="w-12 h-12 md:w-14 md:h-14 border-2 border-white/20 cursor-pointer hover:scale-105 transition-transform duration-300">
+            <Avatar className={cn(
+              "border-2 border-white/20 cursor-pointer hover:scale-105 transition-transform duration-300",
+              isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+            )}>
               <AvatarImage src={video.user.avatar} />
               <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
             </Avatar>
@@ -815,9 +818,10 @@ const VideoCard: React.FC<{
               size="sm"
               variant={isFollowing ? "default" : "outline"}
               className={cn(
-                "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm",
-                isFollowing 
-                  ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white" 
+                "backdrop-blur-sm transition-all duration-300 font-medium",
+                isMobile ? "text-[9px] px-2 py-0.5 h-5" : "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto",
+                isFollowing
+                  ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white"
                   : "bg-white/20 border-white/30 text-white hover:bg-white/30"
               )}
               onClick={() => toggleFollow(video)}
