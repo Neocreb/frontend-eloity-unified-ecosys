@@ -93,7 +93,15 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const body: CreateGroupRequest = await req.json();
+    let body: CreateGroupRequest;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body.' }),
+        { headers: { 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
     
     // Validate required fields
     if (!body.name?.trim()) {
@@ -135,8 +143,21 @@ Deno.serve(async (req) => {
 
     if (groupError) {
       console.error('Error creating group:', groupError);
+      // More specific error handling
+      if (groupError.code === '23503') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Database constraint violation. Please ensure all referenced users exist.',
+            details: groupError.message 
+          }),
+          { headers: { 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
       return new Response(
-        JSON.stringify({ error: 'Failed to create group.', details: groupError.message }),
+        JSON.stringify({ 
+          error: 'Failed to create group due to database configuration issue. Please contact support.',
+          details: groupError.message 
+        }),
         { headers: { 'Content-Type': 'application/json' }, status: 500 }
       );
     }
@@ -160,8 +181,22 @@ Deno.serve(async (req) => {
       // Try to clean up the group we just created
       await supabase.from('group_chat_threads').delete().eq('id', groupThread.id);
       
+      // More specific error handling
+      if (participantsError.code === '23503') {
+        return new Response(
+          JSON.stringify({ 
+            error: 'One or more participants do not exist. Please verify all user IDs.',
+            details: participantsError.message 
+          }),
+          { headers: { 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Failed to add participants.', details: participantsError.message }),
+        JSON.stringify({ 
+          error: 'Failed to add participants due to database configuration issue. Please contact support.',
+          details: participantsError.message 
+        }),
         { headers: { 'Content-Type': 'application/json' }, status: 500 }
       );
     }
@@ -188,7 +223,10 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Unexpected error in create-group-with-participants function:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error.' }),
+      JSON.stringify({ 
+        error: 'Internal server error occurred while creating group. Please contact support.',
+        details: error.message || 'Unknown error'
+      }),
       { headers: { 'Content-Type': 'application/json' }, status: 500 }
     );
   }
