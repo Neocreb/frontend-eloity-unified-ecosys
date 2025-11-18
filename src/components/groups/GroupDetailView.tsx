@@ -61,6 +61,7 @@ import { eventSyncService, SyncEvent } from "@/services/eventSyncService";
 import { chatInitiationService } from "@/services/chatInitiationService";
 import { QuickMessageButton } from "@/components/chat/QuickMessageButton";
 import { useAuth } from "@/contexts/AuthContext";
+import { GroupContributionVotingSystem } from "@/components/chat/group/GroupContributionVotingSystem";
 
 interface Group {
   id: string;
@@ -432,7 +433,7 @@ const GroupDetailView = () => {
   };
 
   const handleManageGroup = () => {
-    if (!group.is_owner && !group.is_admin) {
+    if (!(group.is_owner || false) && !(group.is_admin || false)) {
       toast({
         title: "Access Denied",
         description: "You don't have permission to manage this group",
@@ -499,13 +500,13 @@ const GroupDetailView = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h4 className="font-semibold text-sm">{post.author.full_name}</h4>
-                {group.is_owner && (
+                {group.is_owner || false && (
                   <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                     <Crown className="w-3 h-3 mr-1" />
                     Owner
                   </Badge>
                 )}
-                {group.is_admin && (
+                {group.is_admin || false && (
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                     <Shield className="w-3 h-3 mr-1" />
                     Admin
@@ -722,7 +723,7 @@ const GroupDetailView = () => {
                 </Button>
               ) : (
                 <>
-                  {(group.is_owner || group.is_admin) && (
+                  {(group.is_owner || false || group.is_admin || false) && (
                     <Button variant="secondary" className="gap-2 text-sm sm:text-base" onClick={handleManageGroup}>
                       <Settings className="w-4 h-4" />
                       Manage
@@ -836,7 +837,7 @@ const GroupDetailView = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Create Post Section */}
-            {group.is_joined && (
+            {group.is_joined || false && (
               <Card>
                 <CardContent className="p-4">
                   <div className="flex gap-3">
@@ -890,11 +891,12 @@ const GroupDetailView = () => {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="posts">Posts</TabsTrigger>
                 <TabsTrigger value="events">Events</TabsTrigger>
                 <TabsTrigger value="members">Members</TabsTrigger>
                 <TabsTrigger value="files">Files</TabsTrigger>
+                <TabsTrigger value="contributions">Contributions</TabsTrigger>
               </TabsList>
 
               <TabsContent value="posts" className="space-y-4">
@@ -930,7 +932,7 @@ const GroupDetailView = () => {
               <TabsContent value="events" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Upcoming Events</h3>
-                  {(group.is_owner || group.is_admin) && (
+                  {(group.is_owner || false || group.is_admin || false) && (
                     <Button onClick={() => setShowCreateEvent(true)}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create Event
@@ -999,13 +1001,20 @@ const GroupDetailView = () => {
                   <p className="text-muted-foreground mb-4">
                     Files shared in this group will appear here
                   </p>
-                  {group.is_joined && (
+                  {group.is_joined || false && (
                     <Button>
                       <Upload className="w-4 h-4 mr-2" />
                       Upload File
                     </Button>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="contributions" className="space-y-4">
+                <GroupContributionVotingSystem 
+                  groupId={group.id} 
+                  isAdmin={(group.is_owner || false) || (group.is_admin || false)} 
+                />
               </TabsContent>
             </Tabs>
           </div>
