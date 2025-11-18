@@ -561,7 +561,13 @@ class I18nService {
     );
     if (supported) {
       this.currentCurrency = currencyCode;
-      localStorage.setItem("eloity_currency", currencyCode);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("eloity_currency", currencyCode);
+        } catch (error) {
+          console.warn("Failed to save currency preference:", error);
+        }
+      }
     }
   }
 
