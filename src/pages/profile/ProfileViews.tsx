@@ -58,26 +58,38 @@ const ProfileViews: React.FC = () => {
   const [viewers, setViewers] = useState<Viewer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewStats, setViewStats] = useState<ViewStats>({
+    totalViews: 0,
+    uniqueViewers: 0,
+    avgViewTime: "0m 0s",
+    topLocation: "",
+    peakHour: "",
+    deviceBreakdown: {
+      mobile: 0,
+      desktop: 0,
+      tablet: 0,
+    },
+  });
 
   useEffect(() => {
     const fetchViewers = async () => {
       if (!username) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         // Get user profile first
         const userProfile = await profileService.getUserByUsername(username);
         if (!userProfile) {
           setError("User not found or profile data is temporarily unavailable. Please try again later.");
           return;
         }
-        
+
         // TODO: Fetch real viewer data from analytics service
         // For now, we'll set empty data since we don't have a real analytics service
         setViewers([]);
-        
+
         // Set initial view stats
         setViewStats({
           totalViews: 0,
@@ -106,19 +118,6 @@ const ProfileViews: React.FC = () => {
 
     fetchViewers();
   }, [username]);
-
-  const [viewStats, setViewStats] = useState<ViewStats>({
-    totalViews: 0,
-    uniqueViewers: 0,
-    avgViewTime: "0m 0s",
-    topLocation: "",
-    peakHour: "",
-    deviceBreakdown: {
-      mobile: 0,
-      desktop: 0,
-      tablet: 0,
-    },
-  });
 
   // Show loading state while fetching data
   if (loading) {
