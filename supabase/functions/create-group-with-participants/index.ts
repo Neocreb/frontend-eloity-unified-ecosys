@@ -57,7 +57,7 @@ const getMemberPermissions = (): GroupPermissions => ({
 
 // CORS headers for Vercel deployment
 const corsHeaders = {
-    'Access-Control-Allow-Origin': 'https://frontend-eloity-unified-ecosyst.vercel.app', // In production, replace with your specific domain
+  'Access-Control-Allow-Origin': '*', // In production, replace with your specific domain
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
@@ -102,11 +102,14 @@ Deno.serve(async (req) => {
     // Get the authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) {
+      console.error('Authentication error:', userError);
       return new Response(
         JSON.stringify({ error: 'Invalid or expired token.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
+
+    console.log('Authenticated user:', user.id);
 
     // Parse request body
     let body: CreateGroupRequest;
@@ -140,6 +143,27 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Creator must be included in participants list.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
+    }
+
+    // Log the request details for debugging
+    console.log('Creating group with details:', {
+      name: body.name,
+      createdBy: user.id,
+      participantCount: body.participants.length,
+      participants: body.participants
+    });
+
+    // Check if the user exists in auth.users (debugging)
+    const { data: userData, error: userCheckError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (userCheckError) {
+      console.error('User existence check failed:', userCheckError);
+    } else {
+      console.log('User exists in users table:', !!userData);
     }
 
     // Create the group chat thread
@@ -178,6 +202,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log('Group created successfully:', groupThread.id);
+
     // Add participants
     const participantInserts = body.participants.map((userId, index) => ({
       group_id: groupThread.id,
@@ -187,6 +213,8 @@ Deno.serve(async (req) => {
       joined_at: new Date().toISOString(),
       permissions: userId === user.id ? getAdminPermissions() : getMemberPermissions()
     }));
+
+    console.log('Adding participants:', participantInserts.length);
 
     const { error: participantsError } = await supabase
       .from('group_participants')
@@ -216,6 +244,8 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    console.log('Participants added successfully');
 
     // Return success response
     return new Response(
