@@ -46,22 +46,24 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Keep critical dependencies in main bundle
-          vendor: [
-            "react",
-            "react-dom",
-            "react-router-dom",
-            "lucide-react",
-          ],
-          // Optional larger chunks
-          ui: [
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-tabs",
-          ],
-          query: ["@tanstack/react-query"],
-          supabase: ["@supabase/supabase-js"],
+        manualChunks: (id) => {
+          // Never split critical rendering dependencies
+          if (
+            id.includes("react") ||
+            id.includes("react-dom") ||
+            id.includes("lucide-react") ||
+            id.includes("react-router-dom")
+          ) {
+            return undefined; // Keep in main bundle
+          }
+
+          // Optional splitting for large vendor libraries
+          if (id.includes("@supabase/supabase-js")) {
+            return "supabase";
+          }
+          if (id.includes("@tanstack/react-query")) {
+            return "query";
+          }
         },
       },
     },
