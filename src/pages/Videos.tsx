@@ -751,8 +751,14 @@ const VideoCard: React.FC<{
             </div>
             
             {/* Description */}
-            <div className="text-white text-xs md:text-sm">
-              <p className="leading-relaxed line-clamp-2 md:line-clamp-3">
+            <div className={cn(
+              "text-white",
+              isMobile ? "text-[11px]" : "text-xs md:text-sm"
+            )}>
+              <p className={cn(
+                "leading-relaxed",
+                isMobile ? "line-clamp-1" : "line-clamp-2 md:line-clamp-3"
+              )}>
                 {showMore ? description : truncatedDescription}
                 {description.length > 100 && (
                   <button
