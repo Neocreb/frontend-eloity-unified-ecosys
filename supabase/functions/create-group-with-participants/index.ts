@@ -55,13 +55,29 @@ const getMemberPermissions = (): GroupPermissions => ({
   canMentionEveryone: false
 });
 
+// CORS headers for Vercel deployment
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // In production, replace with your specific domain
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Content-Type': 'application/json'
+};
+
 Deno.serve(async (req) => {
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    });
+  }
+
   try {
     // Validate request method
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed. Use POST.' }),
-        { headers: { 'Content-Type': 'application/json' }, status: 405 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 405 }
       );
     }
 
@@ -70,7 +86,7 @@ Deno.serve(async (req) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Missing or invalid Authorization header. Bearer token required.' }),
-        { headers: { 'Content-Type': 'application/json' }, status: 401 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
@@ -88,7 +104,7 @@ Deno.serve(async (req) => {
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid or expired token.' }),
-        { headers: { 'Content-Type': 'application/json' }, status: 401 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
@@ -99,7 +115,7 @@ Deno.serve(async (req) => {
     } catch (parseError) {
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body.' }),
-        { headers: { 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
     
@@ -107,14 +123,14 @@ Deno.serve(async (req) => {
     if (!body.name?.trim()) {
       return new Response(
         JSON.stringify({ error: 'Group name is required.' }),
-        { headers: { 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     if (!body.participants || body.participants.length === 0) {
       return new Response(
         JSON.stringify({ error: 'At least one participant is required.' }),
-        { headers: { 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
@@ -122,7 +138,7 @@ Deno.serve(async (req) => {
     if (!body.participants.includes(user.id)) {
       return new Response(
         JSON.stringify({ error: 'Creator must be included in participants list.' }),
-        { headers: { 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
@@ -150,7 +166,7 @@ Deno.serve(async (req) => {
             error: 'Database constraint violation. Please ensure all referenced users exist.',
             details: groupError.message 
           }),
-          { headers: { 'Content-Type': 'application/json' }, status: 400 }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
       return new Response(
@@ -158,7 +174,7 @@ Deno.serve(async (req) => {
           error: 'Failed to create group due to database configuration issue. Please contact support.',
           details: groupError.message 
         }),
-        { headers: { 'Content-Type': 'application/json' }, status: 500 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
@@ -188,7 +204,7 @@ Deno.serve(async (req) => {
             error: 'One or more participants do not exist. Please verify all user IDs.',
             details: participantsError.message 
           }),
-          { headers: { 'Content-Type': 'application/json' }, status: 400 }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
       
@@ -197,7 +213,7 @@ Deno.serve(async (req) => {
           error: 'Failed to add participants due to database configuration issue. Please contact support.',
           details: participantsError.message 
         }),
-        { headers: { 'Content-Type': 'application/json' }, status: 500 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
@@ -217,7 +233,7 @@ Deno.serve(async (req) => {
           last_activity: groupThread.last_activity
         }
       }),
-      { headers: { 'Content-Type': 'application/json' }, status: 201 }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 201 }
     );
 
   } catch (error) {
@@ -227,7 +243,7 @@ Deno.serve(async (req) => {
         error: 'Internal server error occurred while creating group. Please contact support.',
         details: error.message || 'Unknown error'
       }),
-      { headers: { 'Content-Type': 'application/json' }, status: 500 }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
