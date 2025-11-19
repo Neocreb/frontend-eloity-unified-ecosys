@@ -621,7 +621,7 @@ const VideoCard: React.FC<{
   };
 
   // Handle battle creation
-  const handleCreateBattle = async (opponentId: string) => {
+  const handleCreateBattle = async (opponentId?: string) => {
     try {
       if (!user) {
         toast({
@@ -632,19 +632,16 @@ const VideoCard: React.FC<{
         return;
       }
 
-      // Create battle
-      // const battle = await battleService.createBattle({
-      //   participant1Id: user.id,
-      //   participant2Id: opponentId
-      // });
-
-      // Navigate to battles tab
-      setActiveTab("battles");
+      // Generate a temporary battle ID for navigation
+      const battleId = `battle-${Date.now()}`;
 
       toast({
         title: "Battle Created!",
-        description: "You've challenged your opponent. Navigating to battle...",
+        description: "You've challenged your opponent. Starting battle...",
       });
+
+      // Navigate to battle page
+      navigate(`/app/battle/${battleId}`);
     } catch (error) {
       console.error("Error creating battle:", error);
       toast({
@@ -667,16 +664,16 @@ const VideoCard: React.FC<{
         return;
       }
 
-      setIsLiveStreaming(true);
-      setShowLiveStreamModal(true);
-
-      // Navigate to live tab
-      setActiveTab("live");
+      // Generate a temporary livestream ID for navigation
+      const streamId = `stream-${Date.now()}`;
 
       toast({
         title: "Going Live!",
         description: "Starting your live stream...",
       });
+
+      // Navigate to livestream page
+      navigate(`/app/live/${streamId}`);
     } catch (error) {
       console.error("Error creating livestream:", error);
       toast({
