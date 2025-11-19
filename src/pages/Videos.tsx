@@ -620,6 +620,73 @@ const VideoCard: React.FC<{
     }
   };
 
+  // Handle battle creation
+  const handleCreateBattle = async (opponentId: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a battle",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create battle
+      // const battle = await battleService.createBattle({
+      //   participant1Id: user.id,
+      //   participant2Id: opponentId
+      // });
+
+      // Navigate to battles tab
+      setActiveTab("battles");
+
+      toast({
+        title: "Battle Created!",
+        description: "You've challenged your opponent. Navigating to battle...",
+      });
+    } catch (error) {
+      console.error("Error creating battle:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create battle",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle livestream creation
+  const handleCreateLivestream = async () => {
+    try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to go live",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setIsLiveStreaming(true);
+      setShowLiveStreamModal(true);
+
+      // Navigate to live tab
+      setActiveTab("live");
+
+      toast({
+        title: "Going Live!",
+        description: "Starting your live stream...",
+      });
+    } catch (error) {
+      console.error("Error creating livestream:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start livestream",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Handle download
   const handleDownload = async () => {
     try {
