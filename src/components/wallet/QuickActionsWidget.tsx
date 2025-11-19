@@ -49,6 +49,7 @@ interface RecentRecipient {
 }
 
 const QuickActionsWidget = () => {
+  const navigate = useNavigate();
   const { walletBalance, transactions, getTotalEarnings } = useWalletContext();
 
   const [recentRecipients] = useState<RecentRecipient[]>([
@@ -73,7 +74,7 @@ const QuickActionsWidget = () => {
       label: "Send Money",
       icon: <Send className="h-6 w-6" />,
       color: "bg-blue-500",
-      action: () => setShowSendModal(true),
+      action: () => navigate("/app/wallet/send-money"),
     },
     {
       id: "request",
