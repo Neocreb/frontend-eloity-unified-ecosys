@@ -474,8 +474,13 @@ const AppRoutes = () => {
           <Route path="wallet/integrations" element={<WalletIntegrations />} />
           <Route path="wallet/cards" element={<WalletCards />} />
           <Route path="wallet/gift-cards" element={<GiftCards />} />
-          {/* Wallet Action Routes */}
+          {/* Wallet Action Routes - Full Page Flows */}
           <Route path="wallet/send-money" element={<SendMoney />} />
+          <Route path="wallet/request" element={<Request />} />
+          <Route path="wallet/withdraw" element={<Withdraw />} />
+          <Route path="wallet/transfer" element={<Transfer />} />
+          <Route path="wallet/pay-bills" element={<PayBills />} />
+          <Route path="wallet/top-up" element={<TopUp />} />
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
