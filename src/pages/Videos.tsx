@@ -569,26 +569,53 @@ const VideoCard: React.FC<{
   };
 
   // Handle duet creation
-  const handleDuet = async () => {
+  const handleDuet = async (duetVideo: VideoData) => {
     try {
-      // In a real implementation, this would open the duet creation interface
-      // For now, we'll just show a toast message
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a duet",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedVideoForDuet(duetVideo);
+      setShowDuetModal(true);
+
       toast({
-        title: "Duet Feature",
-        description: "Duet creation would open here",
+        title: "Duet Creation Started",
+        description: "Get ready to create your duet!",
       });
-      
-      // Example of how to use the duetService:
-      // const duetData = await duetService.createDuet(
-      //   video.id, 
-      //   "duet-video-id", 
-      //   "side-by-side"
-      // );
     } catch (error) {
       console.error("Error initiating duet:", error);
       toast({
         title: "Error",
         description: "Failed to start duet",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle duet completion
+  const handleDuetComplete = async (duetData: any) => {
+    try {
+      // Call service to save duet
+      // await duetService.createDuet(duetData);
+
+      setShowDuetModal(false);
+      setSelectedVideoForDuet(null);
+
+      toast({
+        title: "Duet Created!",
+        description: "Your duet has been published",
+      });
+    } catch (error) {
+      console.error("Error creating duet:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create duet",
+        variant: "destructive"
       });
     }
   };
