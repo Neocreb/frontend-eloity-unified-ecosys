@@ -291,8 +291,7 @@ const QuickActionsWidget = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Action Modals */}
-      <EnhancedSendMoneyModal isOpen={showSendModal} onClose={() => setShowSendModal(false)} />
+      {/* Quick Action Modals - Keep for Request, Transfer, Pay Bill, Top Up, Buy/Sell Gift Cards (for now) */}
       <RequestMoneyModal isOpen={showRequestModal} onClose={() => setShowRequestModal(false)} />
       <TransferModal isOpen={showTransferModal} onClose={() => setShowTransferModal(false)} />
       <PayBillModal isOpen={showPayBillModal} onClose={() => setShowPayBillModal(false)} />
