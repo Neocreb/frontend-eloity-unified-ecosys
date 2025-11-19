@@ -13,7 +13,6 @@ import {
   BuyGiftCardModal,
   SellGiftCardModal,
 } from "./QuickActionModals";
-import EnhancedSendMoneyModal from "./EnhancedSendMoneyModal";
 import {
   ArrowUpRight,
   ArrowDownLeft,
