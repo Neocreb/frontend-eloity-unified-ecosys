@@ -1219,6 +1219,8 @@ const Videos: React.FC = () => {
   // Modals state
   const [showLiveStreamModal, setShowLiveStreamModal] = useState(false);
   const [showBattleCreationModal, setShowBattleCreationModal] = useState(false);
+  const [showDuetModal, setShowDuetModal] = useState(false);
+  const [selectedVideoForDuet, setSelectedVideoForDuet] = useState<VideoData | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
