@@ -469,6 +469,8 @@ const AppRoutes = () => {
           <Route path="wallet/integrations" element={<WalletIntegrations />} />
           <Route path="wallet/cards" element={<WalletCards />} />
           <Route path="wallet/gift-cards" element={<GiftCards />} />
+          {/* Wallet Action Routes */}
+          <Route path="wallet/send-money" element={<SendMoney />} />
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
