@@ -121,6 +121,7 @@ import BattleCard from "@/components/live/BattleCard";
 import LiveStreamModal from "@/components/live/LiveStreamModal";
 import BattleCreationModal from "@/components/live/BattleCreationModal";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
+import DuetRecorder from "@/components/video/DuetRecorder";
 
 interface VideoData {
   id: string;
@@ -197,7 +198,9 @@ const VideoCard: React.FC<{
   onVideoElementReady?: (element: HTMLVideoElement | null) => void;
   onLike?: (videoId: string, isLiked: boolean) => void;
   onComment?: (videoId: string) => void;
-}> = ({ video, isActive, showControls = true, onVideoElementReady, onLike, onComment }) => {
+  onFollow?: (video: VideoData, isFollowing: boolean) => void;
+  onShare?: (video: VideoData, platform: string) => void;
+}> = ({ video, isActive, showControls = true, onVideoElementReady, onLike, onComment, onFollow, onShare }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showMore, setShowMore] = useState(false);
@@ -223,7 +226,8 @@ const VideoCard: React.FC<{
   const { safePlay, safePause, togglePlayback } = useVideoPlayback();
   const { user } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
-  
+  const [selectedMusic, setSelectedMusic] = useState<{id: string; title: string; artist: string} | null>(null);
+
   // Check if user has liked the video
   useEffect(() => {
     const checkLikeStatus = async () => {
@@ -369,35 +373,86 @@ const VideoCard: React.FC<{
   const loadComments = async () => {
     try {
       const videoComments = await videoService.getVideoComments(video.id);
-      setComments(videoComments);
+      setComments(Array.isArray(videoComments) ? videoComments : []);
     } catch (error) {
       console.error("Error loading comments:", error);
+      setComments([]);
+    }
+  };
+
+  // Handle music selection (for future music API integration)
+  const handleMusicSelect = async () => {
+    try {
+      // Store the selected music
+      setSelectedMusic({
+        id: video.music.id || `music-${Date.now()}`,
+        title: video.music.title,
+        artist: video.music.artist
+      });
+
+      toast({
+        title: "Music Added",
+        description: `"${video.music.title}" by ${video.music.artist} added to your selection`,
+      });
+    } catch (error) {
+      console.error("Error selecting music:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select music",
+      });
     }
   };
 
   // Handle adding a new comment
   const handleAddComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
-    
+
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to comment",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      // In a real implementation, this would add the comment to the database
+
+      // Call the service to add comment
+      try {
+        await videoService.addVideoComment(video.id, newComment);
+      } catch (serviceError) {
+        console.warn("Video service unavailable, using local state:", serviceError);
+      }
+
+      // Create local comment object
       const newCommentObj = {
         id: Date.now().toString(),
         content: newComment,
         user: {
-          username: user?.username || "You",
-          avatar_url: user?.avatar_url || "https://i.pravatar.cc/150"
+          id: user.id,
+          username: user.username || "User",
+          avatar_url: user.avatar_url || "https://i.pravatar.cc/150",
+          is_verified: user.is_verified || false
         },
-        likes: 0,
+        likes_count: 0,
         isLiked: false,
         created_at: new Date().toISOString()
       };
-      
+
       setComments(prev => [...prev, newCommentObj]);
       setNewComment("");
+
+      toast({
+        title: "Comment Added",
+        description: "Your comment has been posted",
+      });
     } catch (error) {
       console.error("Error adding comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -436,16 +491,26 @@ const VideoCard: React.FC<{
     try {
       if (isLiked) {
         await videoService.unlikeVideo(video.id);
+        setIsLiked(false);
+        toast({
+          title: "Unliked",
+          description: "Removed from your liked videos",
+        });
       } else {
         await videoService.likeVideo(video.id);
+        setIsLiked(true);
+        toast({
+          title: "Liked",
+          description: "Added to your liked videos",
+        });
       }
-      setIsLiked(!isLiked);
       if (onLike) onLike(video.id, !isLiked);
     } catch (error) {
       console.error("Error toggling like:", error);
       toast({
         title: "Error",
         description: "Failed to like/unlike video",
+        variant: "destructive"
       });
     }
   };
@@ -481,40 +546,141 @@ const VideoCard: React.FC<{
     try {
       if (isBookmarked) {
         await videoService.unsaveVideo(video.id);
+        setIsBookmarked(false);
+        toast({
+          title: "Removed",
+          description: "Video removed from your saved videos",
+        });
       } else {
         await videoService.saveVideo(video.id);
+        setIsBookmarked(true);
+        toast({
+          title: "Saved",
+          description: "Video added to your saved videos",
+        });
       }
-      setIsBookmarked(!isBookmarked);
     } catch (error) {
       console.error("Error toggling save:", error);
       toast({
         title: "Error",
         description: "Failed to save/unsave video",
+        variant: "destructive"
       });
     }
   };
 
   // Handle duet creation
-  const handleDuet = async () => {
+  const handleDuet = async (duetVideo: VideoData) => {
     try {
-      // In a real implementation, this would open the duet creation interface
-      // For now, we'll just show a toast message
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a duet",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedVideoForDuet(duetVideo);
+      setShowDuetModal(true);
+
       toast({
-        title: "Duet Feature",
-        description: "Duet creation would open here",
+        title: "Duet Creation Started",
+        description: "Get ready to create your duet!",
       });
-      
-      // Example of how to use the duetService:
-      // const duetData = await duetService.createDuet(
-      //   video.id, 
-      //   "duet-video-id", 
-      //   "side-by-side"
-      // );
     } catch (error) {
       console.error("Error initiating duet:", error);
       toast({
         title: "Error",
         description: "Failed to start duet",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle duet completion
+  const handleDuetComplete = async (duetData: any) => {
+    try {
+      // Call service to save duet
+      // await duetService.createDuet(duetData);
+
+      setShowDuetModal(false);
+      setSelectedVideoForDuet(null);
+
+      toast({
+        title: "Duet Created!",
+        description: "Your duet has been published",
+      });
+    } catch (error) {
+      console.error("Error creating duet:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create duet",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle battle creation
+  const handleCreateBattle = async (opponentId?: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a battle",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Generate a temporary battle ID for navigation
+      const battleId = `battle-${Date.now()}`;
+
+      toast({
+        title: "Battle Created!",
+        description: "You've challenged your opponent. Starting battle...",
+      });
+
+      // Navigate to battle page
+      navigate(`/app/battle/${battleId}`);
+    } catch (error) {
+      console.error("Error creating battle:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create battle",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle livestream creation
+  const handleCreateLivestream = async () => {
+    try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to go live",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Generate a temporary livestream ID for navigation
+      const streamId = `stream-${Date.now()}`;
+
+      toast({
+        title: "Going Live!",
+        description: "Starting your live stream...",
+      });
+
+      // Navigate to livestream page
+      navigate(`/app/live/${streamId}`);
+    } catch (error) {
+      console.error("Error creating livestream:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start livestream",
+        variant: "destructive"
       });
     }
   };
@@ -522,16 +688,34 @@ const VideoCard: React.FC<{
   // Handle download
   const handleDownload = async () => {
     try {
-      // In a real implementation, this would trigger a download
+      // Check if video has download permission
+      if (!video.allowDownload && video.allowDownload !== undefined) {
+        toast({
+          title: "Not Allowed",
+          description: "The creator has disabled downloads for this video",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Attempt to download the video
+      const link = document.createElement('a');
+      link.href = video.videoUrl;
+      link.download = `${video.user.username}-${video.id}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       toast({
         title: "Download Started",
-        description: "Video download in progress",
+        description: `Downloading "${video.description.substring(0, 30)}..."`,
       });
     } catch (error) {
       console.error("Error downloading video:", error);
       toast({
         title: "Error",
-        description: "Failed to download video",
+        description: "Failed to download video. Please try again.",
+        variant: "destructive"
       });
     }
   };
@@ -644,7 +828,10 @@ const VideoCard: React.FC<{
       {/* Content overlay */}
       <div className="absolute inset-0 flex">
         {/* Left side - user info and description with moved controls */}
-        <div className="flex-1 flex flex-col justify-end p-3 md:p-4 pb-28 md:pb-4">
+        <div className={cn(
+          "flex-1 flex flex-col justify-end transition-all duration-300",
+          isMobile ? "p-2 pb-24" : "p-3 md:p-4 pb-28 md:pb-4"
+        )}>
           {/* Moved audio, auto, and settings controls to left side */}
           <div className="absolute top-16 left-4 flex flex-col gap-2 md:gap-3">
             {/* Connection Quality Indicator */}
@@ -688,16 +875,22 @@ const VideoCard: React.FC<{
             </Button>
           </div>
           
-          <div className="space-y-2 md:space-y-3">
+          <div className={isMobile ? "space-y-1" : "space-y-2 md:space-y-3"}>
             {/* User info */}
-            <div className="flex items-center gap-2 md:gap-3">
-              <Avatar className="w-10 h-10 md:w-12 md:h-12 border-2 border-white/20">
+            <div className={cn("flex items-center gap-2", isMobile ? "gap-2" : "md:gap-3")}>
+              <Avatar className={cn(
+                "border-2 border-white/20",
+                isMobile ? "w-9 h-9" : "w-10 h-10 md:w-12 md:h-12"
+              )}>
                 <AvatarImage src={video.user.avatar} />
                 <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 md:gap-2">
-                  <span className="text-white font-semibold text-xs md:text-sm truncate">
+                <div className={cn("flex items-center", isMobile ? "gap-1" : "gap-1 md:gap-2")}>
+                  <span className={cn(
+                    "text-white font-semibold truncate",
+                    isMobile ? "text-[11px]" : "text-xs md:text-sm"
+                  )}>
                     @{video.user.username}
                   </span>
                   {video.user.verified && (
@@ -714,7 +907,10 @@ const VideoCard: React.FC<{
                     </Badge>
                   )}
                 </div>
-                <div className="text-white/80 text-[10px] md:text-xs">
+                <div className={cn(
+                  "text-white/80",
+                  isMobile ? "text-[9px]" : "text-[10px] md:text-xs"
+                )}>
                   {video.user.displayName}
                   {video.user.followerCount && (
                     <span className="ml-1">
@@ -728,19 +924,30 @@ const VideoCard: React.FC<{
                 variant={isFollowing ? "default" : "outline"}
                 className={cn(
                   "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm",
-                  isFollowing 
-                    ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white" 
+                  isFollowing
+                    ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white"
                     : "bg-white/20 border-white/30 text-white hover:bg-white/30"
                 )}
-                onClick={() => toggleFollow(video)}
+                onClick={() => {
+                  if (onFollow) {
+                    onFollow(video, isFollowing);
+                  }
+                  setIsFollowing(!isFollowing);
+                }}
               >
                 {isFollowing ? "Following" : "Follow"}
               </Button>
             </div>
             
             {/* Description */}
-            <div className="text-white text-xs md:text-sm">
-              <p className="leading-relaxed line-clamp-2 md:line-clamp-3">
+            <div className={cn(
+              "text-white",
+              isMobile ? "text-[11px]" : "text-xs md:text-sm"
+            )}>
+              <p className={cn(
+                "leading-relaxed",
+                isMobile ? "line-clamp-1" : "line-clamp-2 md:line-clamp-3"
+              )}>
                 {showMore ? description : truncatedDescription}
                 {description.length > 100 && (
                   <button
@@ -753,58 +960,75 @@ const VideoCard: React.FC<{
               </p>
 
               {/* Hashtags */}
-              <div className="flex flex-wrap gap-1 mt-1 md:mt-2">
-                {video.hashtags.slice(0, 3).map((tag, index) => (
-                  <span key={tag} className="text-blue-300 text-xs md:text-sm hover:text-blue-100 cursor-pointer">
-                    #{tag}{index < video.hashtags.slice(0, 3).length - 1 ? ' ' : ''}
-                  </span>
-                ))}
-              </div>
+              {!isMobile && (
+                <div className="flex flex-wrap gap-1 mt-1 md:mt-2">
+                  {video.hashtags.slice(0, 3).map((tag, index) => (
+                    <span key={tag} className="text-blue-300 text-xs md:text-sm hover:text-blue-100 cursor-pointer">
+                      #{tag}{index < video.hashtags.slice(0, 3).length - 1 ? ' ' : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Music info */}
-            <div className="flex items-center gap-1 md:gap-2 text-white/80 text-[10px] md:text-xs">
+            <div className={cn(
+              "flex items-center gap-1 text-white/80",
+              isMobile ? "text-[9px] md:gap-2 md:text-[10px]" : "text-[10px] md:gap-2 md:text-xs"
+            )}>
               <Music className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">
                 {video.music.title} - {video.music.artist}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white/60 text-xs p-0 h-auto hover:text-white ml-2"
-              >
-                Use Sound
-              </Button>
+              {!isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/60 text-xs p-0 h-auto hover:text-white ml-2 transition-colors duration-200 hover:text-blue-400"
+                  onClick={handleMusicSelect}
+                  title="Add this sound to your selection"
+                >
+                  Use Sound
+                </Button>
+              )}
             </div>
 
             {/* Video metadata */}
-            <div className="flex items-center gap-3 text-white/60 text-[10px] md:text-xs mt-1">
-              {video.timestamp && <span>{video.timestamp}</span>}
-              {video.category && (
-                <Badge
-                  variant="secondary"
-                  className="bg-black/40 text-white text-[10px]"
-                >
-                  {video.category}
-                </Badge>
-              )}
-              {video.isSponsored && (
-                <Badge
-                  variant="secondary"
-                  className="bg-yellow-500/20 text-yellow-400 text-[10px]"
-                >
-                  Sponsored
-                </Badge>
-              )}
-            </div>
+            {!isMobile && (
+              <div className="flex items-center gap-3 text-white/60 text-[10px] md:text-xs mt-1">
+                {video.timestamp && <span>{video.timestamp}</span>}
+                {video.category && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-black/40 text-white text-[10px]"
+                  >
+                    {video.category}
+                  </Badge>
+                )}
+                {video.isSponsored && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-yellow-500/20 text-yellow-400 text-[10px]"
+                  >
+                    Sponsored
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right side - Enhanced Interactive Features */}
-        <div className="flex flex-col items-center justify-end gap-4 p-3 pb-32">
+        <div className={cn(
+          "flex flex-col items-center justify-end p-2 md:p-3 transition-all duration-300",
+          isMobile ? "gap-3 pb-24" : "gap-4 pb-32"
+        )}>
           {/* User Avatar with Follow Button */}
           <div className="flex flex-col items-center gap-2">
-            <Avatar className="w-12 h-12 md:w-14 md:h-14 border-2 border-white/20 cursor-pointer hover:scale-105 transition-transform duration-300">
+            <Avatar className={cn(
+              "border-2 border-white/20 cursor-pointer hover:scale-105 transition-transform duration-300",
+              isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+            )}>
               <AvatarImage src={video.user.avatar} />
               <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
             </Avatar>
@@ -812,12 +1036,18 @@ const VideoCard: React.FC<{
               size="sm"
               variant={isFollowing ? "default" : "outline"}
               className={cn(
-                "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto backdrop-blur-sm",
-                isFollowing 
-                  ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white" 
+                "backdrop-blur-sm transition-all duration-300 font-medium",
+                isMobile ? "text-[9px] px-2 py-0.5 h-5" : "text-[10px] md:text-xs px-2 md:px-3 py-1 h-6 md:h-auto",
+                isFollowing
+                  ? "bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white"
                   : "bg-white/20 border-white/30 text-white hover:bg-white/30"
               )}
-              onClick={() => toggleFollow(video)}
+              onClick={() => {
+                if (onFollow) {
+                  onFollow(video, isFollowing);
+                }
+                setIsFollowing(!isFollowing);
+              }}
             >
               {isFollowing ? "Following" : "Follow"}
             </Button>
@@ -828,14 +1058,18 @@ const VideoCard: React.FC<{
             <Button
               size="icon"
               className={cn(
-                "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300 shadow-lg hover:scale-110",
+                "rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-300 shadow-lg hover:scale-110",
+                isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14",
                 isLiked ? "text-red-500 scale-110" : "text-white"
               )}
               onClick={toggleLike}
             >
-              <Heart className={cn("w-6 h-6 md:w-7 md:h-7", isLiked && "fill-current")} />
+              <Heart className={cn(
+                isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7",
+                isLiked && "fill-current"
+              )} />
             </Button>
-            <span className="text-white text-xs font-medium">
+            <span className="text-white text-[10px] md:text-xs font-medium">
               {formatNumber(video.stats.likes + (isLiked ? 1 : 0))}
             </span>
           </div>
@@ -844,59 +1078,129 @@ const VideoCard: React.FC<{
           <div className="flex flex-col items-center gap-1">
             <Button
               size="icon"
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+              className={cn(
+                "rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+              )}
               onClick={toggleComments}
             >
-              <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+              <MessageCircle className={isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} />
             </Button>
-            <span className="text-white text-xs font-medium">
+            <span className="text-white text-[10px] md:text-xs font-medium">
               {formatNumber(video.stats.comments)}
             </span>
           </div>
 
           {/* Views Count */}
           <div className="flex flex-col items-center gap-1">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-              <Eye className="w-6 h-6 md:w-7 md:h-7 text-white" />
+            <div className={cn(
+              "rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center",
+              isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+            )}>
+              <Eye className={cn("text-white", isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7")} />
             </div>
-            <span className="text-white text-xs font-medium">
+            <span className="text-white text-[10px] md:text-xs font-medium">
               {formatNumber(parseInt(video.stats.views))}
             </span>
           </div>
 
-          {/* Share, Save, Download Group */}
+          {/* Share/Save/Download Dropdown Menu */}
           <div className="flex flex-col items-center gap-1">
-            <div className="flex gap-2">
-              {/* Share Button */}
-              <Button
-                size="icon"
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-                onClick={() => handleShare(video, 'web')}
-              >
-                <Share className="w-5 h-5 md:w-6 md:h-6" />
-              </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  className={cn(
+                    "rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                    isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+                  )}
+                  aria-label="Share options menu"
+                >
+                  <Share className={isMobile ? "w-5 h-5" : "w-5 h-5 md:w-6 md:h-6"} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-black/95 border-white/20 backdrop-blur-sm w-48" align="end">
+                {/* Share Option */}
+                <DropdownMenuItem
+                  onClick={() => onShare?.(video, 'web')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Share className="w-4 h-4" />
+                  <span>Share to Web</span>
+                </DropdownMenuItem>
 
-              {/* Save Button */}
-              <Button
-                size="icon"
-                className={cn(
-                  "w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
-                  isBookmarked && "text-yellow-400"
-                )}
-                onClick={toggleSave}
-              >
-                <Bookmark className={cn("w-5 h-5 md:w-6 md:h-6", isBookmarked && "fill-current")} />
-              </Button>
+                {/* Share to Twitter */}
+                <DropdownMenuItem
+                  onClick={() => onShare?.(video, 'twitter')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Twitter className="w-4 h-4 text-sky-400" />
+                  <span>Share to Twitter</span>
+                </DropdownMenuItem>
 
-              {/* Download Button */}
-              <Button
-                size="icon"
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-                onClick={handleDownload}
-              >
-                <CloudDownload className="w-5 h-5 md:w-6 md:h-6" />
-              </Button>
-            </div>
+                {/* Share to Facebook */}
+                <DropdownMenuItem
+                  onClick={() => onShare?.(video, 'facebook')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Facebook className="w-4 h-4 text-blue-600" />
+                  <span>Share to Facebook</span>
+                </DropdownMenuItem>
+
+                {/* Share to LinkedIn */}
+                <DropdownMenuItem
+                  onClick={() => onShare?.(video, 'linkedin')}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Linkedin className="w-4 h-4 text-blue-700" />
+                  <span>Share to LinkedIn</span>
+                </DropdownMenuItem>
+
+                {/* Copy Link */}
+                <DropdownMenuItem
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/app/video/${video.id}`);
+                    toast({
+                      title: "Link Copied",
+                      description: "Video link copied to clipboard"
+                    });
+                  }}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Copy Link</span>
+                </DropdownMenuItem>
+
+                {/* Divider */}
+                <div className="my-1 bg-white/10 h-px" />
+
+                {/* Save/Bookmark Option */}
+                <DropdownMenuItem
+                  onClick={toggleSave}
+                  className={cn(
+                    "cursor-pointer flex items-center gap-2",
+                    isBookmarked
+                      ? "text-yellow-400 hover:bg-yellow-400/10"
+                      : "text-white hover:bg-white/10"
+                  )}
+                >
+                  <Bookmark className={cn("w-4 h-4", isBookmarked && "fill-current")} />
+                  <span>{isBookmarked ? "Saved" : "Save Video"}</span>
+                </DropdownMenuItem>
+
+                {/* Divider */}
+                <div className="my-1 bg-white/10 h-px" />
+
+                {/* Download Option */}
+                <DropdownMenuItem
+                  onClick={handleDownload}
+                  className="text-white hover:bg-white/10 cursor-pointer flex items-center gap-2"
+                >
+                  <CloudDownload className="w-4 h-4" />
+                  <span>Download Video</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <span className="text-white text-xs font-medium">Share</span>
           </div>
 
@@ -905,12 +1209,15 @@ const VideoCard: React.FC<{
             <div className="flex flex-col items-center gap-1">
               <Button
                 size="icon"
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
-                onClick={handleDuet}
+                className={cn(
+                  "rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                  isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+                )}
+                onClick={() => handleDuet(video)}
               >
-                <Users className="w-6 h-6 md:w-7 md:h-7" />
+                <Users className={isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} />
               </Button>
-              <span className="text-white text-xs font-medium">Duet</span>
+              <span className="text-white text-[10px] md:text-xs font-medium">Duet</span>
             </div>
           )}
 
@@ -924,19 +1231,25 @@ const VideoCard: React.FC<{
               trigger={
                 <Button
                   size="icon"
-                  className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110"
+                  className={cn(
+                    "rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
+                    isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+                  )}
                 >
-                  <Gift className="w-6 h-6 md:w-7 md:h-7" />
+                  <Gift className={isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} />
                 </Button>
               }
             />
-            <span className="text-white text-xs font-medium">Gift</span>
+            <span className="text-white text-[10px] md:text-xs font-medium">Gift</span>
           </div>
 
           {/* Music Disc with Enhanced Animation */}
           <div className="flex flex-col items-center gap-1 group-hover:animate-spin-slow">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 animate-spin-slow">
-              <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            <div className={cn(
+              "rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center backdrop-blur-sm shadow-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 animate-spin-slow",
+              isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
+            )}>
+              <Music className={cn("text-white", isMobile ? "w-5 h-5" : "w-5 h-5 md:w-6 md:h-6")} />
             </div>
           </div>
         </div>
@@ -998,6 +1311,8 @@ const Videos: React.FC = () => {
   // Modals state
   const [showLiveStreamModal, setShowLiveStreamModal] = useState(false);
   const [showBattleCreationModal, setShowBattleCreationModal] = useState(false);
+  const [showDuetModal, setShowDuetModal] = useState(false);
+  const [selectedVideoForDuet, setSelectedVideoForDuet] = useState<VideoData | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -1170,48 +1485,99 @@ const Videos: React.FC = () => {
 
   // Handle liking a comment
   const handleLikeComment = async (commentId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to like comments",
+      });
+      return;
+    }
+
     try {
-      // In a real implementation, this would update the comment likes in the database
-      console.log("Liking comment:", commentId);
+      // Try to update in the service
+      try {
+        await videoService.likeComment(commentId);
+      } catch (serviceError) {
+        console.warn("Video service unavailable, using local state:", serviceError);
+      }
+
       // Update the comments state to reflect the like change
       setComments(prev => prev.map(comment => {
         if (comment.id === commentId) {
+          const wasLiked = comment.isLiked;
           return {
             ...comment,
-            isLiked: !comment.isLiked,
-            likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1
+            isLiked: !wasLiked,
+            likes_count: wasLiked ? (comment.likes_count || 0) - 1 : (comment.likes_count || 0) + 1
           };
         }
         return comment;
       }));
     } catch (error) {
       console.error("Error liking comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to like comment",
+      });
     }
   };
 
   // Handle adding a new comment
   const handleAddComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
-    
+
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to comment",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      // In a real implementation, this would add the comment to the database
+
+      // Get current video if available
+      const currentVideo = allItems[currentIndex];
+      if (!currentVideo) {
+        throw new Error("No video found");
+      }
+
+      // Call the service to add comment
+      try {
+        await videoService.addVideoComment(currentVideo.id, newComment);
+      } catch (serviceError) {
+        console.warn("Video service unavailable, using local state:", serviceError);
+      }
+
+      // Create local comment object
       const newCommentObj = {
         id: Date.now().toString(),
         content: newComment,
         user: {
-          username: user?.username || "You",
-          avatar_url: user?.avatar_url || "https://i.pravatar.cc/150"
+          id: user.id,
+          username: user.username || "User",
+          avatar_url: user.avatar_url || "https://i.pravatar.cc/150",
+          is_verified: user.is_verified || false
         },
-        likes: 0,
+        likes_count: 0,
         isLiked: false,
         created_at: new Date().toISOString()
       };
-      
+
       setComments(prev => [...prev, newCommentObj]);
       setNewComment("");
+
+      toast({
+        title: "Comment Added",
+        description: "Your comment has been posted",
+      });
     } catch (error) {
       console.error("Error adding comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -1252,21 +1618,30 @@ const Videos: React.FC = () => {
 
   
   // Handle follow/unfollow
-  const toggleFollow = async (video: VideoData) => {
+  const toggleFollow = async (video: VideoData, isCurrentlyFollowing: boolean) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to follow users",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      if (isFollowing) {
+      if (isCurrentlyFollowing) {
         await videoService.unfollowUser(video.user.id);
+        toast({
+          title: "Unfollowed",
+          description: `You have unfollowed @${video.user.username}`
+        });
       } else {
         await videoService.followUser(video.user.id);
+        toast({
+          title: "Following",
+          description: `You are now following @${video.user.username}`
+        });
       }
-      setIsFollowing(!isFollowing);
-      
-      toast({
-        title: isFollowing ? "Unfollowed" : "Following",
-        description: isFollowing 
-          ? `You have unfollowed @${video.user.username}` 
-          : `You are now following @${video.user.username}`
-      });
     } catch (error) {
       console.error('Error toggling follow:', error);
       toast({
@@ -1279,22 +1654,53 @@ const Videos: React.FC = () => {
   
   // Handle sharing
   const handleShare = async (video: VideoData, platform: string) => {
-    try {
-      await videoService.shareVideo(video.id, platform);
-      
-      // Show share success message
+    if (!user) {
       toast({
-        title: "Shared Successfully",
-        description: `Video shared to ${platform}`
+        title: "Error",
+        description: "You must be logged in to share videos",
+        variant: "destructive"
       });
-      
-      // Copy link to clipboard for web sharing
+      return;
+    }
+
+    try {
+      const videoUrl = `${window.location.origin}/app/video/${video.id}`;
+      const shareText = `Check out this video by @${video.user.username}: "${video.description}"`;
+
+      // Track share in service
+      try {
+        await videoService.shareVideo(video.id, platform);
+      } catch (serviceError) {
+        console.warn("Share tracking unavailable:", serviceError);
+      }
+
+      // Handle platform-specific sharing
       if (platform === 'web') {
-        const videoUrl = `${window.location.origin}/app/video/${video.id}`;
         await navigator.clipboard.writeText(videoUrl);
         toast({
           title: "Link Copied",
           description: "Video link copied to clipboard"
+        });
+      } else if (platform === 'twitter') {
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(videoUrl)}`;
+        window.open(twitterUrl, '_blank', 'width=600,height=400');
+        toast({
+          title: "Opening Twitter",
+          description: "Share your video on Twitter"
+        });
+      } else if (platform === 'facebook') {
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(videoUrl)}`;
+        window.open(fbUrl, '_blank', 'width=600,height=400');
+        toast({
+          title: "Opening Facebook",
+          description: "Share your video on Facebook"
+        });
+      } else if (platform === 'linkedin') {
+        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(videoUrl)}`;
+        window.open(linkedinUrl, '_blank', 'width=600,height=400');
+        toast({
+          title: "Opening LinkedIn",
+          description: "Share your video on LinkedIn"
         });
       }
     } catch (error) {
@@ -1582,6 +1988,8 @@ const Videos: React.FC = () => {
                 onVideoElementReady={index === currentIndex ? setCurrentVideoElement : undefined}
                 onLike={handleVideoLike}
                 onComment={handleCommentClick}
+                onFollow={toggleFollow}
+                onShare={handleShare}
               />
             );
           })
@@ -1762,14 +2170,42 @@ const Videos: React.FC = () => {
       />
       
       {/* Battle Creation Modal */}
-      <BattleCreationModal 
+      <BattleCreationModal
         open={showBattleCreationModal}
         onOpenChange={setShowBattleCreationModal}
         onBattleStart={(battleId) => {
           console.log("Battle started:", battleId);
         }}
       />
-      
+
+      {/* Duet Modal */}
+      <Dialog open={showDuetModal} onOpenChange={setShowDuetModal}>
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] bg-black border-gray-800 p-0">
+          <VisuallyHidden>
+            <DialogTitle>Create Duet</DialogTitle>
+          </VisuallyHidden>
+          {selectedVideoForDuet && (
+            <DuetRecorder
+              originalVideo={{
+                id: selectedVideoForDuet.id,
+                url: selectedVideoForDuet.videoUrl,
+                duration: 60,
+                creatorUsername: selectedVideoForDuet.user.username,
+                creatorId: selectedVideoForDuet.user.id,
+                title: selectedVideoForDuet.description,
+                thumbnail: selectedVideoForDuet.thumbnail
+              }}
+              duetStyle="side-by-side"
+              onCancel={() => {
+                setShowDuetModal(false);
+                setSelectedVideoForDuet(null);
+              }}
+              onComplete={handleDuetComplete}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };

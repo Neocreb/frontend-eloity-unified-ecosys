@@ -7,7 +7,7 @@ export class ProductService {
     try {
       return await MarketplaceService.getProductById(id);
     } catch (error) {
-      console.error("Error fetching product by ID:", error);
+      console.error("Error fetching product by ID:", error instanceof Error ? error.message : String(error));
       return null;
     }
   }
@@ -17,7 +17,7 @@ export class ProductService {
       // Use MarketplaceService to fetch products with filters
       return await MarketplaceService.getProducts(filters);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching products:", error instanceof Error ? error.message : String(error));
       return [];
     }
   }
@@ -40,7 +40,7 @@ export class ProductService {
         .limit(10);
 
       if (error) {
-        console.error("Error fetching related products:", error);
+        console.error("Error fetching related products:", error instanceof Error ? error.message : String(error));
         return [];
       }
 
@@ -73,7 +73,7 @@ export class ProductService {
         updatedAt: new Date(product.updated_at).toISOString()
       }));
     } catch (error) {
-      console.error("Error fetching related products:", error);
+      console.error("Error fetching related products:", error instanceof Error ? error.message : String(error));
       return [];
     }
   }
@@ -82,7 +82,7 @@ export class ProductService {
     try {
       return await MarketplaceService.createProduct(productData);
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error("Error creating product:", error instanceof Error ? error.message : String(error));
       return null;
     }
   }
@@ -91,7 +91,7 @@ export class ProductService {
     try {
       return await MarketplaceService.deleteProduct(productId);
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error("Error deleting product:", error instanceof Error ? error.message : String(error));
       return false;
     }
   }

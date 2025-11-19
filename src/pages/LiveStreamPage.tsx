@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { liveStreamService, LiveStream } from '@/services/liveStreamService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const LiveStreamPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -206,10 +207,6 @@ const LiveStreamPage: React.FC = () => {
       </div>
     );
   }
-  
-    function cn(arg0: string, arg1: string | boolean, arg2: string | boolean, arg3: string | boolean): string | undefined {
-        throw new Error('Function not implemented.');
-    }
 
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden">
