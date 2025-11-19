@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWalletContext } from "@/contexts/WalletContext";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   RequestMoneyModal,
   TransferModal,
@@ -19,39 +18,24 @@ import {
   ArrowDownLeft,
   Send,
   Repeat,
-  Star,
-  TrendingUp,
-  Gift,
   CreditCard,
   Smartphone,
-  Zap,
-  Clock,
-  Users,
-  Target,
-  Lightbulb,
-  Sparkles,
+  Gift,
   Store,
+  Users,
+  Clock,
+  TrendingUp,
 } from "lucide-react";
 
-interface QuickAction {
+interface ActionItem {
   id: string;
   label: string;
   icon: React.ReactNode;
   color: string;
   action: () => void;
-  badge?: string;
-}
-
-interface Recommendation {
-  id: string;
-  type: "savings" | "investment" | "spending" | "security" | "feature";
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  priority: "high" | "medium" | "low";
-  action: {
-    label: string;
-    onClick: () => void;
+  badge?: {
+    text: string;
+    variant: "default" | "new" | "promotion";
   };
 }
 
@@ -65,9 +49,8 @@ interface RecentRecipient {
 
 const QuickActionsWidget = () => {
   const { walletBalance, transactions, getTotalEarnings } = useWalletContext();
-  const { user } = useAuth();
 
-  const [recentRecipients, setRecentRecipients] = useState<RecentRecipient[]>([
+  const [recentRecipients] = useState<RecentRecipient[]>([
     { id: "1", name: "John Doe", lastAmount: 250, frequency: 5 },
     { id: "2", name: "Sarah Smith", lastAmount: 100, frequency: 3 },
     { id: "3", name: "Mike Johnson", lastAmount: 75, frequency: 2 },
@@ -82,114 +65,162 @@ const QuickActionsWidget = () => {
   const [showBuyGiftModal, setShowBuyGiftModal] = useState(false);
   const [showSellGiftModal, setShowSellGiftModal] = useState(false);
 
-  // Quick Actions
-  const quickActions: QuickAction[] = [
+  // Send/Receive Actions (Primary)
+  const sendActions: ActionItem[] = [
     {
       id: "send",
       label: "Send Money",
-      icon: <Send className="h-4 w-4" />,
-      color: "bg-blue-500 hover:bg-blue-600",
+      icon: <Send className="h-6 w-6" />,
+      color: "bg-blue-500",
       action: () => setShowSendModal(true),
     },
     {
       id: "request",
       label: "Request",
-      icon: <ArrowDownLeft className="h-4 w-4" />,
-      color: "bg-green-500 hover:bg-green-600",
+      icon: <ArrowDownLeft className="h-6 w-6" />,
+      color: "bg-emerald-500",
       action: () => setShowRequestModal(true),
     },
     {
       id: "withdraw",
       label: "Withdraw",
-      icon: <ArrowUpRight className="h-4 w-4" />,
-      color: "bg-purple-500 hover:bg-purple-600",
+      icon: <ArrowUpRight className="h-6 w-6" />,
+      color: "bg-purple-500",
       action: () => {
-        // This will use the existing withdraw modal from the main dashboard
         const withdrawButton = document.querySelector('[data-action="withdraw"]') as HTMLButtonElement;
         if (withdrawButton) {
           withdrawButton.click();
         }
       },
     },
+  ];
+
+  // Pay Actions (Secondary)
+  const payActions: ActionItem[] = [
     {
       id: "transfer",
       label: "Transfer",
-      icon: <Repeat className="h-4 w-4" />,
-      color: "bg-orange-500 hover:bg-orange-600",
+      icon: <Repeat className="h-6 w-6" />,
+      color: "bg-orange-500",
       action: () => setShowTransferModal(true),
     },
     {
       id: "pay-bill",
-      label: "Pay Bill",
-      icon: <CreditCard className="h-4 w-4" />,
-      color: "bg-red-500 hover:bg-red-600",
+      label: "Pay Bills",
+      icon: <CreditCard className="h-6 w-6" />,
+      color: "bg-red-500",
       action: () => setShowPayBillModal(true),
     },
     {
       id: "top-up",
       label: "Top Up",
-      icon: <Smartphone className="h-4 w-4" />,
-      color: "bg-indigo-500 hover:bg-indigo-600",
+      icon: <Smartphone className="h-6 w-6" />,
+      color: "bg-indigo-500",
       action: () => setShowTopUpModal(true),
+      badge: { text: "New", variant: "new" },
     },
+  ];
+
+  // Gift Cards Actions (Tertiary)
+  const giftActions: ActionItem[] = [
     {
       id: "buy-gift",
       label: "Buy Gift Cards",
-      icon: <Gift className="h-4 w-4" />,
-      color: "bg-pink-500 hover:bg-pink-600",
+      icon: <Gift className="h-6 w-6" />,
+      color: "bg-pink-500",
       action: () => setShowBuyGiftModal(true),
     },
     {
       id: "sell-gift",
       label: "Sell Gift Cards",
-      icon: <Store className="h-4 w-4" />,
-      color: "bg-emerald-500 hover:bg-emerald-600",
+      icon: <Store className="h-6 w-6" />,
+      color: "bg-teal-500",
       action: () => setShowSellGiftModal(true),
     },
   ];
 
-  // Smart Recommendations removed from this widget to avoid duplication on the dashboard
+  const ActionCard = ({ action }: { action: ActionItem }) => (
+    <Button
+      onClick={action.action}
+      className={`${action.color} text-white border-0 hover:shadow-lg transition-all duration-200 flex flex-col items-center gap-2 h-auto py-6 px-4 rounded-xl hover:scale-105 relative group`}
+    >
+      <div className="flex-1 flex items-center justify-center">{action.icon}</div>
+      <span className="text-xs font-semibold text-center leading-tight">{action.label}</span>
+      {action.badge && (
+        <Badge
+          className={`absolute top-1 right-1 text-xs font-bold ${
+            action.badge.variant === "new"
+              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              : "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+          }`}
+        >
+          {action.badge.text}
+        </Badge>
+      )}
+    </Button>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Quick Actions */}
-      <Card>
+      {/* Send & Receive Actions */}
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Quick Actions
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Send className="h-5 w-5 text-blue-500" />
+            Send & Receive
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {quickActions.map((action) => (
-              <Button
-                key={action.id}
-                variant="outline"
-                className={`${action.color} text-white border-none hover:scale-105 transition-transform flex flex-col items-center gap-2 h-auto py-4`}
-                onClick={action.action}
-              >
-                {action.icon}
-                <span className="text-xs font-medium">{action.label}</span>
-                {action.badge && (
-                  <Badge variant="secondary" className="text-xs">
-                    {action.badge}
-                  </Badge>
-                )}
-              </Button>
+          <div className="grid grid-cols-3 gap-3">
+            {sendActions.map((action) => (
+              <ActionCard key={action.id} action={action} />
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Smart Recommendations moved to dedicated component on the page */}
+      {/* Pay & Services Actions */}
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <CreditCard className="h-5 w-5 text-red-500" />
+            Pay & Services
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3">
+            {payActions.map((action) => (
+              <ActionCard key={action.id} action={action} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Gift Cards Actions */}
+      {giftActions.length > 0 && (
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Gift className="h-5 w-5 text-pink-500" />
+              Gift Cards
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3">
+              {giftActions.map((action) => (
+                <ActionCard key={action.id} action={action} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Recipients */}
-      <Card>
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Recent Recipients
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Users className="h-5 w-5 text-indigo-500" />
+            Frequent Recipients
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -197,12 +228,12 @@ const QuickActionsWidget = () => {
             {recentRecipients.map((recipient) => (
               <div
                 key={recipient.id}
-                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                onClick={() => console.log(`Send to ${recipient.name}`)}
+                className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent transition-all duration-200 cursor-pointer group"
+                onClick={() => setShowSendModal(true)}
               >
-                <Avatar className="h-10 w-10">
+                <Avatar className="h-10 w-10 flex-shrink-0">
                   <AvatarImage src={recipient.avatar} />
-                  <AvatarFallback>
+                  <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
                     {recipient.name
                       .split(" ")
                       .map((n) => n[0])
@@ -210,14 +241,21 @@ const QuickActionsWidget = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{recipient.name}</p>
-                  <p className="text-xs text-gray-600 truncate">
-                    Last sent: ${recipient.lastAmount} • {recipient.frequency} times
+                  <p className="font-semibold text-sm text-gray-900">{recipient.name}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    Last sent: ${recipient.lastAmount.toFixed(2)} • {recipient.frequency} times
                   </p>
                 </div>
-                <Button size="sm" variant="outline" className="shrink-0">
+                <Button
+                  size="sm"
+                  className="shrink-0 bg-blue-500 hover:bg-blue-600 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSendModal(true);
+                  }}
+                >
                   <Send className="h-3 w-3 sm:mr-1" />
-                  <span className="hidden sm:inline">Send</span>
+                  <span className="hidden sm:inline text-xs">Send</span>
                 </Button>
               </div>
             ))}
@@ -225,72 +263,40 @@ const QuickActionsWidget = () => {
         </CardContent>
       </Card>
 
-
-
       {/* Quick Stats */}
-      <Card>
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-blue-50 to-indigo-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Clock className="h-5 w-5 text-blue-500" />
             Today's Activity
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="text-center p-2">
+              <div className="text-3xl font-bold text-green-600">
                 +${getTotalEarnings(1).toFixed(2)}
               </div>
-              <div className="text-sm text-gray-600">Earned Today</div>
+              <div className="text-sm text-gray-600 mt-1">Earned Today</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {transactions.filter(t =>
-                  new Date(t.timestamp).toDateString() === new Date().toDateString()
-                ).length}
+            <div className="text-center p-2">
+              <div className="text-3xl font-bold text-blue-600">
+                {transactions.filter((t) => new Date(t.timestamp).toDateString() === new Date().toDateString()).length}
               </div>
-              <div className="text-sm text-gray-600">Transactions</div>
+              <div className="text-sm text-gray-600 mt-1">Transactions</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-
       {/* Quick Action Modals */}
-      <EnhancedSendMoneyModal
-        isOpen={showSendModal}
-        onClose={() => setShowSendModal(false)}
-      />
-
-      <RequestMoneyModal
-        isOpen={showRequestModal}
-        onClose={() => setShowRequestModal(false)}
-      />
-
-      <TransferModal
-        isOpen={showTransferModal}
-        onClose={() => setShowTransferModal(false)}
-      />
-
-      <PayBillModal
-        isOpen={showPayBillModal}
-        onClose={() => setShowPayBillModal(false)}
-      />
-
-      <TopUpModal
-        isOpen={showTopUpModal}
-        onClose={() => setShowTopUpModal(false)}
-      />
-
-      <BuyGiftCardModal
-        isOpen={showBuyGiftModal}
-        onClose={() => setShowBuyGiftModal(false)}
-      />
-
-      <SellGiftCardModal
-        isOpen={showSellGiftModal}
-        onClose={() => setShowSellGiftModal(false)}
-      />
+      <EnhancedSendMoneyModal isOpen={showSendModal} onClose={() => setShowSendModal(false)} />
+      <RequestMoneyModal isOpen={showRequestModal} onClose={() => setShowRequestModal(false)} />
+      <TransferModal isOpen={showTransferModal} onClose={() => setShowTransferModal(false)} />
+      <PayBillModal isOpen={showPayBillModal} onClose={() => setShowPayBillModal(false)} />
+      <TopUpModal isOpen={showTopUpModal} onClose={() => setShowTopUpModal(false)} />
+      <BuyGiftCardModal isOpen={showBuyGiftModal} onClose={() => setShowBuyGiftModal(false)} />
+      <SellGiftCardModal isOpen={showSellGiftModal} onClose={() => setShowSellGiftModal(false)} />
     </div>
   );
 };
