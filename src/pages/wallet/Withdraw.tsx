@@ -1,0 +1,300 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useWalletContext } from "@/contexts/WalletContext";
+import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+
+const Withdraw = () => {
+  const navigate = useNavigate();
+  const { walletBalance } = useWalletContext();
+  const [step, setStep] = useState<"account" | "amount" | "review" | "success">("account");
+  const [selectedAccount, setSelectedAccount] = useState<string>("");
+  const [amount, setAmount] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const bankAccounts = [
+    { id: "1", name: "Primary Account", bank: "First Bank", accountNumber: "****1234" },
+    { id: "2", name: "Secondary Account", bank: "GTBank", accountNumber: "****5678" },
+  ];
+
+  const handleSelectAccount = (accountId: string) => {
+    setSelectedAccount(accountId);
+    setStep("amount");
+  };
+
+  const handleContinue = () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      alert("Please enter a valid amount");
+      return;
+    }
+    if (parseFloat(amount) > (walletBalance?.total || 0)) {
+      alert("Insufficient balance");
+      return;
+    }
+    setStep("review");
+  };
+
+  const handleWithdraw = async () => {
+    setIsLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setStep("success");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (step === "account") {
+    return (
+      <div className="flex flex-col h-screen bg-gray-50">
+        <WalletActionHeader title="Withdraw" />
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 space-y-6">
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-indigo-50">
+              <CardContent className="pt-6">
+                <p className="text-sm text-gray-600">Available Balance</p>
+                <p className="text-4xl font-bold text-gray-900 mt-2">
+                  ${walletBalance?.total.toFixed(2) || "0.00"}
+                </p>
+              </CardContent>
+            </Card>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Bank Accounts</h3>
+              <div className="space-y-2">
+                {bankAccounts.map((account) => (
+                  <button
+                    key={account.id}
+                    onClick={() => handleSelectAccount(account.id)}
+                    className="w-full text-left"
+                  >
+                    <Card
+                      className={`border-2 transition-all cursor-pointer ${
+                        selectedAccount === account.id
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:border-purple-300"
+                      }`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-900">{account.bank}</p>
+                            <p className="text-sm text-gray-600">{account.accountNumber}</p>
+                          </div>
+                          {selectedAccount === account.id && (
+                            <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                              <span className="text-white text-lg">✓</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setStep("amount")}
+              disabled={!selectedAccount}
+              className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
+            >
+              Continue
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "amount") {
+    const account = bankAccounts.find((a) => a.id === selectedAccount);
+    return (
+      <div className="flex flex-col h-screen bg-gray-50">
+        <WalletActionHeader title="Withdrawal Amount" />
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 space-y-6">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <p className="text-xs text-gray-600">To: {account?.bank}</p>
+                <p className="font-semibold text-gray-900">{account?.accountNumber}</p>
+              </CardContent>
+            </Card>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-3">Amount</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-600">$</span>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="pl-10 h-16 text-3xl font-bold"
+                />
+              </div>
+              <div className="mt-3 flex justify-between text-xs text-gray-600">
+                <span>Min: $10</span>
+                <span>Max: ${walletBalance?.total.toFixed(2) || "0.00"}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {[50, 100, 200].map((quickAmount) => (
+                <Button
+                  key={quickAmount}
+                  variant="outline"
+                  onClick={() => setAmount(quickAmount.toString())}
+                  className="w-full"
+                >
+                  ${quickAmount}
+                </Button>
+              ))}
+            </div>
+
+            <div className="flex gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Processing time</p>
+                <p className="text-xs text-blue-700 mt-0.5">1-2 business days</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
+          <Button
+            onClick={handleContinue}
+            disabled={!amount}
+            className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
+          >
+            Continue
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setStep("account")}
+            className="w-full h-12"
+          >
+            Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "review") {
+    const account = bankAccounts.find((a) => a.id === selectedAccount);
+    return (
+      <div className="flex flex-col h-screen bg-gray-50">
+        <WalletActionHeader title="Review Withdrawal" />
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 space-y-6">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6 space-y-6">
+                <div>
+                  <p className="text-sm text-gray-600">From your wallet</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">${parseFloat(amount).toFixed(2)}</p>
+                </div>
+
+                <div className="border-t border-gray-200 pt-6">
+                  <p className="text-sm text-gray-600">To account</p>
+                  <p className="font-semibold text-gray-900 mt-2">{account?.bank}</p>
+                  <p className="text-sm text-gray-600">{account?.accountNumber}</p>
+                </div>
+
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="flex justify-between mb-3">
+                    <span className="text-gray-600">Amount</span>
+                    <span className="font-semibold">${parseFloat(amount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600 mb-3">
+                    <span>Fee</span>
+                    <span>Free</span>
+                  </div>
+                  <div className="flex justify-between border-t border-gray-200 pt-3">
+                    <span className="font-semibold">Total</span>
+                    <span className="font-bold text-lg">${parseFloat(amount).toFixed(2)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
+          <Button
+            onClick={handleWithdraw}
+            disabled={isLoading}
+            className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Confirm Withdrawal"
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setStep("amount")}
+            disabled={isLoading}
+            className="w-full h-12"
+          >
+            Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "success") {
+    return (
+      <div className="flex flex-col h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+        <WalletActionHeader title="Withdrawal Initiated" />
+        <div className="flex-1 flex items-center justify-center overflow-y-auto">
+          <div className="px-4 sm:px-6 py-8 text-center max-w-md">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="h-10 w-10 text-white" />
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Withdrawal Initiated!</h2>
+            <p className="text-gray-600 mb-8">
+              ${parseFloat(amount).toFixed(2)} will be transferred in 1-2 business days
+            </p>
+
+            <Card className="border-0 shadow-sm mb-6">
+              <CardContent className="p-6 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Reference</span>
+                  <span className="font-mono">WD000001</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Status</span>
+                  <span className="text-purple-600 font-semibold">Pending</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
+          <Button
+            onClick={() => navigate("/app/wallet")}
+            className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
+          >
+            Back to Wallet
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default Withdraw;
