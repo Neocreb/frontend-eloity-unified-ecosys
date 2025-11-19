@@ -830,7 +830,7 @@ class AIPersonalAssistantService {
         };
       }
     } catch (err) {
-      console.error("Error fetching real analytics data:", err);
+      console.error("Error fetching real analytics data:", err instanceof Error ? err.message : String(err));
     }
 
     // Fallback to mock data if real data unavailable
