@@ -263,7 +263,7 @@ const fetchProducts = async (params: FetchContentParams) => {
     
     return data.map(transformProductData);
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error('Error fetching products:', error instanceof Error ? error.message : String(error));
     return [];
   }
 };
