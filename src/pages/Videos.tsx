@@ -2172,14 +2172,42 @@ const Videos: React.FC = () => {
       />
       
       {/* Battle Creation Modal */}
-      <BattleCreationModal 
+      <BattleCreationModal
         open={showBattleCreationModal}
         onOpenChange={setShowBattleCreationModal}
         onBattleStart={(battleId) => {
           console.log("Battle started:", battleId);
         }}
       />
-      
+
+      {/* Duet Modal */}
+      <Dialog open={showDuetModal} onOpenChange={setShowDuetModal}>
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] bg-black border-gray-800 p-0">
+          <VisuallyHidden>
+            <DialogTitle>Create Duet</DialogTitle>
+          </VisuallyHidden>
+          {selectedVideoForDuet && (
+            <DuetRecorder
+              originalVideo={{
+                id: selectedVideoForDuet.id,
+                url: selectedVideoForDuet.videoUrl,
+                duration: 60,
+                creatorUsername: selectedVideoForDuet.user.username,
+                creatorId: selectedVideoForDuet.user.id,
+                title: selectedVideoForDuet.description,
+                thumbnail: selectedVideoForDuet.thumbnail
+              }}
+              duetStyle="side-by-side"
+              onCancel={() => {
+                setShowDuetModal(false);
+                setSelectedVideoForDuet(null);
+              }}
+              onComplete={handleDuetComplete}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
