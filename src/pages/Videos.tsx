@@ -121,6 +121,7 @@ import BattleCard from "@/components/live/BattleCard";
 import LiveStreamModal from "@/components/live/LiveStreamModal";
 import BattleCreationModal from "@/components/live/BattleCreationModal";
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
+import DuetRecorder from "@/components/video/DuetRecorder";
 
 interface VideoData {
   id: string;
