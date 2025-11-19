@@ -78,6 +78,7 @@ import WalletTransactions from "./pages/wallet/WalletTransactions";
 import WalletIntegrations from "./pages/wallet/WalletIntegrations";
 import WalletCards from "./pages/wallet/WalletCards";
 import GiftCards from "./pages/wallet/GiftCards";
+import SendMoney from "./pages/wallet/SendMoney";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
