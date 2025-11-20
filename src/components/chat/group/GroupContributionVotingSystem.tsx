@@ -273,16 +273,10 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
                 <p className="text-gray-600 mb-4">
                   Start a new vote to make group decisions together.
                 </p>
-                <CreateGroupVoteModal
-                  groupId={groupId}
-                  onVoteCreated={handleVoteCreated}
-                  trigger={
-                    <Button>
-                      <PlusCircle className="w-4 h-4 mr-2" />
-                      Create Vote
-                    </Button>
-                  }
-                />
+                <Button onClick={handleNewVote}>
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Create Vote
+                </Button>
               </div>
             )}
           </ScrollArea>
