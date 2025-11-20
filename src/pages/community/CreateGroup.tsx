@@ -17,7 +17,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { CreateGroupRequest, GroupChatSettings } from '@/types/group-chat';
 import { ChatParticipant } from '@/types/chat';
 import { groupChatService } from '@/services/groupChatService';
-import { friendsService } from '@/services/friendsService';
 
 export const CreateGroup: React.FC = () => {
   const navigate = useNavigate();
