@@ -592,7 +592,7 @@ export const ClientDashboard: React.FC = () => {
                         <p className="text-gray-600 dark:text-gray-400 mb-4">
                           Start by posting your first job to find freelancers
                         </p>
-                        <Button onClick={() => setShowCreateJobModal(true)}>
+                        <Button onClick={() => navigate('/app/freelance/create-job')}>
                           Post Your First Job
                         </Button>
                       </div>
