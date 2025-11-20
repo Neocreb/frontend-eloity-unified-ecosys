@@ -214,10 +214,10 @@ const CommunityEvents = () => {
                 )}
                 <Button
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                  onClick={() => setShowCreateEvent(true)}
+                  onClick={() => setShowCreateTypeChoice(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Event
+                  Create
                 </Button>
               </div>
             </div>
