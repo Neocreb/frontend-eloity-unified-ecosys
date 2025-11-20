@@ -31,9 +31,8 @@ import {
   Eye,
   Bell,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import CryptoDepositModal from "./CryptoDepositModal";
-import CryptoWithdrawModal from "./CryptoWithdrawModal";
 import CryptoKYCModal from "./CryptoKYCModal";
 
 interface OrderBookEntry {
