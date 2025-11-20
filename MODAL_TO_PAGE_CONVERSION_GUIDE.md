@@ -3,7 +3,24 @@
 ## Overview
 This guide documents the systematic conversion of modal-based UI components to full-page routes, improving user experience and reducing complexity.
 
-## Recent Changes (Latest Session)
+## Recent Changes (Latest Session - Event & Challenge Navigation Updates)
+
+### Completed in this session:
+- ✅ **GroupDetailView** - Added "Start Contribution" button for group members to navigate to `/app/community/group-contribution/:groupId`
+- ✅ **CommunityEvents** - Created choice dialog to prompt users to select between creating an event or challenge
+  - Navigates to `/app/challenges/create` for challenge creation
+  - Opens in-page form for event creation (modal based)
+- ✅ **EventsRewards** - New full-page route `/app/events/rewards` showing all challenges and leaderboard
+  - Displays active challenges with participant counts and prize pools
+  - Shows top 8 leaderboard entries with rankings and stats
+  - Includes tabs for Challenges and Leaderboard views
+  - Search and category filtering for challenges
+- ✅ **Videos Page** - Updated create menu dropdown to navigate to full-page routes instead of modals
+  - "Create Video" → `/app/content/create`
+  - "Go Live" → `/app/live/create-stream`
+  - "Start Battle" → `/app/live/create-battle`
+
+### Previous Session Changes (Earlier)
 
 ### Completed in this session:
 - ✅ **CreateJob** - Full-page freelance job creation flow with 3-step form
