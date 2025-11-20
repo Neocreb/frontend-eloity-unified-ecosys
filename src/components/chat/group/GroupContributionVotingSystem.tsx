@@ -5,22 +5,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { GroupContributionService } from "@/services/groupContributionService";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  GroupContributionWithDetails, 
-  GroupVoteWithDetails 
+import { useNavigate } from "react-router-dom";
+import {
+  GroupContributionWithDetails,
+  GroupVoteWithDetails
 } from "@/types/group-contributions";
-import { 
-  Coins, 
-  MessageSquare, 
-  PlusCircle, 
+import {
+  Coins,
+  MessageSquare,
+  PlusCircle,
   TrendingUp,
   BarChart3
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { StartGroupContributionModal } from "./StartGroupContributionModal";
 import { GroupContributionStatus } from "./GroupContributionStatus";
-import { ContributeToGroupModal } from "./ContributeToGroupModal";
-import { CreateGroupVoteModal } from "./CreateGroupVoteModal";
 import { GroupVoteCard } from "./GroupVoteCard";
 
 interface GroupContributionVotingSystemProps {
@@ -32,13 +30,13 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
   groupId,
   isAdmin,
 }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [contributions, setContributions] = useState<GroupContributionWithDetails[]>([]);
   const [votes, setVotes] = useState<GroupVoteWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedContribution, setSelectedContribution] = useState<GroupContributionWithDetails | null>(null);
-  const [showContributeModal, setShowContributeModal] = useState(false);
   const [activeTab, setActiveTab] = useState("contributions");
 
   // Fetch contributions and votes
@@ -95,31 +93,19 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
     }
   };
 
-  // Handle contribution creation
-  const handleContributionCreated = () => {
-    refreshData();
-    toast({
-      title: "Success",
-      description: "New contribution created successfully!",
-    });
+  // Handle new contribution button
+  const handleNewContribution = () => {
+    navigate(`/app/community/group-contribution/${groupId}`);
   };
 
-  // Handle vote creation
-  const handleVoteCreated = () => {
-    refreshData();
-    toast({
-      title: "Success",
-      description: "New vote created successfully!",
-    });
+  // Handle new vote button
+  const handleNewVote = () => {
+    navigate(`/app/community/vote/${groupId}`);
   };
 
-  // Handle contribution made
-  const handleContributionMade = () => {
-    refreshData();
-    toast({
-      title: "Success",
-      description: "Your contribution has been recorded!",
-    });
+  // Handle contribute to a contribution
+  const handleContributeClick = (contributionId: string) => {
+    navigate(`/app/community/contribute/${contributionId}`);
   };
 
   // Handle vote update
@@ -177,29 +163,24 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
           
           <div className="flex gap-2">
             {activeTab === "contributions" && (
-              <StartGroupContributionModal
-                groupId={groupId}
-                onContributionCreated={handleContributionCreated}
-                trigger={
-                  <Button size="sm" disabled={!isAdmin}>
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    New Contribution
-                  </Button>
-                }
-              />
+              <Button
+                size="sm"
+                disabled={!isAdmin}
+                onClick={handleNewContribution}
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                New Contribution
+              </Button>
             )}
-            
+
             {activeTab === "votes" && (
-              <CreateGroupVoteModal
-                groupId={groupId}
-                onVoteCreated={handleVoteCreated}
-                trigger={
-                  <Button size="sm">
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    New Vote
-                  </Button>
-                }
-              />
+              <Button
+                size="sm"
+                onClick={handleNewVote}
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                New Vote
+              </Button>
             )}
           </div>
         </div>
@@ -263,16 +244,10 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
                     : "No contributions have been created for this group yet."}
                 </p>
                 {isAdmin && (
-                  <StartGroupContributionModal
-                    groupId={groupId}
-                    onContributionCreated={handleContributionCreated}
-                    trigger={
-                      <Button>
-                        <PlusCircle className="w-4 h-4 mr-2" />
-                        Start Contribution
-                      </Button>
-                    }
-                  />
+                  <Button onClick={handleNewContribution}>
+                    <PlusCircle className="w-4 h-4 mr-2" />
+                    Start Contribution
+                  </Button>
                 )}
               </div>
             )}
@@ -298,16 +273,10 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
                 <p className="text-gray-600 mb-4">
                   Start a new vote to make group decisions together.
                 </p>
-                <CreateGroupVoteModal
-                  groupId={groupId}
-                  onVoteCreated={handleVoteCreated}
-                  trigger={
-                    <Button>
-                      <PlusCircle className="w-4 h-4 mr-2" />
-                      Create Vote
-                    </Button>
-                  }
-                />
+                <Button onClick={handleNewVote}>
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Create Vote
+                </Button>
               </div>
             )}
           </ScrollArea>
@@ -318,20 +287,10 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
       {selectedContribution && (
         <GroupContributionStatus
           contribution={selectedContribution}
-          onContribute={() => setShowContributeModal(true)}
+          onContribute={() => handleContributeClick(selectedContribution.id)}
           isAdmin={isAdmin}
           onRefund={handleRefund}
           trigger={<div className="hidden"></div>}
-        />
-      )}
-      
-      {/* Contribute Modal */}
-      {selectedContribution && (
-        <ContributeToGroupModal
-          contribution={selectedContribution}
-          isOpen={showContributeModal}
-          onOpenChange={setShowContributeModal}
-          onContributionMade={handleContributionMade}
         />
       )}
     </div>

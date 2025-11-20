@@ -99,6 +99,11 @@ import CreateBattle from "./pages/live/CreateBattle";
 import CreateStream from "./pages/live/CreateStream";
 import CreateStory from "./pages/feed/CreateStory";
 import CreateContent from "./pages/content/Create";
+// Phase 3 - Community Modal Conversions
+import CreateGroupPage from "./pages/community/CreateGroup";
+import ContributeToGroup from "./pages/community/ContributeToGroup";
+import GroupContribution from "./pages/community/GroupContribution";
+import CreateGroupVote from "./pages/community/CreateGroupVote";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -515,11 +520,11 @@ const AppRoutes = () => {
           <Route path="feed/create-story" element={<CreateStory />} />
           <Route path="content/create" element={<CreateContent />} />
 
-          {/* Group & Community Routes - Pending Full Page Implementation */}
-          {/* <Route path="community/create-group" element={<CreateGroupPage />} /> */}
-          {/* <Route path="community/contribute/:groupId" element={<ContributePage />} /> */}
-          {/* <Route path="community/group-contribution/:groupId" element={<GroupContributionPage />} /> */}
-          {/* <Route path="community/vote/:groupId" element={<CreateVotePage />} /> */}
+          {/* Group & Community Routes - Full Page Implementation COMPLETE */}
+          <Route path="community/create-group" element={<CreateGroupPage />} />
+          <Route path="community/contribute/:contributionId" element={<ContributeToGroup />} />
+          <Route path="community/group-contribution/:groupId" element={<GroupContribution />} />
+          <Route path="community/vote/:groupId" element={<CreateGroupVote />} />
 
           {/* Profile Routes - Pending Full Page Implementation */}
           {/* <Route path="profile/edit" element={<EditProfilePage />} /> */}
