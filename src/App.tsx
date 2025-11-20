@@ -199,6 +199,7 @@ import ChatTest from "./pages/ChatTest";
 import Explore from "./pages/Explore";
 import FindUsers from "./pages/FindUsers";
 import FindUsersPage from "./pages/chat/FindUsers";
+import ImageUpload from "./pages/chat/ImageUpload";
 import UserSearch from "./pages/search/UserSearch";
 import DeleteAccount from "./pages/settings/DeleteAccount";
 import CreateGroup from "./pages/CreateGroup";
