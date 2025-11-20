@@ -743,18 +743,6 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       </div>
 
       {/* Modals */}
-      <CryptoDepositModal
-        isOpen={depositModalOpen}
-        onClose={() => setDepositModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
-      <CryptoWithdrawModal
-        isOpen={withdrawModalOpen}
-        onClose={() => setWithdrawModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
       <CryptoKYCModal
         isOpen={kycModalOpen}
         onClose={() => setKycModalOpen(false)}
