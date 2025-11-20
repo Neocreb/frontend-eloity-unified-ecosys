@@ -108,6 +108,8 @@ import ContributeToGroup from "./pages/community/ContributeToGroup";
 import GroupContribution from "./pages/community/GroupContribution";
 import CreateGroupVote from "./pages/community/CreateGroupVote";
 import CreateEvent from "./pages/community/CreateEvent";
+// Phase 3 - Profile Modal Conversions
+import AddExternalWork from "./pages/profile/AddExternalWork";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -574,9 +576,9 @@ const AppRoutes = () => {
           <Route path="community/group-contribution/:groupId" element={<GroupContribution />} />
           <Route path="community/vote/:groupId" element={<CreateGroupVote />} />
 
-          {/* Profile Routes - Pending Full Page Implementation */}
+          {/* Profile Routes */}
           {/* <Route path="profile/edit" element={<EditProfilePage />} /> */}
-          {/* <Route path="profile/add-work" element={<AddWorkPage />} /> */}
+          <Route path="profile/add-work" element={<AddExternalWork />} />
 
           {/* Rewards Routes - Pending Full Page Implementation */}
           {/* <Route path="rewards/withdraw" element={<WithdrawRewardsPage />} /> */}

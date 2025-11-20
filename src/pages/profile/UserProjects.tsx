@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,6 @@ import {
   User,
 } from "lucide-react";
 import { UserProfile } from "@/types/user";
-import AddExternalWorkModal from "@/components/profile/AddExternalWorkModal";
 import { profileService } from "@/services/profileService";
 import { apiClient } from "@/lib/api";
 
@@ -64,9 +63,9 @@ interface ExternalWork {
 
 const UserProjects: React.FC = () => {
   const { username } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("portfolio");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [showAddWorkModal, setShowAddWorkModal] = useState(false);
   const [externalWorks, setExternalWorks] = useState<ExternalWork[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -498,7 +497,7 @@ const UserProjects: React.FC = () => {
                     </p>
                   </div>
                   {isOwnProfile && (
-                    <Button onClick={() => setShowAddWorkModal(true)}>
+                    <Button onClick={() => navigate("/app/profile/add-work")}>
                       <Plus className="h-4 w-4 mr-2" />
                       Add Work
                     </Button>
