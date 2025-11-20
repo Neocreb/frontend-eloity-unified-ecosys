@@ -963,24 +963,7 @@ function EnhancedCryptoPortfolioContent() {
 
       </Tabs>
 
-      {/* Crypto Modals */}
-      <CryptoDepositModal
-        isOpen={showCryptoDepositModal}
-        onClose={() => {
-          setShowCryptoDepositModal(false);
-          setSelectedAssetForAction(null);
-        }}
-        onSuccess={refreshPortfolio}
-      />
-
-      <CryptoWithdrawModal
-        isOpen={showCryptoWithdrawModal}
-        onClose={() => {
-          setShowCryptoWithdrawModal(false);
-          setSelectedAssetForAction(null);
-        }}
-        onSuccess={refreshPortfolio}
-      />
+      {/* Modals removed - now using full-page routes for crypto operations */}
     </div>
   );
 }
