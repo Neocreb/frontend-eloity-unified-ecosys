@@ -65,11 +65,11 @@ const QuickActionsWidget = () => {
       action: () => navigate("/app/wallet/send-money"),
     },
     {
-      id: "request",
-      label: "Request",
+      id: "deposit",
+      label: "Deposit",
       icon: <ArrowDownLeft className="h-6 w-6" />,
-      color: "bg-emerald-500",
-      action: () => navigate("/app/wallet/request"),
+      color: "bg-green-500",
+      action: () => navigate("/app/wallet/deposit"),
     },
     {
       id: "withdraw",
