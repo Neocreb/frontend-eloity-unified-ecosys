@@ -198,6 +198,9 @@ import ChatTest from "./pages/ChatTest";
 // import Messages from "./pages/Messages";
 import Explore from "./pages/Explore";
 import FindUsers from "./pages/FindUsers";
+import FindUsersPage from "./pages/chat/FindUsers";
+import UserSearch from "./pages/search/UserSearch";
+import DeleteAccount from "./pages/settings/DeleteAccount";
 import CreateGroup from "./pages/CreateGroup";
 import GlobalSearch from "./pages/GlobalSearch";
 import LandingPage from "./pages/LandingPage";
@@ -512,7 +515,7 @@ const AppRoutes = () => {
           <Route path="chat/:threadId" element={<ChatRoom />} />
           <Route path="chat-test/:threadId" element={<ChatTest />} />
           <Route path="chat-simple/:threadId" element={<SimpleChatRoom />} />
-          <Route path="chat/find-users" element={<FindUsers />} />
+          <Route path="chat/find-users" element={<FindUsersPage />} />
           <Route path="chat/create-group" element={<CreateGroup />} />
           <Route
             path="messages"
@@ -603,8 +606,8 @@ const AppRoutes = () => {
 
           {/* Other Routes - Pending Full Page Implementation */}
           {/* <Route path="verify/kyc" element={<KYCPage />} /> */}
-          {/* <Route path="search/users" element={<UserSearchPage />} /> */}
-          {/* <Route path="settings/delete-account" element={<DeleteAccountPage />} /> */}
+          <Route path="search/users" element={<UserSearch />} />
+          <Route path="settings/delete-account" element={<DeleteAccount />} />
 
           <Route path="notifications" element={<UnifiedNotifications />} />
 
