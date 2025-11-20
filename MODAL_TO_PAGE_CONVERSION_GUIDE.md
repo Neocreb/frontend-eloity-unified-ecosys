@@ -437,8 +437,7 @@ After careful analysis, the following feed modals are **recommended to remain as
   - Current status: Remains as modal for this phase
 
 - ⏸️ **StoryViewerModal** → Unused/Deprecated (ARCHIVAL CANDIDATE)
-  - Status: Not imported anywhere - different StoryViewer component in use
-- [ ] **FeelingActivityModal** ��� `/app/feed/feeling`
+  - Status: Not imported anywhere - different StoryViewer component in use ��� `/app/feed/feeling`
 
 ### Other (3)
 - [ ] **KYCVerificationModal** → `/app/verify/kyc`
