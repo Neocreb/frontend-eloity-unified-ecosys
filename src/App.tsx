@@ -201,6 +201,7 @@ import FindUsers from "./pages/FindUsers";
 import FindUsersPage from "./pages/chat/FindUsers";
 import ImageUpload from "./pages/chat/ImageUpload";
 import StickerCreation from "./pages/chat/StickerCreation";
+import ShareMeme from "./pages/chat/ShareMeme";
 import UserSearch from "./pages/search/UserSearch";
 import DeleteAccount from "./pages/settings/DeleteAccount";
 import CreateGroup from "./pages/CreateGroup";
