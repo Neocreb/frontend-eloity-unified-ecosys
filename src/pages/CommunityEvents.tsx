@@ -405,7 +405,7 @@ const CommunityEvents = () => {
                   className="h-40 flex flex-col items-center justify-center gap-3 p-6 hover:bg-blue-50 hover:border-blue-300 transition-all"
                   onClick={() => {
                     setShowCreateTypeChoice(false);
-                    setShowCreateEvent(true);
+                    navigate('/app/community/create-event');
                   }}
                 >
                   <Calendar className="h-8 w-8 text-blue-600" />
