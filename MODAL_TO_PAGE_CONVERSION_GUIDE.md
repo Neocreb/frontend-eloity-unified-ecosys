@@ -261,12 +261,17 @@ src/
    - ✅ StoryCreationModal → `/app/feed/create-story`
    - ✅ ContentCreationModal → `/app/content/create`
 
-### ⏳ Phase 3 - Next Priority (Medium)
-1. **Group & Community** (4 remaining)
-   - [ ] CreateGroupModal → `/app/community/create-group`
-   - [ ] ContributeToGroupModal → `/app/community/contribute/:groupId`
-   - [ ] StartGroupContributionModal → `/app/community/group-contribution/:groupId`
+### ✅ Phase 3 - Partially Complete (Medium Priority)
+1. **Group & Community** (3 completed, 1 remaining)
+   - [x] CreateGroupModal → `/app/community/create-group` - DONE
+   - [x] ContributeToGroupModal → `/app/community/contribute/:groupId` - DONE
+   - [x] StartGroupContributionModal → `/app/community/group-contribution/:groupId` - DONE + Added navigation link to GroupDetailView
    - [ ] CreateGroupVoteModal → `/app/community/vote/:groupId`
+
+2. **Events & Challenges** (New additions - 2 completed)
+   - ✅ EventsRewards page → `/app/events/rewards` (new full-page)
+   - ✅ CommunityEvents choice dialog → Prompts between event/challenge creation
+   - ✅ Videos page navigation → Updated dropdown menu to navigate to full-page routes
 
 2. **Chat & Social** (4+ remaining)
    - [ ] StickerCreationModal → `/app/chat/create-sticker`
