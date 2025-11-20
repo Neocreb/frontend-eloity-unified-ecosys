@@ -90,9 +90,8 @@ import SellGiftCards from "./pages/wallet/SellGiftCards";
 // Crypto pages
 import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
-// Crypto deposit/withdraw pages - components not yet created
-// import CryptoDeposit from "./pages/crypto/CryptoDeposit";
-// import CryptoWithdraw from "./pages/crypto/CryptoWithdraw";
+import CryptoDeposit from "./pages/crypto/CryptoDeposit";
+import CryptoWithdraw from "./pages/crypto/CryptoWithdraw";
 // Freelance pages
 import CreateJob from "./pages/freelance/CreateJob";
 import ApplyJob from "./pages/freelance/ApplyJob";
