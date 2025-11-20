@@ -508,12 +508,12 @@ const AppRoutes = () => {
           <Route path="freelance/apply/:jobId" element={<ApplyJob />} />
           <Route path="freelance/message/:clientId" element={<MessageClient />} />
 
-          {/* Content & Live Routes - Pending Full Page Implementation */}
-          {/* <Route path="challenges/create" element={<CreateChallengePage />} /> */}
-          {/* <Route path="live/create-battle" element={<CreateBattlePage />} /> */}
-          {/* <Route path="live/create-stream" element={<CreateStreamPage />} /> */}
-          {/* <Route path="feed/create-story" element={<CreateStoryPage />} /> */}
-          {/* <Route path="content/create" element={<CreateContentPage />} /> */}
+          {/* Content & Live Routes - Phase 2 Implementation COMPLETE */}
+          <Route path="challenges/create" element={<CreateChallenge />} />
+          <Route path="live/create-battle" element={<CreateBattle />} />
+          <Route path="live/create-stream" element={<CreateStream />} />
+          <Route path="feed/create-story" element={<CreateStory />} />
+          <Route path="content/create" element={<CreateContent />} />
 
           {/* Group & Community Routes - Pending Full Page Implementation */}
           {/* <Route path="community/create-group" element={<CreateGroupPage />} /> */}
