@@ -200,7 +200,8 @@ const VideoCard: React.FC<{
   onComment?: (videoId: string) => void;
   onFollow?: (video: VideoData, isFollowing: boolean) => void;
   onShare?: (video: VideoData, platform: string) => void;
-}> = ({ video, isActive, showControls = true, onVideoElementReady, onLike, onComment, onFollow, onShare }) => {
+  onDuet?: (video: VideoData) => void;
+}> = ({ video, isActive, showControls = true, onVideoElementReady, onLike, onComment, onFollow, onShare, onDuet }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showMore, setShowMore] = useState(false);
@@ -1213,7 +1214,7 @@ const VideoCard: React.FC<{
                   "rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-sm text-white transition-all duration-300 shadow-lg hover:scale-110",
                   isMobile ? "w-11 h-11" : "w-12 h-12 md:w-14 md:h-14"
                 )}
-                onClick={() => handleDuet(video)}
+                onClick={() => onDuet?.(video)}
               >
                 <Users className={isMobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} />
               </Button>
@@ -1990,6 +1991,7 @@ const Videos: React.FC = () => {
                 onComment={handleCommentClick}
                 onFollow={toggleFollow}
                 onShare={handleShare}
+                onDuet={handleDuet}
               />
             );
           })

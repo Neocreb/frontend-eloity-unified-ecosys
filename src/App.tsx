@@ -78,6 +78,17 @@ import WalletTransactions from "./pages/wallet/WalletTransactions";
 import WalletIntegrations from "./pages/wallet/WalletIntegrations";
 import WalletCards from "./pages/wallet/WalletCards";
 import GiftCards from "./pages/wallet/GiftCards";
+import SendMoney from "./pages/wallet/SendMoney";
+import Request from "./pages/wallet/Request";
+import Withdraw from "./pages/wallet/Withdraw";
+import Transfer from "./pages/wallet/Transfer";
+import PayBills from "./pages/wallet/PayBills";
+import TopUp from "./pages/wallet/TopUp";
+import BuyGiftCards from "./pages/wallet/BuyGiftCards";
+import SellGiftCards from "./pages/wallet/SellGiftCards";
+// Crypto pages
+import CryptoDeposit from "./pages/crypto/CryptoDeposit";
+import CryptoWithdraw from "./pages/crypto/CryptoWithdraw";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -468,6 +479,65 @@ const AppRoutes = () => {
           <Route path="wallet/integrations" element={<WalletIntegrations />} />
           <Route path="wallet/cards" element={<WalletCards />} />
           <Route path="wallet/gift-cards" element={<GiftCards />} />
+          {/* Wallet Action Routes - Full Page Flows */}
+          <Route path="wallet/send-money" element={<SendMoney />} />
+          <Route path="wallet/request" element={<Request />} />
+          <Route path="wallet/withdraw" element={<Withdraw />} />
+          <Route path="wallet/transfer" element={<Transfer />} />
+          <Route path="wallet/pay-bills" element={<PayBills />} />
+          <Route path="wallet/top-up" element={<TopUp />} />
+          <Route path="wallet/buy-gift-cards" element={<BuyGiftCards />} />
+          <Route path="wallet/sell-gift-cards" element={<SellGiftCards />} />
+
+          {/* Crypto Trading Routes - Full Page Flows */}
+          <Route path="crypto/deposit" element={<CryptoDeposit />} />
+          <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
+
+          {/* Freelance Routes - Pending Full Page Implementation */}
+          {/* <Route path="freelance/create-job" element={<CreateJobPage />} /> */}
+          {/* <Route path="freelance/apply/:jobId" element={<ApplyPage />} /> */}
+          {/* <Route path="freelance/message/:clientId" element={<MessagePage />} /> */}
+
+          {/* Content & Live Routes - Pending Full Page Implementation */}
+          {/* <Route path="challenges/create" element={<CreateChallengePage />} /> */}
+          {/* <Route path="live/create-battle" element={<CreateBattlePage />} /> */}
+          {/* <Route path="live/create-stream" element={<CreateStreamPage />} /> */}
+          {/* <Route path="feed/create-story" element={<CreateStoryPage />} /> */}
+          {/* <Route path="content/create" element={<CreateContentPage />} /> */}
+
+          {/* Group & Community Routes - Pending Full Page Implementation */}
+          {/* <Route path="community/create-group" element={<CreateGroupPage />} /> */}
+          {/* <Route path="community/contribute/:groupId" element={<ContributePage />} /> */}
+          {/* <Route path="community/group-contribution/:groupId" element={<GroupContributionPage />} /> */}
+          {/* <Route path="community/vote/:groupId" element={<CreateVotePage />} /> */}
+
+          {/* Profile Routes - Pending Full Page Implementation */}
+          {/* <Route path="profile/edit" element={<EditProfilePage />} /> */}
+          {/* <Route path="profile/add-work" element={<AddWorkPage />} /> */}
+
+          {/* Rewards Routes - Pending Full Page Implementation */}
+          {/* <Route path="rewards/withdraw" element={<WithdrawRewardsPage />} /> */}
+
+          {/* Chat & Social Routes - Pending Full Page Implementation */}
+          {/* <Route path="chat/create-sticker" element={<CreateStickerPage />} /> */}
+          {/* <Route path="chat/find-users" element={<FindUsersPage />} /> */}
+          {/* <Route path="chat/upload-image" element={<ImageUploadPage />} /> */}
+          {/* <Route path="chat/share-meme" element={<ShareMemePage />} /> */}
+
+          {/* Feed Routes - Pending Full Page Implementation */}
+          {/* <Route path="feed/story/:storyId" element={<StoryViewerPage />} /> */}
+          {/* <Route path="feed/check-in" element={<CheckInPage />} /> */}
+          {/* <Route path="feed/feeling" element={<FeelingPage />} /> */}
+          {/* <Route path="feed/location" element={<LocationPage />} /> */}
+          {/* <Route path="feed/upload-media" element={<MediaUploadPage />} /> */}
+          {/* <Route path="feed/tag-people" element={<TagPeoplePage />} /> */}
+          {/* <Route path="feed/share/:postId" element={<SharePostPage />} /> */}
+
+          {/* Other Routes - Pending Full Page Implementation */}
+          {/* <Route path="verify/kyc" element={<KYCPage />} /> */}
+          {/* <Route path="search/users" element={<UserSearchPage />} /> */}
+          {/* <Route path="settings/delete-account" element={<DeleteAccountPage />} /> */}
+
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
