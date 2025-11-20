@@ -3,7 +3,7 @@
 ## Overview
 This guide documents the systematic conversion of modal-based UI components to full-page routes, improving user experience and reducing complexity.
 
-## 🎯 Current Status: 32 of 38 Modals Converted (84%)
+## 🎯 Current Status: 33 of 38 Modals Converted (87%)
 
 ### Summary of Conversions by Category
 - **Profile & Rewards**: 3/3 ✅ Complete
@@ -332,7 +332,7 @@ import MyNewPage from "./pages/category/MyNewPage";
   - Dynamic address generation
   - QR code display and copy functionality
 
-- ✅ **CryptoWithdrawModal** → `/app/crypto/withdraw` (COMPLETED THIS SESSION)
+- �� **CryptoWithdrawModal** → `/app/crypto/withdraw` (COMPLETED THIS SESSION)
   - Full-page component with real-time validation
   - Transaction summary with fee calculations
   - Dark/light theme support
@@ -401,7 +401,7 @@ import MyNewPage from "./pages/category/MyNewPage";
 - [ ] **StoryViewerModal** → `/app/feed/story/:storyId`
 - [ ] **CheckInModal** → `/app/feed/check-in`
 - [ ] **FeelingActivityModal** ��� `/app/feed/feeling`
-- [ ] **FeelingLocationModal** ��� `/app/feed/location`
+- [ ] **FeelingLocationModal** → `/app/feed/location`
 - [ ] **MediaUploadModal** → `/app/feed/upload-media`
 - [ ] **TagPeopleModal** → `/app/feed/tag-people`
 - [ ] **EnhancedShareDialog** → `/app/feed/share/:postId`
