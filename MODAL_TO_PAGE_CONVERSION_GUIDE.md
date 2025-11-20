@@ -114,7 +114,7 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 ## Modals Pending Conversion
 
-**Status**: 6 of 38 completed (15.8%) | 32 remaining (84.2%)
+**Status**: 11 of 38 completed (28.9%) | 27 remaining (71.1%)
 
 ### Content & Live (5)
 - [ ] **CreateChallengeModal** → `/app/challenges/create`
@@ -180,7 +180,7 @@ src/
 │   │   ├── CreateJob.tsx (new)
 │   │   └── ...
 │   ├── crypto/
-│   │   ├── CryptoDeposit.tsx ✓
+│   ��   ├── CryptoDeposit.tsx ✓
 │   │   ├── CryptoWithdraw.tsx ✓
 │   │   └── ...
 │   ├── chat/
@@ -206,7 +206,7 @@ src/
 - [x] Freelance Job Creation, Application, Messaging - DONE
 - [x] Wallet Operations - DONE (previous phase)
 
-### ��� Phase 2 - Next Priority (Medium)
+### ⏳ Phase 2 - Next Priority (Medium)
 1. **Content & Live Creation** (5 remaining)
    - CreateChallengeModal → `/app/challenges/create`
    - BattleCreationModal → `/app/live/create-battle`
