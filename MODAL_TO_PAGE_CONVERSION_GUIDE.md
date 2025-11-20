@@ -482,6 +482,106 @@ src/
 - [ ] `CryptoWalletActions.tsx` - Replace CryptoKYCModal with navigation
 - [ ] `MarketplaceCheckout.tsx` - Replace UniversalCryptoPaymentModal with navigation
 
+## Current Session - Error Fix and Modal Conversion Plan
+
+### Error Fixed
+- ✅ **Import Error in WithdrawRewards.tsx** (RESOLVED)
+  - **Problem**: File was importing from a non-existent barrel export `@/components/ui`
+  - **Solution**: Changed to individual component imports from specific files
+  - **Example fix**: Changed `import { Button, Input, Label } from "@/components/ui"` to individual imports like `import { Button } from "@/components/ui/button"`
+  - **Status**: Dev server now compiling successfully without import errors
+
+### Remaining Modals Status
+
+As of this session, **13 modals remain to be converted** (from initial 38, 25 completed = 66% done):
+
+#### High Priority Standalone Modals (Recommended for next conversions)
+1. **StoryViewerModal** → `/app/feed/story/:storyId`
+   - Currently: Dialog-based story player
+   - Impact: High - core feature for viewing user stories
+   - Complexity: High - requires story ID routing and state management
+
+2. **UserSearchModal** → `/app/search/users`
+   - Currently: Dialog-based user search with typeahead
+   - Impact: High - needed for user discovery and mentions
+   - Complexity: Medium - straightforward search UI
+
+3. **DeleteUserDialog** → `/app/settings/delete-account`
+   - Currently: AlertDialog-based confirmation
+   - Impact: Medium - destructive action, should be prominent
+   - Complexity: Low - simple confirmation flow
+
+#### Medium Priority Chat Modals (Independent chat experiences)
+4. **FindUsersModal** → `/app/chat/find-users`
+   - Currently: Dialog-based user search for chat
+   - Impact: Medium - useful for starting conversations
+   - Complexity: Low
+
+5. **StickerCreationModal** → `/app/chat/create-sticker`
+   - Currently: Dialog-based sticker pack upload/creation (multi-step)
+   - Impact: Low - niche feature
+   - Complexity: High - involves image editing
+
+6. **ImageUploadModal** → `/app/chat/upload-image`
+   - Currently: Dialog-based image/video upload for chat
+   - Impact: Medium - frequently used in chat
+   - Complexity: Medium
+
+7. **MemeGifActionDialog** → `/app/chat/share-meme`
+   - Currently: Dialog-based action menu for meme/gif/sticker actions
+   - Impact: Low - supplementary feature
+   - Complexity: Low
+
+#### Lower Priority Feed Modals (Context-dependent - may keep as modals)
+8. **CheckInModal** → `/app/feed/check-in` (Optional)
+   - Currently: Dialog-based location check-in (used in CreatePostFlow)
+   - Note: Tightly coupled to post creation; might work better as modal overlay
+   - Status: Can remain as modal OR convert if independent check-in feature is needed
+
+9. **FeelingActivityModal** → `/app/feed/feeling` (Optional)
+   - Currently: Dialog-based feeling/activity picker (used in CreatePostFlow)
+   - Note: Tightly coupled to post creation; might work better as modal overlay
+
+10. **TagPeopleModal** → `/app/feed/tag-people` (Optional)
+    - Currently: Dialog-based user tagging (used in CreatePostFlow)
+    - Note: Tightly coupled to post creation; might work better as modal overlay
+
+11. **FeelingLocationModal** → `/app/feed/location` (Optional)
+    - Currently: Dialog-based combined feeling/location picker (used in CreatePostFlow)
+    - Note: Tightly coupled to post creation; might work better as modal overlay
+
+12. **MediaUploadModal** → `/app/feed/upload-media` (Optional)
+    - Currently: Dialog-based image/video upload (used in CreatePostFlow)
+    - Note: Tightly coupled to post creation; might work better as modal overlay
+
+13. **EnhancedShareDialog** → `/app/feed/share/:postId` (Optional)
+    - Currently: Dialog-based post sharing interface
+    - Impact: Medium - used for sharing/reposting content
+    - Complexity: Medium - requires post context
+
+14. **KYCVerificationModal** → Already exists as `/app/kyc` route
+    - Status: Already converted! The kyc route at line 685 in App.tsx renders EnhancedKYCVerification
+
+### Conversion Recommendations
+
+**Immediately Priority (Next Session):**
+- [ ] **StoryViewerModal** - Core feature, high impact
+- [ ] **UserSearchModal** - High impact, medium complexity
+- [ ] **FindUsersModal** - Low complexity, good starter conversion
+
+**Secondary Priority (Following Sessions):**
+- [ ] **ImageUploadModal** - Medium complexity, frequently used
+- [ ] **DeleteUserDialog** - Low complexity, important UX improvement
+- [ ] **EnhancedShareDialog** - Medium complexity
+
+**Note on Feed Modal Context-Dependency:**
+The feed-related modals (CheckIn, Feeling, TagPeople, MediaUpload) are currently tightly integrated into CreatePostFlow with shared state. Converting these to full-page routes would require:
+1. Extracting their state management from CreatePostFlow
+2. Using navigation state or context to pass selected values back
+3. Significantly refactoring the post creation flow
+
+**Recommendation**: Keep these as modals OR create standalone pages with a different UX pattern (e.g., search/browse first, then navigate to create post with pre-filled data).
+
 ## Session Summary (Event & Challenge Navigation Updates)
 
 ### What Was Accomplished:
