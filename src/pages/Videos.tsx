@@ -1986,7 +1986,7 @@ const Videos: React.FC = () => {
               }}
             />
           ))
-        ) : (
+        ) : allItems.length > 0 ? (
           // Render regular videos
           allItems.map((item, index) => {
             // Render interstitial ad
@@ -2023,6 +2023,16 @@ const Videos: React.FC = () => {
               />
             );
           })
+        ) : (
+          // Empty state for videos
+          <div className="h-screen flex items-center justify-center text-white">
+            <div className="text-center px-4">
+              <p className="text-lg mb-4">No videos available</p>
+              <Button onClick={() => window.location.reload()} className="bg-blue-600 hover:bg-blue-700">
+                Refresh Page
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
