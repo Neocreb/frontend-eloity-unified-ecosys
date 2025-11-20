@@ -220,11 +220,20 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 ## Modals Pending Conversion
 
-**Status**: 19 of 38 completed (50%) | 19 remaining (50%)
+**Status**: 21 of 38 completed (55%) | 17 remaining (45%)
 
 ### Crypto Operations (2 - All Complete ✅)
-- ✅ **CryptoDepositModal** → `/app/crypto/deposit`
-- ✅ **CryptoWithdrawModal** → `/app/crypto/withdraw`
+- ✅ **CryptoDepositModal** → `/app/crypto/deposit` (COMPLETED THIS SESSION)
+  - Full-page component with 8 supported cryptocurrencies
+  - Dark/light theme support
+  - Dynamic address generation
+  - QR code display and copy functionality
+
+- ✅ **CryptoWithdrawModal** → `/app/crypto/withdraw` (COMPLETED THIS SESSION)
+  - Full-page component with real-time validation
+  - Transaction summary with fee calculations
+  - Dark/light theme support
+  - Security warnings and best practices
 
 ### Navigation Improvements (Completed)
 - ✅ GroupDetailView - "Start Contribution" button properly navigates to group-contribution/:groupId
