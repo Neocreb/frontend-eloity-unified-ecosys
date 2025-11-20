@@ -25,9 +25,9 @@ import WalletSecurityCenter from "./WalletSecurityCenter";
 import QuickActionsWidget from "./QuickActionsWidget";
 import IntegrationManager from "./IntegrationManager";
 
-// Original components
-import WithdrawModal from "./WithdrawModal";
-import DepositModal from "./DepositModal";
+// Original components - Keep for now in case needed elsewhere
+// import WithdrawModal from "./WithdrawModal";
+// import DepositModal from "./DepositModal";
 
 // Currency components
 import CurrencyDemo from "@/components/currency/CurrencyDemo";
