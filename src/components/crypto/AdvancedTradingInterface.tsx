@@ -100,10 +100,9 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
   const [volume24h, setVolume24h] = useState(0);
   const [chartTimeframe, setChartTimeframe] = useState("1h");
   const [isWatchlisted, setIsWatchlisted] = useState(false);
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [isVerified, setIsVerified] = useState(true); // Mock verified status
+  const navigate = useNavigate();
   const chartRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
