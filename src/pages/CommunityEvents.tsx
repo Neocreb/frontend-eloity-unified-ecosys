@@ -83,18 +83,6 @@ const CommunityEvents = () => {
   const [showCreateTypeChoice, setShowCreateTypeChoice] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
-  const [newEventData, setNewEventData] = useState({
-    title: "",
-    description: "",
-    type: "workshop",
-    startTime: "",
-    duration: 60,
-    maxParticipants: 100,
-    isPrivate: false,
-    requiresPayment: false,
-    price: 0,
-    tags: "",
-  });
   const { events, loading, searchEvents, createEvent } = useCommunityEvents();
   const { user } = useAuth();
   const { analytics } = useEventAnalytics(undefined, user?.id);
