@@ -118,14 +118,14 @@ const EnhancedWalletDashboardContent = () => {
       {/* Primary Action Buttons */}
       <div className="flex gap-3 justify-center sm:justify-start">
         <Button
-          onClick={() => setShowDepositModal(true)}
+          onClick={() => navigate("/app/wallet/deposit")}
           className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none sm:min-w-[120px]"
           size="lg"
         >
           Deposit
         </Button>
         <Button
-          onClick={() => setShowWithdrawModal(true)}
+          onClick={() => navigate("/app/wallet/withdraw")}
           variant="outline"
           className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white flex-1 sm:flex-none sm:min-w-[120px]"
           size="lg"
