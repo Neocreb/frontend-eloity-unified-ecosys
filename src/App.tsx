@@ -108,6 +108,8 @@ import ContributeToGroup from "./pages/community/ContributeToGroup";
 import GroupContribution from "./pages/community/GroupContribution";
 import CreateGroupVote from "./pages/community/CreateGroupVote";
 import CreateEvent from "./pages/community/CreateEvent";
+// Phase 3 - Profile Modal Conversions
+import AddExternalWork from "./pages/profile/AddExternalWork";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
