@@ -235,7 +235,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
   };
 
   const handleDepositClick = () => {
-    setDepositModalOpen(true);
+    navigate("/app/crypto/deposit");
   };
 
   const handleWithdrawClick = () => {
@@ -247,7 +247,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       });
       return;
     }
-    setWithdrawModalOpen(true);
+    navigate("/app/crypto/withdraw");
   };
 
   const handleKYCSubmit = async (data: any) => {
