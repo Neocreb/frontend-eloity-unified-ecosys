@@ -99,6 +99,11 @@ import CreateBattle from "./pages/live/CreateBattle";
 import CreateStream from "./pages/live/CreateStream";
 import CreateStory from "./pages/feed/CreateStory";
 import CreateContent from "./pages/content/Create";
+// Phase 3 - Community Modal Conversions
+import CreateGroup from "./pages/community/CreateGroup";
+import ContributeToGroup from "./pages/community/ContributeToGroup";
+import GroupContribution from "./pages/community/GroupContribution";
+import CreateGroupVote from "./pages/community/CreateGroupVote";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
