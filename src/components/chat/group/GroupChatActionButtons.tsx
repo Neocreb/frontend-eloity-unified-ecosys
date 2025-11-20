@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  Coins, 
-  MessageSquare, 
-  PlusCircle 
+import {
+  Coins,
+  MessageSquare,
+  PlusCircle
 } from "lucide-react";
-import { StartGroupContributionModal } from "./StartGroupContributionModal";
-import { CreateGroupVoteModal } from "./CreateGroupVoteModal";
+import { useNavigate } from "react-router-dom";
 
 interface GroupChatActionButtonsProps {
   groupId: string;
@@ -19,55 +18,38 @@ export const GroupChatActionButtons: React.FC<GroupChatActionButtonsProps> = ({
   isAdmin,
   onAction,
 }) => {
-  const [showContributionModal, setShowContributionModal] = useState(false);
-  const [showVoteModal, setShowVoteModal] = useState(false);
+  const navigate = useNavigate();
 
-  const handleContributionCreated = () => {
-    setShowContributionModal(false);
+  const handleContributionClick = () => {
+    navigate(`/app/community/group-contribution/${groupId}`);
     onAction?.();
   };
 
-  const handleVoteCreated = () => {
-    setShowVoteModal(false);
+  const handleVoteClick = () => {
+    navigate(`/app/community/vote/${groupId}`);
     onAction?.();
   };
 
   return (
-    <>
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowContributionModal(true)}
-          disabled={!isAdmin}
-        >
-          <Coins className="w-4 h-4 mr-2" />
-          Contribution
-        </Button>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowVoteModal(true)}
-        >
-          <MessageSquare className="w-4 h-4 mr-2" />
-          Vote
-        </Button>
-      </div>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleContributionClick}
+        disabled={!isAdmin}
+      >
+        <Coins className="w-4 h-4 mr-2" />
+        Contribution
+      </Button>
 
-      <StartGroupContributionModal
-        groupId={groupId}
-        isOpen={showContributionModal}
-        onOpenChange={setShowContributionModal}
-        onContributionCreated={handleContributionCreated}
-      />
-
-      <CreateGroupVoteModal
-        groupId={groupId}
-        isOpen={showVoteModal}
-        onOpenChange={setShowVoteModal}
-        onVoteCreated={handleVoteCreated}
-      />
-    </>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleVoteClick}
+      >
+        <MessageSquare className="w-4 h-4 mr-2" />
+        Vote
+      </Button>
+    </div>
   );
 };
