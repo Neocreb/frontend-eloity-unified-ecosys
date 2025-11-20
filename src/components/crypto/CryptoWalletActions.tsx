@@ -16,9 +16,6 @@ import { ArrowRight, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import CryptoKYCModal from "./CryptoKYCModal";
-import CryptoDepositModal from "./CryptoDepositModal";
-import CryptoWithdrawModal from "./CryptoWithdrawModal";
-import { useNavigate } from "react-router-dom";
 
 interface WalletProps {
   onKYCSubmit: (data: any) => Promise<{success: boolean, error?: any}>;
@@ -35,8 +32,6 @@ interface WalletBalance {
 
 const CryptoWalletActions = ({ onKYCSubmit }: WalletProps) => {
   const [activeTab, setActiveTab] = useState<string>("balances");
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<WalletBalance | null>(null);
   const [walletBalances, setWalletBalances] = useState<WalletBalance[]>([]);
@@ -100,7 +95,7 @@ const CryptoWalletActions = ({ onKYCSubmit }: WalletProps) => {
 
   const openDepositDialog = (currency: WalletBalance) => {
     setSelectedCurrency(currency);
-    setDepositModalOpen(true);
+    navigate("/app/crypto/deposit");
   };
 
   const openWithdrawDialog = (currency: WalletBalance) => {
@@ -114,7 +109,7 @@ const CryptoWalletActions = ({ onKYCSubmit }: WalletProps) => {
     }
 
     setSelectedCurrency(currency);
-    setWithdrawModalOpen(true);
+    navigate("/app/crypto/withdraw");
   };
 
 
@@ -283,22 +278,8 @@ const CryptoWalletActions = ({ onKYCSubmit }: WalletProps) => {
         </div>
       </div>
       
-      {/* Deposit Modal */}
-      <CryptoDepositModal
-        isOpen={depositModalOpen}
-        onClose={() => setDepositModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
-      {/* Withdraw Modal */}
-      <CryptoWithdrawModal
-        isOpen={withdrawModalOpen}
-        onClose={() => setWithdrawModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-      
       {/* KYC Modal */}
-      <CryptoKYCModal 
+      <CryptoKYCModal
         isOpen={kycModalOpen}
         onClose={() => setKycModalOpen(false)}
         onSubmit={handleKYCSubmit}
