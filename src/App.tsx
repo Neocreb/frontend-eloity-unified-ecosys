@@ -592,7 +592,7 @@ const AppRoutes = () => {
           <Route path="rewards/withdraw" element={<WithdrawRewards />} />
 
           {/* Chat & Social Routes - Pending Full Page Implementation */}
-          {/* <Route path="chat/create-sticker" element={<CreateStickerPage />} /> */}
+          <Route path="chat/create-sticker" element={<StickerCreation />} />
           <Route path="chat/upload-image" element={<ImageUpload />} />
           {/* <Route path="chat/share-meme" element={<ShareMemePage />} /> */}
 
