@@ -656,7 +656,7 @@ export const ClientDashboard: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <Button className="w-full justify-start" onClick={() => setShowCreateJobModal(true)}>
+                    <Button className="w-full justify-start" onClick={() => navigate('/app/freelance/create-job')}>
                       <Plus className="w-4 h-4 mr-2" />
                       Post New Job
                     </Button>
