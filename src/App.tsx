@@ -552,9 +552,8 @@ const AppRoutes = () => {
           {/* Crypto Trading Routes - Full Page Flows */}
           <Route path="crypto/kyc" element={<CryptoKYC />} />
           <Route path="crypto/payment" element={<UniversalCryptoPayment />} />
-          {/* Crypto deposit/withdraw routes - components not yet created */}
-          {/* <Route path="crypto/deposit" element={<CryptoDeposit />} /> */}
-          {/* <Route path="crypto/withdraw" element={<CryptoWithdraw />} /> */}
+          <Route path="crypto/deposit" element={<CryptoDeposit />} />
+          <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
 
           {/* Freelance Routes - Full Page Implementation */}
           <Route path="freelance/create-job" element={<CreateJob />} />
