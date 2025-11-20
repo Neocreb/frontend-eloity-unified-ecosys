@@ -414,9 +414,30 @@ import MyNewPage from "./pages/category/MyNewPage";
   - URL parameter-based media data passing for integration
   - Full action set for community engagement
 
-### Feed & Stories (7)
-- [ ] **StoryViewerModal** → `/app/feed/story/:storyId`
-- [ ] **CheckInModal** → `/app/feed/check-in`
+### Feed & Stories (7 - ARCHITECTURAL DECISION: REMAIN AS MODALS ✅)
+
+After careful analysis, the following feed modals are **recommended to remain as modal overlays** due to their tight coupling with the CreatePostFlow component and context-dependent nature:
+
+- ⏸️ **CheckInModal** → Remains in CreatePostFlow (KEEP AS MODAL)
+  - Reason: Tightly coupled to post creation state management
+
+- ⏸️ **FeelingActivityModal** → Remains in CreatePostFlow (KEEP AS MODAL)
+  - Reason: Tightly coupled to post creation state management
+
+- ⏸️ **FeelingLocationModal** → Remains in CreatePostFlow (KEEP AS MODAL)
+  - Reason: Tightly coupled to post creation state management
+
+- ⏸️ **MediaUploadModal** → Remains in CreatePostFlow (KEEP AS MODAL)
+  - Reason: Tightly coupled to post creation state management
+
+- ⏸️ **TagPeopleModal** → Remains in CreatePostFlow (KEEP AS MODAL)
+  - Reason: Tightly coupled to post creation state management
+
+- ⏸️ **EnhancedShareDialog** → Multi-context usage (FUTURE CANDIDATE)
+  - Current status: Remains as modal for this phase
+
+- ⏸️ **StoryViewerModal** → Unused/Deprecated (ARCHIVAL CANDIDATE)
+  - Status: Not imported anywhere - different StoryViewer component in use
 - [ ] **FeelingActivityModal** ��� `/app/feed/feeling`
 - [ ] **FeelingLocationModal** → `/app/feed/location`
 - [ ] **MediaUploadModal** → `/app/feed/upload-media`
@@ -749,7 +770,7 @@ Reviewed/Fixed:
 - ✅ Routes added: 3
 - ✅ Dark mode coverage: 100% of new components
 - ✅ Mobile responsiveness: 100% of new components
-- ✅ Completion rate: 79% (30/38 modals converted)
+- ��� Completion rate: 79% (30/38 modals converted)
 
 ## Session Summary (Event & Challenge Navigation Updates)
 
