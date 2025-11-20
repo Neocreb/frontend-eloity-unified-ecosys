@@ -93,6 +93,12 @@ import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
 import CreateJob from "./pages/freelance/CreateJob";
 import ApplyJob from "./pages/freelance/ApplyJob";
 import MessageClient from "./pages/freelance/MessageClient";
+// Phase 2 Modal Conversions
+import CreateChallenge from "./pages/challenges/CreateChallenge";
+import CreateBattle from "./pages/live/CreateBattle";
+import CreateStream from "./pages/live/CreateStream";
+import CreateStory from "./pages/feed/CreateStory";
+import CreateContent from "./pages/content/Create";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
