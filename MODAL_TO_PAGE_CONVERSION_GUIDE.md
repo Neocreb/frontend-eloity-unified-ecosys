@@ -202,7 +202,11 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 ## Modals Pending Conversion
 
-**Status**: 17 of 38 completed (44.7%) | 21 remaining (55.3%)
+**Status**: 19 of 38 completed (50%) | 19 remaining (50%)
+
+### Crypto Operations (2 - All Complete ✅)
+- ✅ **CryptoDepositModal** → `/app/crypto/deposit`
+- ✅ **CryptoWithdrawModal** → `/app/crypto/withdraw`
 
 ### Navigation Improvements (Completed)
 - ✅ GroupDetailView - "Start Contribution" button properly navigates to group-contribution/:groupId
