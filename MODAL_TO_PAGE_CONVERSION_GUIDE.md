@@ -280,7 +280,26 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 ## Modals Pending Conversion
 
-**Status**: 22 of 38 completed (58%) | 16 remaining (42%)
+**Status**: 25 of 38 completed (66%) | 13 remaining (34%)
+
+### Profile Management (2 - All Complete ✅)
+- ✅ **EditProfileModal** → `/app/profile/edit` (COMPLETED THIS SESSION)
+  - Full-page profile editor with avatar upload
+  - Form validation with error messages
+  - Dark/light theme support
+  - Supabase integration
+
+- ✅ **AddExternalWorkModal** → `/app/profile/add-work` (ALREADY COMPLETE)
+  - Full-page portfolio/work item manager
+  - Multiple work types and categories
+  - Dark/light theme support
+
+### Rewards System (1 - All Complete ✅)
+- ✅ **WithdrawalModal** → `/app/rewards/withdraw` (COMPLETED THIS SESSION)
+  - Full-page withdrawal interface
+  - Real-time conversion calculations
+  - Processing animations
+  - Dark/light theme support
 
 ### Crypto Operations (2 - All Complete ✅)
 - ✅ **CryptoDepositModal** → `/app/crypto/deposit` (COMPLETED THIS SESSION)
