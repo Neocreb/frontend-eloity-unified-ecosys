@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 const WalletDashboardContent = () => {
+  const navigate = useNavigate();
   const {
     walletBalance,
     transactions: allTransactions,
@@ -38,8 +39,6 @@ const WalletDashboardContent = () => {
 
   const [activeTab, setActiveTab] = useState("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showDepositModal, setShowDepositModal] = useState(false);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const { toast } = useToast();
 
