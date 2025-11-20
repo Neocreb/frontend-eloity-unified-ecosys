@@ -88,7 +88,7 @@ import BuyGiftCards from "./pages/wallet/BuyGiftCards";
 import SellGiftCards from "./pages/wallet/SellGiftCards";
 // Crypto pages
 import CryptoKYC from "./pages/CryptoKYC";
-import UniversalCryptoPayment from "./pages/crypto/UniversalCryptoPayment";
+import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
 // Freelance pages
 import CreateJob from "./pages/freelance/CreateJob";
 import ApplyJob from "./pages/freelance/ApplyJob";
