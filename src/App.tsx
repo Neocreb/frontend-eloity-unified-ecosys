@@ -521,7 +521,7 @@ const AppRoutes = () => {
           <Route path="content/create" element={<CreateContent />} />
 
           {/* Group & Community Routes - Full Page Implementation COMPLETE */}
-          <Route path="community/create-group" element={<CreateGroup />} />
+          <Route path="community/create-group" element={<CreateGroupPage />} />
           <Route path="community/contribute/:contributionId" element={<ContributeToGroup />} />
           <Route path="community/group-contribution/:groupId" element={<GroupContribution />} />
           <Route path="community/vote/:groupId" element={<CreateGroupVote />} />
