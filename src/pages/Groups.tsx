@@ -197,7 +197,7 @@ const Groups: React.FC = () => {
           </Button>
           <h1 className="text-[17px] font-semibold">Groups</h1>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => setShowCreateDialog(true)}>
+            <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => navigate('/app/community/create-group')}>
               <Plus className="w-5 h-5" />
             </Button>
             <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => navigate('/app/profile')}>
