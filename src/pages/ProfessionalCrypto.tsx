@@ -23,8 +23,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import CryptoWalletBalanceCard from "@/components/crypto/CryptoWalletBalanceCard";
-import CryptoDepositModal from "@/components/crypto/CryptoDepositModal";
-import CryptoWithdrawModal from "@/components/crypto/CryptoWithdrawModal";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Cryptocurrency {
@@ -70,8 +68,6 @@ const ProfessionalCrypto = () => {
   const [marketStats, setMarketStats] = useState<MarketStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [topGainersLosersTab, setTopGainersLosersTab] = useState<"gainers" | "losers">("gainers");
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
 
   const [totalBalanceUSD, setTotalBalanceUSD] = useState(0);
   const [totalChangeUSD, setTotalChangeUSD] = useState(0);
@@ -266,8 +262,8 @@ const ProfessionalCrypto = () => {
     }
   };
 
-  const handleDeposit = () => setDepositModalOpen(true);
-  const handleWithdraw = () => setWithdrawModalOpen(true);
+  const handleDeposit = () => navigate("/app/crypto/deposit");
+  const handleWithdraw = () => navigate("/app/crypto/withdraw");
 
   // Initiate KYC if needed for certain actions. Tries backend, fails gracefully.
   const handleKYCSubmit = async (data: any): Promise<{ success: boolean; error?: any }> => {
@@ -532,8 +528,7 @@ const ProfessionalCrypto = () => {
             </Card>
           </div>
 
-          <CryptoDepositModal isOpen={depositModalOpen} onClose={() => setDepositModalOpen(false)} onKYCSubmit={handleKYCSubmit} />
-          <CryptoWithdrawModal isOpen={withdrawModalOpen} onClose={() => setWithdrawModalOpen(false)} onKYCSubmit={handleKYCSubmit} />
+          {/* Modals removed - now using full-page routes for crypto operations */}
         </div>
       </div>
     </>

@@ -49,12 +49,11 @@ import {
   Plus,
   Minus,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { cryptoNotificationService } from "@/services/cryptoNotificationService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext, WalletProvider } from "@/contexts/WalletContext";
-import CryptoDepositModal from "@/components/crypto/CryptoDepositModal";
-import CryptoWithdrawModal from "@/components/crypto/CryptoWithdrawModal";
 import { cn } from "@/lib/utils";
 import useCrypto from "@/hooks/use-crypto";
 
@@ -234,9 +233,8 @@ function EnhancedCryptoPortfolioContent() {
   const [timeframe, setTimeframe] = useState("30D");
   const [activeTab, setActiveTab] = useState("overview");
   const [showValues, setShowValues] = useState(true);
-  const [showCryptoDepositModal, setShowCryptoDepositModal] = useState(false);
-  const [showCryptoWithdrawModal, setShowCryptoWithdrawModal] = useState(false);
   const [selectedAssetForAction, setSelectedAssetForAction] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { walletBalance, refreshWallet } = useWalletContext();
@@ -375,7 +373,7 @@ function EnhancedCryptoPortfolioContent() {
         {/* Main Action Buttons - Mobile Responsive */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
-            onClick={() => setShowCryptoDepositModal(true)}
+            onClick={() => navigate("/app/crypto/deposit")}
             className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none sm:min-w-[140px]"
             size="default"
           >
@@ -383,7 +381,7 @@ function EnhancedCryptoPortfolioContent() {
             Deposit Crypto
           </Button>
           <Button
-            onClick={() => setShowCryptoWithdrawModal(true)}
+            onClick={() => navigate("/app/crypto/withdraw")}
             variant="outline"
             className="flex-1 sm:flex-none sm:min-w-[140px]"
             size="default"
@@ -965,24 +963,7 @@ function EnhancedCryptoPortfolioContent() {
 
       </Tabs>
 
-      {/* Crypto Modals */}
-      <CryptoDepositModal
-        isOpen={showCryptoDepositModal}
-        onClose={() => {
-          setShowCryptoDepositModal(false);
-          setSelectedAssetForAction(null);
-        }}
-        onSuccess={refreshPortfolio}
-      />
-
-      <CryptoWithdrawModal
-        isOpen={showCryptoWithdrawModal}
-        onClose={() => {
-          setShowCryptoWithdrawModal(false);
-          setSelectedAssetForAction(null);
-        }}
-        onSuccess={refreshPortfolio}
-      />
+      {/* Modals removed - now using full-page routes for crypto operations */}
     </div>
   );
 }

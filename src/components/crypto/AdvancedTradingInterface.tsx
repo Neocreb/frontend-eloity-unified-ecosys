@@ -31,9 +31,8 @@ import {
   Eye,
   Bell,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import CryptoDepositModal from "./CryptoDepositModal";
-import CryptoWithdrawModal from "./CryptoWithdrawModal";
 import CryptoKYCModal from "./CryptoKYCModal";
 
 interface OrderBookEntry {
@@ -101,10 +100,9 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
   const [volume24h, setVolume24h] = useState(0);
   const [chartTimeframe, setChartTimeframe] = useState("1h");
   const [isWatchlisted, setIsWatchlisted] = useState(false);
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [isVerified, setIsVerified] = useState(true); // Mock verified status
+  const navigate = useNavigate();
   const chartRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -237,7 +235,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
   };
 
   const handleDepositClick = () => {
-    setDepositModalOpen(true);
+    navigate("/app/crypto/deposit");
   };
 
   const handleWithdrawClick = () => {
@@ -249,7 +247,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       });
       return;
     }
-    setWithdrawModalOpen(true);
+    navigate("/app/crypto/withdraw");
   };
 
   const handleKYCSubmit = async (data: any) => {
@@ -745,18 +743,6 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       </div>
 
       {/* Modals */}
-      <CryptoDepositModal
-        isOpen={depositModalOpen}
-        onClose={() => setDepositModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
-      <CryptoWithdrawModal
-        isOpen={withdrawModalOpen}
-        onClose={() => setWithdrawModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
       <CryptoKYCModal
         isOpen={kycModalOpen}
         onClose={() => setKycModalOpen(false)}

@@ -90,6 +90,8 @@ import SellGiftCards from "./pages/wallet/SellGiftCards";
 // Crypto pages
 import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
+import CryptoDeposit from "./pages/crypto/CryptoDeposit";
+import CryptoWithdraw from "./pages/crypto/CryptoWithdraw";
 // Freelance pages
 import CreateJob from "./pages/freelance/CreateJob";
 import ApplyJob from "./pages/freelance/ApplyJob";
@@ -550,6 +552,8 @@ const AppRoutes = () => {
           {/* Crypto Trading Routes - Full Page Flows */}
           <Route path="crypto/kyc" element={<CryptoKYC />} />
           <Route path="crypto/payment" element={<UniversalCryptoPayment />} />
+          <Route path="crypto/deposit" element={<CryptoDeposit />} />
+          <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
 
           {/* Freelance Routes - Full Page Implementation */}
           <Route path="freelance/create-job" element={<CreateJob />} />
