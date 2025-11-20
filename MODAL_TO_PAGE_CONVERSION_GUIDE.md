@@ -5,16 +5,39 @@ This guide documents the systematic conversion of modal-based UI components to f
 
 ## Completed Conversions
 
-### Crypto Trading
-✅ **CryptoDeposit** - Route: `/app/crypto/deposit`
-- Deposit cryptocurrency with address generation
-- QR code support
-- Network-specific fee information
+### Crypto Trading & Verification
+✅ **CryptoKYC** (from CryptoKYCModal) - Route: `/app/crypto/kyc`
+- Multi-step KYC verification flow
+- Document upload support (ID front/back, selfie)
+- Personal information collection
+- Privacy notice and security warnings
 
-✅ **CryptoWithdraw** - Route: `/app/crypto/withdraw`
-- Withdraw to external addresses
-- Multi-step withdrawal confirmation
-- Fee calculation and processing time tracking
+✅ **UniversalCryptoPayment** (from UniversalCryptoPaymentModal) - Route: `/app/crypto/payment`
+- Cryptocurrency payment selection interface
+- Multi-currency support (BTC, ETH, USDC, etc.)
+- Payment confirmation with security PIN
+- Transaction status tracking
+
+### Freelance Platform (High Priority - Complete)
+✅ **CreateJob** (from CreateJobModal) - Route: `/app/freelance/create-job`
+- Multi-step job posting (3 steps)
+- Category and skill selection
+- Budget configuration (fixed or hourly)
+- File attachments and job settings
+- Integrated in ClientDashboard (3 instances updated)
+
+✅ **ApplyJob** (from ApplyModal) - Route: `/app/freelance/apply-job/:jobId`
+- Job detail loading from route params
+- Cover letter submission
+- Milestone-based pricing support
+- File attachment support
+- Real-time job detail retrieval
+
+✅ **MessageClient** (from MessageClientModal) - Route: `/app/freelance/message/:clientId`
+- Client profile display with verification status
+- Message template suggestions
+- Professional messaging interface
+- Client information and response time display
 
 ### Wallet Operations
 ✅ **SendMoney** - Route: `/app/wallet/send-money`
