@@ -67,7 +67,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import TaskTracker from "@/components/freelance/TaskTracker";
 import NegotiationChat from "@/components/freelance/NegotiationChat";
 import ReviewForm from "@/components/freelance/ReviewForm";
-import CreateJobModal from "@/components/freelance/CreateJobModal";
 import FileUpload from "@/components/freelance/FileUpload";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UnifiedCampaignManager } from "@/components/campaigns/UnifiedCampaignManager";
@@ -132,10 +131,10 @@ const navigationItems: TabItem[] = [
 
 
 export const ClientDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [activeProjects, setActiveProjects] = useState<Project[]>([]);
   const [clientStats, setClientStats] = useState<ClientStats | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
@@ -149,7 +148,6 @@ export const ClientDashboard: React.FC = () => {
   const { getProjects, loading } = useFreelance();
   const { getUserEscrows } = useEscrow();
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -593,7 +591,7 @@ export const ClientDashboard: React.FC = () => {
                         <p className="text-gray-600 dark:text-gray-400 mb-4">
                           Start by posting your first job to find freelancers
                         </p>
-                        <Button onClick={() => setShowCreateJobModal(true)}>
+                        <Button onClick={() => navigate('/app/freelance/create-job')}>
                           Post Your First Job
                         </Button>
                       </div>
@@ -657,7 +655,7 @@ export const ClientDashboard: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <Button className="w-full justify-start" onClick={() => setShowCreateJobModal(true)}>
+                    <Button className="w-full justify-start" onClick={() => navigate('/app/freelance/create-job')}>
                       <Plus className="w-4 h-4 mr-2" />
                       Post New Job
                     </Button>
@@ -785,7 +783,7 @@ export const ClientDashboard: React.FC = () => {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={() => setShowCreateJobModal(true)} className="w-full">
+                  <Button onClick={() => navigate('/app/freelance/create-job')} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Job Posting
                   </Button>
@@ -893,18 +891,6 @@ export const ClientDashboard: React.FC = () => {
         onClose={() => setShowOnboarding(false)}
         onComplete={handleTourComplete}
       />
-
-      {/* Create Job Modal */}
-      {showCreateJobModal && (
-        <CreateJobModal
-          isOpen={showCreateJobModal}
-          onClose={() => setShowCreateJobModal(false)}
-          onSubmit={(jobData) => {
-            console.log("Job created:", jobData);
-            setShowCreateJobModal(false);
-          }}
-        />
-      )}
 
       {/* Review Modal */}
       {showReviewModal && selectedProject && (
