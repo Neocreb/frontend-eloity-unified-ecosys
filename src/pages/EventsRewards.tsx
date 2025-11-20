@@ -18,7 +18,7 @@ import {
   TrendingUp,
   Medal,
   Zap,
-  Fire,
+  Flame,
   Crown,
   Calendar,
   MapPin,
