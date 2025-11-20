@@ -493,14 +493,14 @@ const AppRoutes = () => {
           <Route path="wallet/buy-gift-cards" element={<BuyGiftCards />} />
           <Route path="wallet/sell-gift-cards" element={<SellGiftCards />} />
 
-          {/* Crypto Trading Routes - Full Page Flows - Pending Implementation */}
-          {/* <Route path="crypto/deposit" element={<CryptoDeposit />} /> */}
-          {/* <Route path="crypto/withdraw" element={<CryptoWithdraw />} /> */}
+          {/* Crypto Trading Routes - Full Page Flows */}
+          <Route path="crypto/kyc" element={<CryptoKYC />} />
+          <Route path="crypto/payment" element={<UniversalCryptoPayment />} />
 
-          {/* Freelance Routes - Pending Full Page Implementation */}
-          {/* <Route path="freelance/create-job" element={<CreateJobPage />} /> */}
-          {/* <Route path="freelance/apply/:jobId" element={<ApplyPage />} /> */}
-          {/* <Route path="freelance/message/:clientId" element={<MessagePage />} /> */}
+          {/* Freelance Routes - Full Page Implementation */}
+          <Route path="freelance/create-job" element={<CreateJob />} />
+          <Route path="freelance/apply/:jobId" element={<ApplyJob />} />
+          <Route path="freelance/message/:clientId" element={<MessageClient />} />
 
           {/* Content & Live Routes - Pending Full Page Implementation */}
           {/* <Route path="challenges/create" element={<CreateChallengePage />} /> */}
