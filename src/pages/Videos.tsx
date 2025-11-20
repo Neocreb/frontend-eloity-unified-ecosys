@@ -1871,11 +1871,11 @@ const Videos: React.FC = () => {
           {showCreateMenu && (
             <div className="absolute top-16 right-4 z-50 animate-fade-in">
               <div className="bg-gray-900 border border-gray-700 rounded-xl w-56 py-3 shadow-2xl backdrop-blur-lg">
-                <div 
+                <div
                   className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
                   onClick={() => {
                     setShowCreateMenu(false);
-                    setIsAdvancedRecorderOpen(true);
+                    navigate('/app/content/create');
                   }}
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
@@ -1886,11 +1886,11 @@ const Videos: React.FC = () => {
                     <div className="text-xs text-gray-400">Record or upload a video</div>
                   </div>
                 </div>
-                <div 
+                <div
                   className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
                   onClick={() => {
                     setShowCreateMenu(false);
-                    setShowLiveStreamModal(true);
+                    navigate('/app/live/create-stream');
                   }}
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
@@ -1901,11 +1901,11 @@ const Videos: React.FC = () => {
                     <div className="text-xs text-gray-400">Start live streaming</div>
                   </div>
                 </div>
-                <div 
+                <div
                   className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 cursor-pointer rounded-lg mx-2 transition-colors"
                   onClick={() => {
                     setShowCreateMenu(false);
-                    setShowBattleCreationModal(true);
+                    navigate('/app/live/create-battle');
                   }}
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">

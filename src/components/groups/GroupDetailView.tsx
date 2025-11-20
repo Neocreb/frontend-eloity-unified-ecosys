@@ -723,6 +723,14 @@ const GroupDetailView = () => {
                 </Button>
               ) : (
                 <>
+                  <Button
+                    className="gap-2 text-sm sm:text-base bg-green-600 hover:bg-green-700"
+                    onClick={() => navigate(`/app/community/group-contribution/${groupId}`)}
+                  >
+                    <Gift className="w-4 h-4" />
+                    <span className="hidden sm:inline">Start Contribution</span>
+                    <span className="sm:hidden">Contribute</span>
+                  </Button>
                   {(group.is_owner || false || group.is_admin || false) && (
                     <Button variant="secondary" className="gap-2 text-sm sm:text-base" onClick={handleManageGroup}>
                       <Settings className="w-4 h-4" />

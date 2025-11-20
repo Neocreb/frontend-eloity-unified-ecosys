@@ -209,6 +209,7 @@ import Blog from "./pages/Blog";
 import SimpleBlog from "./pages/SimpleBlog";
 import BlogPost from "./pages/BlogPost";
 import CommunityEvents from "./pages/CommunityEvents";
+import EventsRewards from "./pages/EventsRewards";
 // import SubscriptionManager from "./components/premium/SubscriptionManager";
 // import VirtualGiftsAndTips from "./components/premium/VirtualGiftsAndTips";
 import EnhancedKYCVerification from "./components/kyc/EnhancedKYCVerification";
@@ -626,6 +627,7 @@ const AppRoutes = () => {
           <Route path="explore" element={<Explore />} />
           <Route path="global-search" element={<GlobalSearch />} />
           <Route path="events" element={<CommunityEvents />} />
+          <Route path="events/rewards" element={<EventsRewards />} />
           <Route path="events/:eventId" element={<DetailedEventPage />} />
           <Route path="premium" element={<Premium />} />
           <Route

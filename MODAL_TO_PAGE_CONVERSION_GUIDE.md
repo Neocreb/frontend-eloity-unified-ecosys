@@ -3,25 +3,47 @@
 ## Overview
 This guide documents the systematic conversion of modal-based UI components to full-page routes, improving user experience and reducing complexity.
 
-## Recent Changes (Latest Session)
+## Recent Changes (Latest Session - Event & Challenge Navigation Updates)
 
 ### Completed in this session:
+- ✅ **GroupDetailView** - Added "Start Contribution" button for group members to navigate to `/app/community/group-contribution/:groupId`
+- ✅ **CommunityEvents** - Created choice dialog to prompt users to select between creating an event or challenge
+  - Navigates to `/app/challenges/create` for challenge creation
+  - Opens in-page form for event creation (modal based)
+- ✅ **EventsRewards** - New full-page route `/app/events/rewards` showing all challenges and leaderboard
+  - Displays active challenges with participant counts and prize pools
+  - Shows top 8 leaderboard entries with rankings and stats
+  - Includes tabs for Challenges and Leaderboard views
+  - Search and category filtering for challenges
+- ✅ **Videos Page** - Updated create menu dropdown to navigate to full-page routes instead of modals
+  - "Create Video" → `/app/content/create`
+  - "Go Live" → `/app/live/create-stream`
+  - "Start Battle" → `/app/live/create-battle`
+
+### Previous Sessions - Key Completions:
 - ✅ **CreateJob** - Full-page freelance job creation flow with 3-step form
 - ✅ **ApplyJob** - Job proposal submission with milestone support
 - ✅ **MessageClient** - Client messaging interface with templates
 - ✅ **CryptoKYC** - Multi-step identity verification with document uploads
 - ✅ **UniversalCryptoPayment** - Cryptocurrency payment interface with multi-currency support
+- ✅ Routes added to `App.tsx` for all core conversions
+- ✅ All Phase 1 & 2 routes now fully functional and accessible
 
-### Integration Progress:
-- ✅ Routes added to `App.tsx` for all 11 high-priority conversions (6 Phase 1 + 5 Phase 2)
-- ✅ `ClientDashboard.tsx` updated to use navigation (3 button instances)
-- ⏳ Phase 2 routes now available but components using them still need updates
+## New & Enhanced Routes (This Session)
 
-### What's Changed:
-1. **File Structure**: New pages created in `/src/pages/freelance/` and `/src/pages/crypto/`
-2. **Navigation**: Components now use `navigate()` instead of state-based modals
-3. **Routes**: All 6 high-priority routes are fully functional and accessible
-4. **URL Parameters**: ApplyJob and MessageClient support dynamic route parameters
+### Events & Challenges Hub
+✅ **EventsRewards** - Route: `/app/events/rewards`
+- Full-page challenges and leaderboard hub
+- View all active challenges with participant counts and prizes
+- Real-time leaderboard rankings with trend indicators
+- Challenge filtering by category and search
+- Separated from individual event pages for better organization
+- Links back to `/app/events` for main event page
+
+✅ **Updated Navigation**
+- CommunityEvents page choice dialog for event vs challenge creation
+- GroupDetailView now shows "Start Contribution" button for group members
+- Videos page create menu now navigates to full-page routes instead of modals
 
 ## Completed Conversions
 
@@ -144,19 +166,27 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 ## Modals Pending Conversion
 
-**Status**: 11 of 38 completed (28.9%) | 27 remaining (71.1%)
+**Status**: 17 of 38 completed (44.7%) | 21 remaining (55.3%)
 
-### Content & Live (5)
-- [ ] **CreateChallengeModal** → `/app/challenges/create`
-- [ ] **BattleCreationModal** → `/app/live/create-battle`
-- [ ] **LiveStreamModal** → `/app/live/create-stream`
-- [ ] **StoryCreationModal** → `/app/feed/create-story`
-- [ ] **ContentCreationModal** → `/app/content/create`
+### Navigation Improvements (Completed)
+- ✅ GroupDetailView - "Start Contribution" button properly navigates to group-contribution/:groupId
+- ✅ CommunityEvents - Choice dialog for event vs challenge creation
+- ✅ Videos page - Create menu now navigates to full-page routes
+  - "Create Video" → `/app/content/create`
+  - "Go Live" → `/app/live/create-stream`
+  - "Start Battle" → `/app/live/create-battle`
+
+### Content & Live (5 - All Complete ✅)
+- ✅ **CreateChallengeModal** → `/app/challenges/create`
+- ✅ **BattleCreationModal** → `/app/live/create-battle`
+- ✅ **LiveStreamModal** → `/app/live/create-stream`
+- ✅ **StoryCreationModal** → `/app/feed/create-story`
+- ✅ **ContentCreationModal** → `/app/content/create`
 
 ### Group & Community (4)
-- [ ] **CreateGroupModal** → `/app/community/create-group`
-- [ ] **ContributeToGroupModal** → `/app/community/contribute/:groupId`
-- [ ] **StartGroupContributionModal** → `/app/community/group-contribution/:groupId`
+- ✅ **CreateGroupModal** → `/app/community/create-group`
+- ✅ **ContributeToGroupModal** → `/app/community/contribute/:groupId`
+- ✅ **StartGroupContributionModal** → `/app/community/group-contribution/:groupId` (+ navigation link added)
 - [ ] **CreateGroupVoteModal** → `/app/community/vote/:groupId`
 
 ### Profile Management (2)
@@ -215,7 +245,7 @@ src/
 │   │   └── ...
 │   ├── chat/
 │   │   └── ...
-│   └── feed/
+│   └��─ feed/
 │       └── ...
 └── components/
     └── *Modal.tsx (gradually removing)
@@ -244,12 +274,17 @@ src/
    - ✅ StoryCreationModal → `/app/feed/create-story`
    - ✅ ContentCreationModal → `/app/content/create`
 
-### ⏳ Phase 3 - Next Priority (Medium)
-1. **Group & Community** (4 remaining)
-   - [ ] CreateGroupModal → `/app/community/create-group`
-   - [ ] ContributeToGroupModal → `/app/community/contribute/:groupId`
-   - [ ] StartGroupContributionModal → `/app/community/group-contribution/:groupId`
+### ✅ Phase 3 - Partially Complete (Medium Priority)
+1. **Group & Community** (3 completed, 1 remaining)
+   - [x] CreateGroupModal → `/app/community/create-group` - DONE
+   - [x] ContributeToGroupModal → `/app/community/contribute/:groupId` - DONE
+   - [x] StartGroupContributionModal → `/app/community/group-contribution/:groupId` - DONE + Added navigation link to GroupDetailView
    - [ ] CreateGroupVoteModal → `/app/community/vote/:groupId`
+
+2. **Events & Challenges** (New additions - 2 completed)
+   - ✅ EventsRewards page → `/app/events/rewards` (new full-page)
+   - ✅ CommunityEvents choice dialog → Prompts between event/challenge creation
+   - ✅ Videos page navigation → Updated dropdown menu to navigate to full-page routes
 
 2. **Chat & Social** (4+ remaining)
    - [ ] StickerCreationModal → `/app/chat/create-sticker`
@@ -287,6 +322,70 @@ src/
 - [ ] `P2PMarketplace.tsx` - Replace CryptoKYCModal with navigation
 - [ ] `CryptoWalletActions.tsx` - Replace CryptoKYCModal with navigation
 - [ ] `MarketplaceCheckout.tsx` - Replace UniversalCryptoPaymentModal with navigation
+
+## Session Summary (Event & Challenge Navigation Updates)
+
+### What Was Accomplished:
+1. **GroupDetailView Enhancement**
+   - Added prominent "Start Contribution" button (green, visible to group members)
+   - Navigates to `/app/community/group-contribution/:groupId` for group fundraising
+   - Positioned alongside Manage and Leave buttons in group header
+
+2. **CommunityEvents Smart Choice Dialog**
+   - New modal that prompts users to choose between two paths:
+     - "Create Event" - Opens in-page form (modal) for event creation
+     - "Create Challenge" - Navigates to `/app/challenges/create` full-page
+   - Replaces single "Create Event" button with smart routing
+   - Better UX for users choosing between event vs challenge creation
+
+3. **EventsRewards Full-Page Hub** (NEW)
+   - New route: `/app/events/rewards`
+   - Full-featured challenges and leaderboard page
+   - Features:
+     - Displays all active challenges with icons, descriptions, participant counts, and prize pools
+     - Top 8 leaderboard with rank badges, user info, points, wins, and trend indicators
+     - Tab-based navigation between Challenges and Leaderboard
+     - Search and category filtering for challenges (Entertainment, Technology, Art, Health, Lifestyle)
+     - Statistics cards showing active challenges, total participants, total prize pool, trending status
+     - "View Full Leaderboard" button for extended rankings
+   - Integrated into CommunityEvents page for easy navigation
+
+4. **Videos Page Create Menu Navigation Overhaul**
+   - Updated dropdown menu (triggered by + button in header)
+   - Changed from modal-based to navigation-based:
+     - "Create Video" opens `/app/content/create` (full-page form)
+     - "Go Live" opens `/app/live/create-stream` (full-page form)
+     - "Start Battle" opens `/app/live/create-battle` (full-page form)
+   - Better integration with existing full-page routes
+
+### Routes Added/Updated:
+- ✅ `/app/events/rewards` - EventsRewards component (NEW)
+- ✅ `/app/community/group-contribution/:groupId` - Added navigation link in GroupDetailView
+- ✅ `/app/challenges/create` - Referenced in CommunityEvents choice dialog
+- ✅ `/app/content/create` - Videos page navigation
+- ✅ `/app/live/create-stream` - Videos page navigation
+- ✅ `/app/live/create-battle` - Videos page navigation
+
+### Files Modified:
+- `src/components/groups/GroupDetailView.tsx` - Added contribution button
+- `src/pages/CommunityEvents.tsx` - Added choice dialog and state management
+- `src/pages/EventsRewards.tsx` - NEW full-page component
+- `src/pages/Videos.tsx` - Updated create menu navigation
+- `src/App.tsx` - Added EventsRewards import and route
+- `MODAL_TO_PAGE_CONVERSION_GUIDE.md` - This document (updated)
+
+### Key Improvements:
+- Better navigation flow for group users wanting to contribute
+- Clearer user intent when creating content (event vs challenge)
+- Centralized leaderboard and challenge discovery
+- Consistent use of full-page routes instead of modals across video creation
+
+### What's Still Pending:
+- Phase 3 group/community modals: CreateGroupVoteModal
+- Chat modals: StickerCreationModal, FindUsersModal, ImageUploadModal, MemeGifActionDialog
+- Feed modals: 7 story/sharing related modals
+- Profile modals: EditProfileModal, AddExternalWorkModal
+- Other: WithdrawalModal, KYCVerificationModal, UserSearchModal, DeleteUserDialog
 
 ## Notes
 
