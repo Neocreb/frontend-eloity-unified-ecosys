@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalletProvider, useWalletContext } from "@/contexts/WalletContext";
 import WalletSourceCard from "./WalletSourceCard";
-import WithdrawModal from "./WithdrawModal";
-import DepositModal from "./DepositModal";
+// import WithdrawModal from "./WithdrawModal";
+// import DepositModal from "./DepositModal";
 import TransactionItem from "./TransactionItem";
 import { useToast } from "@/components/ui/use-toast";
 import {
