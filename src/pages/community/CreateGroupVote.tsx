@@ -130,19 +130,24 @@ export const CreateGroupVote: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b p-4 flex-shrink-0 z-10">
+      <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 flex-shrink-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+          >
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold flex items-center gap-2">
+            <h1 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
               <MessageSquare className="h-5 w-5" />
               Create Vote
             </h1>
-            <p className="text-xs text-muted-foreground">Create a group vote</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Create a group vote</p>
           </div>
         </div>
       </div>
