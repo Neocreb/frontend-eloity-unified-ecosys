@@ -220,7 +220,7 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 ## Modals Pending Conversion
 
-**Status**: 21 of 38 completed (55%) | 17 remaining (45%)
+**Status**: 22 of 38 completed (58%) | 16 remaining (42%)
 
 ### Crypto Operations (2 - All Complete ✅)
 - ✅ **CryptoDepositModal** → `/app/crypto/deposit` (COMPLETED THIS SESSION)
@@ -318,7 +318,7 @@ For each modal conversion:
 src/
 ├── pages/
 │   ├── freelance/
-��   │   ├── CreateJob.tsx (new)
+│   │   ├── CreateJob.tsx (new)
 │   │   └── ...
 │   ├── crypto/
 │   │   ├── CryptoDeposit.tsx ✓
@@ -510,7 +510,7 @@ src/
    - CryptoWalletActions: Deposit/Withdraw dialogs → navigation
    - EloityPointExchange: Deposit/Withdraw buttons → navigation
    - EnhancedCryptoPortfolio: Deposit/Withdraw buttons and asset actions → navigation
-   - ProfessionalCrypto: Deposit/Withdraw handlers �� navigation
+   - ProfessionalCrypto: Deposit/Withdraw handlers → navigation
 
 4. **Routes Added to App.tsx**:
    - `/app/crypto/deposit` → CryptoDeposit component
