@@ -155,7 +155,7 @@ This guide documents the systematic conversion of modal-based UI components to f
   - Search and category filtering for challenges
 - ✅ **Videos Page** - Updated create menu dropdown to navigate to full-page routes instead of modals
   - "Create Video" → `/app/content/create`
-  - "Go Live" ��� `/app/live/create-stream`
+  - "Go Live" → `/app/live/create-stream`
   - "Start Battle" → `/app/live/create-battle`
 
 ### Previous Sessions - Key Completions:
@@ -594,12 +594,24 @@ As of this session, **13 modals remain to be converted** (from initial 38, 25 co
   - **Features**: Full-screen user search with typeahead, dark/light theme support, mobile-optimized
   - **Route**: Added to App.tsx at line 607
   - **Theme**: Full dark mode support with proper contrast and colors
+  - **Functionality**: Search users, view profiles, navigate to user pages
 
 - ✅ **FindUsersModal** → `/app/chat/find-users` (COMPLETED)
   - **File**: `src/pages/chat/FindUsers.tsx`
   - **Features**: Chat-focused user discovery with suggested users, full-screen layout
   - **Route**: Added to App.tsx at line 517
   - **Theme**: Full dark mode support with consistent styling
+  - **Functionality**: Find users for chat, view suggestions, navigate to profiles
+
+- ✅ **DeleteUserDialog** → `/app/settings/delete-account` (COMPLETED)
+  - **File**: `src/pages/settings/DeleteAccount.tsx`
+  - **Features**: Two-step account deletion confirmation with security verification
+  - **Route**: Added to App.tsx at line 610
+  - **Theme**: Full dark mode support with warning color coding
+  - **Functionality**:
+    - Step 1: Warning screen with data loss information
+    - Step 2: Email and password verification with checkbox confirmations
+    - Error handling and API integration for account deletion
 
 **Immediately Priority (Next Session):**
 - [ ] **StoryViewerModal** - Core feature, high impact
