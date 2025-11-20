@@ -177,19 +177,27 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 ## Modals Pending Conversion
 
-**Status**: 11 of 38 completed (28.9%) | 27 remaining (71.1%)
+**Status**: 17 of 38 completed (44.7%) | 21 remaining (55.3%)
 
-### Content & Live (5)
-- [ ] **CreateChallengeModal** → `/app/challenges/create`
-- [ ] **BattleCreationModal** → `/app/live/create-battle`
-- [ ] **LiveStreamModal** → `/app/live/create-stream`
-- [ ] **StoryCreationModal** → `/app/feed/create-story`
-- [ ] **ContentCreationModal** → `/app/content/create`
+### Navigation Improvements (Completed)
+- ✅ GroupDetailView - "Start Contribution" button properly navigates to group-contribution/:groupId
+- ✅ CommunityEvents - Choice dialog for event vs challenge creation
+- ✅ Videos page - Create menu now navigates to full-page routes
+  - "Create Video" → `/app/content/create`
+  - "Go Live" → `/app/live/create-stream`
+  - "Start Battle" → `/app/live/create-battle`
+
+### Content & Live (5 - All Complete ✅)
+- ✅ **CreateChallengeModal** → `/app/challenges/create`
+- ✅ **BattleCreationModal** → `/app/live/create-battle`
+- ✅ **LiveStreamModal** → `/app/live/create-stream`
+- ✅ **StoryCreationModal** → `/app/feed/create-story`
+- ✅ **ContentCreationModal** → `/app/content/create`
 
 ### Group & Community (4)
-- [ ] **CreateGroupModal** → `/app/community/create-group`
-- [ ] **ContributeToGroupModal** → `/app/community/contribute/:groupId`
-- [ ] **StartGroupContributionModal** → `/app/community/group-contribution/:groupId`
+- ✅ **CreateGroupModal** → `/app/community/create-group`
+- ✅ **ContributeToGroupModal** → `/app/community/contribute/:groupId`
+- ✅ **StartGroupContributionModal** → `/app/community/group-contribution/:groupId` (+ navigation link added)
 - [ ] **CreateGroupVoteModal** → `/app/community/vote/:groupId`
 
 ### Profile Management (2)
@@ -248,7 +256,7 @@ src/
 │   │   └── ...
 │   ├── chat/
 │   │   └── ...
-│   └── feed/
+│   └��─ feed/
 │       └── ...
 └── components/
     └── *Modal.tsx (gradually removing)
