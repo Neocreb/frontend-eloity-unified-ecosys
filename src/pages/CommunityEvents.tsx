@@ -80,7 +80,6 @@ const CommunityEvents = () => {
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showCreateTypeChoice, setShowCreateTypeChoice] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
