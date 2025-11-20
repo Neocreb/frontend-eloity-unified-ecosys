@@ -592,8 +592,7 @@ const AppRoutes = () => {
 
           {/* Chat & Social Routes - Pending Full Page Implementation */}
           {/* <Route path="chat/create-sticker" element={<CreateStickerPage />} /> */}
-          {/* <Route path="chat/find-users" element={<FindUsersPage />} /> */}
-          {/* <Route path="chat/upload-image" element={<ImageUploadPage />} /> */}
+          <Route path="chat/upload-image" element={<ImageUpload />} />
           {/* <Route path="chat/share-meme" element={<ShareMemePage />} /> */}
 
           {/* Feed Routes - Pending Full Page Implementation */}
