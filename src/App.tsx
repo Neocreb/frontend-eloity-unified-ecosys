@@ -576,9 +576,9 @@ const AppRoutes = () => {
           <Route path="community/group-contribution/:groupId" element={<GroupContribution />} />
           <Route path="community/vote/:groupId" element={<CreateGroupVote />} />
 
-          {/* Profile Routes - Pending Full Page Implementation */}
+          {/* Profile Routes */}
           {/* <Route path="profile/edit" element={<EditProfilePage />} /> */}
-          {/* <Route path="profile/add-work" element={<AddWorkPage />} /> */}
+          <Route path="profile/add-work" element={<AddExternalWork />} />
 
           {/* Rewards Routes - Pending Full Page Implementation */}
           {/* <Route path="rewards/withdraw" element={<WithdrawRewardsPage />} /> */}
