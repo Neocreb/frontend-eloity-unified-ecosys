@@ -3,7 +3,7 @@
 ## Overview
 This guide documents the systematic conversion of modal-based UI components to full-page routes, improving user experience and reducing complexity.
 
-## 🎯 Current Status: 33 of 38 Modals Converted (87%)
+## 🎯 Current Status: 33 of 38 Modals Converted (87%) | 5 Modals Retained by Design (13%)
 
 ### Summary of Conversions by Category
 - **Profile & Rewards**: 3/3 ✅ Complete
@@ -14,8 +14,8 @@ This guide documents the systematic conversion of modal-based UI components to f
 - **Group & Community**: 4/4 ✅ Complete
 - **Search/Discovery**: 2/2 ✅ Complete
 - **Settings/Account**: 1/1 ✅ Complete
-- **Chat Modals**: 5/6 ✅ Complete (5 converted: FindUsers, ImageUpload, StickerCreation, ShareMeme; 1 pending)
-- **Feed/Stories**: 0/7 ⏳ Pending (context-dependent, might remain as modals)
+- **Chat Modals**: 5/6 ✅ Complete (5 converted: FindUsers, ImageUpload, StickerCreation, ShareMeme)
+- **Feed/Stories**: 5/7 ⏸️ Intentionally Retained as Modals (CheckIn, FeelingActivity, FeelingLocation, MediaUpload, TagPeople - all coupled to CreatePostFlow)
 
 ### Key Accomplishments This Session
 1. **🐛 Fixed Import Error**: Resolved Vite compilation error in `WithdrawRewards.tsx` by converting barrel imports to individual component imports
