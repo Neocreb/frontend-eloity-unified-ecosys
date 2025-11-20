@@ -159,14 +159,14 @@ const WalletDashboardContent = () => {
             <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Button
-            onClick={() => setShowDepositModal(true)}
+            onClick={() => navigate("/app/wallet/deposit")}
             className="bg-green-600 hover:bg-green-700 flex items-center gap-1 md:gap-2 text-xs md:text-sm"
           >
             <ArrowDownLeft className="h-3 w-3 md:h-4 md:w-4" />
             <span className="hidden sm:inline">Deposit</span>
           </Button>
           <Button
-            onClick={() => setShowWithdrawModal(true)}
+            onClick={() => navigate("/app/wallet/withdraw")}
             variant="outline"
             className="border-red-200 text-red-600 hover:bg-red-50 flex items-center gap-1 md:gap-2 text-xs md:text-sm"
           >
