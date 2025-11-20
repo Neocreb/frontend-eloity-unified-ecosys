@@ -244,16 +244,10 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
                     : "No contributions have been created for this group yet."}
                 </p>
                 {isAdmin && (
-                  <StartGroupContributionModal
-                    groupId={groupId}
-                    onContributionCreated={handleContributionCreated}
-                    trigger={
-                      <Button>
-                        <PlusCircle className="w-4 h-4 mr-2" />
-                        Start Contribution
-                      </Button>
-                    }
-                  />
+                  <Button onClick={handleNewContribution}>
+                    <PlusCircle className="w-4 h-4 mr-2" />
+                    Start Contribution
+                  </Button>
                 )}
               </div>
             )}
