@@ -50,11 +50,29 @@ export const CreateGroup: React.FC = () => {
   // Load contacts on mount
   React.useEffect(() => {
     const loadContacts = async () => {
+      if (!user?.id) return;
+
       try {
         setLoadingContacts(true);
-        // Replace this with your actual service call
-        const fetchedContacts = await groupChatService.getContacts?.() || [];
-        setContacts(fetchedContacts);
+        const { supabase } = await import('@/integrations/supabase/client');
+
+        // Get the user's contacts from the profiles table
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url')
+          .neq('id', user.id)
+          .limit(100);
+
+        if (error) throw error;
+
+        const transformedContacts: ChatParticipant[] = (profiles || []).map(profile => ({
+          id: profile.id,
+          name: profile.full_name || profile.username || 'Unknown User',
+          avatar: profile.avatar_url,
+          username: profile.username,
+        }));
+
+        setContacts(transformedContacts);
       } catch (error) {
         console.error('Failed to load contacts:', error);
         toast({
@@ -68,7 +86,7 @@ export const CreateGroup: React.FC = () => {
     };
 
     loadContacts();
-  }, []);
+  }, [user?.id, toast]);
 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
