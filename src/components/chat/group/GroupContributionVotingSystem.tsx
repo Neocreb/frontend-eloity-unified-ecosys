@@ -163,29 +163,24 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
           
           <div className="flex gap-2">
             {activeTab === "contributions" && (
-              <StartGroupContributionModal
-                groupId={groupId}
-                onContributionCreated={handleContributionCreated}
-                trigger={
-                  <Button size="sm" disabled={!isAdmin}>
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    New Contribution
-                  </Button>
-                }
-              />
+              <Button
+                size="sm"
+                disabled={!isAdmin}
+                onClick={handleNewContribution}
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                New Contribution
+              </Button>
             )}
-            
+
             {activeTab === "votes" && (
-              <CreateGroupVoteModal
-                groupId={groupId}
-                onVoteCreated={handleVoteCreated}
-                trigger={
-                  <Button size="sm">
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    New Vote
-                  </Button>
-                }
-              />
+              <Button
+                size="sm"
+                onClick={handleNewVote}
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                New Vote
+              </Button>
             )}
           </div>
         </div>
