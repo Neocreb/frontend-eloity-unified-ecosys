@@ -111,10 +111,6 @@ const DashboardInner = () => {
         <PaymentCards />
         <SmartRecommendations />
       </div>
-
-      <WithdrawModal isOpen={showWithdrawModal} onClose={()=>setShowWithdrawModal(false)} walletBalance={walletBalance} onSuccess={refreshWallet} />
-      <DepositModal isOpen={showDepositModal} onClose={()=>setShowDepositModal(false)} onSuccess={refreshWallet} />
-      <TransferModal isOpen={showTransferModal} onClose={()=>setShowTransferModal(false)} />
     </div>
   );
 };
