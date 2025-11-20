@@ -27,7 +27,6 @@ import {
   User,
 } from "lucide-react";
 import { UserProfile } from "@/types/user";
-import AddExternalWorkModal from "@/components/profile/AddExternalWorkModal";
 import { profileService } from "@/services/profileService";
 import { apiClient } from "@/lib/api";
 
