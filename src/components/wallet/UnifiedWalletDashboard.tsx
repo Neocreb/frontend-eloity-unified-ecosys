@@ -356,19 +356,8 @@ const WalletDashboardContent = () => {
         })}
       </Tabs>
 
-      {/* Modals */}
-      <WithdrawModal
-        isOpen={showWithdrawModal}
-        onClose={() => setShowWithdrawModal(false)}
-        walletBalance={walletBalance}
-        onSuccess={refreshData}
-      />
-
-      <DepositModal
-        isOpen={showDepositModal}
-        onClose={() => setShowDepositModal(false)}
-        onSuccess={refreshData}
-      />
+      {/* Modals - Replaced with full-page views */}
+      {/* No longer needed - actions navigate to full pages */}
     </div>
   );
 };
