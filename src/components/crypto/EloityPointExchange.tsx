@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -18,8 +19,6 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { ArrowRight, Info, RefreshCcw } from "lucide-react";
 import { useToast } from "../ui/use-toast";
-import CryptoDepositModal from "./CryptoDepositModal";
-import CryptoWithdrawModal from "./CryptoWithdrawModal";
 import CryptoKYCModal from "./CryptoKYCModal";
 import {
   Tooltip,
@@ -43,10 +42,9 @@ const EloityPointExchange = () => {
   const [isConverting, setIsConverting] = useState(false);
   const [conversionRate, setConversionRate] = useState(0);
   const [fee, setFee] = useState(0);
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [isVerified, setIsVerified] = useState(true); // Mock verified status
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const currencies: Currency[] = [
@@ -197,7 +195,7 @@ const EloityPointExchange = () => {
   };
 
   const handleDepositClick = () => {
-    setDepositModalOpen(true);
+    navigate("/app/crypto/deposit");
   };
 
   const handleWithdrawClick = () => {
@@ -209,7 +207,7 @@ const EloityPointExchange = () => {
       });
       return;
     }
-    setWithdrawModalOpen(true);
+    navigate("/app/crypto/withdraw");
   };
 
   const handleKYCSubmit = async (data: any) => {
@@ -424,18 +422,6 @@ const EloityPointExchange = () => {
       </Card>
 
       {/* Modals */}
-      <CryptoDepositModal
-        isOpen={depositModalOpen}
-        onClose={() => setDepositModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
-      <CryptoWithdrawModal
-        isOpen={withdrawModalOpen}
-        onClose={() => setWithdrawModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
       <CryptoKYCModal
         isOpen={kycModalOpen}
         onClose={() => setKycModalOpen(false)}
