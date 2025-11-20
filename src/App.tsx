@@ -487,9 +487,9 @@ const AppRoutes = () => {
           <Route path="wallet/buy-gift-cards" element={<BuyGiftCards />} />
           <Route path="wallet/sell-gift-cards" element={<SellGiftCards />} />
 
-          {/* Crypto Trading Routes - Full Page Flows */}
-          <Route path="crypto/deposit" element={<CryptoDeposit />} />
-          <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
+          {/* Crypto Trading Routes - Full Page Flows - Pending Implementation */}
+          {/* <Route path="crypto/deposit" element={<CryptoDeposit />} /> */}
+          {/* <Route path="crypto/withdraw" element={<CryptoWithdraw />} /> */}
 
           {/* Freelance Routes - Pending Full Page Implementation */}
           {/* <Route path="freelance/create-job" element={<CreateJobPage />} /> */}
