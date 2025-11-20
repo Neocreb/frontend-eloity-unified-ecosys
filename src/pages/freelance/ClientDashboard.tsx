@@ -148,7 +148,6 @@ export const ClientDashboard: React.FC = () => {
   const { getProjects, loading } = useFreelance();
   const { getUserEscrows } = useEscrow();
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const checkScreenSize = () => {
