@@ -131,10 +131,10 @@ const navigationItems: TabItem[] = [
 
 
 export const ClientDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [activeProjects, setActiveProjects] = useState<Project[]>([]);
   const [clientStats, setClientStats] = useState<ClientStats | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
