@@ -250,11 +250,25 @@ import MyNewPage from "./pages/category/MyNewPage";
 - ✅ **StoryCreationModal** → `/app/feed/create-story`
 - ✅ **ContentCreationModal** → `/app/content/create`
 
-### Group & Community (4)
+### Group & Community (4 - All Complete ✅)
 - ✅ **CreateGroupModal** → `/app/community/create-group`
+  - Full-page group creation with settings and permissions
+  - Dark/light theme support
+
 - ✅ **ContributeToGroupModal** → `/app/community/contribute/:groupId`
-- ✅ **StartGroupContributionModal** → `/app/community/group-contribution/:groupId` (+ navigation link added)
-- [ ] **CreateGroupVoteModal** → `/app/community/vote/:groupId`
+  - Full-page group contribution workflow
+  - Dark/light theme support
+
+- ✅ **StartGroupContributionModal** → `/app/community/group-contribution/:groupId`
+  - Full-page group contribution interface
+  - Dark/light theme support
+  - Navigation link added to GroupDetailView
+
+- ✅ **CreateGroupVoteModal** → `/app/community/vote/:groupId` (COMPLETED THIS SESSION)
+  - Full-page group vote creation with options management
+  - Support for custom duration and required percentages
+  - Dark/light theme support with proper contrast
+  - Already integrated with GroupChatActionButtons and GroupContributionVotingSystem for navigation
 
 ### Profile Management (2)
 - [ ] **EditProfileModal** → `/app/profile/edit`
@@ -304,7 +318,7 @@ For each modal conversion:
 src/
 ├── pages/
 │   ├── freelance/
-│   │   ├── CreateJob.tsx (new)
+��   │   ├── CreateJob.tsx (new)
 │   │   └── ...
 │   ├── crypto/
 │   │   ├── CryptoDeposit.tsx ✓
@@ -496,7 +510,7 @@ src/
    - CryptoWalletActions: Deposit/Withdraw dialogs → navigation
    - EloityPointExchange: Deposit/Withdraw buttons → navigation
    - EnhancedCryptoPortfolio: Deposit/Withdraw buttons and asset actions → navigation
-   - ProfessionalCrypto: Deposit/Withdraw handlers → navigation
+   - ProfessionalCrypto: Deposit/Withdraw handlers �� navigation
 
 4. **Routes Added to App.tsx**:
    - `/app/crypto/deposit` → CryptoDeposit component
