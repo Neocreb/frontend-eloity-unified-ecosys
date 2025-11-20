@@ -30,13 +30,13 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
   groupId,
   isAdmin,
 }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [contributions, setContributions] = useState<GroupContributionWithDetails[]>([]);
   const [votes, setVotes] = useState<GroupVoteWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedContribution, setSelectedContribution] = useState<GroupContributionWithDetails | null>(null);
-  const [showContributeModal, setShowContributeModal] = useState(false);
   const [activeTab, setActiveTab] = useState("contributions");
 
   // Fetch contributions and votes
