@@ -86,7 +86,13 @@ import PayBills from "./pages/wallet/PayBills";
 import TopUp from "./pages/wallet/TopUp";
 import BuyGiftCards from "./pages/wallet/BuyGiftCards";
 import SellGiftCards from "./pages/wallet/SellGiftCards";
-// Crypto pages - Pending full-page implementation
+// Crypto pages
+import CryptoKYC from "./pages/crypto/CryptoKYC";
+import UniversalCryptoPayment from "./pages/crypto/UniversalCryptoPayment";
+// Freelance pages
+import CreateJob from "./pages/freelance/CreateJob";
+import ApplyJob from "./pages/freelance/ApplyJob";
+import MessageClient from "./pages/freelance/MessageClient";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
