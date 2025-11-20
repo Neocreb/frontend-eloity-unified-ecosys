@@ -110,6 +110,9 @@ import CreateGroupVote from "./pages/community/CreateGroupVote";
 import CreateEvent from "./pages/community/CreateEvent";
 // Phase 3 - Profile Modal Conversions
 import AddExternalWork from "./pages/profile/AddExternalWork";
+import EditProfile from "./pages/profile/EditProfile";
+// Phase 3 - Rewards Modal Conversions
+import WithdrawRewards from "./pages/rewards/WithdrawRewards";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -577,11 +580,11 @@ const AppRoutes = () => {
           <Route path="community/vote/:groupId" element={<CreateGroupVote />} />
 
           {/* Profile Routes */}
-          {/* <Route path="profile/edit" element={<EditProfilePage />} /> */}
+          <Route path="profile/edit" element={<EditProfile />} />
           <Route path="profile/add-work" element={<AddExternalWork />} />
 
-          {/* Rewards Routes - Pending Full Page Implementation */}
-          {/* <Route path="rewards/withdraw" element={<WithdrawRewardsPage />} /> */}
+          {/* Rewards Routes - Full Page Implementation COMPLETE */}
+          <Route path="rewards/withdraw" element={<WithdrawRewards />} />
 
           {/* Chat & Social Routes - Pending Full Page Implementation */}
           {/* <Route path="chat/create-sticker" element={<CreateStickerPage />} /> */}
