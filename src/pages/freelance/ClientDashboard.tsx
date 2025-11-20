@@ -893,18 +893,6 @@ export const ClientDashboard: React.FC = () => {
         onComplete={handleTourComplete}
       />
 
-      {/* Create Job Modal */}
-      {showCreateJobModal && (
-        <CreateJobModal
-          isOpen={showCreateJobModal}
-          onClose={() => setShowCreateJobModal(false)}
-          onSubmit={(jobData) => {
-            console.log("Job created:", jobData);
-            setShowCreateJobModal(false);
-          }}
-        />
-      )}
-
       {/* Review Modal */}
       {showReviewModal && selectedProject && (
         <ReviewForm
