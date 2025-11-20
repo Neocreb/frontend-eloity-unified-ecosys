@@ -497,7 +497,7 @@ const UserProjects: React.FC = () => {
                     </p>
                   </div>
                   {isOwnProfile && (
-                    <Button onClick={() => setShowAddWorkModal(true)}>
+                    <Button onClick={() => navigate("/app/profile/add-work")}>
                       <Plus className="h-4 w-4 mr-2" />
                       Add Work
                     </Button>
