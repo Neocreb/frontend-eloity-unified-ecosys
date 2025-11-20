@@ -66,7 +66,7 @@ const DashboardInner = () => {
 
           {/* Primary actions */}
           <div className="mt-6 grid grid-cols-2 sm:flex gap-3">
-            <Button onClick={()=>setShowDepositModal(true)} className="bg-white text-indigo-700 hover:bg-white/90">
+            <Button onClick={()=>navigate('/app/wallet/deposit')} className="bg-white text-indigo-700 hover:bg-white/90">
               <Plus className="h-4 w-4"/>
               Deposit
             </Button>
@@ -74,7 +74,7 @@ const DashboardInner = () => {
               <Repeat className="h-4 w-4"/>
               Convert
             </Button>
-            <Button variant="outline" onClick={()=>setShowTransferModal(true)} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+            <Button variant="outline" onClick={()=>navigate('/app/wallet/transfer')} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
               <Send className="h-4 w-4"/>
               Transfer
             </Button>
@@ -100,8 +100,6 @@ const DashboardInner = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* Hidden withdraw trigger for QuickActionsWidget */}
-            <button data-action="withdraw" onClick={()=>setShowWithdrawModal(true)} className="hidden" />
           </div>
         </CardContent>
       </Card>
