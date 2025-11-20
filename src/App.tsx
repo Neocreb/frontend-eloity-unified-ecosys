@@ -198,6 +198,7 @@ import ChatTest from "./pages/ChatTest";
 // import Messages from "./pages/Messages";
 import Explore from "./pages/Explore";
 import FindUsers from "./pages/FindUsers";
+import FindUsersPage from "./pages/chat/FindUsers";
 import UserSearch from "./pages/search/UserSearch";
 import CreateGroup from "./pages/CreateGroup";
 import GlobalSearch from "./pages/GlobalSearch";
