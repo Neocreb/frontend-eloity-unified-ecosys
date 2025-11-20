@@ -33,6 +33,7 @@ import IntegrationManager from "./IntegrationManager";
 import CurrencyDemo from "@/components/currency/CurrencyDemo";
 
 const EnhancedWalletDashboardContent = () => {
+  const navigate = useNavigate();
   const {
     walletBalance,
     isLoading,
@@ -41,8 +42,6 @@ const EnhancedWalletDashboardContent = () => {
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showDepositModal, setShowDepositModal] = useState(false);
 
   // Simple balance calculation
   const totalBalance = walletBalance?.total || 0;
