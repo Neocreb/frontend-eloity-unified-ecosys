@@ -733,10 +733,7 @@ function EnhancedCryptoPortfolioContent() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          setSelectedAssetForAction(asset.symbol);
-                          setShowCryptoDepositModal(true);
-                        }}
+                        onClick={() => navigate("/app/crypto/deposit")}
                         className="text-green-600 hover:text-green-700 hover:bg-green-50"
                       >
                         <ArrowDownLeft className="h-3 w-3 mr-1" />
@@ -745,10 +742,7 @@ function EnhancedCryptoPortfolioContent() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          setSelectedAssetForAction(asset.symbol);
-                          setShowCryptoWithdrawModal(true);
-                        }}
+                        onClick={() => navigate("/app/crypto/withdraw")}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <ArrowUpRight className="h-3 w-3 mr-1" />
