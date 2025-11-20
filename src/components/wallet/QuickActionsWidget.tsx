@@ -7,9 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWalletContext } from "@/contexts/WalletContext";
 import {
   RequestMoneyModal,
-  TransferModal,
-  PayBillModal,
-  TopUpModal,
 } from "./QuickActionModals";
 import {
   ArrowUpRight,
@@ -57,10 +54,6 @@ const QuickActionsWidget = () => {
 
   // Modal states
   const [showSendModal, setShowSendModal] = useState(false);
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showPayBillModal, setShowPayBillModal] = useState(false);
-  const [showTopUpModal, setShowTopUpModal] = useState(false);
 
   // Send/Receive Actions (Primary)
   const sendActions: ActionItem[] = [
@@ -76,19 +69,14 @@ const QuickActionsWidget = () => {
       label: "Request",
       icon: <ArrowDownLeft className="h-6 w-6" />,
       color: "bg-emerald-500",
-      action: () => setShowRequestModal(true),
+      action: () => navigate("/app/wallet/request"),
     },
     {
       id: "withdraw",
       label: "Withdraw",
       icon: <ArrowUpRight className="h-6 w-6" />,
       color: "bg-purple-500",
-      action: () => {
-        const withdrawButton = document.querySelector('[data-action="withdraw"]') as HTMLButtonElement;
-        if (withdrawButton) {
-          withdrawButton.click();
-        }
-      },
+      action: () => navigate("/app/wallet/withdraw"),
     },
   ];
 
@@ -99,21 +87,21 @@ const QuickActionsWidget = () => {
       label: "Transfer",
       icon: <Repeat className="h-6 w-6" />,
       color: "bg-orange-500",
-      action: () => setShowTransferModal(true),
+      action: () => navigate("/app/wallet/transfer"),
     },
     {
       id: "pay-bill",
       label: "Pay Bills",
       icon: <CreditCard className="h-6 w-6" />,
       color: "bg-red-500",
-      action: () => setShowPayBillModal(true),
+      action: () => navigate("/app/wallet/pay-bills"),
     },
     {
       id: "top-up",
       label: "Top Up",
       icon: <Smartphone className="h-6 w-6" />,
       color: "bg-indigo-500",
-      action: () => setShowTopUpModal(true),
+      action: () => navigate("/app/wallet/top-up"),
       badge: { text: "New", variant: "new" },
     },
   ];
@@ -286,11 +274,8 @@ const QuickActionsWidget = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Action Modals */}
-      <RequestMoneyModal isOpen={showRequestModal} onClose={() => setShowRequestModal(false)} />
-      <TransferModal isOpen={showTransferModal} onClose={() => setShowTransferModal(false)} />
-      <PayBillModal isOpen={showPayBillModal} onClose={() => setShowPayBillModal(false)} />
-      <TopUpModal isOpen={showTopUpModal} onClose={() => setShowTopUpModal(false)} />
+      {/* Quick Action Modals - Send Money still uses modal for now */}
+      <RequestMoneyModal isOpen={showSendModal} onClose={() => setShowSendModal(false)} />
     </div>
   );
 };
