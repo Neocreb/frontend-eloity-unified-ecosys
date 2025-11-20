@@ -86,9 +86,7 @@ import PayBills from "./pages/wallet/PayBills";
 import TopUp from "./pages/wallet/TopUp";
 import BuyGiftCards from "./pages/wallet/BuyGiftCards";
 import SellGiftCards from "./pages/wallet/SellGiftCards";
-// Crypto pages
-import CryptoDeposit from "./pages/crypto/CryptoDeposit";
-import CryptoWithdraw from "./pages/crypto/CryptoWithdraw";
+// Crypto pages - Pending full-page implementation
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
