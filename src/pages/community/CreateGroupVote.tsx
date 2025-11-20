@@ -157,29 +157,31 @@ export const CreateGroupVote: React.FC = () => {
         <div className="max-w-md mx-auto p-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="topic">Topic</Label>
+              <Label htmlFor="topic" className="text-gray-900 dark:text-white">Topic</Label>
               <Input
                 id="topic"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g., Should we release the group funds early?"
+                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="description" className="text-gray-900 dark:text-white">Description (Optional)</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Provide more details about this vote..."
+                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 rows={3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Options</Label>
+              <Label className="text-gray-900 dark:text-white">Options</Label>
               <div className="space-y-2">
                 {options.map((option, index) => (
                   <div key={index} className="flex gap-2">
@@ -187,7 +189,7 @@ export const CreateGroupVote: React.FC = () => {
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
                       placeholder={`Option ${index + 1}`}
-                      className="flex-1"
+                      className="flex-1 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     {options.length > 2 && (
                       <Button
@@ -195,7 +197,7 @@ export const CreateGroupVote: React.FC = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => removeOption(index)}
-                        className="flex-shrink-0"
+                        className="flex-shrink-0 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -209,7 +211,7 @@ export const CreateGroupVote: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={addOption}
-                  className="w-full"
+                  className="w-full border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   Add Option
                 </Button>
@@ -217,23 +219,23 @@ export const CreateGroupVote: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Duration</Label>
+              <Label className="text-gray-900 dark:text-white">Duration</Label>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2 flex-1">
-                  <Hash className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                  <Hash className="w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
                   <Input
                     type="number"
                     value={durationValue}
                     onChange={(e) => setDurationValue(Number(e.target.value) || 1)}
                     min="1"
-                    className="flex-1"
+                    className="flex-1 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <Select value={durationUnit} onValueChange={(value: 'hours' | 'days' | 'weeks') => setDurationUnit(value)}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="hours">Hours</SelectItem>
                     <SelectItem value="days">Days</SelectItem>
                     <SelectItem value="weeks">Weeks</SelectItem>
@@ -243,7 +245,7 @@ export const CreateGroupVote: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="percentage">Required Percentage</Label>
+              <Label htmlFor="percentage" className="text-gray-900 dark:text-white">Required Percentage</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="percentage"
@@ -252,11 +254,11 @@ export const CreateGroupVote: React.FC = () => {
                   onChange={(e) => setRequiredPercentage(Number(e.target.value) || 60)}
                   min="50"
                   max="100"
-                  className="w-20"
+                  className="w-20 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white"
                 />
-                <span className="text-gray-500">%</span>
+                <span className="text-gray-600 dark:text-gray-400">%</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 Minimum percentage of votes needed for a decision to pass
               </p>
             </div>
@@ -266,13 +268,13 @@ export const CreateGroupVote: React.FC = () => {
                 type="button"
                 variant="outline"
                 onClick={() => navigate(-1)}
-                className="flex-1"
+                className="flex-1 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Creating...' : 'Create Vote'}
