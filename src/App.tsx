@@ -87,12 +87,18 @@ import TopUp from "./pages/wallet/TopUp";
 import BuyGiftCards from "./pages/wallet/BuyGiftCards";
 import SellGiftCards from "./pages/wallet/SellGiftCards";
 // Crypto pages
-import CryptoKYC from "./pages/crypto/CryptoKYC";
-import UniversalCryptoPayment from "./pages/crypto/UniversalCryptoPayment";
+import CryptoKYC from "./pages/CryptoKYC";
+import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
 // Freelance pages
 import CreateJob from "./pages/freelance/CreateJob";
 import ApplyJob from "./pages/freelance/ApplyJob";
 import MessageClient from "./pages/freelance/MessageClient";
+// Phase 2 Modal Conversions
+import CreateChallenge from "./pages/challenges/CreateChallenge";
+import CreateBattle from "./pages/live/CreateBattle";
+import CreateStream from "./pages/live/CreateStream";
+import CreateStory from "./pages/feed/CreateStory";
+import CreateContent from "./pages/content/Create";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -502,12 +508,12 @@ const AppRoutes = () => {
           <Route path="freelance/apply/:jobId" element={<ApplyJob />} />
           <Route path="freelance/message/:clientId" element={<MessageClient />} />
 
-          {/* Content & Live Routes - Pending Full Page Implementation */}
-          {/* <Route path="challenges/create" element={<CreateChallengePage />} /> */}
-          {/* <Route path="live/create-battle" element={<CreateBattlePage />} /> */}
-          {/* <Route path="live/create-stream" element={<CreateStreamPage />} /> */}
-          {/* <Route path="feed/create-story" element={<CreateStoryPage />} /> */}
-          {/* <Route path="content/create" element={<CreateContentPage />} /> */}
+          {/* Content & Live Routes - Phase 2 Implementation COMPLETE */}
+          <Route path="challenges/create" element={<CreateChallenge />} />
+          <Route path="live/create-battle" element={<CreateBattle />} />
+          <Route path="live/create-stream" element={<CreateStream />} />
+          <Route path="feed/create-story" element={<CreateStory />} />
+          <Route path="content/create" element={<CreateContent />} />
 
           {/* Group & Community Routes - Pending Full Page Implementation */}
           {/* <Route path="community/create-group" element={<CreateGroupPage />} /> */}
