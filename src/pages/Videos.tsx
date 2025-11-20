@@ -1317,6 +1317,21 @@ const Videos: React.FC = () => {
   
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Set timeout for loading state to prevent infinite loading on mobile
+  useEffect(() => {
+    if (!loading) {
+      setLoadingTimeout(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 10000); // 10 second timeout
+
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Transform ContentItem to VideoData for compatibility with VideoCard
   const transformToVideoData = (item: any): VideoData => {
