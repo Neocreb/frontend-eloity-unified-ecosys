@@ -349,13 +349,6 @@ import MyNewPage from "./pages/category/MyNewPage";
   - Dark/light theme support with proper contrast
   - Already integrated with GroupChatActionButtons and GroupContributionVotingSystem for navigation
 
-### Profile Management (2)
-- [ ] **EditProfileModal** → `/app/profile/edit`
-- [ ] **AddExternalWorkModal** → `/app/profile/add-work`
-
-### Rewards System (1)
-- [ ] **WithdrawalModal** → `/app/rewards/withdraw`
-
 ### Chat & Social (4+)
 - [ ] **StickerCreationModal** → `/app/chat/create-sticker`
 - [ ] **FindUsersModal** → `/app/chat/find-users`
