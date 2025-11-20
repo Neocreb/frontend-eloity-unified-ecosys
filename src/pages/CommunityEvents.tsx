@@ -389,6 +389,50 @@ const CommunityEvents = () => {
             </CardContent>
           </Card>
 
+          {/* Create Type Choice Dialog */}
+          <Dialog open={showCreateTypeChoice} onOpenChange={setShowCreateTypeChoice}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  What would you like to create?
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  className="h-40 flex flex-col items-center justify-center gap-3 p-6 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                  onClick={() => {
+                    setShowCreateTypeChoice(false);
+                    setShowCreateEvent(true);
+                  }}
+                >
+                  <Calendar className="h-8 w-8 text-blue-600" />
+                  <div className="text-center">
+                    <div className="font-semibold text-lg">Create Event</div>
+                    <div className="text-sm text-muted-foreground">Workshop, meetup, or live session</div>
+                  </div>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="h-40 flex flex-col items-center justify-center gap-3 p-6 hover:bg-purple-50 hover:border-purple-300 transition-all"
+                  onClick={() => {
+                    setShowCreateTypeChoice(false);
+                    navigate('/app/challenges/create');
+                  }}
+                >
+                  <Target className="h-8 w-8 text-purple-600" />
+                  <div className="text-center">
+                    <div className="font-semibold text-lg">Create Challenge</div>
+                    <div className="text-sm text-muted-foreground">Competition with prizes</div>
+                  </div>
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           {/* Create Event Dialog */}
           <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
