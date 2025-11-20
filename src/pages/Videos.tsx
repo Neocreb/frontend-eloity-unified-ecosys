@@ -1731,12 +1731,25 @@ const Videos: React.FC = () => {
   
 
 
-  if (loading) {
+  if (loading && !loadingTimeout) {
     return (
       <div className={`fixed inset-0 bg-black text-white flex items-center justify-center ${viewportHeight.screen}`}>
-        <div className="text-center">
+        <div className="text-center px-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p>Loading videos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && loadingTimeout) {
+    return (
+      <div className={`fixed inset-0 bg-black text-white flex items-center justify-center ${viewportHeight.screen}`}>
+        <div className="text-center px-4">
+          <p className="text-yellow-400 mb-4">Taking longer than expected...</p>
+          <Button onClick={() => window.location.reload()} className="bg-white text-black hover:bg-gray-200">
+            Reload Page
+          </Button>
         </div>
       </div>
     );
