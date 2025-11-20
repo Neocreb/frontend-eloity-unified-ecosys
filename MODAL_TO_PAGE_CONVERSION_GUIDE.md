@@ -123,7 +123,7 @@ This guide documents the systematic conversion of modal-based UI components to f
 ✅ **Withdraw** - Route: `/app/wallet/withdraw`
 ✅ **Transfer** - Route: `/app/wallet/transfer`
 ✅ **PayBills** - Route: `/app/wallet/pay-bills`
-✅ **TopUp** - Route: `/app/wallet/top-up`
+�� **TopUp** - Route: `/app/wallet/top-up`
 ✅ **BuyGiftCards** - Route: `/app/wallet/buy-gift-cards`
 ✅ **SellGiftCards** - Route: `/app/wallet/sell-gift-cards`
 
@@ -426,6 +426,86 @@ src/
 - Feed modals: 7 story/sharing related modals
 - Profile modals: EditProfileModal, AddExternalWorkModal
 - Other: WithdrawalModal, KYCVerificationModal, UserSearchModal, DeleteUserDialog
+
+## Session Summary (Crypto Deposit/Withdraw Full-Page Conversions)
+
+### What Was Accomplished:
+1. **CryptoDeposit Full-Page Component** (`src/pages/crypto/CryptoDeposit.tsx`)
+   - Complete deposit interface with 8 supported cryptocurrencies
+   - Dynamic address generation from Bybit API
+   - QR code display toggle for easy scanning
+   - Memo/tag support for coins that require it
+   - Network info cards showing confirmations and fees
+   - Security warnings with best practices
+   - Processing time estimates by cryptocurrency
+   - Copy-to-clipboard functionality for addresses and memos
+   - Full dark/light theme support with proper color contrast
+   - Mobile-optimized responsive design
+   - Back navigation button in sticky header
+   - Action footer with Cancel and "I've Sent the Funds" buttons
+
+2. **CryptoWithdraw Full-Page Component** (`src/pages/crypto/CryptoWithdraw.tsx`)
+   - Complete withdrawal form with real-time validation
+   - Support for 4 main cryptocurrencies with balance display
+   - Amount input with MIN/MAX button and range validation
+   - Withdrawal address input with network validation
+   - Optional memo/tag input for specific coins (XRP, XLM, BNB)
+   - Transaction summary card with:
+     - Withdrawal amount display
+     - Network fee breakdown
+     - Calculated receive amount (after fees)
+     - Processing time estimates
+   - USD value conversion display
+   - Security warnings about address verification
+   - Full error handling and toast notifications
+   - Full dark/light theme support
+   - Mobile-optimized responsive design
+   - Integration with crypto notification service
+
+3. **Updated All Crypto Components to Use Navigation**:
+   - AdvancedTradingInterface: Deposit/Withdraw buttons → navigation
+   - P2PMarketplace: Deposit/Withdraw buttons → navigation
+   - CryptoWalletActions: Deposit/Withdraw dialogs → navigation
+   - EloityPointExchange: Deposit/Withdraw buttons → navigation
+   - EnhancedCryptoPortfolio: Deposit/Withdraw buttons and asset actions → navigation
+   - ProfessionalCrypto: Deposit/Withdraw handlers → navigation
+
+4. **Routes Added to App.tsx**:
+   - `/app/crypto/deposit` → CryptoDeposit component
+   - `/app/crypto/withdraw` → CryptoWithdraw component
+
+### UI/UX Improvements:
+- **Full-Screen Experience**: Users get dedicated full-screen pages instead of constrained modals
+- **Better Mobile Experience**: More space for input fields and better touch targets
+- **Consistent Theming**: All components respect dark/light theme with proper Tailwind utilities
+- **Better Navigation**: Browser back button works naturally, users can bookmark flows
+- **Enhanced Accessibility**: Proper heading hierarchy, form labels, and ARIA attributes
+- **Professional Design**: Header with back button, footer with actions, proper spacing and typography
+
+### Files Modified:
+- `src/pages/crypto/CryptoDeposit.tsx` - NEW full-page component
+- `src/pages/crypto/CryptoWithdraw.tsx` - NEW full-page component
+- `src/components/crypto/AdvancedTradingInterface.tsx` - Updated to use navigation
+- `src/components/crypto/P2PMarketplace.tsx` - Updated to use navigation
+- `src/components/crypto/CryptoWalletActions.tsx` - Updated to use navigation
+- `src/components/crypto/EloityPointExchange.tsx` - Updated to use navigation
+- `src/components/crypto/EnhancedCryptoPortfolio.tsx` - Updated to use navigation
+- `src/pages/ProfessionalCrypto.tsx` - Updated to use navigation
+- `src/App.tsx` - Added CryptoDeposit and CryptoWithdraw imports and routes
+- `MODAL_TO_PAGE_CONVERSION_GUIDE.md` - This document (updated with new completions)
+
+### Design Decisions:
+- **Colors**: Used existing brand colors (green for deposit, red for withdraw) with proper dark mode variants
+- **Layout**: Full-screen flex layout with sticky header and footer for optimal space utilization
+- **Typography**: Maintained consistency with existing platform typography and spacing
+- **Dark Mode**: Used proper Tailwind dark utilities (dark:) for all color-dependent elements
+- **Mobile First**: Designed mobile experience first, then enhanced for larger screens
+
+### Remaining Modals to Convert:
+- Profile modals (EditProfileModal, AddExternalWorkModal)
+- Feed/Stories modals (7 remaining)
+- Chat modals (4 remaining)
+- Other (WithdrawalModal, KYCVerificationModal, UserSearchModal, DeleteUserDialog, CreateGroupVoteModal)
 
 ## Notes
 
