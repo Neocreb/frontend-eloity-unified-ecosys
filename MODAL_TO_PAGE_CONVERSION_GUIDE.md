@@ -40,6 +40,22 @@ This guide documents the systematic conversion of modal-based UI components to f
 3. **Routes**: All 6 high-priority routes are fully functional and accessible
 4. **URL Parameters**: ApplyJob and MessageClient support dynamic route parameters
 
+## New & Enhanced Routes (This Session)
+
+### Events & Challenges Hub
+✅ **EventsRewards** - Route: `/app/events/rewards`
+- Full-page challenges and leaderboard hub
+- View all active challenges with participant counts and prizes
+- Real-time leaderboard rankings with trend indicators
+- Challenge filtering by category and search
+- Separated from individual event pages for better organization
+- Links back to `/app/events` for main event page
+
+✅ **Updated Navigation**
+- CommunityEvents page choice dialog for event vs challenge creation
+- GroupDetailView now shows "Start Contribution" button for group members
+- Videos page create menu now navigates to full-page routes instead of modals
+
 ## Completed Conversions
 
 ### Crypto Trading & Verification
