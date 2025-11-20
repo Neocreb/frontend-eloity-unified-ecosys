@@ -63,9 +63,9 @@ interface ExternalWork {
 
 const UserProjects: React.FC = () => {
   const { username } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("portfolio");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [showAddWorkModal, setShowAddWorkModal] = useState(false);
   const [externalWorks, setExternalWorks] = useState<ExternalWork[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
