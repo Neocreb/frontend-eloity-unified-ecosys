@@ -93,31 +93,19 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
     }
   };
 
-  // Handle contribution creation
-  const handleContributionCreated = () => {
-    refreshData();
-    toast({
-      title: "Success",
-      description: "New contribution created successfully!",
-    });
+  // Handle new contribution button
+  const handleNewContribution = () => {
+    navigate(`/app/community/group-contribution/${groupId}`);
   };
 
-  // Handle vote creation
-  const handleVoteCreated = () => {
-    refreshData();
-    toast({
-      title: "Success",
-      description: "New vote created successfully!",
-    });
+  // Handle new vote button
+  const handleNewVote = () => {
+    navigate(`/app/community/vote/${groupId}`);
   };
 
-  // Handle contribution made
-  const handleContributionMade = () => {
-    refreshData();
-    toast({
-      title: "Success",
-      description: "Your contribution has been recorded!",
-    });
+  // Handle contribute to a contribution
+  const handleContributeClick = (contributionId: string) => {
+    navigate(`/app/community/contribute/${contributionId}`);
   };
 
   // Handle vote update
