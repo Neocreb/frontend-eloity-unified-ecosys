@@ -5,22 +5,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { GroupContributionService } from "@/services/groupContributionService";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  GroupContributionWithDetails, 
-  GroupVoteWithDetails 
+import { useNavigate } from "react-router-dom";
+import {
+  GroupContributionWithDetails,
+  GroupVoteWithDetails
 } from "@/types/group-contributions";
-import { 
-  Coins, 
-  MessageSquare, 
-  PlusCircle, 
+import {
+  Coins,
+  MessageSquare,
+  PlusCircle,
   TrendingUp,
   BarChart3
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { StartGroupContributionModal } from "./StartGroupContributionModal";
 import { GroupContributionStatus } from "./GroupContributionStatus";
-import { ContributeToGroupModal } from "./ContributeToGroupModal";
-import { CreateGroupVoteModal } from "./CreateGroupVoteModal";
 import { GroupVoteCard } from "./GroupVoteCard";
 
 interface GroupContributionVotingSystemProps {
