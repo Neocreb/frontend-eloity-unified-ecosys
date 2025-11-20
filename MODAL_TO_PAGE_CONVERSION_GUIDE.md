@@ -564,10 +564,23 @@ As of this session, **13 modals remain to be converted** (from initial 38, 25 co
 
 ### Conversion Recommendations
 
+**Completed This Session:**
+- ✅ **UserSearchModal** → `/app/search/users` (COMPLETED)
+  - **File**: `src/pages/search/UserSearch.tsx`
+  - **Features**: Full-screen user search with typeahead, dark/light theme support, mobile-optimized
+  - **Route**: Added to App.tsx at line 607
+  - **Theme**: Full dark mode support with proper contrast and colors
+
+- ✅ **FindUsersModal** → `/app/chat/find-users` (COMPLETED)
+  - **File**: `src/pages/chat/FindUsers.tsx`
+  - **Features**: Chat-focused user discovery with suggested users, full-screen layout
+  - **Route**: Added to App.tsx at line 517
+  - **Theme**: Full dark mode support with consistent styling
+
 **Immediately Priority (Next Session):**
 - [ ] **StoryViewerModal** - Core feature, high impact
-- [ ] **UserSearchModal** - High impact, medium complexity
-- [ ] **FindUsersModal** - Low complexity, good starter conversion
+- [ ] **ImageUploadModal** - Medium complexity, frequently used in chat
+- [ ] **DeleteUserDialog** - Low complexity, important UX improvement
 
 **Secondary Priority (Following Sessions):**
 - [ ] **ImageUploadModal** - Medium complexity, frequently used
