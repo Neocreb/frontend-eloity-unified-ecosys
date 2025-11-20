@@ -287,20 +287,10 @@ export const GroupContributionVotingSystem: React.FC<GroupContributionVotingSyst
       {selectedContribution && (
         <GroupContributionStatus
           contribution={selectedContribution}
-          onContribute={() => setShowContributeModal(true)}
+          onContribute={() => handleContributeClick(selectedContribution.id)}
           isAdmin={isAdmin}
           onRefund={handleRefund}
           trigger={<div className="hidden"></div>}
-        />
-      )}
-      
-      {/* Contribute Modal */}
-      {selectedContribution && (
-        <ContributeToGroupModal
-          contribution={selectedContribution}
-          isOpen={showContributeModal}
-          onOpenChange={setShowContributeModal}
-          onContributionMade={handleContributionMade}
         />
       )}
     </div>
