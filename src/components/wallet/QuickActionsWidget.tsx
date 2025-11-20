@@ -10,8 +10,6 @@ import {
   TransferModal,
   PayBillModal,
   TopUpModal,
-  BuyGiftCardModal,
-  SellGiftCardModal,
 } from "./QuickActionModals";
 import {
   ArrowUpRight,
@@ -63,8 +61,6 @@ const QuickActionsWidget = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showPayBillModal, setShowPayBillModal] = useState(false);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
-  const [showBuyGiftModal, setShowBuyGiftModal] = useState(false);
-  const [showSellGiftModal, setShowSellGiftModal] = useState(false);
 
   // Send/Receive Actions (Primary)
   const sendActions: ActionItem[] = [
@@ -129,14 +125,14 @@ const QuickActionsWidget = () => {
       label: "Buy Gift Cards",
       icon: <Gift className="h-6 w-6" />,
       color: "bg-pink-500",
-      action: () => setShowBuyGiftModal(true),
+      action: () => navigate("/app/wallet/buy-gift-cards"),
     },
     {
       id: "sell-gift",
       label: "Sell Gift Cards",
       icon: <Store className="h-6 w-6" />,
       color: "bg-teal-500",
-      action: () => setShowSellGiftModal(true),
+      action: () => navigate("/app/wallet/sell-gift-cards"),
     },
   ];
 
@@ -290,13 +286,11 @@ const QuickActionsWidget = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Action Modals - Keep for Request, Transfer, Pay Bill, Top Up, Buy/Sell Gift Cards (for now) */}
+      {/* Quick Action Modals */}
       <RequestMoneyModal isOpen={showRequestModal} onClose={() => setShowRequestModal(false)} />
       <TransferModal isOpen={showTransferModal} onClose={() => setShowTransferModal(false)} />
       <PayBillModal isOpen={showPayBillModal} onClose={() => setShowPayBillModal(false)} />
       <TopUpModal isOpen={showTopUpModal} onClose={() => setShowTopUpModal(false)} />
-      <BuyGiftCardModal isOpen={showBuyGiftModal} onClose={() => setShowBuyGiftModal(false)} />
-      <SellGiftCardModal isOpen={showSellGiftModal} onClose={() => setShowSellGiftModal(false)} />
     </div>
   );
 };
