@@ -488,6 +488,11 @@ const AppRoutes = () => {
           <Route path="wallet/top-up" element={<TopUp />} />
           <Route path="wallet/buy-gift-cards" element={<BuyGiftCards />} />
           <Route path="wallet/sell-gift-cards" element={<SellGiftCards />} />
+
+          {/* Crypto Trading Routes - Full Page Flows */}
+          <Route path="crypto/deposit" element={<CryptoDeposit />} />
+          <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
+
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
