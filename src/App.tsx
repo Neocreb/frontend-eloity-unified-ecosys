@@ -104,6 +104,7 @@ import CreateGroupPage from "./pages/community/CreateGroup";
 import ContributeToGroup from "./pages/community/ContributeToGroup";
 import GroupContribution from "./pages/community/GroupContribution";
 import CreateGroupVote from "./pages/community/CreateGroupVote";
+import CreateEvent from "./pages/community/CreateEvent";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
