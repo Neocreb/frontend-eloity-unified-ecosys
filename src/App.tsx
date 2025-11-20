@@ -84,6 +84,8 @@ import Withdraw from "./pages/wallet/Withdraw";
 import Transfer from "./pages/wallet/Transfer";
 import PayBills from "./pages/wallet/PayBills";
 import TopUp from "./pages/wallet/TopUp";
+import BuyGiftCards from "./pages/wallet/BuyGiftCards";
+import SellGiftCards from "./pages/wallet/SellGiftCards";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -481,6 +483,8 @@ const AppRoutes = () => {
           <Route path="wallet/transfer" element={<Transfer />} />
           <Route path="wallet/pay-bills" element={<PayBills />} />
           <Route path="wallet/top-up" element={<TopUp />} />
+          <Route path="wallet/buy-gift-cards" element={<BuyGiftCards />} />
+          <Route path="wallet/sell-gift-cards" element={<SellGiftCards />} />
           <Route path="notifications" element={<UnifiedNotifications />} />
 
           {/* Marketplace routes */}
