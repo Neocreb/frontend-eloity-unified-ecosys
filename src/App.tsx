@@ -104,6 +104,7 @@ import CreateGroupPage from "./pages/community/CreateGroup";
 import ContributeToGroup from "./pages/community/ContributeToGroup";
 import GroupContribution from "./pages/community/GroupContribution";
 import CreateGroupVote from "./pages/community/CreateGroupVote";
+import CreateEvent from "./pages/community/CreateEvent";
 // import Marketplace from "./pages/Marketplace";
 import EnhancedMarketplace from "./pages/EnhancedMarketplace";
 import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
@@ -277,11 +278,49 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading, session, user } = useAuth() as any;
+  const [showLoadingTimeout, setShowLoadingTimeout] = React.useState(false);
+
+  // Set a timeout to prevent infinite loading state
+  React.useEffect(() => {
+    if (!isLoading) {
+      setShowLoadingTimeout(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setShowLoadingTimeout(true);
+    }, 12000); // Show timeout message after 12 seconds
+
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
 
   const hasAuth = !!session || !!user || isAuthenticated;
-  const stillLoading = isLoading && !hasAuth;
 
-  if (stillLoading) {
+  // If loading and has auth, let it through (auth is just verifying)
+  if (isLoading && hasAuth) {
+    return <>{children}</>;
+  }
+
+  // If loading and no auth, show loading screen with timeout fallback
+  if (isLoading && !hasAuth) {
+    if (showLoadingTimeout) {
+      return (
+        <div className="h-screen flex items-center justify-center">
+          <div className="text-center px-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground mb-4">Taking longer than expected...</p>
+            <p className="text-sm text-muted-foreground mb-6">Trying to reload authentication.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
@@ -292,6 +331,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
+  // Not loading, check if authenticated
   if (!hasAuth) {
     console.log("Not authenticated, redirecting to /auth");
     return <Navigate to="/auth" replace />;
@@ -523,6 +563,7 @@ const AppRoutes = () => {
 
           {/* Group & Community Routes - Full Page Implementation COMPLETE */}
           <Route path="community/create-group" element={<CreateGroupPage />} />
+          <Route path="community/create-event" element={<CreateEvent />} />
           <Route path="community/contribute/:contributionId" element={<ContributeToGroup />} />
           <Route path="community/group-contribution/:groupId" element={<GroupContribution />} />
           <Route path="community/vote/:groupId" element={<CreateGroupVote />} />

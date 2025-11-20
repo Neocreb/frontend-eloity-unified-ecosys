@@ -18,7 +18,7 @@ import {
   TrendingUp,
   Medal,
   Zap,
-  Fire,
+  Flame,
   Crown,
   Calendar,
   MapPin,
@@ -313,7 +313,7 @@ const EventsRewards = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Trending</p>
                     <p className="text-2xl font-bold flex items-center gap-1">
-                      <Fire className="w-5 h-5" /> Hot
+                      <Flame className="w-5 h-5" /> Hot
                     </p>
                   </div>
                 </div>

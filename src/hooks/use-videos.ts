@@ -73,33 +73,44 @@ export const useVideos = () => {
       try {
         setLoading(true);
         setError(null);
-        const videoData = await videoService.getVideos(20, 0);
-        
-        // Transform Video objects to VideoItem objects
-        const transformedVideos: VideoItem[] = videoData.map((video: Video) => ({
-          id: video.id,
-          url: video.video_url,
-          thumbnail: video.thumbnail_url || "",
-          description: video.description || "",
-          likes: video.likes_count,
-          comments: video.comments_count,
-          shares: video.shares_count,
-          views: video.views_count,
-          author: {
-            name: video.user?.full_name || "Unknown User",
-            username: video.user?.username || "unknown",
-            avatar: video.user?.avatar_url || "",
-            verified: video.user?.is_verified || false
-          },
-          isFollowing: false, // This would need to be fetched from a following service
-          duration: video.duration || undefined,
-          timestamp: video.created_at,
-          tags: video.tags || undefined,
-          category: video.category || undefined
-        }));
-        
-        setVideos(transformedVideos);
-        setLoading(false);
+
+        // Add a timeout to prevent infinite loading
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+        try {
+          const videoData = await videoService.getVideos(20, 0);
+          clearTimeout(timeoutId);
+
+          // Transform Video objects to VideoItem objects
+          const transformedVideos: VideoItem[] = videoData.map((video: Video) => ({
+            id: video.id,
+            url: video.video_url,
+            thumbnail: video.thumbnail_url || "",
+            description: video.description || "",
+            likes: video.likes_count,
+            comments: video.comments_count,
+            shares: video.shares_count,
+            views: video.views_count,
+            author: {
+              name: video.user?.full_name || "Unknown User",
+              username: video.user?.username || "unknown",
+              avatar: video.user?.avatar_url || "",
+              verified: video.user?.is_verified || false
+            },
+            isFollowing: false,
+            duration: video.duration || undefined,
+            timestamp: video.created_at,
+            tags: video.tags || undefined,
+            category: video.category || undefined
+          }));
+
+          setVideos(transformedVideos);
+          setLoading(false);
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          throw fetchErr;
+        }
       } catch (err) {
         console.error("Error fetching videos:", err);
         setVideos([]);
