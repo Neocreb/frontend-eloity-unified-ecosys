@@ -439,10 +439,6 @@ After careful analysis, the following feed modals are **recommended to remain as
 - ⏸️ **StoryViewerModal** → Unused/Deprecated (ARCHIVAL CANDIDATE)
   - Status: Not imported anywhere - different StoryViewer component in use
 - [ ] **FeelingActivityModal** ��� `/app/feed/feeling`
-- [ ] **FeelingLocationModal** → `/app/feed/location`
-- [ ] **MediaUploadModal** → `/app/feed/upload-media`
-- [ ] **TagPeopleModal** → `/app/feed/tag-people`
-- [ ] **EnhancedShareDialog** → `/app/feed/share/:postId`
 
 ### Other (3)
 - [ ] **KYCVerificationModal** → `/app/verify/kyc`
