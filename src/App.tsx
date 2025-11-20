@@ -539,6 +539,7 @@ const AppRoutes = () => {
           {/* Wallet Action Routes - Full Page Flows */}
           <Route path="wallet/send-money" element={<SendMoney />} />
           <Route path="wallet/request" element={<Request />} />
+          <Route path="wallet/deposit" element={<Deposit />} />
           <Route path="wallet/withdraw" element={<Withdraw />} />
           <Route path="wallet/transfer" element={<Transfer />} />
           <Route path="wallet/pay-bills" element={<PayBills />} />
