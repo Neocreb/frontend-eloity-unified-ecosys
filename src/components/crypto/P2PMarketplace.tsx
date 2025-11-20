@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,8 +8,6 @@ import { Info } from "lucide-react";
 import { P2POffer } from "@/types/user";
 import P2POfferCard from "./P2POfferCard";
 import { Button } from "@/components/ui/button";
-import CryptoDepositModal from "./CryptoDepositModal";
-import CryptoWithdrawModal from "./CryptoWithdrawModal";
 import CryptoKYCModal from "./CryptoKYCModal";
 
 const P2PMarketplace = () => {
@@ -17,10 +16,9 @@ const P2PMarketplace = () => {
   const [selectedPayment, setSelectedPayment] = useState("all");
   const [offers, setOffers] = useState<P2POffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [isVerified, setIsVerified] = useState(true); // Mock verified status
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -96,7 +94,7 @@ const P2PMarketplace = () => {
   };
 
   const handleDepositClick = () => {
-    setDepositModalOpen(true);
+    navigate("/app/crypto/deposit");
   };
 
   const handleWithdrawClick = () => {
@@ -108,7 +106,7 @@ const P2PMarketplace = () => {
       });
       return;
     }
-    setWithdrawModalOpen(true);
+    navigate("/app/crypto/withdraw");
   };
 
   const handleKYCSubmit = async (data: any) => {
@@ -220,18 +218,6 @@ const P2PMarketplace = () => {
       </Card>
 
       {/* Modals */}
-      <CryptoDepositModal
-        isOpen={depositModalOpen}
-        onClose={() => setDepositModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
-      <CryptoWithdrawModal
-        isOpen={withdrawModalOpen}
-        onClose={() => setWithdrawModalOpen(false)}
-        onKYCSubmit={handleKYCSubmit}
-      />
-
       <CryptoKYCModal
         isOpen={kycModalOpen}
         onClose={() => setKycModalOpen(false)}
