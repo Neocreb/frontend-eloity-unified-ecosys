@@ -604,7 +604,7 @@ const AppRoutes = () => {
 
           {/* Other Routes - Pending Full Page Implementation */}
           {/* <Route path="verify/kyc" element={<KYCPage />} /> */}
-          {/* <Route path="search/users" element={<UserSearchPage />} /> */}
+          <Route path="search/users" element={<UserSearch />} />
           {/* <Route path="settings/delete-account" element={<DeleteAccountPage />} /> */}
 
           <Route path="notifications" element={<UnifiedNotifications />} />
