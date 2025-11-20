@@ -209,6 +209,7 @@ import Blog from "./pages/Blog";
 import SimpleBlog from "./pages/SimpleBlog";
 import BlogPost from "./pages/BlogPost";
 import CommunityEvents from "./pages/CommunityEvents";
+import EventsRewards from "./pages/EventsRewards";
 // import SubscriptionManager from "./components/premium/SubscriptionManager";
 // import VirtualGiftsAndTips from "./components/premium/VirtualGiftsAndTips";
 import EnhancedKYCVerification from "./components/kyc/EnhancedKYCVerification";
