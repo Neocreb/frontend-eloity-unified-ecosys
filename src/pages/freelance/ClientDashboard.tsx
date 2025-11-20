@@ -784,7 +784,7 @@ export const ClientDashboard: React.FC = () => {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={() => setShowCreateJobModal(true)} className="w-full">
+                  <Button onClick={() => navigate('/app/freelance/create-job')} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Job Posting
                   </Button>
