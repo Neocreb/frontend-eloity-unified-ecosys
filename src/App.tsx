@@ -514,7 +514,7 @@ const AppRoutes = () => {
           <Route path="chat/:threadId" element={<ChatRoom />} />
           <Route path="chat-test/:threadId" element={<ChatTest />} />
           <Route path="chat-simple/:threadId" element={<SimpleChatRoom />} />
-          <Route path="chat/find-users" element={<FindUsers />} />
+          <Route path="chat/find-users" element={<FindUsersPage />} />
           <Route path="chat/create-group" element={<CreateGroup />} />
           <Route
             path="messages"
