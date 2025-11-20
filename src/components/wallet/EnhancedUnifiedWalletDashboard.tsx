@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,14 +25,15 @@ import WalletSecurityCenter from "./WalletSecurityCenter";
 import QuickActionsWidget from "./QuickActionsWidget";
 import IntegrationManager from "./IntegrationManager";
 
-// Original components
-import WithdrawModal from "./WithdrawModal";
-import DepositModal from "./DepositModal";
+// Original components - Keep for now in case needed elsewhere
+// import WithdrawModal from "./WithdrawModal";
+// import DepositModal from "./DepositModal";
 
 // Currency components
 import CurrencyDemo from "@/components/currency/CurrencyDemo";
 
 const EnhancedWalletDashboardContent = () => {
+  const navigate = useNavigate();
   const {
     walletBalance,
     isLoading,
@@ -40,8 +42,6 @@ const EnhancedWalletDashboardContent = () => {
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showDepositModal, setShowDepositModal] = useState(false);
 
   // Simple balance calculation
   const totalBalance = walletBalance?.total || 0;
@@ -118,14 +118,14 @@ const EnhancedWalletDashboardContent = () => {
       {/* Primary Action Buttons */}
       <div className="flex gap-3 justify-center sm:justify-start">
         <Button
-          onClick={() => setShowDepositModal(true)}
+          onClick={() => navigate("/app/wallet/deposit")}
           className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none sm:min-w-[120px]"
           size="lg"
         >
           Deposit
         </Button>
         <Button
-          onClick={() => setShowWithdrawModal(true)}
+          onClick={() => navigate("/app/wallet/withdraw")}
           variant="outline"
           className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white flex-1 sm:flex-none sm:min-w-[120px]"
           size="lg"
@@ -221,19 +221,8 @@ const EnhancedWalletDashboardContent = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Modals */}
-      <WithdrawModal
-        isOpen={showWithdrawModal}
-        onClose={() => setShowWithdrawModal(false)}
-        walletBalance={walletBalance}
-        onSuccess={refreshWallet}
-      />
-
-      <DepositModal
-        isOpen={showDepositModal}
-        onClose={() => setShowDepositModal(false)}
-        onSuccess={refreshWallet}
-      />
+      {/* Modals - Replaced with full-page views */}
+      {/* No longer needed - actions navigate to full pages */}
     </div>
   );
 };

@@ -80,6 +80,7 @@ import WalletCards from "./pages/wallet/WalletCards";
 import GiftCards from "./pages/wallet/GiftCards";
 import SendMoney from "./pages/wallet/SendMoney";
 import Request from "./pages/wallet/Request";
+import Deposit from "./pages/wallet/Deposit";
 import Withdraw from "./pages/wallet/Withdraw";
 import Transfer from "./pages/wallet/Transfer";
 import PayBills from "./pages/wallet/PayBills";
@@ -538,6 +539,7 @@ const AppRoutes = () => {
           {/* Wallet Action Routes - Full Page Flows */}
           <Route path="wallet/send-money" element={<SendMoney />} />
           <Route path="wallet/request" element={<Request />} />
+          <Route path="wallet/deposit" element={<Deposit />} />
           <Route path="wallet/withdraw" element={<Withdraw />} />
           <Route path="wallet/transfer" element={<Transfer />} />
           <Route path="wallet/pay-bills" element={<PayBills />} />
