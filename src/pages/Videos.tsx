@@ -1958,7 +1958,9 @@ const Videos: React.FC = () => {
           scrollBehavior: "smooth",
           paddingTop: showControls && !isFullscreen ? "100px" : "0",
           paddingBottom: isMobile ? "80px" : "20px",
-        }}
+          overscrollBehavior: "contain",
+          WebkitOverflowScrolling: "touch",
+        } as React.CSSProperties}
         onClick={() => setShowControls(!showControls)}
       >
         {/* Render content based on active tab */}
