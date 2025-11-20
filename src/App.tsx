@@ -200,6 +200,7 @@ import Explore from "./pages/Explore";
 import FindUsers from "./pages/FindUsers";
 import FindUsersPage from "./pages/chat/FindUsers";
 import UserSearch from "./pages/search/UserSearch";
+import DeleteAccount from "./pages/settings/DeleteAccount";
 import CreateGroup from "./pages/CreateGroup";
 import GlobalSearch from "./pages/GlobalSearch";
 import LandingPage from "./pages/LandingPage";
