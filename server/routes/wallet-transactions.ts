@@ -792,7 +792,133 @@ router.get('/deposit/status/:depositId', requireAuth, async (req: Request, res: 
 
 /**
  * GET /api/wallet/transactions/export
- * Export transactions as CSV
+ * Export transactions in multiple formats (csv, json, pdf)
+ */
+router.get('/export', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId || req.query.userId as string;
+    const format = (req.query.format as string) || 'csv';
+    const dateFrom = req.query.dateFrom as string | undefined;
+    const dateTo = req.query.dateTo as string | undefined;
+
+    const result = await walletDatabaseService.getTransactions(userId, {
+      limit: 1000,
+      offset: 0,
+      dateFrom,
+      dateTo,
+    });
+
+    if (format === 'json') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename="transactions.json"');
+      res.json({
+        exported_at: new Date().toISOString(),
+        total_transactions: result.transactions.length,
+        transactions: result.transactions,
+      });
+    } else if (format === 'csv') {
+      const headers = [
+        'Transaction ID',
+        'Reference ID',
+        'Type',
+        'Amount',
+        'Currency',
+        'Fee',
+        'Net Amount',
+        'Status',
+        'Method',
+        'Recipient',
+        'Description',
+        'Created At',
+      ];
+
+      const rows = result.transactions.map((tx) => [
+        tx.id,
+        tx.referenceId || '',
+        tx.transactionType,
+        tx.amount,
+        tx.currency,
+        tx.feeAmount || 0,
+        tx.netAmount || tx.amount,
+        tx.status,
+        tx.depositMethod || tx.withdrawalMethod || 'N/A',
+        tx.recipientUsername || tx.recipientEmail || tx.recipientPhone || 'N/A',
+        tx.description,
+        new Date(tx.metadata?.initiatedAt || '').toLocaleString(),
+      ]);
+
+      const csv = [headers, ...rows]
+        .map((row) => row.map((cell) => `"${cell}"`).join(','))
+        .join('\n');
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"');
+      res.send(csv);
+    } else if (format === 'pdf') {
+      const totalIncome = result.transactions
+        .filter((tx) => tx.transactionType === 'deposit' || tx.transactionType === 'earned')
+        .reduce((sum, tx) => sum + tx.amount, 0);
+
+      const totalExpense = result.transactions
+        .filter((tx) => tx.transactionType === 'withdrawal' || tx.transactionType === 'transfer')
+        .reduce((sum, tx) => sum + tx.amount, 0);
+
+      const totalFees = result.transactions.reduce((sum, tx) => sum + (tx.feeAmount || 0), 0);
+
+      const pdfContent = `
+TRANSACTION REPORT
+Generated: ${new Date().toLocaleString()}
+User ID: ${userId}
+
+SUMMARY
+-------
+Total Transactions: ${result.transactions.length}
+Total Income: $${totalIncome.toFixed(2)}
+Total Expenses: $${totalExpense.toFixed(2)}
+Total Fees: $${totalFees.toFixed(2)}
+Net Balance Change: $${(totalIncome - totalExpense - totalFees).toFixed(2)}
+
+TRANSACTION DETAILS
+-------------------
+${result.transactions
+  .map(
+    (tx) => `
+ID: ${tx.id}
+Type: ${tx.transactionType}
+Amount: ${tx.amount} ${tx.currency}
+Fee: ${tx.feeAmount || 0}
+Status: ${tx.status}
+Date: ${new Date(tx.metadata?.initiatedAt || '').toLocaleString()}
+Description: ${tx.description}
+---`
+  )
+  .join('\n')}
+
+End of Report
+`;
+
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', 'attachment; filename="transactions.pdf"');
+      res.send(pdfContent);
+    } else {
+      return res.status(400).json({
+        error: 'Invalid format. Supported formats: csv, json, pdf',
+      });
+    }
+
+    logger.info(`Transactions exported for user ${userId} in ${format} format`);
+  } catch (error: any) {
+    logger.error('Error exporting transactions:', error);
+    res.status(500).json({
+      error: 'Failed to export transactions',
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/wallet/transactions/export/csv (legacy endpoint)
+ * Export transactions as CSV (backward compatibility)
  */
 router.get('/export/csv', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -807,7 +933,6 @@ router.get('/export/csv', requireAuth, async (req: Request, res: Response) => {
       dateTo,
     });
 
-    // Convert to CSV
     const headers = [
       'Transaction ID',
       'Reference ID',
@@ -825,20 +950,22 @@ router.get('/export/csv', requireAuth, async (req: Request, res: Response) => {
 
     const rows = result.transactions.map((tx) => [
       tx.id,
-      tx.referenceId,
+      tx.referenceId || '',
       tx.transactionType,
       tx.amount,
       tx.currency,
       tx.feeAmount || 0,
       tx.netAmount || tx.amount,
       tx.status,
-      tx.depositMethod || tx.withdrawalMethod,
+      tx.depositMethod || tx.withdrawalMethod || 'N/A',
       tx.recipientUsername || tx.recipientEmail || tx.recipientPhone || 'N/A',
       tx.description,
       new Date(tx.metadata?.initiatedAt || '').toLocaleString(),
     ]);
 
-    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(','))
+      .join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"');
