@@ -267,6 +267,7 @@ export default function EnhancedRewards() {
               {[
                 { id: "dashboard", label: "Dashboard", icon: BarChart3, description: "Overview and stats" },
                 { id: "activities", label: "Activities", icon: Activity, description: "Earnings analysis" },
+                { id: "gifts", label: "Gifts & Tips", icon: Gift, description: "Send gifts and tips" },
                 { id: "challenges", label: "Challenges", icon: Target, description: "Complete challenges" },
                 { id: "battles", label: "Battles", icon: Swords, description: "Vote and earn" },
                 { id: "referrals", label: "Referral", icon: UserPlus, description: "Invite friends" },
