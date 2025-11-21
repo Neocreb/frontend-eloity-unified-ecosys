@@ -601,6 +601,12 @@ const AppRoutes = () => {
           <Route path="community/group-contribution/:groupId" element={<GroupContribution />} />
           <Route path="community/vote/:groupId" element={<CreateGroupVote />} />
 
+          {/* Strategy B - Modular Group Pages (NEW) */}
+          <Route path="community/group/:groupId/info" element={<GroupInfo />} />
+          <Route path="community/group/:groupId/members" element={<GroupMembers />} />
+          <Route path="community/group/:groupId/edit" element={<GroupEdit />} />
+          <Route path="community/group/:groupId/settings" element={<GroupSettings />} />
+
           {/* Profile Routes */}
           <Route path="profile/edit" element={<EditProfile />} />
           <Route path="profile/add-work" element={<AddExternalWork />} />
