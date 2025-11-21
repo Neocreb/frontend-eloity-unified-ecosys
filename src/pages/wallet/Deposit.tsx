@@ -358,7 +358,7 @@ const Deposit = () => {
                 Processing...
               </>
             ) : (
-              `Deposit $${depositAmount.toFixed(2)}`
+              `Deposit $${feeCalc.total.toFixed(2)}`
             )}
           </Button>
           <Button
