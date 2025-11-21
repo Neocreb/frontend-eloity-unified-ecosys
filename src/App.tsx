@@ -92,6 +92,7 @@ import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
 import CryptoDeposit from "./pages/crypto/CryptoDeposit";
 import CryptoWithdraw from "./pages/crypto/CryptoWithdraw";
+import CreateP2POffer from "./pages/crypto/CreateP2POffer";
 // Freelance pages
 import CreateJob from "./pages/freelance/CreateJob";
 import ApplyJob from "./pages/freelance/ApplyJob";
