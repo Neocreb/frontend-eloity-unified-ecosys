@@ -596,63 +596,68 @@ export default function CreateCampaign() {
 
               <div>
                 <Label>Your Content</Label>
-                <div className="space-y-3 mt-2">
-                  {filteredContent.map((content) => (
-                    <Card
-                      key={content.id}
-                      className={`cursor-pointer transition-all ${
-                        campaignData.selectedContent.some(
-                          (c) => c.id === content.id
-                        )
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                          : "hover:shadow-sm"
-                      }`}
-                      onClick={() => handleContentSelect(content)}
-                    >
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <img
-                            src={content.image}
-                            alt={content.name}
-                            className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg object-cover"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm sm:text-base truncate">
-                              {content.name}
-                            </h4>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                              {content.price && <span>${content.price}</span>}
-                              {content.performance && (
-                                <span>
-                                  {content.performance.views} views
-                                  {content.performance.sales &&
-                                    ` • ${content.performance.sales} sales`}
-                                  {content.performance.inquiries &&
-                                    ` • ${content.performance.inquiries} inquiries`}
-                                  {content.performance.likes &&
-                                    ` • ${content.performance.likes} likes`}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {campaignData.selectedContent.some(
-                            (c) => c.id === content.id
-                          ) && (
-                            <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {filteredContent.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
+                {contentLoading ? (
+                  <div className="text-center py-8 text-muted-foreground mt-2">
+                    <div className="h-12 w-12 rounded-full border-2 border-blue-600 border-t-transparent animate-spin mx-auto mb-3"></div>
+                    <p>Loading your content...</p>
+                  </div>
+                ) : filteredContent.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground mt-2">
                     <Monitor className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>No content available for the selected goal.</p>
                     <p className="text-sm">
                       Create some content first to start promoting it.
                     </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 mt-2">
+                    {filteredContent.map((content) => (
+                      <Card
+                        key={content.id}
+                        className={`cursor-pointer transition-all ${
+                          campaignData.selectedContent.some(
+                            (c) => c.id === content.id
+                          )
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "hover:shadow-sm"
+                        }`}
+                        onClick={() => handleContentSelect(content)}
+                      >
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <img
+                              src={content.image || "/placeholder.svg"}
+                              alt={content.name}
+                              className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg object-cover"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm sm:text-base truncate">
+                                {content.name}
+                              </h4>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                                {content.price && <span>${content.price}</span>}
+                                {content.performance && (
+                                  <span>
+                                    {content.performance.views} views
+                                    {content.performance.sales &&
+                                      ` • ${content.performance.sales} sales`}
+                                    {content.performance.clicks &&
+                                      ` • ${content.performance.clicks} clicks`}
+                                    {content.performance.likes &&
+                                      ` • ${content.performance.likes} likes`}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {campaignData.selectedContent.some(
+                              (c) => c.id === content.id
+                            ) && (
+                              <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 )}
               </div>
