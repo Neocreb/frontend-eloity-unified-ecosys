@@ -93,21 +93,21 @@
   - Database: Update status='cancelled', refund to wallet
   - Audit: Log cancellation reason
 
-#### 1.4 Transaction Management
-- [ ] `GET /api/wallet/transactions` - Get transaction history
+#### 1.4 Transaction Management ✅
+- [x] `GET /api/wallet/transactions` - Get transaction history
   - Query params: limit, offset, source, status, dateFrom, dateTo, type
   - Output: Array of transactions with pagination
   - Database: Query `wallet_transactions` ordered by created_at DESC
   - Performance: Add indexes on (user_id, status, created_at)
 
-- [ ] `GET /api/wallet/transactions/:id` - Get transaction details
+- [x] `GET /api/wallet/transactions/:id` - Get transaction details
   - Output: Full transaction with all metadata
   - Security: Verify ownership
 
-- [ ] `GET /api/wallet/transactions/export` - Export transactions as CSV
-  - Query params: dateFrom, dateTo, format (csv/pdf)
+- [x] `GET /api/wallet/transactions/export` - Export transactions as CSV/JSON/PDF
+  - Query params: dateFrom, dateTo, format (csv/json/pdf)
   - Output: File download
-  - Formats: CSV with headers, PDF with branding
+  - Formats: CSV with headers, JSON with metadata, PDF with branding
 
 ---
 
@@ -245,7 +245,7 @@
 ---
 
 ### 4. Wallet Analytics Dashboard
-**Priority**: 🟡 **HIGH** | **Effort**: 10-12 hours | **Status**: ⏳ Pending
+**Priority**: ��� **HIGH** | **Effort**: 10-12 hours | **Status**: ⏳ Pending
 
 #### 4.1 Dashboard Page (`/app/wallet/analytics`)
 - [ ] Summary cards
