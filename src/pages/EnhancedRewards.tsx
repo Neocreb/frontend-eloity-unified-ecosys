@@ -161,14 +161,6 @@ export default function EnhancedRewards() {
     }
   };
 
-  const handleWithdrawalSuccess = (amount: number, method: string) => {
-    toast({
-      title: "Withdrawal Complete!",
-      description: `${formatCurrency(amount)} has been added to your ${method}`,
-    });
-    // Refresh data to show updated balance
-    handleRefresh();
-  };
 
   if (!user) {
     return (
