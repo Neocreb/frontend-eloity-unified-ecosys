@@ -85,8 +85,6 @@ const Deposit = () => {
     }
   };
 
-  const getDestinationInfo = () => destinations.find((d) => d.value === selectedDestination);
-  const getMethodInfo = () => paymentMethods.find((m) => m.value === selectedMethod);
 
   if (step === "country") {
     return (
