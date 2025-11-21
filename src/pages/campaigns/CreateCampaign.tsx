@@ -221,9 +221,7 @@ export default function CreateCampaign() {
     },
   });
 
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
   const { content: userContent, isLoading: contentLoading } = useUserBoostableContent();
   const [estimatedReach, setEstimatedReach] = useState(50000);
 
