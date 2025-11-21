@@ -226,6 +226,11 @@ class PaymentProcessorService {
    */
   async verifyFlutterwavePayment(transactionId: string): Promise<ProcessorPayment | null> {
     try {
+      // Validate transactionId: allow only digits for Flutterwave transaction IDs
+      if (!/^\d+$/.test(transactionId)) {
+        logger.error('Invalid transaction ID format in verifyFlutterwavePayment:', transactionId);
+        return null;
+      }
       const response = await fetch(`https://api.flutterwave.com/v3/transactions/${transactionId}/verify`, {
         method: 'GET',
         headers: {
