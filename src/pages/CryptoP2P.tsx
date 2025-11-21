@@ -24,7 +24,6 @@ const CryptoP2P = () => {
   const [activeTab, setActiveTab] = useState("market");
   const [selectedCurrency, setSelectedCurrency] = useState("NGN");
   const [tradingMode, setTradingMode] = useState("buy");
-  const [triggerCreateOffer, setTriggerCreateOffer] = useState(false);
 
   useEffect(() => {
     if (!user) {
