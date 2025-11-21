@@ -305,7 +305,15 @@ const Withdraw = () => {
       if (bankMethod) {
         const feeCalc = paymentMethods.calculateWithdrawalFee(amountNum, bankMethod);
         fee = feeCalc.fee;
-        processingTime = `${bankMethod.processingTimeMinutes > 60 ? Math.ceil(bankMethod.processingTimeMinutes / 1440) + " business days" : bankMethod.processingTimeMinutes + " minutes"}`;
+        if (bankMethod.processingTimeMinutes >= 1440) {
+          const days = Math.ceil(bankMethod.processingTimeMinutes / 1440);
+          processingTime = `${days} business day${days > 1 ? 's' : ''}`;
+        } else if (bankMethod.processingTimeMinutes >= 60) {
+          const hours = Math.ceil(bankMethod.processingTimeMinutes / 60);
+          processingTime = `${hours} hour${hours > 1 ? 's' : ''}`;
+        } else {
+          processingTime = `${bankMethod.processingTimeMinutes} minutes`;
+        }
       }
     } else if (recipientType === "username") {
       fee = 0;
@@ -318,7 +326,12 @@ const Withdraw = () => {
       if (mobileMethod) {
         const feeCalc = paymentMethods.calculateWithdrawalFee(amountNum, mobileMethod);
         fee = feeCalc.fee;
-        processingTime = `${mobileMethod.processingTimeMinutes} minutes`;
+        if (mobileMethod.processingTimeMinutes >= 60) {
+          const hours = Math.ceil(mobileMethod.processingTimeMinutes / 60);
+          processingTime = `${hours} hour${hours > 1 ? 's' : ''}`;
+        } else {
+          processingTime = `${mobileMethod.processingTimeMinutes} minutes`;
+        }
       }
     }
 
