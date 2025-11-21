@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRewards } from "@/hooks/use-rewards";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +28,6 @@ if (typeof window !== "undefined" && typeof process !== 'undefined' && process.e
 
 // Import new organized components
 import RewardsCard from "@/components/rewards/RewardsCard";
-import WithdrawalModal from "@/components/rewards/WithdrawalModal";
 import RewardsStats from "@/components/rewards/RewardsStats";
 import RewardsActivitiesTab from "@/components/rewards/RewardsActivitiesTab";
 import RewardsChallengesTab from "@/components/rewards/RewardsChallengesTab";
