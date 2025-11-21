@@ -115,6 +115,7 @@ const UnifiedFeedItemCardComponent: React.FC<{
 
   // Modal states
   const [showComments, setShowComments] = React.useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const formatTime = (date: Date) => formatTimeAgo(date);
 
