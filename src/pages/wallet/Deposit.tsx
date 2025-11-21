@@ -373,7 +373,7 @@ const Deposit = () => {
   }
 
   if (step === "success") {
-    const destinationInfo = getDestinationInfo();
+    const destinationInfo = destinations.find(d => d.value === selectedDestination);
     return (
       <div className="flex flex-col h-screen bg-gradient-to-br from-green-50 to-emerald-50">
         <WalletActionHeader title="Deposit Complete" />
@@ -385,7 +385,7 @@ const Deposit = () => {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Deposit Successful!</h2>
             <p className="text-gray-600 mb-8">
-              ${parseFloat(amount).toFixed(2)} has been added to {destinationInfo?.label}
+              ${parseFloat(amount).toFixed(2)} has been added to {destinationInfo?.emoji} {destinationInfo?.label}
             </p>
 
             <Card className="border-0 shadow-sm mb-6">
