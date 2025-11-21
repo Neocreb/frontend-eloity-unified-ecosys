@@ -31,7 +31,6 @@ import { useEntityFollowHandlers } from "./UnifiedFeedHandlers";
 import { useNavigate } from 'react-router-dom';
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
 import PostOptionsModal from "./PostOptionsModal";
-import { useProfile } from "@/hooks/use-profile";
 import {
   DropdownMenu,
   DropdownMenuContent,
