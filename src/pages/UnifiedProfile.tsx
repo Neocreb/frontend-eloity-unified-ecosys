@@ -121,7 +121,6 @@ const UnifiedProfile: React.FC<UnifiedProfileProps> = ({
   const [posts, setPosts] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<any[]>([]);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
   const [mediaFilter, setMediaFilter] = useState("all");
   const [mediaViewMode, setMediaViewMode] = useState("grid");
