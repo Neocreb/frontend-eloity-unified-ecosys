@@ -467,7 +467,7 @@ const UnifiedProfile: React.FC<UnifiedProfileProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => navigate("/app/profile/edit")}
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Profile
