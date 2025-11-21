@@ -211,7 +211,9 @@ const Withdraw = () => {
   }
 
   if (step === "amount") {
-    const account = bankAccounts.find((a) => a.id === selectedAccount);
+    const regionConfig = paymentMethods.getRegionConfig(userCountry);
+    const recipientDisplay = getRecipientDisplay();
+
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Withdrawal Amount" />
@@ -219,8 +221,13 @@ const Withdraw = () => {
           <div className="p-4 sm:p-6 space-y-6">
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4">
-                <p className="text-xs text-gray-600">To: {account?.bank}</p>
-                <p className="font-semibold text-gray-900">{account?.accountNumber}</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{getRecipientIcon()}</span>
+                  <div>
+                    <p className="text-xs text-gray-600">{recipientDisplay?.label}</p>
+                    <p className="font-semibold text-gray-900">{recipientDisplay?.value}</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
