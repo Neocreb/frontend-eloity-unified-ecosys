@@ -56,18 +56,9 @@ const Pages: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [myPages, setMyPages] = useState<Page[]>([]);
   const [allPages, setAllPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pageForm, setPageForm] = useState({
-    name: "",
-    description: "",
-    category: "",
-    avatar_url: "",
-    cover_url: "",
-    privacy: "public",
-  });
 
   const chips = useMemo(
     () => ["Create", "Discover", "Invites", "Liked Pages"],
