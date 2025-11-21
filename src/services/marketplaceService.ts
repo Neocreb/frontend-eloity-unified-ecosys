@@ -905,18 +905,18 @@ export class MarketplaceService {
 
       if (profilesError) {
         console.warn("Error fetching marketplace profiles:", profilesError);
-        // Fallback to using users table with store information
-        const { data: users, error: usersError } = await supabase
-          .from('users')
+        // Fallback to using profiles table with store information
+        const { data: profiles, error: profilesFailover } = await supabase
+          .from('profiles')
           .select('*')
           .limit(20);
 
-        if (usersError) {
-          console.error("Error fetching users:", usersError);
+        if (profilesFailover) {
+          console.error("Error fetching profiles:", profilesFailover);
           return [];
         }
 
-        return users.map(user => ({
+        return profiles.map(user => ({
           id: user.id,
           username: user.username || '',
           name: user.full_name || 'Unknown User',
