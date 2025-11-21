@@ -205,6 +205,12 @@ import StickerCreation from "./pages/chat/StickerCreation";
 import ShareMeme from "./pages/chat/ShareMeme";
 import UserSearch from "./pages/search/UserSearch";
 import DeleteAccount from "./pages/settings/DeleteAccount";
+// Phase 3 - User List Modal Conversions
+import UserFollowers from "./pages/profile/UserFollowers";
+import UserFollowing from "./pages/profile/UserFollowing";
+import UserViewers from "./pages/profile/UserViewers";
+// Phase 3 - Crypto Detail Modal Conversion
+import CryptoDetail from "./pages/crypto/CryptoDetail";
 import CreateGroup from "./pages/CreateGroup";
 import GlobalSearch from "./pages/GlobalSearch";
 import LandingPage from "./pages/LandingPage";
@@ -530,9 +536,10 @@ const AppRoutes = () => {
           <Route path="profile" element={<EnhancedProfile />} />
           <Route path="profile/:username" element={<EnhancedProfile />} />
           <Route path="profile/:username/stats" element={<ProfileStats />} />
-          <Route path="profile/:username/followers" element={<ProfileFollowers />} />
-          <Route path="profile/:username/following" element={<ProfileFollowing />} />
-          <Route path="profile/:username/views" element={<ProfileViews />} />
+          {/* Phase 3 - User List Full Page Conversions */}
+          <Route path="profile/:username/followers" element={<UserFollowers />} />
+          <Route path="profile/:username/following" element={<UserFollowing />} />
+          <Route path="profile/:username/viewers" element={<UserViewers />} />
           <Route path="profile/:username/posts" element={<UserPosts />} />
           <Route path="profile/:username/trust" element={<TrustScore />} />
           <Route path="profile/:username/likes" element={<UserLikes />} />
@@ -567,6 +574,8 @@ const AppRoutes = () => {
           <Route path="crypto/deposit" element={<CryptoDeposit />} />
           <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
           <Route path="crypto/p2p/create-offer" element={<CreateP2POffer />} />
+          {/* Phase 3 - Crypto Detail Full Page Conversion */}
+          <Route path="crypto/coin/:symbol" element={<CryptoDetail />} />
 
           {/* Freelance Routes - Full Page Implementation */}
           <Route path="freelance/create-job" element={<CreateJob />} />
