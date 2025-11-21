@@ -30,6 +30,8 @@ import { CompactFollowButton } from "./FollowButton";
 import { useEntityFollowHandlers } from "./UnifiedFeedHandlers";
 import { useNavigate } from 'react-router-dom';
 import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
+import PostOptionsModal from "./PostOptionsModal";
+import { useProfile } from "@/hooks/use-profile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,12 +74,14 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { handleUserFollow } = useEntityFollowHandlers();
-  
+  const { isFollowing: isUserFollowing } = useProfile(post.author.username);
+
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [quoteContent, setQuoteContent] = useState("");
   const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(isUserFollowing || false);
 
   const replies = getPostReplies(post.id);
   const isRootPost = !post.parentId;
