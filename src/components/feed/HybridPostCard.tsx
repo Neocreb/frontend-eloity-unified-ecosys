@@ -314,7 +314,7 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
                 <span className="text-xs font-medium">{post.originalPost.author.name}</span>
                 <span className="text-xs text-muted-foreground">@{post.originalPost.author.username}</span>
               </div>
-              <p className="text-xs">{post.originalPost.content}</p>
+              <p className="text-xs whitespace-pre-wrap break-words">{post.originalPost.content}</p>
             </Card>
           )}
           
