@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import PostContentRenderer from "./PostContentRenderer";
 import { 
   MoreHorizontal, 
   Heart, 
@@ -295,7 +296,12 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
             </div>
           )}
 
-          <p className="mb-3 break-words leading-relaxed">{post.content}</p>
+          <PostContentRenderer
+            content={post.content}
+            maxLines={4}
+            className="mb-3"
+            onSeeMore={() => navigate(`/app/post/${post.id}`)}
+          />
           
           {/* Quoted post display for threaded mode */}
           {viewMode === 'threaded' && post.type === 'quote' && post.originalPost && (
@@ -308,7 +314,7 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
                 <span className="text-xs font-medium">{post.originalPost.author.name}</span>
                 <span className="text-xs text-muted-foreground">@{post.originalPost.author.username}</span>
               </div>
-              <p className="text-xs">{post.originalPost.content}</p>
+              <p className="text-xs whitespace-pre-wrap break-words">{post.originalPost.content}</p>
             </Card>
           )}
           

@@ -199,6 +199,9 @@ import ChatTest from "./pages/ChatTest";
 import Explore from "./pages/Explore";
 import FindUsers from "./pages/FindUsers";
 import FindUsersPage from "./pages/chat/FindUsers";
+import ImageUpload from "./pages/chat/ImageUpload";
+import StickerCreation from "./pages/chat/StickerCreation";
+import ShareMeme from "./pages/chat/ShareMeme";
 import UserSearch from "./pages/search/UserSearch";
 import DeleteAccount from "./pages/settings/DeleteAccount";
 import CreateGroup from "./pages/CreateGroup";
@@ -590,10 +593,9 @@ const AppRoutes = () => {
           <Route path="rewards/withdraw" element={<WithdrawRewards />} />
 
           {/* Chat & Social Routes - Pending Full Page Implementation */}
-          {/* <Route path="chat/create-sticker" element={<CreateStickerPage />} /> */}
-          {/* <Route path="chat/find-users" element={<FindUsersPage />} /> */}
-          {/* <Route path="chat/upload-image" element={<ImageUploadPage />} /> */}
-          {/* <Route path="chat/share-meme" element={<ShareMemePage />} /> */}
+          <Route path="chat/create-sticker" element={<StickerCreation />} />
+          <Route path="chat/upload-image" element={<ImageUpload />} />
+          <Route path="chat/share-meme" element={<ShareMeme />} />
 
           {/* Feed Routes - Pending Full Page Implementation */}
           {/* <Route path="feed/story/:storyId" element={<StoryViewerPage />} /> */}

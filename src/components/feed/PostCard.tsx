@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import PostContentRenderer from "./PostContentRenderer";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Post = {
@@ -140,7 +141,12 @@ const PostCard = ({ post }: PostCardProps) => {
         </Button>
       </CardHeader>
       <CardContent className="px-4 py-3 text-sm">
-        <p className="mb-3 break-words">{post.content}</p>
+        <PostContentRenderer
+          content={post.content}
+          maxLines={4}
+          className="mb-3"
+          onSeeMore={() => navigate(`/app/post/${post.id}`)}
+        />
         {post.image && (
           <div className="overflow-hidden rounded-md -mx-1">
             <img
