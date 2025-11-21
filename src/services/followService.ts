@@ -169,10 +169,7 @@ export class FollowService {
       const { data, error } = await supabase
         .from("followers")
         .select(`
-          follower:users!followers_follower_id_fkey (
-            *,
-            profiles (*)
-          )
+          follower_id
         `)
         .eq("following_id", userId)
         .range(offset, offset + limit - 1);
@@ -182,7 +179,36 @@ export class FollowService {
         return [];
       }
 
-      return data.map((item: any) => item.follower) as UserWithProfile[];
+      const followerIds = data?.map((item: any) => item.follower_id) || [];
+      if (followerIds.length === 0) return [];
+
+      // Fetch profiles for all follower IDs
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", followerIds);
+
+      if (profileError) {
+        console.error("Error fetching profiles:", profileError);
+        return [];
+      }
+
+      return (profiles || []).map((profile: any) => ({
+        id: profile.user_id,
+        username: profile.username || null,
+        full_name: profile.full_name || null,
+        name: profile.full_name || null,
+        avatar: profile.avatar_url || null,
+        avatar_url: profile.avatar_url || null,
+        bio: profile.bio || null,
+        is_verified: profile.is_verified || false,
+        points: profile.points || 0,
+        level: profile.level || null,
+        role: profile.role || null,
+        created_at: profile.created_at || null,
+        updated_at: profile.updated_at || null,
+        profile: profile
+      })) as UserWithProfile[];
     } catch (error) {
       console.error("Error in getUserFollowers:", error);
       return [];
@@ -195,10 +221,7 @@ export class FollowService {
       const { data, error } = await supabase
         .from("followers")
         .select(`
-          following:users!followers_following_id_fkey (
-            *,
-            profiles (*)
-          )
+          following_id
         `)
         .eq("follower_id", userId)
         .range(offset, offset + limit - 1);
@@ -208,7 +231,36 @@ export class FollowService {
         return [];
       }
 
-      return data.map((item: any) => item.following) as UserWithProfile[];
+      const followingIds = data?.map((item: any) => item.following_id) || [];
+      if (followingIds.length === 0) return [];
+
+      // Fetch profiles for all following IDs
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", followingIds);
+
+      if (profileError) {
+        console.error("Error fetching profiles:", profileError);
+        return [];
+      }
+
+      return (profiles || []).map((profile: any) => ({
+        id: profile.user_id,
+        username: profile.username || null,
+        full_name: profile.full_name || null,
+        name: profile.full_name || null,
+        avatar: profile.avatar_url || null,
+        avatar_url: profile.avatar_url || null,
+        bio: profile.bio || null,
+        is_verified: profile.is_verified || false,
+        points: profile.points || 0,
+        level: profile.level || null,
+        role: profile.role || null,
+        created_at: profile.created_at || null,
+        updated_at: profile.updated_at || null,
+        profile: profile
+      })) as UserWithProfile[];
     } catch (error) {
       console.error("Error in getUserFollowing:", error);
       return [];
@@ -218,29 +270,64 @@ export class FollowService {
   // Get mutual followers between two users
   static async getMutualFollowers(userId1: string, userId2: string, limit = 20): Promise<UserWithProfile[]> {
     try {
-      // Get followers of both users and find intersection
-      const { data, error } = await supabase
+      // Get followers of userId1
+      const { data: followers1, error: error1 } = await supabase
         .from("followers")
-        .select(`
-          follower:users!followers_follower_id_fkey (
-            *,
-            profiles (*)
-          )
-        `)
-        .eq("following_id", userId1)
-        .in("follower_id", 
-          supabase
-            .from("followers")
-            .select("follower_id")
-            .eq("following_id", userId2)
-        );
+        .select("follower_id")
+        .eq("following_id", userId1);
 
-      if (error) {
-        console.error("Error fetching mutual followers:", error);
+      if (error1) {
+        console.error("Error fetching followers:", error1);
         return [];
       }
 
-      return data.map((item: any) => item.follower) as UserWithProfile[];
+      // Get followers of userId2
+      const { data: followers2, error: error2 } = await supabase
+        .from("followers")
+        .select("follower_id")
+        .eq("following_id", userId2);
+
+      if (error2) {
+        console.error("Error fetching followers:", error2);
+        return [];
+      }
+
+      // Find intersection
+      const ids1 = new Set((followers1 || []).map((f: any) => f.follower_id));
+      const mutualIds = (followers2 || [])
+        .map((f: any) => f.follower_id)
+        .filter((id: string) => ids1.has(id))
+        .slice(0, limit);
+
+      if (mutualIds.length === 0) return [];
+
+      // Fetch profiles
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", mutualIds);
+
+      if (profileError) {
+        console.error("Error fetching profiles:", profileError);
+        return [];
+      }
+
+      return (profiles || []).map((profile: any) => ({
+        id: profile.user_id,
+        username: profile.username || null,
+        full_name: profile.full_name || null,
+        name: profile.full_name || null,
+        avatar: profile.avatar_url || null,
+        avatar_url: profile.avatar_url || null,
+        bio: profile.bio || null,
+        is_verified: profile.is_verified || false,
+        points: profile.points || 0,
+        level: profile.level || null,
+        role: profile.role || null,
+        created_at: profile.created_at || null,
+        updated_at: profile.updated_at || null,
+        profile: profile
+      })) as UserWithProfile[];
     } catch (error) {
       console.error("Error in getMutualFollowers:", error);
       return [];
@@ -251,14 +338,12 @@ export class FollowService {
   static async getSuggestedUsers(userId: string, limit = 10): Promise<UserWithProfile[]> {
     try {
       // Get users that the current user is not following and are not the user themselves
-      // This is a simplified approach - in a real app, you'd want more sophisticated suggestions
       const { data, error } = await supabase
-        .from("users")
+        .from("profiles")
         .select(`
-          *,
-          profiles (*)
+          *
         `)
-        .neq("id", userId)
+        .neq("user_id", userId)
         .limit(limit * 2); // Get more to filter out already followed users
 
       if (error) {
