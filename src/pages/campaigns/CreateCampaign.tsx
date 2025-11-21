@@ -356,10 +356,22 @@ export default function CreateCampaign() {
     return <div className="w-5 h-5 bg-gray-300 rounded-full" />;
   };
 
-  const filteredContent = mockUserContent.filter((content) => {
+  const filteredContent = userContent.filter((content) => {
     if (!campaignData.goal) return true;
+
+    // Map content types to goal targets
+    const contentTypeMap: Record<string, string[]> = {
+      product: ["marketplace_products"],
+      service: ["freelance_services"],
+      job: ["freelance_jobs"],
+      video: ["videos", "content"],
+      post: ["posts", "content"],
+      profile: ["user_profiles"],
+    };
+
+    const targetTypes = contentTypeMap[content.type] || [];
     return campaignData.goal.targets.some((target: string) =>
-      content.type.includes(target.replace("_", "_"))
+      targetTypes.includes(target)
     );
   });
 
