@@ -2510,84 +2510,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="ai-content" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI Content Generator</h2>
-                  <p className="text-gray-600 dark:text-gray-400">Create AI-powered content for your posts</p>
-                </div>
-                <Button onClick={() => setShowAIGenerator(true)}>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate New Content
-                </Button>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Edith AI Content Generator</CardTitle>
-                  <CardDescription>Create stunning AI-generated images and videos for your content</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
-                      <Sparkles className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">Create AI-Powered Content</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-center max-w-md">
-                      Generate stunning images and videos with Edith AI to enhance your posts and engage your audience.
-                    </p>
-                    <Button onClick={() => setShowAIGenerator(true)} size="lg">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Generate Content with Edith AI
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <ImageIcon className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <h3 className="font-semibold">Image Generation</h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Create stunning images with detailed prompts for your social media posts.</p>
-                    <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(true)}>Generate Image</Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <Video className="w-5 h-5 text-red-600" />
-                      </div>
-                      <h3 className="font-semibold">Video Creation</h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Generate short videos with AI for engaging content.</p>
-                    <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(true)}>Generate Video</Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Wand2 className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <h3 className="font-semibold">Smart Editing</h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Enhance and upscale your AI-generated content with smart editing tools.</p>
-                    <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(true)}>Enhance Content</Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="ai-assistant" className="space-y-6">
-              <AIContentAssistant />
+            <TabsContent value="ai-studio" className="space-y-6">
+              <UnifiedAIStudio />
             </TabsContent>
 
             <TabsContent value="features" className="space-y-6">
