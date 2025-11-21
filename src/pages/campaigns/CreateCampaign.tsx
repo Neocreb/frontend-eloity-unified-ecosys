@@ -221,36 +221,11 @@ export default function CreateCampaign() {
     },
   });
 
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { content: userContent, isLoading: contentLoading } = useUserBoostableContent();
   const [estimatedReach, setEstimatedReach] = useState(50000);
-  const [mockUserContent] = useState([
-    {
-      id: "1",
-      type: "marketplace_products",
-      name: "Wireless Bluetooth Headphones",
-      image: "/placeholder.svg",
-      price: 45.99,
-      status: "active",
-      performance: { views: 234, sales: 12 },
-    },
-    {
-      id: "2",
-      type: "freelance_services",
-      name: "Professional Logo Design",
-      image: "/placeholder.svg",
-      price: 150.0,
-      status: "active",
-      performance: { views: 456, inquiries: 23 },
-    },
-    {
-      id: "3",
-      type: "videos",
-      name: "React Tutorial Series",
-      image: "/placeholder.svg",
-      duration: "15:30",
-      status: "published",
-      performance: { views: 1230, likes: 89 },
-    },
-  ]);
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
