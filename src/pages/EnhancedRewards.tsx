@@ -363,6 +363,12 @@ export default function EnhancedRewards() {
           )}
         </TabsContent>
 
+        <TabsContent value="gifts" className="mt-6">
+          <RewardsErrorBoundary>
+            <GiftsTipsAnalytics />
+          </RewardsErrorBoundary>
+        </TabsContent>
+
         <TabsContent value="challenges" className="mt-6">
           <RewardsErrorBoundary>
             <RewardsChallengesTab />
