@@ -27,11 +27,18 @@ import { paymentMethods } from "@/config/paymentMethods";
 const Deposit = () => {
   const navigate = useNavigate();
   const { walletBalance } = useWalletContext();
-  const [step, setStep] = useState<"method" | "amount" | "review" | "success">("method");
-  const [selectedMethod, setSelectedMethod] = useState<"card" | "bank" | "crypto" | "mobile" | "ewallet">("card");
+  const [userCountry, setUserCountry] = useState("NG"); // TODO: Get from user profile
+  const [step, setStep] = useState<"country" | "method" | "amount" | "review" | "success">("country");
+  const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [selectedDestination, setSelectedDestination] = useState<"ecommerce" | "crypto" | "rewards" | "freelance">("ecommerce");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const regionConfig = paymentMethods.getRegionConfig(userCountry);
+  const allMethods = useMemo(() => {
+    const methods = paymentMethods.getMethodsByCountry(userCountry);
+    return methods.filter(m => m.isDepositEnabled);
+  }, [userCountry]);
 
   const paymentMethods = [
     {
