@@ -260,18 +260,28 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
                   </Button>
                 </>
               )}
+              {!post.author.id.startsWith(user?.id || '') && (
+                <CompactFollowButton
+                  type="user"
+                  isFollowing={isFollowing}
+                  onToggleFollow={() => {
+                    setIsFollowing(!isFollowing);
+                    handleUserFollow(post.author.id, isFollowing);
+                  }}
+                />
+              )}
             </div>
           </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 flex-shrink-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {viewMode === 'threaded' && (
-                <>
+
+          <div className="flex items-center gap-1">
+            {viewMode === 'threaded' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 flex-shrink-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setShowReplyForm(true)}>
                     <Reply className="h-4 w-4 mr-2" />
                     Reply to this post
@@ -285,10 +295,31 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
                     <ArrowUpRight className="h-4 w-4 mr-2" />
                     View full thread
                   </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <PostOptionsModal
+              postId={post.id}
+              postAuthorId={post.author.id}
+              postAuthorName={post.author.name}
+              postAuthorUsername={post.author.username}
+              postContent={post.content}
+              isFollowing={isFollowing}
+              onFollowChange={setIsFollowing}
+              onPostDelete={() => {
+                navigate('/app/feed');
+              }}
+              onPostEdit={(newContent) => {
+                // Optionally refresh the post data
+              }}
+              trigger={
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 flex-shrink-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              }
+            />
+          </div>
         </CardHeader>
 
         <CardContent className="px-4 py-3 text-sm">
