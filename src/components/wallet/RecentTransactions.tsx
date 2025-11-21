@@ -92,7 +92,10 @@ const RecentTransactions = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Recent Transactions</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-purple-500" />
+          Recent Activity
+        </CardTitle>
         <Button asChild variant="link" className="p-0">
           <Link to="/app/wallet/transactions">See All</Link>
         </Button>
@@ -103,18 +106,24 @@ const RecentTransactions = () => {
           return (
             <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/30">
               <div className="flex items-center gap-3">
-                {positive ? (
-                  <ArrowDownRight className="h-4 w-4 text-green-600" />
-                ) : (
-                  <ArrowUpRight className="h-4 w-4 text-red-600" />
-                )}
+                <div className="p-2 rounded-full bg-muted">
+                  {getIcon(t)}
+                </div>
                 <div>
                   <div className="text-sm font-medium">{t.description}</div>
                   <div className="text-xs text-muted-foreground">{new Date(t.timestamp||'').toLocaleString()}</div>
                 </div>
               </div>
-              <div className={`font-semibold ${positive? 'text-green-600':'text-red-600'}`}>
-                {positive?'+':''}${Math.abs(t.amount as number).toFixed(2)}
+              <div className="flex items-center gap-2">
+                <span className={`font-semibold ${positive? 'text-green-600':'text-red-600'}`}>
+                  {positive?'+':''}${Math.abs(t.amount as number).toFixed(2)}
+                </span>
+                {t.type === "gift" && (
+                  <Badge variant="secondary" className="text-xs">Gift</Badge>
+                )}
+                {t.type === "tip" && (
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Tip</Badge>
+                )}
               </div>
             </div>
           );
