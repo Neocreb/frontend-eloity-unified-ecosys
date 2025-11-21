@@ -811,15 +811,14 @@ const VideoCard: React.FC<{
 
       {/* Play/Pause indicator with enhanced animation */}
       <div
-        className="absolute inset-0 flex items-center justify-center transition-all duration-300"
+        className="absolute inset-0 flex items-center justify-center transition-all duration-300 group"
         style={{backgroundColor: !isPlaying ? 'rgba(0, 0, 0, 0.2)' : 'transparent'}}
       >
         <Button
           size="icon"
           variant="ghost"
-          className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 hover:bg-white/30 border-none backdrop-blur-sm shadow-2xl transition-all duration-300 hover:scale-110"
+          className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 hover:bg-white/30 border-none backdrop-blur-sm shadow-2xl transition-all duration-300 hover:scale-110 opacity-100 group-hover:opacity-100"
           onClick={togglePlay}
-          style={{opacity: isPlaying ? 0 : 1, pointerEvents: isPlaying ? 'none' : 'auto'}}
         >
           {isPlaying ? (
             <Pause className="w-10 h-10 md:w-12 md:h-12 text-white fill-white" />
