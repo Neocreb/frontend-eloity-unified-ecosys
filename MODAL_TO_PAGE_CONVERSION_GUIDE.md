@@ -3,7 +3,7 @@
 ## Overview
 This guide documents the systematic conversion of modal-based UI components to full-page routes, improving user experience and reducing complexity.
 
-## 🎯 Current Status: 33 of 38 Modals Converted (87%) | 5 Modals Retained by Design (13%)
+## 🎯 Current Status: 37 of 50 Modals Converted (74%) | 5 Modals Retained by Design (10%) | 8 Remaining (16%)
 
 ### Summary of Conversions by Category
 - **Profile & Rewards**: 3/3 ✅ Complete
@@ -593,7 +593,7 @@ src/
 
 3. **Events & Challenges** (New additions - 2 completed)
    - ✅ EventsRewards page → `/app/events/rewards` (new full-page)
-   - ✅ CommunityEvents choice dialog �� Prompts between event/challenge creation
+   - ✅ CommunityEvents choice dialog → Prompts between event/challenge creation
    - ✅ Videos page navigation → Updated dropdown menu to navigate to full-page routes
 
 4. **Chat & Social** (4+ remaining)
