@@ -235,18 +235,29 @@ const CampaignCenter: React.FC = () => {
   const avgROI = activeCampaigns.length > 0 ?
     activeCampaigns.reduce((sum, c) => sum + parseInt(c.performance.roi), 0) / activeCampaigns.length : 0;
 
-  const handlePauseCampaign = (campaignId: string) => {
-    setActiveCampaigns(prev => 
-      prev.map(c => 
-        c.id === campaignId 
-          ? { ...c, status: c.status === "active" ? "paused" : "active" }
-          : c
-      )
-    );
-    toast({
-      title: "Campaign Updated",
-      description: "Campaign status has been changed successfully",
-    });
+  const handlePauseCampaign = async (campaignId: string) => {
+    try {
+      const campaign = activeCampaigns.find(c => c.id === campaignId);
+      if (!campaign) return;
+
+      const newStatus = campaign.status === "active" ? "paused" : "active";
+
+      // Update campaign status in database
+      const { campaignService } = await import("@/services/campaignService");
+      await campaignService.updateCampaign(campaignId, { status: newStatus });
+
+      toast({
+        title: "Campaign Updated",
+        description: `Campaign has been ${newStatus} successfully`,
+      });
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update campaign",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleClaimIncentive = (incentiveId: string) => {
