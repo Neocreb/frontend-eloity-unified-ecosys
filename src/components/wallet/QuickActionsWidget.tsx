@@ -106,8 +106,16 @@ const QuickActionsWidget = () => {
     },
   ];
 
-  // Gift Cards Actions (Tertiary)
+  // Virtual Gifts & Gift Cards Actions (Tertiary)
   const giftActions: ActionItem[] = [
+    {
+      id: "send-gifts",
+      label: "Send Gifts",
+      icon: <Gift className="h-6 w-6" />,
+      color: "bg-rose-500",
+      action: () => navigate("/app/send-gifts"),
+      badge: { text: "Popular", variant: "promotion" },
+    },
     {
       id: "buy-gift",
       label: "Buy Gift Cards",
@@ -181,13 +189,13 @@ const QuickActionsWidget = () => {
         </CardContent>
       </Card>
 
-      {/* Gift Cards Actions */}
+      {/* Virtual Gifts & Gift Cards Actions */}
       {giftActions.length > 0 && (
         <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Gift className="h-5 w-5 text-pink-500" />
-              Gift Cards
+              <Gift className="h-5 w-5 text-rose-500" />
+              Gifts & Rewards
             </CardTitle>
           </CardHeader>
           <CardContent>
