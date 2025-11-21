@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import UserListModal from "@/components/profile/UserListModal";
 import { ProfilePostCard } from "@/components/profile/ProfilePostCard";
 import { EnhancedCommentsSection } from "@/components/feed/EnhancedCommentsSection";
