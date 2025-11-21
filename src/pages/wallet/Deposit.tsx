@@ -126,7 +126,8 @@ const Deposit = () => {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 mt-6">Available Payment Methods</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 mt-6">Select Payment Method</h3>
+              <p className="text-xs text-gray-600 mb-3">Fast, secure, and multiple options to fund your wallet</p>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {allMethods.map((method) => {
                   const feeInfo = paymentMethods.calculateDepositFee(100, method);
