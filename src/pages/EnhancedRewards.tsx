@@ -251,7 +251,7 @@ export default function EnhancedRewards() {
           availableToWithdraw={rewardData.availableToWithdraw}
           totalEarnings={rewardData.totalEarnings}
           trustScore={rewardData.trustScore}
-          onWithdraw={() => setShowWithdrawalModal(true)}
+          onWithdraw={() => navigate("/app/rewards/withdraw")}
           className="mb-8"
         />
       ) : (
