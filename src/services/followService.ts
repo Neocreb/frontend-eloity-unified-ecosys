@@ -136,11 +136,11 @@ export class FollowService {
       const currentCount = await this.getFollowersCount(userId);
       const newCount = Math.max(0, currentCount + delta);
 
-      // Update user profile
+      // Update user profile in profiles table
       await supabase
-        .from("users")
+        .from("profiles")
         .update({ followers_count: newCount })
-        .eq("id", userId);
+        .eq("user_id", userId);
     } catch (error) {
       console.error("Error updating followers count:", error);
     }
@@ -153,11 +153,11 @@ export class FollowService {
       const currentCount = await this.getFollowingCount(userId);
       const newCount = Math.max(0, currentCount + delta);
 
-      // Update user profile
+      // Update user profile in profiles table
       await supabase
-        .from("users")
+        .from("profiles")
         .update({ following_count: newCount })
-        .eq("id", userId);
+        .eq("user_id", userId);
     } catch (error) {
       console.error("Error updating following count:", error);
     }
