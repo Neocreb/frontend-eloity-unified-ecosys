@@ -109,6 +109,11 @@ import ContributeToGroup from "./pages/community/ContributeToGroup";
 import GroupContribution from "./pages/community/GroupContribution";
 import CreateGroupVote from "./pages/community/CreateGroupVote";
 import CreateEvent from "./pages/community/CreateEvent";
+// Strategy B - Modular Group Pages
+import GroupInfo from "./pages/community/GroupInfo";
+import GroupMembers from "./pages/community/GroupMembers";
+import GroupEdit from "./pages/community/GroupEdit";
+import GroupSettings from "./pages/community/GroupSettings";
 // Phase 3 - Profile Modal Conversions
 import AddExternalWork from "./pages/profile/AddExternalWork";
 import EditProfile from "./pages/profile/EditProfile";
