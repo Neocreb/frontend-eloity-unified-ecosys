@@ -60,6 +60,7 @@ import { useToast } from "@/components/ui/use-toast";
 import CampaignAnalyticsDashboard from "./CampaignAnalyticsDashboard";
 import SmartBoostSuggestions from "./SmartBoostSuggestions";
 import { campaignSyncService } from "@/services/campaignSyncService";
+import { useUserCampaigns } from "@/hooks/use-user-campaigns";
 
 // Campaign goals definition
 export const CAMPAIGN_GOALS = {
