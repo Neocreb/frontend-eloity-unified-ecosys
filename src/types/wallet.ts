@@ -29,22 +29,52 @@ export interface WalletSource {
 export interface WithdrawalRequest {
   amount: number;
   source?: "total" | "ecommerce" | "crypto" | "rewards" | "freelance";
-  bankAccount: string;
+  recipientType: "bank_account" | "username" | "email" | "mobile_money";
+  bankAccountId?: string;
+  username?: string;
+  email?: string;
+  mobilePhone?: string;
   description?: string;
 }
 
 export interface DepositRequest {
   amount: number;
-  method: "card" | "bank" | "crypto";
+  method: "card" | "bank" | "crypto" | "mobile" | "ewallet";
+  methodProviderId: string;
   source: "ecommerce" | "crypto" | "rewards" | "freelance";
+  countryCode: string;
+  currency: string;
   description?: string;
 }
 
 export interface BankAccount {
   id: string;
-  name: string;
+  accountName: string;
   accountNumber: string;
-  routingNumber: string;
+  routingNumber?: string;
   bankName: string;
+  accountHolderName: string;
+  accountHolderPhone?: string;
+  countryCode: string;
+  currency: string;
   isDefault: boolean;
+  isVerified: boolean;
+  bankCode?: string;
+  swiftCode?: string;
+}
+
+export interface WithdrawalMethod {
+  id: string;
+  userId: string;
+  methodType: "bank_account" | "username" | "email" | "mobile_money";
+  displayName?: string;
+  bankAccountId?: string;
+  username?: string;
+  email?: string;
+  mobilePhone?: string;
+  mobileProvider?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt: string;
+  lastUsedAt?: string;
 }
