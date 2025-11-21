@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWalletContext } from "@/contexts/WalletContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
@@ -20,7 +20,9 @@ import {
   Bitcoin,
   Smartphone,
   Building,
+  Globe,
 } from "lucide-react";
+import { paymentMethods } from "@/config/paymentMethods";
 
 const Deposit = () => {
   const navigate = useNavigate();
