@@ -71,13 +71,17 @@ const DashboardInner = () => {
               <Plus className="h-4 w-4"/>
               Deposit
             </Button>
-            <Button variant="outline" onClick={()=>navigate('/app/currency-demo')} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-              <Repeat className="h-4 w-4"/>
-              Convert
+            <Button variant="outline" onClick={()=>navigate('/app/wallet/withdraw')} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+              <Send className="h-4 w-4"/>
+              Withdraw
             </Button>
             <Button variant="outline" onClick={()=>navigate('/app/wallet/transfer')} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-              <Send className="h-4 w-4"/>
+              <Repeat className="h-4 w-4"/>
               Transfer
+            </Button>
+            <Button variant="outline" onClick={()=>navigate('/app/currency-demo')} className="bg-white/10 text-white border-white/20 hover:bg-white/20 hidden sm:flex">
+              <Repeat className="h-4 w-4"/>
+              Convert
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
