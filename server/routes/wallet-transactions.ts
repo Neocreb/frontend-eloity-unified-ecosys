@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { walletDatabaseService } from '../services/walletDatabaseService.js';
+import { paymentProcessorService } from '../services/paymentProcessorService.js';
 import { logger } from '../utils/logger.js';
 import { v4 as uuidv4 } from 'uuid';
 
