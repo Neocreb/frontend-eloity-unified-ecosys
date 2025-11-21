@@ -387,6 +387,240 @@ router.post('/withdraw/cancel/:id', requireAuth, async (req: Request, res: Respo
 });
 
 /**
+ * POST /api/wallet/deposit/paystack-webhook
+ * Handle Paystack payment webhook
+ */
+router.post('/deposit/paystack-webhook', async (req: Request, res: Response) => {
+  try {
+    const signature = req.headers['x-paystack-signature'] as string;
+    const body = JSON.stringify(req.body);
+
+    if (!paymentProcessorService.verifyPaystackWebhookSignature(body, signature)) {
+      logger.warn('Invalid Paystack webhook signature');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const event = req.body;
+
+    if (event.event === 'charge.success') {
+      const reference = event.data.reference;
+      const metadata = event.data.metadata;
+
+      const transactionId = metadata?.transactionId;
+      const userId = metadata?.userId;
+
+      if (!transactionId || !userId) {
+        logger.warn('Missing transactionId or userId in Paystack webhook');
+        return res.status(400).json({ error: 'Missing metadata' });
+      }
+
+      const payment = await paymentProcessorService.verifyPaystackPayment(reference);
+
+      if (!payment) {
+        logger.warn('Failed to verify Paystack payment:', reference);
+        return res.status(400).json({ error: 'Failed to verify payment' });
+      }
+
+      await walletDatabaseService.updateTransactionStatus(transactionId, userId, 'completed', {
+        processor: 'paystack',
+        processorReference: reference,
+        processorFee: payment.fee,
+        completedAt: new Date().toISOString(),
+      });
+
+      logger.info(`Deposit completed via Paystack for user ${userId}: ${transactionId}`);
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Error processing Paystack webhook:', error);
+    res.status(500).json({ error: 'Failed to process webhook' });
+  }
+});
+
+/**
+ * POST /api/wallet/deposit/flutterwave-webhook
+ * Handle Flutterwave payment webhook
+ */
+router.post('/deposit/flutterwave-webhook', async (req: Request, res: Response) => {
+  try {
+    const signature = req.headers['verif-hash'] as string;
+    const body = JSON.stringify(req.body);
+
+    if (!paymentProcessorService.verifyFlutterwaveWebhookSignature(body, signature)) {
+      logger.warn('Invalid Flutterwave webhook signature');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const event = req.body;
+
+    if (event.status === 'successful' && event.data?.meta?.transactionId && event.data?.meta?.userId) {
+      const transactionId = event.data.meta.transactionId;
+      const userId = event.data.meta.userId;
+
+      const payment = await paymentProcessorService.verifyFlutterwavePayment(event.data.id);
+
+      if (!payment) {
+        logger.warn('Failed to verify Flutterwave payment:', event.data.id);
+        return res.status(400).json({ error: 'Failed to verify payment' });
+      }
+
+      await walletDatabaseService.updateTransactionStatus(transactionId, userId, 'completed', {
+        processor: 'flutterwave',
+        processorReference: event.data.flw_ref,
+        processorFee: payment.fee,
+        completedAt: new Date().toISOString(),
+      });
+
+      logger.info(`Deposit completed via Flutterwave for user ${userId}: ${transactionId}`);
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Error processing Flutterwave webhook:', error);
+    res.status(500).json({ error: 'Failed to process webhook' });
+  }
+});
+
+/**
+ * POST /api/wallet/deposit/stripe-webhook
+ * Handle Stripe payment webhook
+ */
+router.post('/deposit/stripe-webhook', async (req: Request, res: Response) => {
+  try {
+    const signature = req.headers['stripe-signature'] as string;
+    const secret = process.env.STRIPE_WEBHOOK_SECRET || '';
+
+    if (!paymentProcessorService.verifyStripeWebhookSignature(JSON.stringify(req.body), signature, secret)) {
+      logger.warn('Invalid Stripe webhook signature');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const event = req.body;
+
+    if (event.type === 'payment_intent.succeeded') {
+      const intentId = event.data.object.id;
+      const metadata = event.data.object.metadata;
+
+      const transactionId = metadata?.transactionId;
+      const userId = metadata?.userId;
+
+      if (!transactionId || !userId) {
+        logger.warn('Missing transactionId or userId in Stripe webhook');
+        return res.status(400).json({ error: 'Missing metadata' });
+      }
+
+      const payment = await paymentProcessorService.retrieveStripePaymentIntent(intentId);
+
+      if (!payment) {
+        logger.warn('Failed to retrieve Stripe payment intent:', intentId);
+        return res.status(400).json({ error: 'Failed to verify payment' });
+      }
+
+      await walletDatabaseService.updateTransactionStatus(transactionId, userId, 'completed', {
+        processor: 'stripe',
+        processorReference: intentId,
+        processorFee: payment.fee,
+        completedAt: new Date().toISOString(),
+      });
+
+      logger.info(`Deposit completed via Stripe for user ${userId}: ${transactionId}`);
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Error processing Stripe webhook:', error);
+    res.status(500).json({ error: 'Failed to process webhook' });
+  }
+});
+
+/**
+ * POST /api/wallet/deposit/mpesa-callback
+ * Handle M-Pesa payment callback
+ */
+router.post('/deposit/mpesa-callback', async (req: Request, res: Response) => {
+  try {
+    const body = req.body.Body.stkCallback;
+
+    const metadata = body.CallbackMetadata?.Item?.find((item: any) => item.Name === 'Metadata');
+    const transactionId = metadata?.Value?.transactionId;
+    const userId = metadata?.Value?.userId;
+
+    if (!transactionId || !userId) {
+      logger.warn('Missing transactionId or userId in M-Pesa callback');
+      return res.json({ ResultCode: 1, ResultDesc: 'Missing metadata' });
+    }
+
+    if (body.ResultCode === 0) {
+      const amountItem = body.CallbackMetadata?.Item?.find((item: any) => item.Name === 'Amount');
+      const amount = amountItem?.Value || 0;
+
+      await walletDatabaseService.updateTransactionStatus(transactionId, userId, 'completed', {
+        processor: 'mpesa',
+        processorReference: body.CheckoutRequestID,
+        processorFee: 0,
+        completedAt: new Date().toISOString(),
+      });
+
+      logger.info(`Deposit completed via M-Pesa for user ${userId}: ${transactionId} (${amount} KES)`);
+    } else {
+      await walletDatabaseService.updateTransactionStatus(transactionId, userId, 'failed', {
+        processor: 'mpesa',
+        processorReference: body.CheckoutRequestID,
+        failureReason: body.ResultDesc,
+        failedAt: new Date().toISOString(),
+      });
+
+      logger.info(`Deposit failed via M-Pesa for user ${userId}: ${transactionId} - ${body.ResultDesc}`);
+    }
+
+    res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+  } catch (error: any) {
+    logger.error('Error processing M-Pesa callback:', error);
+    res.json({ ResultCode: 1, ResultDesc: 'Error processing callback' });
+  }
+});
+
+/**
+ * GET /api/wallet/deposit/status/:depositId
+ * Check deposit status
+ */
+router.get('/deposit/status/:depositId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId || (req.query.userId as string);
+    const { depositId } = req.params;
+
+    const transaction = await walletDatabaseService.getTransaction(depositId, userId);
+
+    if (!transaction) {
+      return res.status(404).json({
+        error: 'Deposit not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      deposit: {
+        depositId: transaction.id,
+        referenceId: transaction.referenceId,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        status: transaction.status,
+        fee: transaction.feeAmount || 0,
+        net: transaction.netAmount || transaction.amount,
+        createdAt: transaction.metadata?.initiatedAt,
+      },
+    });
+  } catch (error: any) {
+    logger.error('Error checking deposit status:', error);
+    res.status(500).json({
+      error: 'Failed to check deposit status',
+      details: error.message,
+    });
+  }
+});
+
+/**
  * GET /api/wallet/transactions/export
  * Export transactions as CSV
  */
