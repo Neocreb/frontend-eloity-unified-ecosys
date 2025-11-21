@@ -103,7 +103,7 @@ const Withdraw = () => {
   if (step === "recipient") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <WalletActionHeader title="Withdraw Funds" />
+        <WalletActionHeader title="Withdraw Funds" subtitle="Cash out to your personal accounts" />
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
             <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-indigo-50">
@@ -116,13 +116,13 @@ const Withdraw = () => {
             </Card>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Send Money To</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Withdraw To</h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  { type: "bank" as RecipientType, label: "Bank Account", icon: "🏦" },
-                  { type: "username" as RecipientType, label: "Username", icon: "👤" },
-                  { type: "email" as RecipientType, label: "Email", icon: "✉️" },
-                  { type: "mobile" as RecipientType, label: "Mobile Money", icon: "📱" },
+                  { type: "bank" as RecipientType, label: "Bank Account", icon: "🏦", desc: "Direct to bank" },
+                  { type: "mobile" as RecipientType, label: "Mobile Wallet", icon: "📱", desc: "MTN, Airtel, etc" },
+                  { type: "email" as RecipientType, label: "Email Wallet", icon: "✉️", desc: "Email transfer" },
+                  { type: "username" as RecipientType, label: "Eloity User", icon: "👤", desc: "To another user" },
                 ].map((option) => (
                   <button
                     key={option.type}
@@ -141,6 +141,7 @@ const Withdraw = () => {
                         <p className="text-xs sm:text-sm font-semibold text-center text-gray-900">
                           {option.label}
                         </p>
+                        <p className="text-2xs text-gray-500 text-center mt-1">{option.desc}</p>
                       </CardContent>
                     </Card>
                   </button>
