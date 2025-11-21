@@ -10,6 +10,7 @@ import PaymentCards from "@/components/wallet/PaymentCards";
 import RecentTransactions from "@/components/wallet/RecentTransactions";
 import SmartRecommendations from "@/components/wallet/SmartRecommendations";
 import QuickActionsWidget from "@/components/wallet/QuickActionsWidget";
+import GiftsAndTipsWidget from "@/components/wallet/GiftsAndTipsWidget";
 
 const DashboardInner = () => {
   const { walletBalance, refreshWallet } = useWalletContext();
