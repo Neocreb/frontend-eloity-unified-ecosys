@@ -57,7 +57,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import CampaignCreationWizard from "./CampaignCreationWizard";
 import CampaignAnalyticsDashboard from "./CampaignAnalyticsDashboard";
 import SmartBoostSuggestions from "./SmartBoostSuggestions";
 import { campaignSyncService } from "@/services/campaignSyncService";
