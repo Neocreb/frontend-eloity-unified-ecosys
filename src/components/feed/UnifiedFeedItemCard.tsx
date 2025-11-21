@@ -1,9 +1,11 @@
 // @ts-nocheck
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CompactFollowButton } from "./FollowButton";
+import PostOptionsModal from "./PostOptionsModal";
 import {
   Heart,
   MessageCircle,
@@ -113,6 +115,7 @@ const UnifiedFeedItemCardComponent: React.FC<{
 
   // Modal states
   const [showComments, setShowComments] = React.useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const formatTime = (date: Date) => formatTimeAgo(date);
 
@@ -383,10 +386,10 @@ const UnifiedFeedItemCardComponent: React.FC<{
       <Card className="mb-4 sm:mb-6 mx-2 sm:mx-0">
         <CardContent className="p-0">
           {/* Header */}
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <Avatar
-                className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity"
+                className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/app/profile/${item.author?.username}`);
@@ -395,10 +398,10 @@ const UnifiedFeedItemCardComponent: React.FC<{
                 <AvatarImage src={item.author?.avatar} />
                 <AvatarFallback>{item.author?.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span
-                    className="font-semibold cursor-pointer hover:underline"
+                    className="font-semibold cursor-pointer hover:underline truncate"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/app/profile/${item.author?.username}`);
@@ -407,17 +410,17 @@ const UnifiedFeedItemCardComponent: React.FC<{
                     {item.author?.name}
                   </span>
                   {item.author?.verified && (
-                    <Badge variant="secondary" className="h-4 w-4 p-0 rounded-full bg-blue-500">
+                    <Badge variant="secondary" className="h-4 w-4 p-0 rounded-full bg-blue-500 flex-shrink-0">
                       <span className="text-white text-xs">✓</span>
                     </Badge>
                   )}
                   {item.author?.badges?.map((badge) => (
-                    <Badge key={badge} variant="outline" className="text-xs">
+                    <Badge key={badge} variant="outline" className="text-xs flex-shrink-0">
                       {badge}
                     </Badge>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
                   <span
                     className="cursor-pointer hover:underline"
                     onClick={(e) => {
@@ -440,9 +443,35 @@ const UnifiedFeedItemCardComponent: React.FC<{
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {!item.author?.id.startsWith(user?.id || '') && (
+                <CompactFollowButton
+                  type="user"
+                  isFollowing={isFollowing}
+                  onToggleFollow={() => setIsFollowing(!isFollowing)}
+                />
+              )}
+              <PostOptionsModal
+                postId={item.id}
+                postAuthorId={item.author?.id || ''}
+                postAuthorName={item.author?.name || ''}
+                postAuthorUsername={item.author?.username || ''}
+                postContent={item.content.text || ''}
+                isFollowing={isFollowing}
+                onFollowChange={setIsFollowing}
+                onPostDelete={() => {
+                  navigate('/app/feed');
+                }}
+                onPostEdit={(newContent) => {
+                  // Optionally refresh the post data
+                }}
+                trigger={
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                }
+              />
+            </div>
           </div>
 
           {/* Content */}
@@ -489,21 +518,35 @@ const UnifiedFeedItemCardComponent: React.FC<{
       <Card className="mb-4 sm:mb-6 mx-2 sm:mx-0">
         <CardContent className="p-0">
           {/* Header */}
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
+          <div className="p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Avatar
+                className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/app/profile/${item.author?.username}`);
+                }}
+              >
                 <AvatarImage src={item.author?.avatar} />
                 <AvatarFallback>{item.author?.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">{item.author?.name}</span>
+                  <span
+                    className="font-semibold cursor-pointer hover:underline truncate"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/app/profile/${item.author?.username}`);
+                    }}
+                  >
+                    {item.author?.name}
+                  </span>
                   {item.author?.verified && (
-                    <Badge variant="secondary" className="h-4 w-4 p-0 rounded-full bg-blue-500">
+                    <Badge variant="secondary" className="h-4 w-4 p-0 rounded-full bg-blue-500 flex-shrink-0">
                       <span className="text-white text-xs">✓</span>
                     </Badge>
                   )}
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs flex-shrink-0">
                     <ShoppingBag className="w-3 h-3 mr-1" />
                     Product
                   </Badge>
@@ -515,9 +558,32 @@ const UnifiedFeedItemCardComponent: React.FC<{
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {!item.author?.id.startsWith(user?.id || '') && (
+                <CompactFollowButton
+                  type="user"
+                  isFollowing={isFollowing}
+                  onToggleFollow={() => setIsFollowing(!isFollowing)}
+                />
+              )}
+              <PostOptionsModal
+                postId={item.id}
+                postAuthorId={item.author?.id || ''}
+                postAuthorName={item.author?.name || ''}
+                postAuthorUsername={item.author?.username || ''}
+                postContent={item.content.text || ''}
+                isFollowing={isFollowing}
+                onFollowChange={setIsFollowing}
+                onPostDelete={() => {
+                  navigate('/app/feed');
+                }}
+                trigger={
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                }
+              />
+            </div>
           </div>
 
           {/* Product Content */}
