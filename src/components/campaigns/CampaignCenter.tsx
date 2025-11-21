@@ -269,7 +269,7 @@ const CampaignCenter: React.FC = () => {
             <span className="sm:hidden">Bonuses</span>
           </Button>
           <Button
-            onClick={() => setShowCreationWizard(true)}
+            onClick={() => navigate('/app/campaigns/create')}
             className="w-full sm:w-auto min-w-[140px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             <PlusCircle className="h-4 w-4 mr-2" />
