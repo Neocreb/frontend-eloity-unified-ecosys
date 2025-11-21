@@ -155,7 +155,7 @@ const CryptoP2P = () => {
                   {/* Center - Create Offer Button */}
                   <div className="flex justify-center w-full sm:flex-1">
                     <Button
-                      onClick={() => setTriggerCreateOffer(true)}
+                      onClick={() => navigate("/app/crypto/p2p/create-offer")}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-6 h-9 w-full sm:w-auto"
                     >
                       <Plus className="h-4 w-4 mr-2" />
@@ -184,10 +184,7 @@ const CryptoP2P = () => {
                   </div>
                 </div>
 
-                <EnhancedP2PMarketplace
-                  triggerCreateOffer={triggerCreateOffer}
-                  onCreateOfferTriggered={() => setTriggerCreateOffer(false)}
-                />
+                <EnhancedP2PMarketplace />
               </>
             )}
 
