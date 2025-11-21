@@ -436,8 +436,11 @@ After careful analysis, the following feed modals are **recommended to remain as
 - ⏸️ **EnhancedShareDialog** → Multi-context usage (FUTURE CANDIDATE)
   - Current status: Remains as modal for this phase
 
-- ⏸️ **StoryViewerModal** → Unused/Deprecated (ARCHIVAL CANDIDATE)
-  - Status: Not imported anywhere - different StoryViewer component in use ��� `/app/feed/feeling`
+- ⏸️ **StoryViewerModal** → DEPRECATED/ARCHIVED (NOT IN USE)
+  - Status: Not imported or referenced anywhere in the codebase
+  - Alternative: StoryViewer component is used instead in EnhancedFeedWithTabs.tsx
+  - Action: This component can be safely archived or removed in future cleanup
+  - Location: src/components/feed/StoryViewerModal.tsx (candidate for removal) ��� `/app/feed/feeling`
 
 ### Other (3)
 - [ ] **KYCVerificationModal** → `/app/verify/kyc`
