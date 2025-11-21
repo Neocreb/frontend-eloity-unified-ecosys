@@ -646,22 +646,6 @@ const CampaignCenter: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Campaign Creation Wizard */}
-      {showCreationWizard && (
-        <CampaignCreationWizard 
-          isOpen={showCreationWizard}
-          open={showCreationWizard}
-          onClose={() => setShowCreationWizard(false)}
-          onCampaignCreated={(newCampaign) => {
-            setActiveCampaigns(prev => [...prev, newCampaign]);
-            setShowCreationWizard(false);
-            toast({
-              title: "Campaign Created!",
-              description: "Your campaign is now live and promoting your content",
-            });
-          }}
-        />
-      )}
     </div>
   );
 };
