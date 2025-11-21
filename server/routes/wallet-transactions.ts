@@ -473,6 +473,46 @@ router.post('/withdraw/confirm', requireAuth, async (req: Request, res: Response
 });
 
 /**
+ * GET /api/wallet/withdraw/status/:withdrawalId
+ * Check withdrawal status
+ */
+router.get('/withdraw/status/:withdrawalId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId || (req.query.userId as string);
+    const { withdrawalId } = req.params;
+
+    const transaction = await walletDatabaseService.getTransaction(withdrawalId, userId);
+
+    if (!transaction) {
+      return res.status(404).json({
+        error: 'Withdrawal not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      withdrawal: {
+        withdrawalId: transaction.id,
+        referenceId: transaction.referenceId,
+        amount: transaction.amount,
+        fee: transaction.feeAmount || 0,
+        netAmount: transaction.netAmount || transaction.amount,
+        status: transaction.status,
+        recipientType: transaction.withdrawalMethod,
+        recipient: transaction.recipientUsername || transaction.recipientEmail || transaction.recipientPhone || 'N/A',
+        createdAt: transaction.metadata?.initiatedAt,
+      },
+    });
+  } catch (error: any) {
+    logger.error('Error checking withdrawal status:', error);
+    res.status(500).json({
+      error: 'Failed to check withdrawal status',
+      details: error.message,
+    });
+  }
+});
+
+/**
  * POST /api/wallet/withdraw/cancel/:id
  * Cancel a pending withdrawal
  */
