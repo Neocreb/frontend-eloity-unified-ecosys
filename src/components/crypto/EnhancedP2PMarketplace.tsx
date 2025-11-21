@@ -101,14 +101,6 @@ export default function EnhancedP2PMarketplace() {
     loadP2PData();
   }, [selectedAsset, selectedFiat, selectedPayment, minAmount, searchQuery, marketplaceTab]);
 
-  // Handle external create offer trigger
-  useEffect(() => {
-    if (triggerCreateOffer) {
-      setShowCreateOffer(true);
-      onCreateOfferTriggered?.();
-    }
-  }, [triggerCreateOffer, onCreateOfferTriggered]);
-
   const loadP2PData = async () => {
     setIsLoading(true);
     try {
