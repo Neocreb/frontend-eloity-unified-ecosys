@@ -5,20 +5,36 @@ import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, CheckCircle2, AlertCircle, Mail, User, Smartphone } from "lucide-react";
+import BankAccountManager, { BankAccount } from "@/components/wallet/BankAccountManager";
+import { paymentMethods } from "@/config/paymentMethods";
+
+type RecipientType = "bank" | "username" | "email" | "mobile";
+
+interface RecipientData {
+  type: RecipientType;
+  bankAccount?: BankAccount;
+  username?: string;
+  email?: string;
+  mobile?: string;
+}
 
 const Withdraw = () => {
   const navigate = useNavigate();
   const { walletBalance } = useWalletContext();
-  const [step, setStep] = useState<"account" | "amount" | "review" | "success">("account");
-  const [selectedAccount, setSelectedAccount] = useState<string>("");
+  const [step, setStep] = useState<"recipient" | "amount" | "review" | "success">("recipient");
+  const [recipientType, setRecipientType] = useState<RecipientType>("bank");
+  const [recipient, setRecipient] = useState<RecipientData>({ type: "bank" });
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  const bankAccounts = [
-    { id: "1", name: "Primary Account", bank: "First Bank", accountNumber: "****1234" },
-    { id: "2", name: "Secondary Account", bank: "GTBank", accountNumber: "****5678" },
-  ];
+  const [userCountry] = useState("NG"); // TODO: Get from user profile
 
   const handleSelectAccount = (accountId: string) => {
     setSelectedAccount(accountId);
