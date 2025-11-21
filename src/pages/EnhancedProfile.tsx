@@ -1838,12 +1838,6 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        profile={mockProfile}
-      />
 
       {/* Followers Modal */}
       <UserListModal
