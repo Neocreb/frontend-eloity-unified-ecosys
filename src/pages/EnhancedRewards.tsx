@@ -39,6 +39,7 @@ import AdvancedAnalytics from "@/components/rewards/AdvancedAnalytics";
 import RewardsErrorBoundary from "@/components/rewards/RewardsErrorBoundary";
 import SeasonalEvents from "@/components/rewards/SeasonalEvents";
 import PioneerBadgeWidget from "@/components/rewards/PioneerBadgeWidget";
+import GiftsTipsAnalytics from "@/components/rewards/GiftsTipsAnalytics";
 
 interface RewardData {
   totalEarnings: number;
@@ -266,6 +267,7 @@ export default function EnhancedRewards() {
               {[
                 { id: "dashboard", label: "Dashboard", icon: BarChart3, description: "Overview and stats" },
                 { id: "activities", label: "Activities", icon: Activity, description: "Earnings analysis" },
+                { id: "gifts", label: "Gifts & Tips", icon: Gift, description: "Send gifts and tips" },
                 { id: "challenges", label: "Challenges", icon: Target, description: "Complete challenges" },
                 { id: "battles", label: "Battles", icon: Swords, description: "Vote and earn" },
                 { id: "referrals", label: "Referral", icon: UserPlus, description: "Invite friends" },
@@ -359,6 +361,12 @@ export default function EnhancedRewards() {
               <p className="text-gray-600">Your earnings activities will appear here once data loads.</p>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="gifts" className="mt-6">
+          <RewardsErrorBoundary>
+            <GiftsTipsAnalytics />
+          </RewardsErrorBoundary>
         </TabsContent>
 
         <TabsContent value="challenges" className="mt-6">
