@@ -642,14 +642,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <TabsTrigger value="wallet" className="flex items-center gap-2 whitespace-nowrap px-3">
                     <Wallet className="w-4 h-4" /> <span className="hidden sm:inline">Wallet</span><span className="sm:hidden">Money</span>
                   </TabsTrigger>
-                  <TabsTrigger value="ai-content" className="flex items-center gap-2 whitespace-nowrap px-3">
-                    <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Content</span><span className="sm:hidden">AI</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="ai-assistant" className="flex items-center gap-2 whitespace-nowrap px-3">
-                    <Brain className="w-4 h-4" /> <span className="hidden sm:inline">AI Assistant</span><span className="sm:hidden">AI</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="ai-insights" className="flex items-center gap-2 whitespace-nowrap px-3">
-                    <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Insights</span><span className="sm:hidden">AI</span>
+                  <TabsTrigger value="ai-studio" className="flex items-center gap-2 whitespace-nowrap px-3">
+                    <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Studio</span><span className="sm:hidden">AI</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
