@@ -284,7 +284,7 @@ export default function CreateCampaign() {
     return baseCost * speedMultiplier;
   };
 
-  const handleCreateCampaign = () => {
+  const handleCreateCampaign = async () => {
     if (!campaignData.goal || campaignData.selectedContent.length === 0) {
       toast({
         title: "Validation Error",
@@ -303,49 +303,73 @@ export default function CreateCampaign() {
       return;
     }
 
-    const newCampaign = {
-      id: Date.now().toString(),
-      name: campaignData.campaignName || `${campaignData.goal.name} Campaign`,
-      goal: campaignData.goal,
-      status: "active",
-      budget: calculateTotalCost(),
-      spent: 0,
-      remaining: calculateTotalCost(),
-      duration:
-        campaignData.budget.type === "daily"
-          ? 7
-          : Math.ceil(
-              (campaignData.schedule.endDate.getTime() -
-                campaignData.schedule.startDate.getTime()) /
-                (24 * 60 * 60 * 1000)
-            ),
-      timeLeft: "7 days",
-      performance: {
-        impressions: 0,
-        clicks: 0,
-        conversions: 0,
-        ctr: 0,
-        conversionRate: 0,
-        costPerClick: 0,
-        roi: 0,
-      },
-      boostedItems: campaignData.selectedContent.map((content) => ({
-        type: content.type,
-        name: content.name,
-        image: content.image,
-      })),
-      currency: campaignData.budget.currency.replace("_", " ").toUpperCase(),
-      createdAt: new Date().toISOString().split("T")[0],
-      targeting: campaignData.targeting,
-      estimatedReach: estimatedReach,
-    };
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create a campaign",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Success",
-      description: "Campaign created successfully!",
-    });
+    try {
+      // Create slug from campaign name
+      const slug = (campaignData.campaignName || campaignData.goal.name)
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
 
-    navigate("/app/campaigns");
+      // Map goal ID to goal type
+      const goalTypeMap: Record<string, string> = {
+        increase_sales: "increase_sales",
+        get_applications: "get_applications",
+        promote_talent: "promote_talent",
+        get_more_views: "get_more_views",
+        drive_chats: "drive_chats",
+      };
+
+      const goalType = goalTypeMap[campaignData.goal.id] || "increase_sales";
+      const totalBudget = calculateTotalCost();
+
+      // Save campaign to database
+      const campaignData_ = {
+        name: campaignData.campaignName || campaignData.goal.name,
+        slug: slug,
+        description: campaignData.campaignDescription,
+        type: "product_boost",
+        goal_type: goalType,
+        startDate: campaignData.schedule.startDate.toISOString(),
+        endDate: campaignData.schedule.endDate.toISOString(),
+        targeting: campaignData.targeting,
+        estimated_reach: estimatedReach,
+        status: "active",
+        isPublic: true,
+        requiresApproval: false,
+        createdBy: user.id,
+        currency: campaignData.budget.currency,
+        budget: totalBudget,
+      };
+
+      const createdCampaign = await campaignService.createCampaign(campaignData_);
+
+      if (!createdCampaign) {
+        throw new Error("Failed to create campaign");
+      }
+
+      toast({
+        title: "Success",
+        description: "Campaign created successfully!",
+      });
+
+      navigate("/app/campaigns");
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create campaign",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStepIcon = (step: number) => {
