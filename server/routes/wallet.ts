@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { eq, sum, desc, and, gte } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
-import { 
+import {
   crypto_wallets,
   crypto_transactions,
   crypto_prices
@@ -18,8 +18,13 @@ import { users } from '../../shared/schema.js';
 import type { Database } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { db as globalDb } from '../enhanced-index.js';
+import bankAccountsRouter from './wallet-bankaccounts.js';
+import walletTransactionsRouter from './wallet-transactions.js';
 
 const router = express.Router();
+
+router.use('/bank-accounts', bankAccountsRouter);
+router.use('/transactions', walletTransactionsRouter);
 
 // Use req.db when available, otherwise fall back to the global db
 const getDb = (req: Request) => (req.db as PostgresJsDatabase<any>) || (globalDb as PostgresJsDatabase<any>);
