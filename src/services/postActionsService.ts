@@ -225,15 +225,9 @@ export class PostActionsService {
     userId: string
   ): Promise<PostPreference | null> {
     try {
-      const { data, error } = await supabase
-        .from("post_preferences")
-        .select("*")
-        .eq("post_id", postId)
-        .eq("user_id", userId)
-        .single();
-
-      if (error) return null;
-      return data;
+      // Note: post_preferences table doesn't exist in the current schema
+      console.warn("Post preferences not available - table not available");
+      return null;
     } catch (error) {
       console.error("Error fetching post preferences:", error);
       return null;
