@@ -51,74 +51,78 @@ export const exploreService = {
   },
 
   async getSuggestedUsers(limit: number = 5): Promise<SuggestedUser[]> {
-    const userRes = await supabase.auth.getUser();
-    const user = userRes?.data?.user ?? null;
+    try {
+      const userRes = await supabase.auth.getUser();
+      const user = userRes?.data?.user ?? null;
 
-    // Get users the current user is not following
-    let query = supabase
-      .from('profiles')
-      .select('*')
-      .order('followers_count', { ascending: false, nullsFirst: false })
-      .limit(limit);
+      let excludeIds: Set<string> = new Set();
 
-    if (user) {
-      // Exclude users already followed
-      const followersRes = await supabase
-        .from('followers')
-        .select('following_id')
-        .eq('follower_id', user.id);
-      const following = followersRes?.data ?? null;
+      if (user) {
+        // Get users the current user is already following
+        const followersRes = await supabase
+          .from('followers')
+          .select('following_id')
+          .eq('follower_id', user.id);
 
-      if (following && following.length > 0) {
-        const followingIds = (following.map((f: any) => f.following_id) as string[]).filter(Boolean);
-        if (followingIds.length > 0) {
-          // Fix the query construction to avoid malformed parameters
-          query = query.not('user_id', 'in', `(${followingIds.map(id => `'${id}'`).join(',')})`);
+        if (followersRes.data) {
+          followersRes.data.forEach(f => {
+            if (f.following_id) excludeIds.add(f.following_id);
+          });
         }
+
+        // Always exclude current user
+        excludeIds.add(user.id);
       }
 
-      // Exclude current user
-      query = query.neq('user_id', user.id);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching suggested users:', error);
-      // Fallback to ordering by created_at if followers_count fails
-      const fallbackQuery = supabase
+      // Fetch profiles and filter in application code
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      
-      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
-      
-      if (fallbackError) {
-        console.error('Error fetching suggested users with fallback:', fallbackError);
-        throw fallbackError;
+        .order('followers_count', { ascending: false, nullsFirst: false });
+
+      if (error) {
+        console.error('Error fetching suggested users:', error);
+        // Fallback: fetch with different ordering
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (fallbackError) {
+          console.error('Error fetching suggested users with fallback:', fallbackError);
+          return [];
+        }
+
+        return (fallbackData || [])
+          .filter((profile: any) => !excludeIds.has(profile.user_id))
+          .slice(0, limit)
+          .map((profile: any) => ({
+            id: profile.user_id,
+            username: profile.username || 'unknown',
+            full_name: profile.full_name || 'Unknown User',
+            avatar_url: profile.avatar_url || '',
+            bio: profile.bio || '',
+            is_verified: profile.is_verified || false,
+            followers_count: profile.followers_count || 0
+          }));
       }
-      
-      return (fallbackData || []).map((profile: any) => ({
-        id: profile.user_id,
-        username: profile.username || 'unknown',
-        full_name: profile.full_name || 'Unknown User',
-        avatar_url: profile.avatar_url || '',
-        bio: profile.bio || '',
-        is_verified: profile.is_verified || false,
-        followers_count: profile.followers_count || 0
-      }));
+
+      return (data || [])
+        .filter((profile: any) => !excludeIds.has(profile.user_id))
+        .slice(0, limit)
+        .map((profile: any) => ({
+          id: profile.user_id,
+          username: profile.username || 'unknown',
+          full_name: profile.full_name || 'Unknown User',
+          avatar_url: profile.avatar_url || '',
+          bio: profile.bio || '',
+          is_verified: profile.is_verified || false,
+          followers_count: profile.followers_count || 0
+        }));
+    } catch (error) {
+      console.error('Error fetching suggested users:', error);
+      return [];
     }
-    
-    return (data || []).map((profile: any) => ({
-      id: profile.user_id,
-      username: profile.username || 'unknown',
-      full_name: profile.full_name || 'Unknown User',
-      avatar_url: profile.avatar_url || '',
-      bio: profile.bio || '',
-      is_verified: profile.is_verified || false,
-      followers_count: profile.followers_count || 0
-    }));
   },
 
   async getSuggestedGroups(limit: number = 5): Promise<Group[]> {

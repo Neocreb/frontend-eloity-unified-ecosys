@@ -98,10 +98,10 @@ export const fetchUserDemographics = async (): Promise<UserDemographics> => {
   }
 
   try {
-    // Fetch all users with demographic information
+    // Fetch all user profiles with demographic information
     const { data: users, error } = await supabase
-      .from('users')
-      .select('id, date_of_birth, gender, location, interests')
+      .from('profiles')
+      .select('user_id, date_of_birth, gender, location, interests')
       .not('date_of_birth', 'is', null);
 
     if (error) {
