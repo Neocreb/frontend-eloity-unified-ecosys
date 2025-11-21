@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger.js';
+import striptags from 'striptags';
 
 export interface EmailTemplate {
   subject: string;
@@ -277,7 +278,7 @@ class WalletNotificationService {
         
         Hi ${data.userName},
         
-        ${contentMap[data.status].replace(/<[^>]*>/g, '')}
+        ${striptags(contentMap[data.status])}
         
         Best regards,
         The Eloity Team
