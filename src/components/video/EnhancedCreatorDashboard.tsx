@@ -2681,9 +2681,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="ai-insights" className="space-y-6">
-              <AIPerformanceInsights />
-            </TabsContent>
           </Tabs>
         )}
       </div>
