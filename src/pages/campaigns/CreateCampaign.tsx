@@ -61,6 +61,9 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import AudienceTargeting from "@/components/campaigns/AudienceTargeting";
 import CampaignPayment from "@/components/campaigns/CampaignPayment";
+import { useUserBoostableContent } from "@/hooks/use-user-boostable-content";
+import { useAuth } from "@/contexts/AuthContext";
+import { campaignService } from "@/services/campaignService";
 
 // Available content types for boosting
 const BOOSTABLE_CONTENT = {
@@ -218,36 +221,9 @@ export default function CreateCampaign() {
     },
   });
 
+  const { user } = useAuth();
+  const { content: userContent, isLoading: contentLoading } = useUserBoostableContent();
   const [estimatedReach, setEstimatedReach] = useState(50000);
-  const [mockUserContent] = useState([
-    {
-      id: "1",
-      type: "marketplace_products",
-      name: "Wireless Bluetooth Headphones",
-      image: "/placeholder.svg",
-      price: 45.99,
-      status: "active",
-      performance: { views: 234, sales: 12 },
-    },
-    {
-      id: "2",
-      type: "freelance_services",
-      name: "Professional Logo Design",
-      image: "/placeholder.svg",
-      price: 150.0,
-      status: "active",
-      performance: { views: 456, inquiries: 23 },
-    },
-    {
-      id: "3",
-      type: "videos",
-      name: "React Tutorial Series",
-      image: "/placeholder.svg",
-      duration: "15:30",
-      status: "published",
-      performance: { views: 1230, likes: 89 },
-    },
-  ]);
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -306,7 +282,7 @@ export default function CreateCampaign() {
     return baseCost * speedMultiplier;
   };
 
-  const handleCreateCampaign = () => {
+  const handleCreateCampaign = async () => {
     if (!campaignData.goal || campaignData.selectedContent.length === 0) {
       toast({
         title: "Validation Error",
@@ -325,49 +301,73 @@ export default function CreateCampaign() {
       return;
     }
 
-    const newCampaign = {
-      id: Date.now().toString(),
-      name: campaignData.campaignName || `${campaignData.goal.name} Campaign`,
-      goal: campaignData.goal,
-      status: "active",
-      budget: calculateTotalCost(),
-      spent: 0,
-      remaining: calculateTotalCost(),
-      duration:
-        campaignData.budget.type === "daily"
-          ? 7
-          : Math.ceil(
-              (campaignData.schedule.endDate.getTime() -
-                campaignData.schedule.startDate.getTime()) /
-                (24 * 60 * 60 * 1000)
-            ),
-      timeLeft: "7 days",
-      performance: {
-        impressions: 0,
-        clicks: 0,
-        conversions: 0,
-        ctr: 0,
-        conversionRate: 0,
-        costPerClick: 0,
-        roi: 0,
-      },
-      boostedItems: campaignData.selectedContent.map((content) => ({
-        type: content.type,
-        name: content.name,
-        image: content.image,
-      })),
-      currency: campaignData.budget.currency.replace("_", " ").toUpperCase(),
-      createdAt: new Date().toISOString().split("T")[0],
-      targeting: campaignData.targeting,
-      estimatedReach: estimatedReach,
-    };
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create a campaign",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Success",
-      description: "Campaign created successfully!",
-    });
+    try {
+      // Create slug from campaign name
+      const slug = (campaignData.campaignName || campaignData.goal.name)
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
 
-    navigate("/app/campaigns");
+      // Map goal ID to goal type
+      const goalTypeMap: Record<string, string> = {
+        increase_sales: "increase_sales",
+        get_applications: "get_applications",
+        promote_talent: "promote_talent",
+        get_more_views: "get_more_views",
+        drive_chats: "drive_chats",
+      };
+
+      const goalType = goalTypeMap[campaignData.goal.id] || "increase_sales";
+      const totalBudget = calculateTotalCost();
+
+      // Save campaign to database
+      const campaignData_ = {
+        name: campaignData.campaignName || campaignData.goal.name,
+        slug: slug,
+        description: campaignData.campaignDescription,
+        type: "product_boost",
+        goal_type: goalType,
+        startDate: campaignData.schedule.startDate.toISOString(),
+        endDate: campaignData.schedule.endDate.toISOString(),
+        targeting: campaignData.targeting,
+        estimated_reach: estimatedReach,
+        status: "active",
+        isPublic: true,
+        requiresApproval: false,
+        createdBy: user.id,
+        currency: campaignData.budget.currency,
+        budget: totalBudget,
+      };
+
+      const createdCampaign = await campaignService.createCampaign(campaignData_);
+
+      if (!createdCampaign) {
+        throw new Error("Failed to create campaign");
+      }
+
+      toast({
+        title: "Success",
+        description: "Campaign created successfully!",
+      });
+
+      navigate("/app/campaigns");
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create campaign",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStepIcon = (step: number) => {
@@ -378,10 +378,22 @@ export default function CreateCampaign() {
     return <div className="w-5 h-5 bg-gray-300 rounded-full" />;
   };
 
-  const filteredContent = mockUserContent.filter((content) => {
+  const filteredContent = userContent.filter((content) => {
     if (!campaignData.goal) return true;
+
+    // Map content types to goal targets
+    const contentTypeMap: Record<string, string[]> = {
+      product: ["marketplace_products"],
+      service: ["freelance_services"],
+      job: ["freelance_jobs"],
+      video: ["videos", "content"],
+      post: ["posts", "content"],
+      profile: ["user_profiles"],
+    };
+
+    const targetTypes = contentTypeMap[content.type] || [];
     return campaignData.goal.targets.some((target: string) =>
-      content.type.includes(target.replace("_", "_"))
+      targetTypes.includes(target)
     );
   });
 
@@ -582,63 +594,68 @@ export default function CreateCampaign() {
 
               <div>
                 <Label>Your Content</Label>
-                <div className="space-y-3 mt-2">
-                  {filteredContent.map((content) => (
-                    <Card
-                      key={content.id}
-                      className={`cursor-pointer transition-all ${
-                        campaignData.selectedContent.some(
-                          (c) => c.id === content.id
-                        )
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                          : "hover:shadow-sm"
-                      }`}
-                      onClick={() => handleContentSelect(content)}
-                    >
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <img
-                            src={content.image}
-                            alt={content.name}
-                            className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg object-cover"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm sm:text-base truncate">
-                              {content.name}
-                            </h4>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                              {content.price && <span>${content.price}</span>}
-                              {content.performance && (
-                                <span>
-                                  {content.performance.views} views
-                                  {content.performance.sales &&
-                                    ` • ${content.performance.sales} sales`}
-                                  {content.performance.inquiries &&
-                                    ` • ${content.performance.inquiries} inquiries`}
-                                  {content.performance.likes &&
-                                    ` • ${content.performance.likes} likes`}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {campaignData.selectedContent.some(
-                            (c) => c.id === content.id
-                          ) && (
-                            <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {filteredContent.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
+                {contentLoading ? (
+                  <div className="text-center py-8 text-muted-foreground mt-2">
+                    <div className="h-12 w-12 rounded-full border-2 border-blue-600 border-t-transparent animate-spin mx-auto mb-3"></div>
+                    <p>Loading your content...</p>
+                  </div>
+                ) : filteredContent.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground mt-2">
                     <Monitor className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>No content available for the selected goal.</p>
                     <p className="text-sm">
                       Create some content first to start promoting it.
                     </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 mt-2">
+                    {filteredContent.map((content) => (
+                      <Card
+                        key={content.id}
+                        className={`cursor-pointer transition-all ${
+                          campaignData.selectedContent.some(
+                            (c) => c.id === content.id
+                          )
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "hover:shadow-sm"
+                        }`}
+                        onClick={() => handleContentSelect(content)}
+                      >
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <img
+                              src={content.image || "/placeholder.svg"}
+                              alt={content.name}
+                              className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg object-cover"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm sm:text-base truncate">
+                                {content.name}
+                              </h4>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                                {content.price && <span>${content.price}</span>}
+                                {content.performance && (
+                                  <span>
+                                    {content.performance.views} views
+                                    {content.performance.sales &&
+                                      ` • ${content.performance.sales} sales`}
+                                    {content.performance.clicks &&
+                                      ` • ${content.performance.clicks} clicks`}
+                                    {content.performance.likes &&
+                                      ` • ${content.performance.likes} likes`}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {campaignData.selectedContent.some(
+                              (c) => c.id === content.id
+                            ) && (
+                              <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 )}
               </div>
@@ -658,13 +675,15 @@ export default function CreateCampaign() {
               </div>
 
               <AudienceTargeting
-                value={campaignData.targeting}
-                onChange={(targeting) =>
+                targeting={campaignData.targeting}
+                onTargetingChange={(targeting) =>
                   setCampaignData((prev) => ({
                     ...prev,
                     targeting,
                   }))
                 }
+                estimatedReach={estimatedReach}
+                onEstimatedReachChange={setEstimatedReach}
               />
             </div>
           )}

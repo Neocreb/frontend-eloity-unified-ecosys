@@ -60,6 +60,7 @@ import { useToast } from "@/components/ui/use-toast";
 import CampaignAnalyticsDashboard from "./CampaignAnalyticsDashboard";
 import SmartBoostSuggestions from "./SmartBoostSuggestions";
 import { campaignSyncService } from "@/services/campaignSyncService";
+import { useUserCampaigns } from "@/hooks/use-user-campaigns";
 
 // Campaign goals definition
 export const CAMPAIGN_GOALS = {
@@ -110,60 +111,6 @@ export const CAMPAIGN_GOALS = {
   },
 };
 
-// Mock data for campaigns
-const mockActiveCampaigns = [
-  {
-    id: "1",
-    name: "Premium Product Promotion",
-    goal: CAMPAIGN_GOALS.INCREASE_SALES,
-    status: "active",
-    budget: 250.00,
-    spent: 127.50,
-    remaining: 122.50,
-    duration: 7,
-    timeLeft: "4 days",
-    performance: {
-      impressions: 15420,
-      clicks: 892,
-      conversions: 23,
-      ctr: 5.8,
-      conversionRate: 2.6,
-      costPerClick: 0.14,
-      roi: 340,
-    },
-    boostedItems: [
-      { type: "product", name: "Premium Headphones", image: "/placeholder.svg" }
-    ],
-    currency: "SOFT_POINTS",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2", 
-    name: "Freelance Profile Boost",
-    goal: CAMPAIGN_GOALS.PROMOTE_TALENT,
-    status: "active",
-    budget: 100.00,
-    spent: 45.30,
-    remaining: 54.70,
-    duration: 3,
-    timeLeft: "1 day",
-    performance: {
-      impressions: 8750,
-      clicks: 234,
-      conversions: 12,
-      ctr: 2.7,
-      conversionRate: 5.1,
-      costPerClick: 0.19,
-      roi: 180,
-    },
-    boostedItems: [
-      { type: "profile", name: "UI/UX Designer Profile", image: "/placeholder.svg" }
-    ],
-    currency: "USDT",
-    createdAt: "2024-01-20",
-  },
-];
-
 // Incentives and bonuses
 const mockIncentives = [
   {
@@ -198,30 +145,65 @@ const mockIncentives = [
 const CampaignCenter: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeCampaigns, setActiveCampaigns] = useState(mockActiveCampaigns);
+  const { campaigns, isLoading } = useUserCampaigns();
   const [showIncentives, setShowIncentives] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+
+  // Format campaigns from database to component format
+  const activeCampaigns = campaigns.map(campaign => ({
+    id: campaign.id,
+    name: campaign.name,
+    goal: Object.values(CAMPAIGN_GOALS).find(g => g.id === campaign.goal_type) || CAMPAIGN_GOALS.INCREASE_SALES,
+    status: campaign.status,
+    budget: campaign.budget,
+    spent: campaign.spent,
+    remaining: campaign.budget - campaign.spent,
+    duration: 7,
+    timeLeft: "7 days",
+    performance: {
+      impressions: campaign.view_count || 0,
+      clicks: campaign.click_count || 0,
+      conversions: campaign.conversion_count || 0,
+      ctr: campaign.view_count > 0 ? ((campaign.click_count || 0) / campaign.view_count * 100).toFixed(1) : "0",
+      conversionRate: campaign.click_count > 0 ? ((campaign.conversion_count || 0) / campaign.click_count * 100).toFixed(1) : "0",
+      roi: campaign.budget > 0 ? ((campaign.total_revenue || 0) / campaign.budget * 100).toFixed(0) : "0",
+    },
+    boostedItems: [],
+    currency: campaign.currency?.toUpperCase() || "ELOITS",
+    createdAt: campaign.created_at,
+  }));
 
   // Calculate overview stats
   const totalSpent = activeCampaigns.reduce((sum, c) => sum + c.spent, 0);
   const totalBudget = activeCampaigns.reduce((sum, c) => sum + c.budget, 0);
   const totalImpressions = activeCampaigns.reduce((sum, c) => sum + c.performance.impressions, 0);
   const totalConversions = activeCampaigns.reduce((sum, c) => sum + c.performance.conversions, 0);
-  const avgROI = activeCampaigns.length > 0 ? 
-    activeCampaigns.reduce((sum, c) => sum + c.performance.roi, 0) / activeCampaigns.length : 0;
+  const avgROI = activeCampaigns.length > 0 ?
+    activeCampaigns.reduce((sum, c) => sum + parseInt(c.performance.roi), 0) / activeCampaigns.length : 0;
 
-  const handlePauseCampaign = (campaignId: string) => {
-    setActiveCampaigns(prev => 
-      prev.map(c => 
-        c.id === campaignId 
-          ? { ...c, status: c.status === "active" ? "paused" : "active" }
-          : c
-      )
-    );
-    toast({
-      title: "Campaign Updated",
-      description: "Campaign status has been changed successfully",
-    });
+  const handlePauseCampaign = async (campaignId: string) => {
+    try {
+      const campaign = activeCampaigns.find(c => c.id === campaignId);
+      if (!campaign) return;
+
+      const newStatus = campaign.status === "active" ? "paused" : "active";
+
+      // Update campaign status in database
+      const { campaignService } = await import("@/services/campaignService");
+      await campaignService.updateCampaign(campaignId, { status: newStatus });
+
+      toast({
+        title: "Campaign Updated",
+        description: `Campaign has been ${newStatus} successfully`,
+      });
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update campaign",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleClaimIncentive = (incentiveId: string) => {
@@ -245,6 +227,17 @@ const CampaignCenter: React.FC = () => {
     const IconComponent = goal.icon;
     return <IconComponent className="h-4 w-4" />;
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-none px-0 py-6 flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="h-12 w-12 rounded-full border-2 border-blue-600 border-t-transparent animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading campaigns...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-none px-0 py-6 space-y-6">
