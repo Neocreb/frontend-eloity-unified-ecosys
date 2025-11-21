@@ -1495,6 +1495,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <TipsReceivedAnalytics />
             </TabsContent>
 
             <TabsContent value="audience" className="space-y-6">
