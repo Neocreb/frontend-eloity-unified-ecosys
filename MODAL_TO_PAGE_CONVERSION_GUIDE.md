@@ -1252,6 +1252,10 @@ Reviewed/Fixed:
 | LiveStreamModal | live/ | `/app/live/create-stream` | ✅ CONVERTED | Live stream configuration |
 | MemeGifActionDialog | chat/ | `/app/chat/share-meme` | ✅ CONVERTED | Media sharing and actions |
 | DeleteUserDialog | settings/ | `/app/settings/delete-account` | ✅ CONVERTED | Account deletion (2-step) |
+| UserFollowers | profile/ | `/app/profile/:username/followers` | ✅ CONVERTED (Phase 3) | Followers list with search and actions |
+| UserFollowing | profile/ | `/app/profile/:username/following` | ✅ CONVERTED (Phase 3) | Following list with search and actions |
+| UserViewers | profile/ | `/app/profile/:username/viewers` | ✅ CONVERTED (Phase 3) | Profile viewers with last seen time |
+| CryptoDetailModal | crypto/ | `/app/crypto/coin/:symbol` | ✅ CONVERTED (Phase 3) | Crypto details with market stats |
 
 ---
 
