@@ -862,11 +862,6 @@ const UnifiedProfile: React.FC<UnifiedProfileProps> = ({
       </div>
 
       {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        profile={mockProfile}
-      />
     </div>
   );
 };
