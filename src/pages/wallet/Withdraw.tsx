@@ -88,7 +88,7 @@ const Withdraw = () => {
   };
 
   const getRecipientIcon = () => {
-    const icons = { bank: "🏦", username: "👤", email: "��️", mobile: "📱" };
+    const icons = { bank: "🏦", username: "👤", email: "✉️", mobile: "📱" };
     return icons[recipientType];
   };
 
@@ -381,7 +381,7 @@ const Withdraw = () => {
                 Processing...
               </>
             ) : (
-              "Confirm Withdrawal"
+              `Withdraw ${(parseFloat(amount) - (recipientType === "bank" ? (parseFloat(amount) * 0.05) : 0)).toFixed(2)}`
             )}
           </Button>
           <Button
