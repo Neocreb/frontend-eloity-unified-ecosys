@@ -574,6 +574,8 @@ const AppRoutes = () => {
           <Route path="crypto/deposit" element={<CryptoDeposit />} />
           <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
           <Route path="crypto/p2p/create-offer" element={<CreateP2POffer />} />
+          {/* Phase 3 - Crypto Detail Full Page Conversion */}
+          <Route path="crypto/coin/:symbol" element={<CryptoDetail />} />
 
           {/* Freelance Routes - Full Page Implementation */}
           <Route path="freelance/create-job" element={<CreateJob />} />
