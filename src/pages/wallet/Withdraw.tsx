@@ -36,9 +36,20 @@ const Withdraw = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [userCountry] = useState("NG"); // TODO: Get from user profile
 
-  const handleSelectAccount = (accountId: string) => {
-    setSelectedAccount(accountId);
-    setStep("amount");
+  const validateRecipient = () => {
+    if (recipientType === "bank" && !recipient.bankAccount) {
+      return false;
+    }
+    if (recipientType === "username" && !recipient.username?.trim()) {
+      return false;
+    }
+    if (recipientType === "email" && !recipient.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return false;
+    }
+    if (recipientType === "mobile" && !recipient.mobile?.trim()) {
+      return false;
+    }
+    return true;
   };
 
   const handleContinue = () => {
@@ -61,6 +72,24 @@ const Withdraw = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getRecipientDisplay = () => {
+    switch (recipientType) {
+      case "bank":
+        return { label: "Bank Account", value: `${recipient.bankAccount?.bankName} - ${recipient.bankAccount?.accountNumber}` };
+      case "username":
+        return { label: "Username", value: `@${recipient.username}` };
+      case "email":
+        return { label: "Email", value: recipient.email };
+      case "mobile":
+        return { label: "Mobile Money", value: recipient.mobile };
+    }
+  };
+
+  const getRecipientIcon = () => {
+    const icons = { bank: "🏦", username: "👤", email: "✉️", mobile: "📱" };
+    return icons[recipientType];
   };
 
   if (step === "account") {
