@@ -408,17 +408,6 @@ export default function EnhancedRewards() {
         </TabsContent>
       </Tabs>
 
-      {/* Withdrawal Modal */}
-      {rewardData && (
-        <WithdrawalModal
-          isOpen={showWithdrawalModal}
-          onClose={() => setShowWithdrawalModal(false)}
-          currentEloits={rewardData.currentEloits}
-          availableToWithdraw={rewardData.availableToWithdraw}
-          trustScore={rewardData.trustScore}
-          onWithdrawalSuccess={handleWithdrawalSuccess}
-        />
-      )}
         </div>
       </div>
     </RewardsErrorBoundary>
