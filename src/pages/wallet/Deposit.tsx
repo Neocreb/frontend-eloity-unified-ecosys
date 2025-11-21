@@ -40,43 +40,13 @@ const Deposit = () => {
     return methods.filter(m => m.isDepositEnabled);
   }, [userCountry]);
 
-  const paymentMethods = [
-    {
-      value: "card" as const,
-      label: "Credit/Debit Card",
-      icon: CreditCard,
-      color: "text-blue-600",
-      description: "Instant processing, 2.9% fee",
-    },
-    {
-      value: "bank" as const,
-      label: "Bank Transfer",
-      icon: Wallet,
-      color: "text-green-600",
-      description: "1-3 business days, no fee",
-    },
-    {
-      value: "crypto" as const,
-      label: "Cryptocurrency",
-      icon: Bitcoin,
-      color: "text-orange-600",
-      description: "Network fees apply",
-    },
-    {
-      value: "mobile" as const,
-      label: "Mobile Money",
-      icon: Smartphone,
-      color: "text-purple-600",
-      description: "Instant via Mobile Money, 1.5% fee",
-    },
-    {
-      value: "ewallet" as const,
-      label: "E-Wallet",
-      icon: Building,
-      color: "text-indigo-600",
-      description: "Instant via PayStack/Flutterwave, 2.5% fee",
-    },
-  ];
+  const methodTypeIcons: Record<string, React.ReactNode> = {
+    card: <CreditCard className="h-6 w-6 text-blue-600" />,
+    bank: <Wallet className="h-6 w-6 text-green-600" />,
+    crypto: <Bitcoin className="h-6 w-6 text-orange-600" />,
+    mobile: <Smartphone className="h-6 w-6 text-purple-600" />,
+    ewallet: <Building className="h-6 w-6 text-indigo-600" />,
+  };
 
   const destinations = [
     {
