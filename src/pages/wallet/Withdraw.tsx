@@ -394,7 +394,7 @@ const Withdraw = () => {
                 Processing...
               </>
             ) : (
-              `Withdraw ${(parseFloat(amount) - (recipientType === "bank" ? (parseFloat(amount) * 0.05) : 0)).toFixed(2)}`
+              `Withdraw $${(amountNum - fee).toFixed(2)}`
             )}
           </Button>
           <Button
