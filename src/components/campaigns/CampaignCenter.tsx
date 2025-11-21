@@ -199,17 +199,41 @@ const mockIncentives = [
 const CampaignCenter: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeCampaigns, setActiveCampaigns] = useState(mockActiveCampaigns);
+  const { campaigns, isLoading } = useUserCampaigns();
   const [showIncentives, setShowIncentives] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+
+  // Format campaigns from database to component format
+  const activeCampaigns = campaigns.map(campaign => ({
+    id: campaign.id,
+    name: campaign.name,
+    goal: Object.values(CAMPAIGN_GOALS).find(g => g.id === campaign.goal_type) || CAMPAIGN_GOALS.INCREASE_SALES,
+    status: campaign.status,
+    budget: campaign.budget,
+    spent: campaign.spent,
+    remaining: campaign.budget - campaign.spent,
+    duration: 7,
+    timeLeft: "7 days",
+    performance: {
+      impressions: campaign.view_count || 0,
+      clicks: campaign.click_count || 0,
+      conversions: campaign.conversion_count || 0,
+      ctr: campaign.view_count > 0 ? ((campaign.click_count || 0) / campaign.view_count * 100).toFixed(1) : "0",
+      conversionRate: campaign.click_count > 0 ? ((campaign.conversion_count || 0) / campaign.click_count * 100).toFixed(1) : "0",
+      roi: campaign.budget > 0 ? ((campaign.total_revenue || 0) / campaign.budget * 100).toFixed(0) : "0",
+    },
+    boostedItems: [],
+    currency: campaign.currency?.toUpperCase() || "ELOITS",
+    createdAt: campaign.created_at,
+  }));
 
   // Calculate overview stats
   const totalSpent = activeCampaigns.reduce((sum, c) => sum + c.spent, 0);
   const totalBudget = activeCampaigns.reduce((sum, c) => sum + c.budget, 0);
   const totalImpressions = activeCampaigns.reduce((sum, c) => sum + c.performance.impressions, 0);
   const totalConversions = activeCampaigns.reduce((sum, c) => sum + c.performance.conversions, 0);
-  const avgROI = activeCampaigns.length > 0 ? 
-    activeCampaigns.reduce((sum, c) => sum + c.performance.roi, 0) / activeCampaigns.length : 0;
+  const avgROI = activeCampaigns.length > 0 ?
+    activeCampaigns.reduce((sum, c) => sum + parseInt(c.performance.roi), 0) / activeCampaigns.length : 0;
 
   const handlePauseCampaign = (campaignId: string) => {
     setActiveCampaigns(prev => 
