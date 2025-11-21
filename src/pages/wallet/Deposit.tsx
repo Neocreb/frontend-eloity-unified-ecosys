@@ -292,9 +292,11 @@ const Deposit = () => {
   }
 
   if (step === "review") {
-    const destinationInfo = getDestinationInfo();
-    const methodInfo = getMethodInfo();
+    const destinationInfo = destinations.find(d => d.value === selectedDestination);
+    const selectedPaymentMethod = allMethods.find(m => m.id === selectedMethod);
     const depositAmount = parseFloat(amount);
+    const feeCalc = selectedPaymentMethod ? paymentMethods.calculateDepositFee(depositAmount, selectedPaymentMethod) : { fee: 0, total: depositAmount };
+
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Review Deposit" />
@@ -305,10 +307,13 @@ const Deposit = () => {
                 <div>
                   <p className="text-sm text-gray-600">Payment Method</p>
                   <div className="flex items-center gap-2 mt-2">
-                    {methodInfo && (
+                    {selectedPaymentMethod && (
                       <>
-                        <methodInfo.icon className={`h-5 w-5 ${methodInfo.color}`} />
-                        <p className="font-semibold text-gray-900">{methodInfo.label}</p>
+                        {methodTypeIcons[selectedPaymentMethod.methodType]}
+                        <div>
+                          <p className="font-semibold text-gray-900">{selectedPaymentMethod.providerName}</p>
+                          <p className="text-xs text-gray-600">{selectedPaymentMethod.countryName}</p>
+                        </div>
                       </>
                     )}
                   </div>
@@ -329,17 +334,11 @@ const Deposit = () => {
                   </div>
                   <div className="flex justify-between text-gray-600 mb-3">
                     <span>Fee</span>
-                    <span>
-                      {selectedMethod === "card" && `$${(depositAmount * 0.029).toFixed(2)}`}
-                      {selectedMethod === "bank" && "Free"}
-                      {selectedMethod === "crypto" && "Network dependent"}
-                      {selectedMethod === "mobile" && `$${(depositAmount * 0.015).toFixed(2)}`}
-                      {selectedMethod === "ewallet" && `$${(depositAmount * 0.025).toFixed(2)}`}
-                    </span>
+                    <span className="font-semibold">${feeCalc.fee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between border-t border-gray-200 pt-3">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-bold text-lg">${depositAmount.toFixed(2)}</span>
+                    <span className="font-semibold">Total Charge</span>
+                    <span className="font-bold text-lg">${feeCalc.total.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
