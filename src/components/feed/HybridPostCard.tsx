@@ -296,7 +296,12 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
             </div>
           )}
 
-          <p className="mb-3 break-words leading-relaxed">{post.content}</p>
+          <PostContentRenderer
+            content={post.content}
+            maxLines={4}
+            className="mb-3"
+            onSeeMore={() => navigate(`/app/post/${post.id}`)}
+          />
           
           {/* Quoted post display for threaded mode */}
           {viewMode === 'threaded' && post.type === 'quote' && post.originalPost && (
