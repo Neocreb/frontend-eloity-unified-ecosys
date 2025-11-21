@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,15 @@ import { paymentMethods } from "@/config/paymentMethods";
 
 const Deposit = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { walletBalance } = useWalletContext();
-  const [userCountry, setUserCountry] = useState("NG"); // TODO: Get from user profile
+  const [userCountry, setUserCountry] = useState("NG");
+
+  useEffect(() => {
+    // Get country from user metadata or use default
+    const country = (user?.user_metadata?.country_code as string) || "NG";
+    setUserCountry(country);
+  }, [user]);
   const [step, setStep] = useState<"country" | "method" | "amount" | "review" | "success">("country");
   const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [selectedDestination, setSelectedDestination] = useState<"ecommerce" | "crypto" | "rewards" | "freelance">("ecommerce");
@@ -373,7 +381,7 @@ const Deposit = () => {
   }
 
   if (step === "success") {
-    const destinationInfo = getDestinationInfo();
+    const destinationInfo = destinations.find(d => d.value === selectedDestination);
     return (
       <div className="flex flex-col h-screen bg-gradient-to-br from-green-50 to-emerald-50">
         <WalletActionHeader title="Deposit Complete" />
@@ -385,7 +393,7 @@ const Deposit = () => {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Deposit Successful!</h2>
             <p className="text-gray-600 mb-8">
-              ${parseFloat(amount).toFixed(2)} has been added to {destinationInfo?.label}
+              ${parseFloat(amount).toFixed(2)} has been added to {destinationInfo?.emoji} {destinationInfo?.label}
             </p>
 
             <Card className="border-0 shadow-sm mb-6">

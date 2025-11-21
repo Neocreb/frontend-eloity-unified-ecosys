@@ -19,6 +19,7 @@ import {
   Tablet,
 } from "lucide-react";
 import { profileService } from "@/services/profileService";
+import { profileViewsService } from "@/services/profileViewsService";
 
 interface Viewer {
   id: string;
@@ -86,28 +87,25 @@ const ProfileViews: React.FC = () => {
           return;
         }
 
-        // TODO: Fetch real viewer data from analytics service
-        // For now, we'll set empty data since we don't have a real analytics service
-        setViewers([]);
+        // Fetch real viewer data from the database
+        const viewerData = await profileViewsService.getProfileViewers(
+          userProfile.id || ""
+        );
+        setViewers(viewerData);
 
-        // Set initial view stats
-        setViewStats({
-          totalViews: 0,
-          uniqueViewers: 0,
-          avgViewTime: "0m 0s",
-          topLocation: "",
-          peakHour: "",
-          deviceBreakdown: {
-            mobile: 0,
-            desktop: 0,
-            tablet: 0,
-          },
-        });
+        // Fetch view statistics
+        const stats = await profileViewsService.getProfileViewStats(
+          userProfile.id || ""
+        );
+        setViewStats(stats);
       } catch (err: any) {
         console.error("Error fetching viewers:", err);
-        // Check if this is a Supabase 400 error related to missing tables
-        if (err.message && (err.message.includes("400") || err.message.includes("marketplace_profiles"))) {
-          setError("Profile data is temporarily unavailable due to system maintenance. Please try again later.");
+        // Check if tables don't exist yet (need to run migration)
+        if (err.message && (err.message.includes("profile_views") || err.message.includes("does not exist"))) {
+          setError(
+            "Profile analytics tables haven't been created yet. Please run the migration script: " +
+            "node scripts/database/create-profile-views-tables.js"
+          );
         } else {
           setError("Failed to load viewer data. Please try again later.");
         }

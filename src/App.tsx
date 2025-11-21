@@ -543,6 +543,7 @@ const AppRoutes = () => {
           <Route path="profile" element={<EnhancedProfile />} />
           <Route path="profile/:username" element={<EnhancedProfile />} />
           <Route path="profile/:username/stats" element={<ProfileStats />} />
+          <Route path="profile/:username/views" element={<ProfileViews />} />
           {/* Phase 3 - User List Full Page Conversions */}
           <Route path="profile/:username/followers" element={<UserFollowers />} />
           <Route path="profile/:username/following" element={<UserFollowing />} />
