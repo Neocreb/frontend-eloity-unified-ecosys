@@ -427,13 +427,17 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
   return (
     <>
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-          {trigger || (
+        {trigger ? (
+          <div asChild>
+            {trigger}
+          </div>
+        ) : (
+          <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
             <button>
               <MoreHorizontal className="h-4 w-4" />
             </button>
-          )}
-        </Button>
+          </Button>
+        )}
 
         <DropdownMenuContent align="end" className="w-56">
           {isOwnPost ? (
