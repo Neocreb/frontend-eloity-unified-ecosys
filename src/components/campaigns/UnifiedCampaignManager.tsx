@@ -309,22 +309,6 @@ export const UnifiedCampaignManager: React.FC<UnifiedCampaignManagerProps> = ({
           </Card>
         )}
 
-        {/* Campaign Creation Wizard */}
-        <CampaignCreationWizard
-          isOpen={showCreateWizard}
-          onClose={() => setShowCreateWizard(false)}
-          onCampaignCreated={(campaignData) => {
-            const campaign = campaignSyncService.createCampaign(campaignData);
-            setShowCreateWizard(false);
-            toast({
-              title: "Campaign Created",
-              description: `${campaign.name} has been created successfully.`,
-            });
-          }}
-          context={context}
-          entityId={entityId}
-          entityType={entityType}
-        />
 
         {/* Campaign Analytics Modal */}
         <Dialog open={showAnalytics} onOpenChange={setShowAnalytics}>
