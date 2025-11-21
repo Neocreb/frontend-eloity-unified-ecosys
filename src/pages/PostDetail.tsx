@@ -561,7 +561,7 @@ const PostDetail: React.FC = () => {
             )}
 
             {/* Post Content */}
-            <div className="text-lg leading-relaxed">
+            <div className="text-lg leading-relaxed whitespace-pre-wrap break-words">
               {post.content}
             </div>
 
