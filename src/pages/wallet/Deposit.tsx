@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWalletContext } from "@/contexts/WalletContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
@@ -20,54 +20,33 @@ import {
   Bitcoin,
   Smartphone,
   Building,
+  Globe,
 } from "lucide-react";
+import { paymentMethods } from "@/config/paymentMethods";
 
 const Deposit = () => {
   const navigate = useNavigate();
   const { walletBalance } = useWalletContext();
-  const [step, setStep] = useState<"method" | "amount" | "review" | "success">("method");
-  const [selectedMethod, setSelectedMethod] = useState<"card" | "bank" | "crypto" | "mobile" | "ewallet">("card");
+  const [userCountry, setUserCountry] = useState("NG"); // TODO: Get from user profile
+  const [step, setStep] = useState<"country" | "method" | "amount" | "review" | "success">("country");
+  const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [selectedDestination, setSelectedDestination] = useState<"ecommerce" | "crypto" | "rewards" | "freelance">("ecommerce");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const paymentMethods = [
-    {
-      value: "card" as const,
-      label: "Credit/Debit Card",
-      icon: CreditCard,
-      color: "text-blue-600",
-      description: "Instant processing, 2.9% fee",
-    },
-    {
-      value: "bank" as const,
-      label: "Bank Transfer",
-      icon: Wallet,
-      color: "text-green-600",
-      description: "1-3 business days, no fee",
-    },
-    {
-      value: "crypto" as const,
-      label: "Cryptocurrency",
-      icon: Bitcoin,
-      color: "text-orange-600",
-      description: "Network fees apply",
-    },
-    {
-      value: "mobile" as const,
-      label: "Mobile Money",
-      icon: Smartphone,
-      color: "text-purple-600",
-      description: "Instant via Mobile Money, 1.5% fee",
-    },
-    {
-      value: "ewallet" as const,
-      label: "E-Wallet",
-      icon: Building,
-      color: "text-indigo-600",
-      description: "Instant via PayStack/Flutterwave, 2.5% fee",
-    },
-  ];
+  const regionConfig = paymentMethods.getRegionConfig(userCountry);
+  const allMethods = useMemo(() => {
+    const methods = paymentMethods.getMethodsByCountry(userCountry);
+    return methods.filter(m => m.isDepositEnabled);
+  }, [userCountry]);
+
+  const methodTypeIcons: Record<string, React.ReactNode> = {
+    card: <CreditCard className="h-6 w-6 text-blue-600" />,
+    bank: <Wallet className="h-6 w-6 text-green-600" />,
+    crypto: <Bitcoin className="h-6 w-6 text-orange-600" />,
+    mobile: <Smartphone className="h-6 w-6 text-purple-600" />,
+    ewallet: <Building className="h-6 w-6 text-indigo-600" />,
+  };
 
   const destinations = [
     {
@@ -106,10 +85,8 @@ const Deposit = () => {
     }
   };
 
-  const getDestinationInfo = () => destinations.find((d) => d.value === selectedDestination);
-  const getMethodInfo = () => paymentMethods.find((m) => m.value === selectedMethod);
 
-  if (step === "method") {
+  if (step === "country") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Add Funds" />
@@ -125,41 +102,73 @@ const Deposit = () => {
             </Card>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Payment Method</h3>
-              <div className="space-y-2">
-                {paymentMethods.map((method) => (
-                  <button
-                    key={method.value}
-                    onClick={() => {
-                      setSelectedMethod(method.value);
-                      setStep("amount");
-                    }}
-                    className="w-full text-left"
-                  >
-                    <Card
-                      className={`border-2 transition-all cursor-pointer ${
-                        selectedMethod === method.value
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-200 hover:border-green-300"
-                      }`}
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Your Country</h3>
+              <Select value={userCountry} onValueChange={(value) => setUserCountry(value)}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentMethods.getAllRegions().map((region) => (
+                    <SelectItem key={region.countryCode} value={region.countryCode}>
+                      {region.countryName} ({region.currency})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 mt-6">Available Payment Methods</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {allMethods.map((method) => {
+                  const feeInfo = paymentMethods.calculateDepositFee(100, method);
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => {
+                        setSelectedMethod(method.id);
+                        setStep("amount");
+                      }}
+                      className="w-full text-left"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <method.icon className={`h-6 w-6 ${method.color}`} />
-                            <div>
-                              <p className="font-semibold text-gray-900">{method.label}</p>
-                              <p className="text-xs text-gray-600">{method.description}</p>
+                      <Card
+                        className={`border-2 transition-all cursor-pointer ${
+                          selectedMethod === method.id
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-200 hover:border-green-300"
+                        }`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {methodTypeIcons[method.methodType]}
+                              <div>
+                                <p className="font-semibold text-gray-900">{method.providerName}</p>
+                                <p className="text-xs text-gray-600">
+                                  {method.processingTimeMinutes > 60
+                                    ? `${Math.ceil(method.processingTimeMinutes / 1440)} days`
+                                    : `${method.processingTimeMinutes}m`} •
+                                  {method.depositFeePercentage ? ` ${method.depositFeePercentage}%` : method.depositFlatFee ? ` ${method.depositFlatFee} fee` : ' No fee'}
+                                </p>
+                              </div>
                             </div>
+                            <span className="text-gray-400">→</span>
                           </div>
-                          <span className="text-gray-400">→</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </button>
-                ))}
+                        </CardContent>
+                      </Card>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            <Button
+              onClick={() => setStep("amount")}
+              disabled={!selectedMethod}
+              className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold"
+            >
+              Continue
+            </Button>
           </div>
         </div>
       </div>
@@ -167,7 +176,8 @@ const Deposit = () => {
   }
 
   if (step === "amount") {
-    const methodInfo = getMethodInfo();
+    const selectedPaymentMethod = allMethods.find(m => m.id === selectedMethod);
+
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Deposit Amount" />
@@ -175,12 +185,15 @@ const Deposit = () => {
           <div className="p-4 sm:p-6 space-y-6">
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4">
-                <p className="text-xs text-gray-600">Method</p>
+                <p className="text-xs text-gray-600">Payment Method</p>
                 <div className="flex items-center gap-2 mt-2">
-                  {methodInfo && (
+                  {selectedPaymentMethod && (
                     <>
-                      <methodInfo.icon className={`h-5 w-5 ${methodInfo.color}`} />
-                      <p className="font-semibold text-gray-900">{methodInfo.label}</p>
+                      {methodTypeIcons[selectedPaymentMethod.methodType]}
+                      <div>
+                        <p className="font-semibold text-gray-900">{selectedPaymentMethod.providerName}</p>
+                        <p className="text-xs text-gray-600">{selectedPaymentMethod.countryName}</p>
+                      </div>
                     </>
                   )}
                 </div>
@@ -266,7 +279,7 @@ const Deposit = () => {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setStep("method")}
+            onClick={() => setStep("country")}
             className="w-full h-12"
           >
             Back
@@ -277,9 +290,11 @@ const Deposit = () => {
   }
 
   if (step === "review") {
-    const destinationInfo = getDestinationInfo();
-    const methodInfo = getMethodInfo();
+    const destinationInfo = destinations.find(d => d.value === selectedDestination);
+    const selectedPaymentMethod = allMethods.find(m => m.id === selectedMethod);
     const depositAmount = parseFloat(amount);
+    const feeCalc = selectedPaymentMethod ? paymentMethods.calculateDepositFee(depositAmount, selectedPaymentMethod) : { fee: 0, total: depositAmount };
+
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Review Deposit" />
@@ -290,10 +305,13 @@ const Deposit = () => {
                 <div>
                   <p className="text-sm text-gray-600">Payment Method</p>
                   <div className="flex items-center gap-2 mt-2">
-                    {methodInfo && (
+                    {selectedPaymentMethod && (
                       <>
-                        <methodInfo.icon className={`h-5 w-5 ${methodInfo.color}`} />
-                        <p className="font-semibold text-gray-900">{methodInfo.label}</p>
+                        {methodTypeIcons[selectedPaymentMethod.methodType]}
+                        <div>
+                          <p className="font-semibold text-gray-900">{selectedPaymentMethod.providerName}</p>
+                          <p className="text-xs text-gray-600">{selectedPaymentMethod.countryName}</p>
+                        </div>
                       </>
                     )}
                   </div>
@@ -314,17 +332,11 @@ const Deposit = () => {
                   </div>
                   <div className="flex justify-between text-gray-600 mb-3">
                     <span>Fee</span>
-                    <span>
-                      {selectedMethod === "card" && `$${(depositAmount * 0.029).toFixed(2)}`}
-                      {selectedMethod === "bank" && "Free"}
-                      {selectedMethod === "crypto" && "Network dependent"}
-                      {selectedMethod === "mobile" && `$${(depositAmount * 0.015).toFixed(2)}`}
-                      {selectedMethod === "ewallet" && `$${(depositAmount * 0.025).toFixed(2)}`}
-                    </span>
+                    <span className="font-semibold">${feeCalc.fee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between border-t border-gray-200 pt-3">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-bold text-lg">${depositAmount.toFixed(2)}</span>
+                    <span className="font-semibold">Total Charge</span>
+                    <span className="font-bold text-lg">${feeCalc.total.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -344,7 +356,7 @@ const Deposit = () => {
                 Processing...
               </>
             ) : (
-              `Deposit $${depositAmount.toFixed(2)}`
+              `Deposit $${feeCalc.total.toFixed(2)}`
             )}
           </Button>
           <Button
