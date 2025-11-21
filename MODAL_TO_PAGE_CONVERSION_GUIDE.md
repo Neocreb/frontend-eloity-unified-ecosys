@@ -1146,3 +1146,157 @@ Reviewed/Fixed:
 - Consider using loaders for pre-fetching data
 - Test browser back/forward behavior on all new pages
 - **Important**: After creating a new page, search for all components using the old modal and update them to use navigation instead
+
+---
+
+## 📊 COMPREHENSIVE MODAL INVENTORY & CONVERSION ROADMAP
+
+### Master Modal Checklist (All 50+ Discovered Modals)
+
+#### ✅ COMPLETED CONVERSIONS (33 modals converted to full pages)
+
+| Component | File | Route | Status | Notes |
+|-----------|------|-------|--------|-------|
+| CreateChallengeModal | challenges/ | `/app/challenges/create` | ✅ CONVERTED | Multi-step challenge creation |
+| FindUsersModal | chat/ | `/app/chat/find-users` | ✅ CONVERTED | Chat user discovery |
+| ImageUploadModal | chat/ | `/app/chat/upload-image` | ✅ CONVERTED | Multi-file media upload |
+| StickerCreationModal | chat/ | `/app/chat/create-sticker` | ✅ CONVERTED | Multi-step sticker pack creation |
+| ContentCreationModal | content/ | `/app/content/create` | ✅ CONVERTED | Generic content creator wrapper |
+| CryptoDepositModal | crypto/ | `/app/crypto/deposit` | ✅ CONVERTED | Crypto deposit interface |
+| CryptoWithdrawModal | crypto/ | `/app/crypto/withdraw` | ✅ CONVERTED | Crypto withdrawal form |
+| CryptoKYCModal | crypto/ | `/app/crypto/kyc` | ✅ CONVERTED | Multi-step KYC verification |
+| UniversalCryptoPaymentModal | payments/ | `/app/crypto/payment` | ✅ CONVERTED | Crypto payment selection |
+| EditProfileModal | profile/ | `/app/profile/edit` | ✅ CONVERTED | Profile editing interface |
+| AddExternalWorkModal | profile/ | `/app/profile/add-work` | ✅ CONVERTED | Portfolio/work item management |
+| UserSearchModal | search/ | `/app/search/users` | ✅ CONVERTED | User discovery with typeahead |
+| WithdrawalModal | rewards/ | `/app/rewards/withdraw` | ✅ CONVERTED | Eloits to USD withdrawal |
+| CreateGroupModal | chat/group/ | `/app/community/create-group` | ✅ CONVERTED | Multi-step group creation |
+| ContributeToGroupModal | chat/group/ | `/app/community/contribute/:groupId` | ✅ CONVERTED | Group contribution workflow |
+| StartGroupContributionModal | chat/group/ | `/app/community/group-contribution/:groupId` | ✅ CONVERTED | Group contribution interface |
+| CreateGroupVoteModal | chat/group/ | `/app/community/vote/:groupId` | ✅ CONVERTED | Group vote creation |
+| CreateJobModal | freelance/ | `/app/freelance/create-job` | ✅ CONVERTED | Multi-step job posting |
+| ApplyModal | freelance/ | `/app/freelance/apply-job/:jobId` | ✅ CONVERTED | Job proposal submission |
+| MessageClientModal | freelance/ | `/app/freelance/message/:clientId` | ✅ CONVERTED | Client messaging interface |
+| SendMoney | wallet/ | `/app/wallet/send-money` | ✅ CONVERTED | Send money to contacts |
+| Request | wallet/ | `/app/wallet/request` | ✅ CONVERTED | Money request interface |
+| Withdraw | wallet/ | `/app/wallet/withdraw` | ✅ CONVERTED | Wallet withdrawal |
+| Transfer | wallet/ | `/app/wallet/transfer` | ✅ CONVERTED | Money transfer |
+| PayBills | wallet/ | `/app/wallet/pay-bills` | ✅ CONVERTED | Bill payment interface |
+| TopUp | wallet/ | `/app/wallet/top-up` | ✅ CONVERTED | Wallet top-up |
+| BuyGiftCards | wallet/ | `/app/wallet/buy-gift-cards` | ✅ CONVERTED | Gift card purchase |
+| SellGiftCards | wallet/ | `/app/wallet/sell-gift-cards` | ✅ CONVERTED | Gift card selling |
+| StoryCreationModal | feed/ | `/app/feed/create-story` | ✅ CONVERTED | Story creation (image/video/text) |
+| BattleCreationModal | live/ | `/app/live/create-battle` | ✅ CONVERTED | Live battle setup |
+| LiveStreamModal | live/ | `/app/live/create-stream` | ✅ CONVERTED | Live stream configuration |
+| MemeGifActionDialog | chat/ | `/app/chat/share-meme` | ✅ CONVERTED | Media sharing and actions |
+| DeleteUserDialog | settings/ | `/app/settings/delete-account` | ✅ CONVERTED | Account deletion (2-step) |
+
+---
+
+#### ⚠️ PENDING CONVERSION - HIGH PRIORITY (Phase 3-4 Implementation)
+
+| Component | File | Suggested Route | Complexity | Impact | Priority | Notes |
+|-----------|------|-----------------|------------|--------|----------|-------|
+| UserListModal | profile/ | `/app/profile/:username/followers` | Medium | Medium | HIGH (Phase 3) | Followers/following/viewers lists |
+| CryptoDetailModal | crypto/ | `/app/crypto/coin/:symbol` | Medium | Medium | HIGH (Phase 3) | Crypto detail view with stats/charts |
+| PostOptionsModal | feed/ | `/app/feed/post/:postId/options` | High | High | HIGH (Phase 4) | Post menu with edit/delete/report |
+| EnhancedGroupInfoModal | chat/group/ | `/app/community/group/:groupId/settings` | Very High | High | HIGH (Phase 4) | Comprehensive group management |
+| GroupInfoModal | chat/group/ | Consolidate with Enhanced | High | Medium | HIGH (Phase 4) | Duplicate of EnhancedGroupInfoModal |
+| GroupSettingsModal | chat/group/ | `/app/community/group/:groupId/settings/options` | Medium-High | Medium | HIGH (Phase 4) | Group settings (posting, invites) |
+| EnhancedSendMoneyModal | wallet/ | `/app/wallet/send-advanced` | Very High | Very High | MEDIUM (Phase 4) | Advanced send with bank transfer |
+| DepositModal (Wallet) | wallet/ | `/app/wallet/deposit-advanced` | High | Very High | MEDIUM (Phase 4) | Enhanced deposit with regional methods |
+| WithdrawModal (Wallet) | wallet/ | `/app/wallet/withdraw-advanced` | High | Very High | MEDIUM (Phase 4) | Enhanced withdraw with bank selection |
+| QuickActionModals | wallet/ | Various or keep as modal | Medium | Medium-High | MEDIUM (Architectural Decision) | Small action overlays |
+
+---
+
+#### ⏸️ INTENTIONALLY RETAINED AS MODALS (Architectural Decision)
+
+| Component | File | Reason | Status |
+|-----------|------|--------|--------|
+| CheckInModal | feed/ | Tightly coupled to CreatePostFlow state | ⏸️ KEEP |
+| FeelingActivityModal | feed/ | Tightly coupled to CreatePostFlow state | ⏸️ KEEP |
+| FeelingLocationModal | feed/ | Tightly coupled to CreatePostFlow state | ⏸️ KEEP |
+| MediaUploadModal | feed/ | Tightly coupled to CreatePostFlow state | ⏸️ KEEP |
+| TagPeopleModal | feed/ | Tightly coupled to CreatePostFlow state | ⏸️ KEEP |
+| EnhancedShareDialog | feed/ | Multi-context usage, consider future conversion | ⏸️ EVALUATE |
+
+---
+
+### Implementation Roadmap by Phase
+
+#### **PHASE 3 (NEXT - 2 conversions, ~4-6 hours)**
+
+**Goal**: Enhance user discovery and crypto exploration
+
+1. **UserListModal** → `/app/profile/:username/followers|following|viewers`
+   - Complexity: Medium (2-3 hours)
+   - Files: EnhancedProfile.tsx, UserProfile.tsx, create UserFollowers.tsx/UserFollowing.tsx/UserViewers.tsx
+   - Benefits: Better mobile UX, dedicated pages, improved accessibility
+
+2. **CryptoDetailModal** → `/app/crypto/coin/:symbol`
+   - Complexity: Medium (2-3 hours)
+   - Files: Create CryptoDetail.tsx, update navigation in crypto components
+   - Benefits: Better desktop UX, bookmarkable details, full-screen charts
+
+---
+
+#### **PHASE 4 (HIGH PRIORITY - 5-8 conversions, 12-16 hours)**
+
+**Requires architectural decisions first:**
+
+1. **Group Management Suite** (3-4 conversions)
+   - GroupSettingsModal → `/app/community/group/:groupId/settings/options`
+   - EnhancedGroupInfoModal + GroupInfoModal → Single `/app/community/group/:groupId/settings`
+   - Consolidate duplicates
+
+2. **Advanced Wallet Features** (Architectural decision)
+   - Option A: Enhance existing pages
+   - Option B: Create advanced variants
+   - Option C: Keep as modals for quick access
+
+3. **PostOptionsModal Management**
+   - Decision: Keep as context menu vs full page?
+   - Contains nested dialogs (edit, delete, report)
+
+---
+
+### Key Implementation Guidelines
+
+✓ **Always**:
+- Use full-screen layout with sticky header/back button
+- Implement dark/light theme support
+- Test on mobile and desktop
+- Update parent components to navigate instead of toggleModal
+- Add to routes in App.tsx
+
+✓ **Never**:
+- Leave placeholders or TODOs in production code
+- Hard-code specific values
+- Forget accessibility features
+- Skip testing navigation and back button behavior
+
+---
+
+### Quick Reference: Modal Files by Category
+
+**Chat Modals**:
+- FindUsersModal ✅ | ImageUploadModal ✅ | StickerCreationModal ✅ | MemeGifActionDialog ✅ | UserListModal ⚠️
+
+**Crypto Modals**:
+- CryptoDepositModal ✅ | CryptoWithdrawModal ✅ | CryptoDetailModal ⚠️ | CryptoKYCModal ✅
+
+**Feed Modals**:
+- StoryCreationModal ✅ | PostOptionsModal ⚠️ | CheckIn/Feeling/Tag/Media ⏸️ KEEP
+
+**Group Modals**:
+- CreateGroupModal ✅ | ContributeToGroupModal ✅ | StartGroupContribution ✅ | CreateGroupVote ✅ | EnhancedGroupInfoModal ⚠️ | GroupInfoModal ⚠️ | GroupSettingsModal ⚠️
+
+**Wallet Modals**:
+- SendMoney ✅ | Request ✅ | Withdraw ✅ | Transfer ✅ | PayBills ✅ | TopUp ✅ | GiftCards ✅ | DepositModal ⚠️ | WithdrawModal ⚠️ | EnhancedSendMoneyModal ⚠️
+
+**Profile Modals**:
+- EditProfileModal ✅ | AddExternalWorkModal ✅ | UserListModal ⚠️
+
+**Other**:
+- CreateChallengeModal ✅ | CreateJobModal ✅ | ApplyModal ✅ | MessageClientModal ✅ | BattleCreationModal ✅ | LiveStreamModal ✅ | ContentCreationModal ✅ | UniversalCryptoPaymentModal ✅ | WithdrawalModal ✅ | UserSearchModal ✅ | DeleteUserDialog ✅
