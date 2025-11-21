@@ -205,6 +205,12 @@ import StickerCreation from "./pages/chat/StickerCreation";
 import ShareMeme from "./pages/chat/ShareMeme";
 import UserSearch from "./pages/search/UserSearch";
 import DeleteAccount from "./pages/settings/DeleteAccount";
+// Phase 3 - User List Modal Conversions
+import UserFollowers from "./pages/profile/UserFollowers";
+import UserFollowing from "./pages/profile/UserFollowing";
+import UserViewers from "./pages/profile/UserViewers";
+// Phase 3 - Crypto Detail Modal Conversion
+import CryptoDetail from "./pages/crypto/CryptoDetail";
 import CreateGroup from "./pages/CreateGroup";
 import GlobalSearch from "./pages/GlobalSearch";
 import LandingPage from "./pages/LandingPage";
