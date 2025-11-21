@@ -178,7 +178,8 @@ const Deposit = () => {
   }
 
   if (step === "amount") {
-    const methodInfo = getMethodInfo();
+    const selectedPaymentMethod = allMethods.find(m => m.id === selectedMethod);
+
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Deposit Amount" />
@@ -186,12 +187,15 @@ const Deposit = () => {
           <div className="p-4 sm:p-6 space-y-6">
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4">
-                <p className="text-xs text-gray-600">Method</p>
+                <p className="text-xs text-gray-600">Payment Method</p>
                 <div className="flex items-center gap-2 mt-2">
-                  {methodInfo && (
+                  {selectedPaymentMethod && (
                     <>
-                      <methodInfo.icon className={`h-5 w-5 ${methodInfo.color}`} />
-                      <p className="font-semibold text-gray-900">{methodInfo.label}</p>
+                      {methodTypeIcons[selectedPaymentMethod.methodType]}
+                      <div>
+                        <p className="font-semibold text-gray-900">{selectedPaymentMethod.providerName}</p>
+                        <p className="text-xs text-gray-600">{selectedPaymentMethod.countryName}</p>
+                      </div>
                     </>
                   )}
                 </div>
