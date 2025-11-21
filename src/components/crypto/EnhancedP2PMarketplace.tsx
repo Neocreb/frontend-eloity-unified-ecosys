@@ -127,59 +127,6 @@ export default function EnhancedP2PMarketplace() {
     }
   };
 
-  const handleCreateOffer = async () => {
-    try {
-      const offerData = {
-        crypto_type: newOffer.asset,
-        offer_type: newOffer.type.toLowerCase(),
-        amount: parseFloat(newOffer.totalAmount),
-        price_per_unit: parseFloat(newOffer.price),
-        payment_method: newOffer.paymentMethods.join(','),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-        notes: newOffer.terms || undefined,
-      };
-
-      const createdOffer = await cryptoService.createP2POffer(offerData);
-      setOffers((prev) => [createdOffer, ...prev]);
-      setShowCreateOffer(false);
-
-      // Reset form
-      setNewOffer({
-        type: "SELL",
-        asset: "BTC",
-        fiatCurrency: "USD",
-        price: "",
-        minAmount: "",
-        maxAmount: "",
-        totalAmount: "",
-        paymentMethods: [],
-        terms: "",
-        autoReply: "",
-      });
-
-      toast({
-        title: "Offer Created",
-        description: "Your P2P offer has been created successfully",
-      });
-
-      // Send unified notification
-      if (user?.id) {
-        await cryptoNotificationService.notifyP2PTrade(
-          user.id,
-          "offer created",
-          newOffer.asset,
-          parseFloat(newOffer.totalAmount)
-        );
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create offer",
-        variant: "destructive",
-      });
-    }
-  };
-
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
