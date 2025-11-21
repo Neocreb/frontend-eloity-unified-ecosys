@@ -752,7 +752,7 @@ const PostDetail: React.FC = () => {
                       <span className="text-muted-foreground text-sm">{comment.createdAt}</span>
                     </div>
 
-                    <p className="mb-3">{comment.content}</p>
+                    <p className="mb-3 whitespace-pre-wrap break-words">{comment.content}</p>
 
                     {/* Comment Media */}
                     {comment.media && comment.media.length > 0 && (
