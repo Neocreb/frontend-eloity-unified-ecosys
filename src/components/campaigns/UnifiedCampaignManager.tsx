@@ -151,12 +151,7 @@ export const UnifiedCampaignManager: React.FC<UnifiedCampaignManagerProps> = ({
   };
 
   const handleCreateCampaign = () => {
-    if (context === "seller" || context === "freelancer" || context === "client") {
-      setShowCreateWizard(true);
-    } else {
-      // Navigate to main campaign center
-      navigate("/app/campaigns");
-    }
+    navigate("/app/campaigns/create");
   };
 
   const handleCampaignAction = (action: string, campaign: Campaign) => {
