@@ -84,11 +84,11 @@ interface RewardData {
 }
 
 export default function EnhancedRewards() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: rewardsData, isLoading, error, refresh } = useRewards();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
   // Transform rewards data to match the expected format
   const rewardData: RewardData | null = rewardsData?.calculatedUserRewards ? {
