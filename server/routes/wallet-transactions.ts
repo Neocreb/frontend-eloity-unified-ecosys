@@ -680,6 +680,12 @@ router.post('/deposit/stripe-webhook', async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Missing metadata' });
       }
 
+      // Validate the Stripe Payment Intent ID to prevent SSRF
+      if (typeof intentId !== 'string' || !/^pi_[a-zA-Z0-9]+$/.test(intentId)) {
+        logger.warn('Invalid Stripe Payment Intent ID format:', intentId);
+        return res.status(400).json({ error: 'Invalid payment intent ID format' });
+      }
+
       const payment = await paymentProcessorService.retrieveStripePaymentIntent(intentId);
 
       if (!payment) {
