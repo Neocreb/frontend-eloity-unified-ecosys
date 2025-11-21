@@ -70,25 +70,25 @@
   - Output: Transaction with status and metadata
   - Database: Query `wallet_transactions`
 
-#### 1.3 Withdrawal Endpoints
-- [ ] `POST /api/wallet/withdraw/initiate` - Start withdrawal flow
+#### 1.3 Withdrawal Endpoints ✅
+- [x] `POST /api/wallet/withdraw/initiate` - Start withdrawal flow
   - Input: amount, recipientType, bankAccountId/username/email/mobilePhone, description
   - Output: withdrawalId, fee, netAmount, processingTime
   - Validation: Sufficient balance, recipient exists (for username), KYC level check
   - Database: Insert into `wallet_transactions` with status='pending'
   - Features: Check velocity limits, fraud detection
 
-- [ ] `POST /api/wallet/withdraw/confirm` - Confirm withdrawal with 2FA
+- [x] `POST /api/wallet/withdraw/confirm` - Confirm withdrawal with 2FA
   - Input: withdrawalId, verificationCode (from email/SMS/auth app)
   - Output: Confirmation and processing timeline
   - Database: Update `wallet_transactions` status='processing'
   - Security: Must pass 2FA verification
 
-- [ ] `GET /api/wallet/withdraw/status/:withdrawalId` - Check withdrawal status
+- [x] `GET /api/wallet/withdraw/status/:withdrawalId` - Check withdrawal status
   - Output: Transaction with status and tracking info
   - Database: Query `wallet_transactions`
 
-- [ ] `POST /api/wallet/withdraw/cancel/:withdrawalId` - Cancel pending withdrawal
+- [x] `POST /api/wallet/withdraw/cancel/:withdrawalId` - Cancel pending withdrawal
   - Validation: Only cancel if status='pending'
   - Database: Update status='cancelled', refund to wallet
   - Audit: Log cancellation reason
