@@ -177,8 +177,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [demographics, setDemographics] = useState<any>(null);
-  const [unsubscribeRef, setUnsubscribeRef] = useState<(() => void) | null>(null);
-  const [demographicUnsubscribeRef, setDemographicUnsubscribeRef] = useState<(() => void) | null>(null);
 
   const { user } = useAuth();
 
