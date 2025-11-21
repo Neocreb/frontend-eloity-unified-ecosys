@@ -658,13 +658,15 @@ export default function CreateCampaign() {
               </div>
 
               <AudienceTargeting
-                value={campaignData.targeting}
-                onChange={(targeting) =>
+                targeting={campaignData.targeting}
+                onTargetingChange={(targeting) =>
                   setCampaignData((prev) => ({
                     ...prev,
                     targeting,
                   }))
                 }
+                estimatedReach={estimatedReach}
+                onEstimatedReachChange={setEstimatedReach}
               />
             </div>
           )}
