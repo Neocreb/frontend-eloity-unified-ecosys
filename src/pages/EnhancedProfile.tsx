@@ -777,7 +777,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => navigate("/app/profile/edit")}
                           className="text-xs sm:text-sm"
                         >
                           <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
