@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from "react";
 
 
-import { AIContentAssistant } from "@/components/ai/AIFeatures";
-import AIPerformanceInsights from "@/components/ai/AIPerformanceInsights";
 import UnifiedAIStudio from "@/components/ai/UnifiedAIStudio";
 import {
   Card,
