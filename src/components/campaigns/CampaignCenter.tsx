@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -56,7 +57,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import CampaignCreationWizard from "./CampaignCreationWizard";
 import CampaignAnalyticsDashboard from "./CampaignAnalyticsDashboard";
 import SmartBoostSuggestions from "./SmartBoostSuggestions";
 import { campaignSyncService } from "@/services/campaignSyncService";
@@ -196,9 +196,9 @@ const mockIncentives = [
 ];
 
 const CampaignCenter: React.FC = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [activeCampaigns, setActiveCampaigns] = useState(mockActiveCampaigns);
-  const [showCreationWizard, setShowCreationWizard] = useState(false);
   const [showIncentives, setShowIncentives] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
 
@@ -268,7 +268,7 @@ const CampaignCenter: React.FC = () => {
             <span className="sm:hidden">Bonuses</span>
           </Button>
           <Button
-            onClick={() => setShowCreationWizard(true)}
+            onClick={() => navigate('/app/campaigns/create')}
             className="w-full sm:w-auto min-w-[140px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             <PlusCircle className="h-4 w-4 mr-2" />
@@ -645,22 +645,6 @@ const CampaignCenter: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Campaign Creation Wizard */}
-      {showCreationWizard && (
-        <CampaignCreationWizard 
-          isOpen={showCreationWizard}
-          open={showCreationWizard}
-          onClose={() => setShowCreationWizard(false)}
-          onCampaignCreated={(newCampaign) => {
-            setActiveCampaigns(prev => [...prev, newCampaign]);
-            setShowCreationWizard(false);
-            toast({
-              title: "Campaign Created!",
-              description: "Your campaign is now live and promoting your content",
-            });
-          }}
-        />
-      )}
     </div>
   );
 };

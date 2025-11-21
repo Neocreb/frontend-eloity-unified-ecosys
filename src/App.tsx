@@ -103,6 +103,7 @@ import CreateBattle from "./pages/live/CreateBattle";
 import CreateStream from "./pages/live/CreateStream";
 import CreateStory from "./pages/feed/CreateStory";
 import CreateContent from "./pages/content/Create";
+import CreateCampaignPage from "./pages/campaigns/CreateCampaign";
 // Phase 3 - Community Modal Conversions
 import CreateGroupPage from "./pages/community/CreateGroup";
 import ContributeToGroup from "./pages/community/ContributeToGroup";
@@ -243,6 +244,7 @@ import EnhancedKYCVerification from "./components/kyc/EnhancedKYCVerification";
 // import { LiveStreamCreator } from "./components/livestream/LiveStreamCreator";
 import Groups from "./pages/Groups";
 import Pages from "./pages/Pages";
+import CreatePageForm from "./pages/pages/CreatePage";
 import GroupDetailView from "./components/groups/GroupDetailView";
 import PageDetailView from "./components/pages/PageDetailView";
 import GroupManagement from "./pages/GroupManagement";
@@ -696,6 +698,7 @@ const AppRoutes = () => {
           <Route path="crypto/profile/:username" element={<CryptoProfile />} />
           <Route path="delivery/profile/:username" element={<DeliveryProfile />} />
           <Route path="campaigns" element={<CampaignCenter />} />
+          <Route path="campaigns/create" element={<CreateCampaignPage />} />
           <Route path="rewards" element={<EnhancedRewards />} />
           <Route path="videos" element={<VideosPage />} />
           <Route path="videos/:videoId" element={<VideoDetail />} />
@@ -739,6 +742,7 @@ const AppRoutes = () => {
           <Route path="saved" element={<SavedPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="pages" element={<Pages />} />
+          <Route path="pages/create" element={<CreatePageForm />} />
           <Route path="pages/:pageId" element={<PageDetailView />} />
           <Route path="pages/:pageId/manage" element={<PageManagement />} />
           <Route path="privacy" element={<PrivacyPolicy />} />

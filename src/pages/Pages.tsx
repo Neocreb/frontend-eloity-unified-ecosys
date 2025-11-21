@@ -3,13 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -63,18 +56,9 @@ const Pages: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [myPages, setMyPages] = useState<Page[]>([]);
   const [allPages, setAllPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pageForm, setPageForm] = useState({
-    name: "",
-    description: "",
-    category: "",
-    avatar_url: "",
-    cover_url: "",
-    privacy: "public",
-  });
 
   const chips = useMemo(
     () => ["Create", "Discover", "Invites", "Liked Pages"],
@@ -117,46 +101,8 @@ const Pages: React.FC = () => {
     }
   };
 
-  const handleCreatePage = async () => {
-    if (!pageForm.name || !user?.id) {
-      toast({ title: "Error", description: "Page name is required", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const { data: newPage, error } = await supabase
-        .from("pages")
-        .insert({
-          name: pageForm.name,
-          description: pageForm.description || null,
-          category: pageForm.category || null,
-          avatar_url: pageForm.avatar_url || null,
-          cover_url: pageForm.cover_url || null,
-          privacy: pageForm.privacy,
-          creator_id: user.id,
-          follower_count: 0,
-          is_verified: false,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const prepared: Page = {
-        ...newPage,
-        isOwner: true,
-        isFollowing: false,
-        avatar_url: newPage.avatar_url || referenceImages[0],
-      };
-
-      setMyPages((prev) => [prepared, ...prev]);
-      setAllPages((prev) => [prepared, ...prev]);
-      setPageForm({ name: "", description: "", category: "", avatar_url: "", cover_url: "", privacy: "public" });
-      setShowCreateDialog(false);
-      toast({ title: "Success", description: `Page "${newPage.name}" created successfully!` });
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to create page", variant: "destructive" });
-    }
+  const handleCreatePage = () => {
+    navigate('/app/pages/create');
   };
 
   const Header = (
@@ -242,62 +188,6 @@ const Pages: React.FC = () => {
         )}
       </div>
 
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogTrigger asChild>
-          <span />
-        </DialogTrigger>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Page</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="pageName">Page Name *</Label>
-              <Input
-                id="pageName"
-                value={pageForm.name}
-                onChange={(e) => setPageForm((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter page name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pageCategory">Category</Label>
-              <Input
-                id="pageCategory"
-                value={pageForm.category}
-                onChange={(e) => setPageForm((prev) => ({ ...prev, category: e.target.value }))}
-                placeholder="e.g. Business"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pageDescription">Description</Label>
-              <Textarea
-                id="pageDescription"
-                value={pageForm.description}
-                onChange={(e) => setPageForm((prev) => ({ ...prev, description: e.target.value }))}
-                rows={3}
-                placeholder="Describe your page"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pagePrivacy">Privacy</Label>
-              <Select value={pageForm.privacy} onValueChange={(v) => setPageForm((prev) => ({ ...prev, privacy: v }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select privacy" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="private">Private</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleCreatePage} className="flex-1">Create</Button>
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

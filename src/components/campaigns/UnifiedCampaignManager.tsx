@@ -39,7 +39,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import CampaignCreationWizard from "./CampaignCreationWizard";
 import CampaignAnalyticsDashboard from "./CampaignAnalyticsDashboard";
 import SmartBoostSuggestions from "./SmartBoostSuggestions";
 import { campaignSyncService } from "@/services/campaignSyncService";
@@ -91,7 +90,6 @@ export const UnifiedCampaignManager: React.FC<UnifiedCampaignManagerProps> = ({
   maxCampaigns,
 }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [activeTab, setActiveTab] = useState("campaigns");
@@ -151,12 +149,7 @@ export const UnifiedCampaignManager: React.FC<UnifiedCampaignManagerProps> = ({
   };
 
   const handleCreateCampaign = () => {
-    if (context === "seller" || context === "freelancer" || context === "client") {
-      setShowCreateWizard(true);
-    } else {
-      // Navigate to main campaign center
-      navigate("/app/campaigns");
-    }
+    navigate("/app/campaigns/create");
   };
 
   const handleCampaignAction = (action: string, campaign: Campaign) => {
@@ -314,22 +307,6 @@ export const UnifiedCampaignManager: React.FC<UnifiedCampaignManagerProps> = ({
           </Card>
         )}
 
-        {/* Campaign Creation Wizard */}
-        <CampaignCreationWizard
-          isOpen={showCreateWizard}
-          onClose={() => setShowCreateWizard(false)}
-          onCampaignCreated={(campaignData) => {
-            const campaign = campaignSyncService.createCampaign(campaignData);
-            setShowCreateWizard(false);
-            toast({
-              title: "Campaign Created",
-              description: `${campaign.name} has been created successfully.`,
-            });
-          }}
-          context={context}
-          entityId={entityId}
-          entityType={entityType}
-        />
 
         {/* Campaign Analytics Modal */}
         <Dialog open={showAnalytics} onOpenChange={setShowAnalytics}>
@@ -419,22 +396,6 @@ export const UnifiedCampaignManager: React.FC<UnifiedCampaignManagerProps> = ({
         </TabsContent>
       </Tabs>
 
-      {/* Campaign Creation Wizard */}
-      <CampaignCreationWizard
-        isOpen={showCreateWizard}
-        onClose={() => setShowCreateWizard(false)}
-        onCampaignCreated={(campaignData) => {
-          const campaign = campaignSyncService.createCampaign(campaignData);
-          setShowCreateWizard(false);
-          toast({
-            title: "Campaign Created",
-            description: `${campaign.name} has been created successfully.`,
-          });
-        }}
-        context={context}
-        entityId={entityId}
-        entityType={entityType}
-      />
 
       {/* Campaign Analytics Modal */}
       <Dialog open={showAnalytics} onOpenChange={setShowAnalytics}>
