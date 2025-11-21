@@ -97,7 +97,7 @@ const Deposit = () => {
   if (step === "country") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <WalletActionHeader title="Add Funds" />
+        <WalletActionHeader title="Add Funds to Wallet" subtitle="Deposit via card, bank, crypto & more" />
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
             <Card className="border-0 shadow-sm bg-gradient-to-br from-green-50 to-emerald-50">
