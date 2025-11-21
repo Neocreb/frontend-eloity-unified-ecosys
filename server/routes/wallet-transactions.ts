@@ -17,7 +17,7 @@ const requireAuth = (req: Request, res: Response, next: Function) => {
 
 /**
  * POST /api/wallet/deposit/initiate
- * Start a deposit transaction
+ * Start a deposit transaction with payment processor integration
  */
 router.post('/deposit/initiate', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -30,6 +30,7 @@ router.post('/deposit/initiate', requireAuth, async (req: Request, res: Response
       countryCode,
       currency,
       description,
+      email,
     } = req.body;
 
     // Validation
@@ -53,6 +54,26 @@ router.post('/deposit/initiate', requireAuth, async (req: Request, res: Response
     // Generate reference ID
     const referenceId = `DEP-${Date.now()}-${uuidv4().substring(0, 8)}`;
 
+    // Calculate fee based on method
+    let fee = 0;
+    let processingTime = '5-30 minutes';
+
+    if (methodProviderId === 'paystack_ng' || methodProviderId === 'paystack_ke') {
+      fee = amount * 0.015;
+      processingTime = '1-5 minutes';
+    } else if (methodProviderId.includes('flutterwave')) {
+      fee = amount * 0.018;
+      processingTime = '2-10 minutes';
+    } else if (methodProviderId === 'stripe_us') {
+      fee = amount * 0.029 + 0.30;
+      processingTime = '3-5 minutes';
+    } else if (methodProviderId === 'mpesa_ke') {
+      fee = 0;
+      processingTime = '1-2 minutes';
+    }
+
+    const amountWithFee = amount + fee;
+
     // Create transaction record
     const transaction = await walletDatabaseService.createTransaction({
       userId,
@@ -61,6 +82,8 @@ router.post('/deposit/initiate', requireAuth, async (req: Request, res: Response
       currency,
       status: 'pending',
       depositMethod: method,
+      feeAmount: fee,
+      netAmount: amount,
       description: description || `Deposit via ${methodProviderId}`,
       referenceId,
       metadata: {
@@ -73,6 +96,86 @@ router.post('/deposit/initiate', requireAuth, async (req: Request, res: Response
 
     logger.info(`Deposit initiated for user ${userId}: ${transaction.id} (${amount} ${currency})`);
 
+    let paymentUrl = null;
+    let paymentData = null;
+
+    const callbackUrl = `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/wallet/transactions/deposit/${transaction.id}/webhook`;
+
+    if (methodProviderId === 'paystack_ng') {
+      const paystackResult = await paymentProcessorService.initializePaystackPayment({
+        email: email || '',
+        amount,
+        currency: 'NGN',
+        reference: referenceId,
+        callback_url: callbackUrl,
+        metadata: {
+          transactionId: transaction.id,
+          userId,
+        },
+      });
+
+      if (paystackResult) {
+        paymentUrl = paystackResult.authorizationUrl;
+        paymentData = {
+          processor: 'paystack',
+          accessCode: paystackResult.accessCode,
+          reference: paystackResult.reference,
+        };
+      }
+    } else if (methodProviderId.includes('flutterwave')) {
+      const flutterwaveResult = await paymentProcessorService.initializeFlutterwavePayment({
+        amount,
+        currency: 'NGN',
+        reference: referenceId,
+        customer_email: email || '',
+        redirect_url: callbackUrl,
+        metadata: {
+          transactionId: transaction.id,
+          userId,
+        },
+      });
+
+      if (flutterwaveResult) {
+        paymentUrl = flutterwaveResult.paymentLink;
+        paymentData = {
+          processor: 'flutterwave',
+          flwRef: flutterwaveResult.flwRef,
+        };
+      }
+    } else if (methodProviderId === 'stripe_us') {
+      const stripeResult = await paymentProcessorService.createStripePaymentIntent({
+        amount,
+        currency: 'USD',
+        description: `Deposit for user ${userId}`,
+        metadata: {
+          transactionId: transaction.id,
+          userId,
+        },
+      });
+
+      if (stripeResult) {
+        paymentData = {
+          processor: 'stripe',
+          clientSecret: stripeResult.clientSecret,
+          intentId: stripeResult.intentId,
+        };
+      }
+    } else if (methodProviderId === 'mpesa_ke') {
+      const mpesaResult = await paymentProcessorService.initiateMpesaStkPush({
+        phoneNumber: '254' + (email || '').replace(/\D/g, '').slice(-9),
+        amount: Math.round(amount),
+        accountReference: userId.substring(0, 12),
+        transactionDescription: 'Deposit to Eloity Wallet',
+      });
+
+      if (mpesaResult) {
+        paymentData = {
+          processor: 'mpesa',
+          checkoutRequestId: mpesaResult.checkoutRequestId,
+        };
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: 'Deposit initiated successfully',
@@ -81,10 +184,14 @@ router.post('/deposit/initiate', requireAuth, async (req: Request, res: Response
         referenceId: transaction.referenceId,
         amount: transaction.amount,
         currency: transaction.currency,
+        fee: fee,
+        amountWithFee: amountWithFee,
         status: transaction.status,
         destination,
-        processingTime: '5-30 minutes depending on method',
-        nextStep: 'Payment processor integration will be added',
+        processingTime,
+        paymentUrl,
+        paymentData,
+        nextStep: paymentUrl ? 'Proceed to payment URL' : 'Complete payment verification',
       },
     });
   } catch (error: any) {
