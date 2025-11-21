@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { walletDatabaseService, BankAccountData } from '../services/walletDatabaseService.js';
+import { walletDatabaseService, BankAccountData } from '../../src/services/walletDatabaseService.js';
 import { logger } from '../utils/logger.js';
 
 const router = express.Router();
