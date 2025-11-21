@@ -121,7 +121,7 @@ import GroupSettings from "./pages/community/GroupSettings";
 - **Freelance Platform**: 3/3 ✅ Complete
 - **Wallet Operations**: 8/8 �� Complete
 - **Content & Live**: 5/5 ✅ Complete
-- **Group & Community**: 4/4 ✅ Complete
+- **Group & Community**: 8/8 ✅ Complete (4 core + 4 new modular pages: Info, Members, Edit, Settings)
 - **Search/Discovery**: 2/2 ✅ Complete
 - **Settings/Account**: 1/1 ✅ Complete
 - **Chat Modals**: 5/6 ✅ Complete (5 converted: FindUsers, ImageUpload, StickerCreation, ShareMeme)
@@ -528,7 +528,7 @@ import MyNewPage from "./pages/category/MyNewPage";
 
 After careful analysis, the following feed modals are **recommended to remain as modal overlays** due to their tight coupling with the CreatePostFlow component and context-dependent nature:
 
-- ⏸️ **CheckInModal** → Remains in CreatePostFlow (KEEP AS MODAL)
+- ⏸️ **CheckInModal** �� Remains in CreatePostFlow (KEEP AS MODAL)
   - Reason: Tightly coupled to post creation state management
 
 - ⏸️ **FeelingActivityModal** → Remains in CreatePostFlow (KEEP AS MODAL)
@@ -655,7 +655,7 @@ src/
 │   │   └── ...
 │   ├── crypto/
 │   │   ├── CryptoDeposit.tsx ✓
-│   │   ├── CryptoWithdraw.tsx ✓
+│   │   ├���─ CryptoWithdraw.tsx ✓
 │   │   └── ...
 │   ├��─ chat/
 │   │   └── ...
@@ -1053,7 +1053,7 @@ The feed-related modals (CheckIn, Feeling, TagPeople, MediaUpload) are currently
 
 **Feed Modals** (Intentionally retained - CONFIRMED as architectural decision)
 - CheckInModal, FeelingActivityModal, FeelingLocationModal, MediaUploadModal, TagPeopleModal
-- Status: ⏸️ **KEEP AS MODALS** - Tight coupling with CreatePostFlow (already documented as intentional)
+- Status: ���️ **KEEP AS MODALS** - Tight coupling with CreatePostFlow (already documented as intentional)
 
 ---
 
