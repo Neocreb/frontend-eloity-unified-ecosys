@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,15 +55,8 @@ import P2PEscrowSystem from "./P2PEscrowSystem";
 import P2PDisputeResolution from "./P2PDisputeResolution";
 import { cn } from "@/lib/utils";
 
-export interface EnhancedP2PMarketplaceProps {
-  triggerCreateOffer?: boolean;
-  onCreateOfferTriggered?: () => void;
-}
-
-export default function EnhancedP2PMarketplace({
-  triggerCreateOffer = false,
-  onCreateOfferTriggered
-}: EnhancedP2PMarketplaceProps) {
+export default function EnhancedP2PMarketplace() {
+  const navigate = useNavigate();
   const [marketplaceTab, setMarketplaceTab] = useState("buy");
   const [offers, setOffers] = useState<P2POffer[]>([]);
   const [myTrades, setMyTrades] = useState<P2PTrade[]>([]);
@@ -73,27 +67,12 @@ export default function EnhancedP2PMarketplace({
   const [maxAmount, setMaxAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreateOffer, setShowCreateOffer] = useState(false);
   const [showOfferDetails, setShowOfferDetails] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<P2POffer | null>(null);
   const [showEscrowSystem, setShowEscrowSystem] = useState(false);
   const [showDisputeResolution, setShowDisputeResolution] = useState(false);
   const [selectedTrade, setSelectedTrade] = useState<any>(null);
   const [selectedDispute, setSelectedDispute] = useState<any>(null);
-
-  // Create offer form state
-  const [newOffer, setNewOffer] = useState({
-    type: "SELL" as "BUY" | "SELL",
-    asset: "BTC",
-    fiatCurrency: "USD",
-    price: "",
-    minAmount: "",
-    maxAmount: "",
-    totalAmount: "",
-    paymentMethods: [] as string[],
-    terms: "",
-    autoReply: "",
-  });
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -122,14 +101,6 @@ export default function EnhancedP2PMarketplace({
     loadP2PData();
   }, [selectedAsset, selectedFiat, selectedPayment, minAmount, searchQuery, marketplaceTab]);
 
-  // Handle external create offer trigger
-  useEffect(() => {
-    if (triggerCreateOffer) {
-      setShowCreateOffer(true);
-      onCreateOfferTriggered?.();
-    }
-  }, [triggerCreateOffer, onCreateOfferTriggered]);
-
   const loadP2PData = async () => {
     setIsLoading(true);
     try {
@@ -153,59 +124,6 @@ export default function EnhancedP2PMarketplace({
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleCreateOffer = async () => {
-    try {
-      const offerData = {
-        crypto_type: newOffer.asset,
-        offer_type: newOffer.type.toLowerCase(),
-        amount: parseFloat(newOffer.totalAmount),
-        price_per_unit: parseFloat(newOffer.price),
-        payment_method: newOffer.paymentMethods.join(','),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-        notes: newOffer.terms || undefined,
-      };
-
-      const createdOffer = await cryptoService.createP2POffer(offerData);
-      setOffers((prev) => [createdOffer, ...prev]);
-      setShowCreateOffer(false);
-
-      // Reset form
-      setNewOffer({
-        type: "SELL",
-        asset: "BTC",
-        fiatCurrency: "USD",
-        price: "",
-        minAmount: "",
-        maxAmount: "",
-        totalAmount: "",
-        paymentMethods: [],
-        terms: "",
-        autoReply: "",
-      });
-
-      toast({
-        title: "Offer Created",
-        description: "Your P2P offer has been created successfully",
-      });
-
-      // Send unified notification
-      if (user?.id) {
-        await cryptoNotificationService.notifyP2PTrade(
-          user.id,
-          "offer created",
-          newOffer.asset,
-          parseFloat(newOffer.totalAmount)
-        );
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create offer",
-        variant: "destructive",
-      });
     }
   };
 
@@ -631,288 +549,6 @@ export default function EnhancedP2PMarketplace({
           </Card>
         )}
       </div>
-
-      {/* Create Offer Dialog */}
-      <Dialog open={showCreateOffer} onOpenChange={setShowCreateOffer}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create P2P Offer</DialogTitle>
-            <DialogDescription>
-              Create a new offer to buy or sell cryptocurrency
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Offer Type */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                I want to
-              </label>
-              <Tabs
-                value={newOffer.type.toLowerCase()}
-                onValueChange={(value) =>
-                  setNewOffer((prev) => ({
-                    ...prev,
-                    type: value.toUpperCase() as "BUY" | "SELL",
-                  }))
-                }
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="sell" className="text-green-600">
-                    Sell {newOffer.asset}
-                  </TabsTrigger>
-                  <TabsTrigger value="buy" className="text-red-600">
-                    Buy {newOffer.asset}
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* Asset and Currency */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Asset</label>
-                <Select
-                  value={newOffer.asset}
-                  onValueChange={(value) =>
-                    setNewOffer((prev) => ({ ...prev, asset: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assets.map((asset) => (
-                      <SelectItem key={asset} value={asset}>
-                        {asset}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Fiat Currency
-                </label>
-                <Select
-                  value={newOffer.fiatCurrency}
-                  onValueChange={(value) =>
-                    setNewOffer((prev) => ({ ...prev, fiatCurrency: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fiatCurrencies.map((currency) => (
-                      <SelectItem key={currency} value={currency}>
-                        {currency}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Price and Amounts */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Price per {newOffer.asset} ({newOffer.fiatCurrency})
-                </label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={newOffer.price}
-                  onChange={(e) =>
-                    setNewOffer((prev) => ({ ...prev, price: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Total Amount ({newOffer.fiatCurrency})
-                </label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={newOffer.totalAmount}
-                  onChange={(e) =>
-                    setNewOffer((prev) => ({
-                      ...prev,
-                      totalAmount: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Min Order ({newOffer.fiatCurrency})
-                </label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={newOffer.minAmount}
-                  onChange={(e) =>
-                    setNewOffer((prev) => ({
-                      ...prev,
-                      minAmount: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Max Order ({newOffer.fiatCurrency})
-                </label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={newOffer.maxAmount}
-                  onChange={(e) =>
-                    setNewOffer((prev) => ({
-                      ...prev,
-                      maxAmount: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Payment Methods */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Payment Methods
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {paymentMethods.map((method) => (
-                  <label
-                    key={method.id}
-                    className="flex items-center space-x-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={newOffer.paymentMethods.includes(method.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setNewOffer((prev) => ({
-                            ...prev,
-                            paymentMethods: [...prev.paymentMethods, method.id],
-                          }));
-                        } else {
-                          setNewOffer((prev) => ({
-                            ...prev,
-                            paymentMethods: prev.paymentMethods.filter(
-                              (id) => id !== method.id,
-                            ),
-                          }));
-                        }
-                      }}
-                    />
-                    <method.icon className="h-4 w-4" />
-                    <span className="text-sm">{method.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Terms and Auto Reply */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Terms (Optional)
-              </label>
-              <Input
-                placeholder="e.g., Payment within 15 minutes required"
-                value={newOffer.terms}
-                onChange={(e) =>
-                  setNewOffer((prev) => ({ ...prev, terms: e.target.value }))
-                }
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Auto Reply Message (Optional)
-              </label>
-              <Input
-                placeholder="e.g., Thank you for your order. Please make payment within 15 minutes."
-                value={newOffer.autoReply}
-                onChange={(e) =>
-                  setNewOffer((prev) => ({
-                    ...prev,
-                    autoReply: e.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            {/* Summary */}
-            {newOffer.price && newOffer.totalAmount && (
-              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                <div className="font-medium">Offer Summary:</div>
-                <div className="text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span>You will {newOffer.type.toLowerCase()}:</span>
-                    <span>
-                      {formatCrypto(
-                        parseFloat(newOffer.totalAmount) /
-                          parseFloat(newOffer.price),
-                        newOffer.asset,
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>For:</span>
-                    <span>
-                      {formatCurrency(
-                        parseFloat(newOffer.totalAmount),
-                        newOffer.fiatCurrency,
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Rate:</span>
-                    <span>
-                      {formatCurrency(
-                        parseFloat(newOffer.price),
-                        newOffer.fiatCurrency,
-                      )}{" "}
-                      per {newOffer.asset}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowCreateOffer(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateOffer}
-                disabled={
-                  !newOffer.price ||
-                  !newOffer.totalAmount ||
-                  !newOffer.minAmount ||
-                  !newOffer.maxAmount ||
-                  newOffer.paymentMethods.length === 0
-                }
-              >
-                Create Offer
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Offer Details Dialog */}
       <Dialog open={showOfferDetails} onOpenChange={setShowOfferDetails}>

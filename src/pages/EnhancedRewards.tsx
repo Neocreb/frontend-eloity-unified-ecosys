@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRewards } from "@/hooks/use-rewards";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +28,6 @@ if (typeof window !== "undefined" && typeof process !== 'undefined' && process.e
 
 // Import new organized components
 import RewardsCard from "@/components/rewards/RewardsCard";
-import WithdrawalModal from "@/components/rewards/WithdrawalModal";
 import RewardsStats from "@/components/rewards/RewardsStats";
 import RewardsActivitiesTab from "@/components/rewards/RewardsActivitiesTab";
 import RewardsChallengesTab from "@/components/rewards/RewardsChallengesTab";
@@ -84,11 +84,11 @@ interface RewardData {
 }
 
 export default function EnhancedRewards() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: rewardsData, isLoading, error, refresh } = useRewards();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
   // Transform rewards data to match the expected format
   const rewardData: RewardData | null = rewardsData?.calculatedUserRewards ? {
@@ -161,14 +161,6 @@ export default function EnhancedRewards() {
     }
   };
 
-  const handleWithdrawalSuccess = (amount: number, method: string) => {
-    toast({
-      title: "Withdrawal Complete!",
-      description: `${formatCurrency(amount)} has been added to your ${method}`,
-    });
-    // Refresh data to show updated balance
-    handleRefresh();
-  };
 
   if (!user) {
     return (
@@ -251,7 +243,7 @@ export default function EnhancedRewards() {
           availableToWithdraw={rewardData.availableToWithdraw}
           totalEarnings={rewardData.totalEarnings}
           trustScore={rewardData.trustScore}
-          onWithdraw={() => setShowWithdrawalModal(true)}
+          onWithdraw={() => navigate("/app/rewards/withdraw")}
           className="mb-8"
         />
       ) : (
@@ -408,17 +400,6 @@ export default function EnhancedRewards() {
         </TabsContent>
       </Tabs>
 
-      {/* Withdrawal Modal */}
-      {rewardData && (
-        <WithdrawalModal
-          isOpen={showWithdrawalModal}
-          onClose={() => setShowWithdrawalModal(false)}
-          currentEloits={rewardData.currentEloits}
-          availableToWithdraw={rewardData.availableToWithdraw}
-          trustScore={rewardData.trustScore}
-          onWithdrawalSuccess={handleWithdrawalSuccess}
-        />
-      )}
         </div>
       </div>
     </RewardsErrorBoundary>

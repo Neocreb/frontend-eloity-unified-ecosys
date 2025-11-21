@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import {
   Select,
   SelectContent,
@@ -122,7 +121,6 @@ const UnifiedProfile: React.FC<UnifiedProfileProps> = ({
   const [posts, setPosts] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<any[]>([]);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
   const [mediaFilter, setMediaFilter] = useState("all");
   const [mediaViewMode, setMediaViewMode] = useState("grid");
@@ -469,7 +467,7 @@ const UnifiedProfile: React.FC<UnifiedProfileProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => navigate("/app/profile/edit")}
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Profile
@@ -864,11 +862,6 @@ const UnifiedProfile: React.FC<UnifiedProfileProps> = ({
       </div>
 
       {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        profile={mockProfile}
-      />
     </div>
   );
 };

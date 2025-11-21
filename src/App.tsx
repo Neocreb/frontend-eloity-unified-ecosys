@@ -92,6 +92,7 @@ import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
 import CryptoDeposit from "./pages/crypto/CryptoDeposit";
 import CryptoWithdraw from "./pages/crypto/CryptoWithdraw";
+import CreateP2POffer from "./pages/crypto/CreateP2POffer";
 // Freelance pages
 import CreateJob from "./pages/freelance/CreateJob";
 import ApplyJob from "./pages/freelance/ApplyJob";
@@ -565,6 +566,7 @@ const AppRoutes = () => {
           <Route path="crypto/payment" element={<UniversalCryptoPayment />} />
           <Route path="crypto/deposit" element={<CryptoDeposit />} />
           <Route path="crypto/withdraw" element={<CryptoWithdraw />} />
+          <Route path="crypto/p2p/create-offer" element={<CreateP2POffer />} />
 
           {/* Freelance Routes - Full Page Implementation */}
           <Route path="freelance/create-job" element={<CreateJob />} />

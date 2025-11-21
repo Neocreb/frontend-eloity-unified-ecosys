@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import UserListModal from "@/components/profile/UserListModal";
 import { ProfilePostCard } from "@/components/profile/ProfilePostCard";
 import { EnhancedCommentsSection } from "@/components/feed/EnhancedCommentsSection";
@@ -110,7 +109,6 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
   const [posts, setPosts] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<any[]>([]);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
   const [isEditingCover, setIsEditingCover] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
@@ -779,7 +777,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowEditModal(true)}
+                          onClick={() => navigate("/app/profile/edit")}
                           className="text-xs sm:text-sm"
                         >
                           <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -1840,12 +1838,6 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        profile={mockProfile}
-      />
 
       {/* Followers Modal */}
       <UserListModal
