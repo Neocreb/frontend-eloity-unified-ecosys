@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Eye, EyeOff, ChevronDown, BarChart3, List, PlugZap, Send, Repeat, Plus, MoreHorizontal, Gift, Plane, ArrowDown, ArrowUp, Wallet, Phone, CreditCard, Home, Clock, Star, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import AdCarousel, { Ad } from "@/components/wallet/AdCarousel";
 
 const AnimatedWave = () => {
   return (
@@ -61,6 +62,16 @@ const DashboardInner = () => {
 
   const [showBalance, setShowBalance] = useState(true);
   const [portfolio, setPortfolio] = useState<'total'|'ecommerce'|'crypto'|'rewards'|'freelance'>('total');
+  const [ads, setAds] = useState<Ad[]>([]);
+
+  useEffect(() => {
+    // Load ads from localStorage or API
+    const savedAds = localStorage.getItem('walletAds');
+    if (savedAds) {
+      setAds(JSON.parse(savedAds));
+    }
+  }, []);
+
   const [recipients, setRecipients] = useState<Recipient[]>([
     { id: '1', initials: 'JD', name: 'John Doe', lastAmount: 250, timesUsed: 5 },
     { id: '2', initials: 'SS', name: 'Sarah Smith', lastAmount: 100, timesUsed: 3 },
@@ -196,7 +207,19 @@ const DashboardInner = () => {
         }}></div>
 
         <div className="relative z-10 max-w-md mx-auto px-4 space-y-6 pb-12">
-          
+
+          {/* Ad Carousel Banner */}
+          <AdCarousel
+            ads={ads}
+            autoScroll={true}
+            scrollInterval={6000}
+            onAdClick={(ad) => {
+              if (ad.ctaUrl) {
+                navigate(ad.ctaUrl);
+              }
+            }}
+          />
+
           {/* Send & Receive Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
