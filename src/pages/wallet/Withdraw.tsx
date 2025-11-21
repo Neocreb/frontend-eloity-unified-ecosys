@@ -92,10 +92,10 @@ const Withdraw = () => {
     return icons[recipientType];
   };
 
-  if (step === "account") {
+  if (step === "recipient") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <WalletActionHeader title="Withdraw" />
+        <WalletActionHeader title="Withdraw Funds" />
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
             <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-indigo-50">
@@ -108,33 +108,31 @@ const Withdraw = () => {
             </Card>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Bank Accounts</h3>
-              <div className="space-y-2">
-                {bankAccounts.map((account) => (
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Send Money To</h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { type: "bank" as RecipientType, label: "Bank Account", icon: "🏦" },
+                  { type: "username" as RecipientType, label: "Username", icon: "👤" },
+                  { type: "email" as RecipientType, label: "Email", icon: "✉️" },
+                  { type: "mobile" as RecipientType, label: "Mobile Money", icon: "📱" },
+                ].map((option) => (
                   <button
-                    key={account.id}
-                    onClick={() => handleSelectAccount(account.id)}
-                    className="w-full text-left"
+                    key={option.type}
+                    onClick={() => setRecipientType(option.type)}
+                    className="w-full"
                   >
                     <Card
-                      className={`border-2 transition-all cursor-pointer ${
-                        selectedAccount === account.id
+                      className={`border-2 transition-all cursor-pointer h-full ${
+                        recipientType === option.type
                           ? "border-purple-500 bg-purple-50"
                           : "border-gray-200 hover:border-purple-300"
                       }`}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">{account.bank}</p>
-                            <p className="text-sm text-gray-600">{account.accountNumber}</p>
-                          </div>
-                          {selectedAccount === account.id && (
-                            <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
-                              <span className="text-white text-lg">✓</span>
-                            </div>
-                          )}
-                        </div>
+                      <CardContent className="p-4 flex flex-col items-center justify-center">
+                        <span className="text-3xl mb-2">{option.icon}</span>
+                        <p className="text-xs sm:text-sm font-semibold text-center text-gray-900">
+                          {option.label}
+                        </p>
                       </CardContent>
                     </Card>
                   </button>
@@ -142,10 +140,67 @@ const Withdraw = () => {
               </div>
             </div>
 
+            {recipientType === "bank" && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Bank Account</h3>
+                <BankAccountManager
+                  countryCode={userCountry}
+                  onAccountSelected={(account) => {
+                    setRecipient({ type: "bank", bankAccount: account });
+                  }}
+                  mode="select"
+                />
+              </div>
+            )}
+
+            {recipientType === "username" && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Enter Username</label>
+                <Input
+                  placeholder="@username"
+                  value={recipient.username || ""}
+                  onChange={(e) =>
+                    setRecipient({ ...recipient, username: e.target.value })
+                  }
+                  className="h-12"
+                />
+              </div>
+            )}
+
+            {recipientType === "email" && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Enter Email Address</label>
+                <Input
+                  type="email"
+                  placeholder="recipient@example.com"
+                  value={recipient.email || ""}
+                  onChange={(e) =>
+                    setRecipient({ ...recipient, email: e.target.value })
+                  }
+                  className="h-12"
+                />
+              </div>
+            )}
+
+            {recipientType === "mobile" && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Mobile Money Number</label>
+                <Input
+                  type="tel"
+                  placeholder={`${paymentMethods.getRegionConfig(userCountry)?.phonePrefix} xxxxxxxxx`}
+                  value={recipient.mobile || ""}
+                  onChange={(e) =>
+                    setRecipient({ ...recipient, mobile: e.target.value })
+                  }
+                  className="h-12"
+                />
+              </div>
+            )}
+
             <Button
               onClick={() => setStep("amount")}
-              disabled={!selectedAccount}
-              className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
+              disabled={!validateRecipient()}
+              className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold disabled:opacity-50"
             >
               Continue
             </Button>
