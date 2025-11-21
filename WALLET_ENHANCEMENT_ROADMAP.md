@@ -20,33 +20,33 @@
 ## Tier 1: Critical (Core Functionality)
 
 ### 1. Backend API Integration
-**Priority**: 🔴 **CRITICAL** | **Effort**: 8-10 hours | **Status**: ⏳ Pending
+**Priority**: 🔴 **CRITICAL** | **Effort**: 8-10 hours | **Status**: ✅ Completed
 
-#### 1.1 Wallet Account Endpoints
-- [ ] `POST /api/wallet/bank-accounts` - Create bank account
+#### 1.1 Wallet Account Endpoints ✅
+- [x] `POST /api/wallet/bank-accounts` - Create bank account
   - Input: accountName, accountNumber, bankName, accountHolderName, accountHolderPhone, countryCode
   - Output: bankAccount object with ID
   - Validation: Account number length, bank exists in country, phone format
   - Database: Insert into `bank_accounts` table
   - Notes: Initial accounts should be unverified
 
-- [ ] `GET /api/wallet/bank-accounts` - List user's bank accounts
+- [x] `GET /api/wallet/bank-accounts` - List user's bank accounts
   - Query params: countryCode (optional), isVerified (optional)
   - Output: Array of BankAccount objects
   - Database: Query `bank_accounts` where user_id = auth.user.id
   - Notes: Mask account numbers in response
 
-- [ ] `PATCH /api/wallet/bank-accounts/:id` - Update bank account
+- [x] `PATCH /api/wallet/bank-accounts/:id` - Update bank account
   - Allows: accountName, accountHolderPhone
   - Prevents: accountNumber, bankName, countryCode (immutable)
   - Database: Update `bank_accounts`
 
-- [ ] `DELETE /api/wallet/bank-accounts/:id` - Delete bank account
+- [x] `DELETE /api/wallet/bank-accounts/:id` - Delete bank account
   - Validation: Cannot delete if default and other accounts exist
   - Auto-reassign: If deleted account is default, make next account default
   - Database: Delete from `bank_accounts`
 
-- [ ] `POST /api/wallet/bank-accounts/:id/verify` - Request account verification
+- [x] `POST /api/wallet/bank-accounts/:id/verify` - Request account verification
   - Verification methods: Micro-deposits (2 small deposits), Document upload, Bank link
   - Output: Verification status and next steps
   - Database: Update `is_verified`, store verification method
