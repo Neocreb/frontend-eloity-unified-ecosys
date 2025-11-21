@@ -429,140 +429,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
     };
   }, [user, timeRange]);
 
-  // Set up real-time data subscription
-  useEffect(() => {
-    if (user) {
-      // Subscribe to real-time data updates
-      const unsubscribe = unifiedAnalyticsService.subscribeToDataUpdates(user.id, (updatedMetrics) => {
-        // Update the UI with the new data
-        const realPlatformFeatures = [
-          {
-            name: "Feed & Social",
-            icon: House,
-            color: "bg-blue-500",
-            growth: updatedMetrics?.social?.posts?.engagementRate || 0,
-            active: true,
-            metrics: [
-              { title: "Total Posts", value: updatedMetrics?.social?.posts?.totalPosts || "0", change: 0, trend: "up", icon: FileText, color: "text-blue-600" },
-              { title: "Followers", value: updatedMetrics?.social?.audience?.totalFollowers || "0", change: 0, trend: "up", icon: Users, color: "text-green-600" },
-            ],
-          },
-          {
-            name: "Video",
-            icon: Video,
-            color: "bg-red-500",
-            growth: updatedMetrics?.social?.videos?.retentionRate || 0,
-            active: true,
-            metrics: [
-              { title: "Videos Created", value: updatedMetrics?.social?.videos?.totalVideos || "0", change: 0, trend: "up", icon: Film, color: "text-red-600" },
-              { title: "Total Views", value: updatedMetrics?.social?.videos?.avgViews || "0", change: 0, trend: "up", icon: Play, color: "text-blue-600" },
-            ],
-          },
-          {
-            name: "Marketplace",
-            icon: ShoppingBag,
-            color: "bg-green-500",
-            growth: updatedMetrics?.ecommerce?.sales?.conversionRate || 0,
-            active: true,
-            metrics: [
-              { title: "Products Sold", value: updatedMetrics?.ecommerce?.sales?.totalOrders || "0", change: 0, trend: "up", icon: ShoppingBag, color: "text-green-600" },
-              { title: "Revenue", value: formatCurrency(updatedMetrics?.ecommerce?.sales?.totalRevenue || 0), change: 0, trend: "up", icon: DollarSign, color: "text-emerald-600" },
-            ],
-          },
-          {
-            name: "Freelance",
-            icon: Briefcase,
-            color: "bg-orange-500",
-            growth: updatedMetrics?.freelance?.performance?.successScore || 0,
-            active: true,
-            metrics: [
-              { title: "Active Projects", value: updatedMetrics?.freelance?.projects?.activeProjects || "0", change: 0, trend: "up", icon: Briefcase, color: "text-orange-600" },
-              { title: "Earnings", value: formatCurrency(updatedMetrics?.freelance?.earnings?.totalEarnings || 0), change: 0, trend: "up", icon: DollarSign, color: "text-emerald-600" },
-            ],
-          },
-          {
-            name: "Crypto",
-            icon: Coins,
-            color: "bg-yellow-500",
-            growth: updatedMetrics?.crypto?.portfolio?.totalPnL || 0,
-            active: true,
-            metrics: [
-              { title: "Portfolio Value", value: formatCurrency(updatedMetrics?.crypto?.portfolio?.totalValue || 0), change: 0, trend: "up", icon: Coins, color: "text-yellow-600" },
-              { title: "Win Rate", value: `${updatedMetrics?.crypto?.trading?.winRate || 0}%`, change: 0, trend: "up", icon: TrendingUp, color: "text-green-600" },
-            ],
-          },
-          {
-            name: "Wallet",
-            icon: Wallet,
-            color: "bg-purple-500",
-            growth: 0,
-            active: true,
-            metrics: [
-              { title: "Balance", value: formatCurrency(0), change: 0, trend: "up", icon: DollarSign, color: "text-purple-600" },
-              { title: "Transactions", value: "0", change: 0, trend: "up", icon: Activity, color: "text-blue-600" },
-            ],
-          },
-          {
-            name: "Events",
-            icon: CalendarIcon,
-            color: "bg-pink-500",
-            growth: 0,
-            active: true,
-            metrics: [
-              { title: "Events Created", value: "0", change: 0, trend: "up", icon: CalendarIcon, color: "text-pink-600" },
-              { title: "Attendees", value: "0", change: 0, trend: "up", icon: Users, color: "text-green-600" },
-            ],
-          },
-          {
-            name: "Tips & Rewards",
-            icon: Gift,
-            color: "bg-cyan-500",
-            growth: 0,
-            active: true,
-            metrics: [
-              { title: "Tips Received", value: formatCurrency(0), change: 0, trend: "up", icon: Heart, color: "text-pink-600" },
-              { title: "Rewards Earned", value: formatCurrency(0), change: 0, trend: "up", icon: Gift, color: "text-cyan-600" },
-            ],
-          },
-        ];
-        
-        setPlatformFeatures(realPlatformFeatures);
-        // compute revenue roughly
-        const revenue = realPlatformFeatures.reduce((sum, feature) => {
-          const rm = feature.metrics.find((m: any) => m.title.includes("Revenue") || m.title.includes("Earnings"));
-          if (rm && typeof rm.value === "string") {
-            const v = parseFloat(rm.value.replace(/[^0-9.-]/g, "")) || 0;
-            return sum + v;
-          }
-          return sum;
-        }, 0);
-        setTotalRevenue(revenue);
-        setTotalGrowth(realPlatformFeatures.length ? realPlatformFeatures.reduce((s, f) => s + f.growth, 0) / realPlatformFeatures.length : 0);
-      });
-      
-      // Store the unsubscribe function
-      setUnsubscribeRef(() => unsubscribe);
-      
-      // Subscribe to real-time demographic updates
-      const demographicUnsubscribe = DemographicsService.subscribeToDemographicUpdates(user.id, (updatedDemographics) => {
-        setDemographics(updatedDemographics);
-      });
-      
-      // Store the demographic unsubscribe function
-      setDemographicUnsubscribeRef(() => demographicUnsubscribe);
-    }
-    
-    // Cleanup function to unsubscribe when component unmounts or user changes
-    return () => {
-      if (unsubscribeRef) {
-        unsubscribeRef();
-      }
-      if (demographicUnsubscribeRef) {
-        demographicUnsubscribeRef();
-      }
-    };
-  }, [user]);
-
   // Fetch content page (simplified / using fallback)
   const fetchContentPage = async ({
     types,
@@ -1837,7 +1703,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       {demographics?.locationDistribution?.map((location: any, index: number) => (
                         <div key={index} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{index === 0 ? '🇺🇸' : index === 1 ? '🇬🇧' : index === 2 ? '🇨🇦' : index === 3 ? '🇩🇪' : index === 4 ? '🇦����' : '🌐'}</span>
+                            <span className="text-lg">{index === 0 ? '🇺🇸' : index === 1 ? '🇬🇧' : index === 2 ? '🇨🇦' : index === 3 ? '🇩��' : index === 4 ? '🇦����' : '🌐'}</span>
                             <span className="font-medium">{location.location}</span>
                           </div>
                           <span className="text-gray-600 dark:text-gray-400">{location.percentage}%</span>
