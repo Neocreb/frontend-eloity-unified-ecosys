@@ -27,8 +27,15 @@ import { paymentMethods } from "@/config/paymentMethods";
 
 const Deposit = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { walletBalance } = useWalletContext();
-  const [userCountry, setUserCountry] = useState("NG"); // TODO: Get from user profile
+  const [userCountry, setUserCountry] = useState("NG");
+
+  useEffect(() => {
+    // Get country from user metadata or use default
+    const country = (user?.user_metadata?.country_code as string) || "NG";
+    setUserCountry(country);
+  }, [user]);
   const [step, setStep] = useState<"country" | "method" | "amount" | "review" | "success">("country");
   const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [selectedDestination, setSelectedDestination] = useState<"ecommerce" | "crypto" | "rewards" | "freelance">("ecommerce");
