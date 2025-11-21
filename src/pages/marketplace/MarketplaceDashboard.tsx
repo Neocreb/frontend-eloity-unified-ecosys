@@ -18,7 +18,7 @@ export default function MarketplaceDashboard() {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="bg-white border-b sticky top-0 z-30">
-        <div className="container mx-auto px-4 py-4">
+        <div className="w-full px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold">Marketplace Dashboard</h1>
@@ -64,7 +64,7 @@ export default function MarketplaceDashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto">
+      <div className="w-full">
         {view === "buyer" && <BuyerDashboard />}
         {view === "seller" && <EnhancedSellerDashboard />}
       </div>

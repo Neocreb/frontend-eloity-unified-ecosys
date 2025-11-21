@@ -109,6 +109,11 @@ import ContributeToGroup from "./pages/community/ContributeToGroup";
 import GroupContribution from "./pages/community/GroupContribution";
 import CreateGroupVote from "./pages/community/CreateGroupVote";
 import CreateEvent from "./pages/community/CreateEvent";
+// Strategy B - Modular Group Pages
+import GroupInfo from "./pages/community/GroupInfo";
+import GroupMembers from "./pages/community/GroupMembers";
+import GroupEdit from "./pages/community/GroupEdit";
+import GroupSettings from "./pages/community/GroupSettings";
 // Phase 3 - Profile Modal Conversions
 import AddExternalWork from "./pages/profile/AddExternalWork";
 import EditProfile from "./pages/profile/EditProfile";
@@ -595,6 +600,12 @@ const AppRoutes = () => {
           <Route path="community/contribute/:contributionId" element={<ContributeToGroup />} />
           <Route path="community/group-contribution/:groupId" element={<GroupContribution />} />
           <Route path="community/vote/:groupId" element={<CreateGroupVote />} />
+
+          {/* Strategy B - Modular Group Pages (NEW) */}
+          <Route path="community/group/:groupId/info" element={<GroupInfo />} />
+          <Route path="community/group/:groupId/members" element={<GroupMembers />} />
+          <Route path="community/group/:groupId/edit" element={<GroupEdit />} />
+          <Route path="community/group/:groupId/settings" element={<GroupSettings />} />
 
           {/* Profile Routes */}
           <Route path="profile/edit" element={<EditProfile />} />
