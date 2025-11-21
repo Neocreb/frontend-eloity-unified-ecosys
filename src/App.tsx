@@ -740,6 +740,7 @@ const AppRoutes = () => {
           <Route path="saved" element={<SavedPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="pages" element={<Pages />} />
+          <Route path="pages/create" element={<CreatePageForm />} />
           <Route path="pages/:pageId" element={<PageDetailView />} />
           <Route path="pages/:pageId/manage" element={<PageManagement />} />
           <Route path="privacy" element={<PrivacyPolicy />} />
