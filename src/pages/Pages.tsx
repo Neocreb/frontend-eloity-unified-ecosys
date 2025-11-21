@@ -117,46 +117,8 @@ const Pages: React.FC = () => {
     }
   };
 
-  const handleCreatePage = async () => {
-    if (!pageForm.name || !user?.id) {
-      toast({ title: "Error", description: "Page name is required", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const { data: newPage, error } = await supabase
-        .from("pages")
-        .insert({
-          name: pageForm.name,
-          description: pageForm.description || null,
-          category: pageForm.category || null,
-          avatar_url: pageForm.avatar_url || null,
-          cover_url: pageForm.cover_url || null,
-          privacy: pageForm.privacy,
-          creator_id: user.id,
-          follower_count: 0,
-          is_verified: false,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const prepared: Page = {
-        ...newPage,
-        isOwner: true,
-        isFollowing: false,
-        avatar_url: newPage.avatar_url || referenceImages[0],
-      };
-
-      setMyPages((prev) => [prepared, ...prev]);
-      setAllPages((prev) => [prepared, ...prev]);
-      setPageForm({ name: "", description: "", category: "", avatar_url: "", cover_url: "", privacy: "public" });
-      setShowCreateDialog(false);
-      toast({ title: "Success", description: `Page "${newPage.name}" created successfully!` });
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to create page", variant: "destructive" });
-    }
+  const handleCreatePage = () => {
+    navigate('/app/pages/create');
   };
 
   const Header = (
