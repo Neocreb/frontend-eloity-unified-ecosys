@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 
 
 import UnifiedAIStudio from "@/components/ai/UnifiedAIStudio";
+import TipsReceivedAnalytics from "@/components/creator-economy/TipsReceivedAnalytics";
 import {
   Card,
   CardContent,
