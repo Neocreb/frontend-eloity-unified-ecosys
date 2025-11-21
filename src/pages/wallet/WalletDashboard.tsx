@@ -139,41 +139,44 @@ const DashboardInner = () => {
           <div className="flex gap-3 justify-center">
             <button
               onClick={()=>navigate('/app/wallet/deposit')}
-              className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
             >
               <Plus className="h-5 w-5" />
               <span>Deposit</span>
             </button>
             <button
+              onClick={()=>navigate('/app/wallet/send-money')}
+              className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+            >
+              <Send className="h-5 w-5" />
+              <span>Send</span>
+            </button>
+            <button
               onClick={()=>navigate('/app/wallet/withdraw')}
-              className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
             >
               <ArrowUp className="h-5 w-5" />
               <span>Withdraw</span>
             </button>
-            <button
-              onClick={()=>navigate('/app/wallet/transfer')}
-              className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105"
-            >
-              <Repeat className="h-5 w-5" />
-              <span>Transfer</span>
-            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <button className="flex-1 bg-white text-[#8B5CF6] rounded-2xl py-3 px-4 font-semibold text-sm flex flex-col items-center gap-1 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
                   <MoreHorizontal className="h-5 w-5" />
                   <span>More</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center">
+                <DropdownMenuItem onClick={()=>navigate('/app/wallet/top-up')} className="flex items-center gap-2">
+                  <Phone className="h-4 w-4"/> Top Up
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={()=>navigate('/app/wallet/analytics')} className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4"/> Analytics
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={()=>navigate('/app/wallet/transactions')} className="flex items-center gap-2">
                   <List className="h-4 w-4"/> Transactions
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={()=>navigate('/app/wallet/integrations')} className="flex items-center gap-2">
-                  <PlugZap className="h-4 w-4"/> Integrations
+                <DropdownMenuItem onClick={()=>navigate('/app/wallet/cards')} className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4"/> My Cards
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={()=>navigate('/app/wallet/gift-cards')} className="flex items-center gap-2">
                   <Gift className="h-4 w-4"/> Gift Cards
