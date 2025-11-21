@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,15 +55,7 @@ import P2PEscrowSystem from "./P2PEscrowSystem";
 import P2PDisputeResolution from "./P2PDisputeResolution";
 import { cn } from "@/lib/utils";
 
-export interface EnhancedP2PMarketplaceProps {
-  triggerCreateOffer?: boolean;
-  onCreateOfferTriggered?: () => void;
-}
-
-export default function EnhancedP2PMarketplace({
-  triggerCreateOffer = false,
-  onCreateOfferTriggered
-}: EnhancedP2PMarketplaceProps) {
+export default function EnhancedP2PMarketplace() {
   const [marketplaceTab, setMarketplaceTab] = useState("buy");
   const [offers, setOffers] = useState<P2POffer[]>([]);
   const [myTrades, setMyTrades] = useState<P2PTrade[]>([]);
