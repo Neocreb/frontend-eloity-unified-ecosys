@@ -197,9 +197,9 @@ const mockIncentives = [
 ];
 
 const CampaignCenter: React.FC = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [activeCampaigns, setActiveCampaigns] = useState(mockActiveCampaigns);
-  const [showCreationWizard, setShowCreationWizard] = useState(false);
   const [showIncentives, setShowIncentives] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
 
