@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, ExternalLink } from "lucide-react";
 import PostActions from "./PostActions";
+import PostContentRenderer from "./PostContentRenderer";
 import { Post } from "./PostCard";
 
 interface EnhancedPostCardProps {
