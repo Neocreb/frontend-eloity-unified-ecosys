@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import PostContentRenderer from "./PostContentRenderer";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Post = {
