@@ -56,6 +56,7 @@ import P2PDisputeResolution from "./P2PDisputeResolution";
 import { cn } from "@/lib/utils";
 
 export default function EnhancedP2PMarketplace() {
+  const navigate = useNavigate();
   const [marketplaceTab, setMarketplaceTab] = useState("buy");
   const [offers, setOffers] = useState<P2POffer[]>([]);
   const [myTrades, setMyTrades] = useState<P2PTrade[]>([]);
@@ -66,27 +67,12 @@ export default function EnhancedP2PMarketplace() {
   const [maxAmount, setMaxAmount] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreateOffer, setShowCreateOffer] = useState(false);
   const [showOfferDetails, setShowOfferDetails] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<P2POffer | null>(null);
   const [showEscrowSystem, setShowEscrowSystem] = useState(false);
   const [showDisputeResolution, setShowDisputeResolution] = useState(false);
   const [selectedTrade, setSelectedTrade] = useState<any>(null);
   const [selectedDispute, setSelectedDispute] = useState<any>(null);
-
-  // Create offer form state
-  const [newOffer, setNewOffer] = useState({
-    type: "SELL" as "BUY" | "SELL",
-    asset: "BTC",
-    fiatCurrency: "USD",
-    price: "",
-    minAmount: "",
-    maxAmount: "",
-    totalAmount: "",
-    paymentMethods: [] as string[],
-    terms: "",
-    autoReply: "",
-  });
 
   const { toast } = useToast();
   const { user } = useAuth();
