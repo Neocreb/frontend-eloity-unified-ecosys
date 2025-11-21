@@ -203,14 +203,14 @@ const DashboardInner = () => {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={()=>navigate('/app/wallet/send-money')}
-                className="bg-blue-500 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-blue-600 transition-all hover:scale-105"
+                className="bg-blue-500 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-blue-600 transition-all hover:scale-105 active:scale-95"
               >
                 <Plane className="h-5 w-5" />
                 <span>Send Money</span>
               </button>
               <button
                 onClick={()=>navigate('/app/wallet/deposit')}
-                className="bg-green-500 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-green-600 transition-all hover:scale-105"
+                className="bg-green-500 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-green-600 transition-all hover:scale-105 active:scale-95"
               >
                 <ArrowDown className="h-5 w-5" />
                 <span>Deposit</span>
@@ -333,7 +333,7 @@ const DashboardInner = () => {
                 <Star className="h-5 w-5 text-purple-600" />
                 <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
               </div>
-              <button className="text-blue-600 text-sm font-medium hover:underline">See All</button>
+              <button onClick={()=>navigate('/app/wallet/transactions')} className="text-blue-600 text-sm font-medium hover:underline">See All</button>
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
               <div className="text-gray-600 text-sm">No transactions yet.</div>
@@ -348,8 +348,8 @@ const DashboardInner = () => {
             </div>
             <div className="text-sm text-gray-600 mb-4">No gifts or tips sent yet</div>
             <button
-              onClick={()=>navigate('/app/wallet/send-gifts')}
-              className="w-full bg-purple-600 text-white rounded-lg py-2 px-4 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-purple-700 transition-all"
+              onClick={()=>navigate('/app/send-gifts')}
+              className="w-full bg-purple-600 text-white rounded-lg py-2 px-4 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-purple-700 transition-all active:scale-95"
             >
               <Gift className="h-4 w-4" />
               Send Your First Gift
@@ -360,7 +360,7 @@ const DashboardInner = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">My Cards</h2>
-              <button className="text-blue-600 text-sm font-medium hover:underline">Manage</button>
+              <button onClick={()=>navigate('/app/wallet/cards')} className="text-blue-600 text-sm font-medium hover:underline">Manage</button>
             </div>
             <div className="space-y-3">
               {/* Visa Card */}
@@ -405,7 +405,7 @@ const DashboardInner = () => {
                 </div>
                 <div className="text-xs text-gray-600 mb-3">Protect your account with two-factor authentication.</div>
               </div>
-              <button className="w-full bg-white text-blue-600 border border-blue-200 rounded-lg py-2 px-4 font-semibold text-sm hover:bg-blue-50 transition-all">
+              <button onClick={()=>navigate('/app/settings')} className="w-full bg-white text-blue-600 border border-blue-200 rounded-lg py-2 px-4 font-semibold text-sm hover:bg-blue-50 transition-all active:scale-95">
                 View
               </button>
             </div>
