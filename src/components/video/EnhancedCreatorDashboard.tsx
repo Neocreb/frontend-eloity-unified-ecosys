@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 
 
-import { AIContentAssistant } from "@/components/ai/AIFeatures";
-import AIPerformanceInsights from "@/components/ai/AIPerformanceInsights";
+import UnifiedAIStudio from "@/components/ai/UnifiedAIStudio";
 import {
   Card,
   CardContent,
@@ -111,7 +110,6 @@ import {
 import { unifiedAnalyticsService } from "@/services/unifiedAnalyticsService";
 import { DemographicsService } from "@/services/demographicsService";
 import { useAuth } from "@/contexts/AuthContext";
-import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 /**
@@ -158,7 +156,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [sortBy, setSortBy] = useState("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -177,8 +174,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [demographics, setDemographics] = useState<any>(null);
-  const [unsubscribeRef, setUnsubscribeRef] = useState<(() => void) | null>(null);
-  const [demographicUnsubscribeRef, setDemographicUnsubscribeRef] = useState<(() => void) | null>(null);
 
   const { user } = useAuth();
 
@@ -429,140 +424,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
     };
   }, [user, timeRange]);
 
-  // Set up real-time data subscription
-  useEffect(() => {
-    if (user) {
-      // Subscribe to real-time data updates
-      const unsubscribe = unifiedAnalyticsService.subscribeToDataUpdates(user.id, (updatedMetrics) => {
-        // Update the UI with the new data
-        const realPlatformFeatures = [
-          {
-            name: "Feed & Social",
-            icon: House,
-            color: "bg-blue-500",
-            growth: updatedMetrics?.social?.posts?.engagementRate || 0,
-            active: true,
-            metrics: [
-              { title: "Total Posts", value: updatedMetrics?.social?.posts?.totalPosts || "0", change: 0, trend: "up", icon: FileText, color: "text-blue-600" },
-              { title: "Followers", value: updatedMetrics?.social?.audience?.totalFollowers || "0", change: 0, trend: "up", icon: Users, color: "text-green-600" },
-            ],
-          },
-          {
-            name: "Video",
-            icon: Video,
-            color: "bg-red-500",
-            growth: updatedMetrics?.social?.videos?.retentionRate || 0,
-            active: true,
-            metrics: [
-              { title: "Videos Created", value: updatedMetrics?.social?.videos?.totalVideos || "0", change: 0, trend: "up", icon: Film, color: "text-red-600" },
-              { title: "Total Views", value: updatedMetrics?.social?.videos?.avgViews || "0", change: 0, trend: "up", icon: Play, color: "text-blue-600" },
-            ],
-          },
-          {
-            name: "Marketplace",
-            icon: ShoppingBag,
-            color: "bg-green-500",
-            growth: updatedMetrics?.ecommerce?.sales?.conversionRate || 0,
-            active: true,
-            metrics: [
-              { title: "Products Sold", value: updatedMetrics?.ecommerce?.sales?.totalOrders || "0", change: 0, trend: "up", icon: ShoppingBag, color: "text-green-600" },
-              { title: "Revenue", value: formatCurrency(updatedMetrics?.ecommerce?.sales?.totalRevenue || 0), change: 0, trend: "up", icon: DollarSign, color: "text-emerald-600" },
-            ],
-          },
-          {
-            name: "Freelance",
-            icon: Briefcase,
-            color: "bg-orange-500",
-            growth: updatedMetrics?.freelance?.performance?.successScore || 0,
-            active: true,
-            metrics: [
-              { title: "Active Projects", value: updatedMetrics?.freelance?.projects?.activeProjects || "0", change: 0, trend: "up", icon: Briefcase, color: "text-orange-600" },
-              { title: "Earnings", value: formatCurrency(updatedMetrics?.freelance?.earnings?.totalEarnings || 0), change: 0, trend: "up", icon: DollarSign, color: "text-emerald-600" },
-            ],
-          },
-          {
-            name: "Crypto",
-            icon: Coins,
-            color: "bg-yellow-500",
-            growth: updatedMetrics?.crypto?.portfolio?.totalPnL || 0,
-            active: true,
-            metrics: [
-              { title: "Portfolio Value", value: formatCurrency(updatedMetrics?.crypto?.portfolio?.totalValue || 0), change: 0, trend: "up", icon: Coins, color: "text-yellow-600" },
-              { title: "Win Rate", value: `${updatedMetrics?.crypto?.trading?.winRate || 0}%`, change: 0, trend: "up", icon: TrendingUp, color: "text-green-600" },
-            ],
-          },
-          {
-            name: "Wallet",
-            icon: Wallet,
-            color: "bg-purple-500",
-            growth: 0,
-            active: true,
-            metrics: [
-              { title: "Balance", value: formatCurrency(0), change: 0, trend: "up", icon: DollarSign, color: "text-purple-600" },
-              { title: "Transactions", value: "0", change: 0, trend: "up", icon: Activity, color: "text-blue-600" },
-            ],
-          },
-          {
-            name: "Events",
-            icon: CalendarIcon,
-            color: "bg-pink-500",
-            growth: 0,
-            active: true,
-            metrics: [
-              { title: "Events Created", value: "0", change: 0, trend: "up", icon: CalendarIcon, color: "text-pink-600" },
-              { title: "Attendees", value: "0", change: 0, trend: "up", icon: Users, color: "text-green-600" },
-            ],
-          },
-          {
-            name: "Tips & Rewards",
-            icon: Gift,
-            color: "bg-cyan-500",
-            growth: 0,
-            active: true,
-            metrics: [
-              { title: "Tips Received", value: formatCurrency(0), change: 0, trend: "up", icon: Heart, color: "text-pink-600" },
-              { title: "Rewards Earned", value: formatCurrency(0), change: 0, trend: "up", icon: Gift, color: "text-cyan-600" },
-            ],
-          },
-        ];
-        
-        setPlatformFeatures(realPlatformFeatures);
-        // compute revenue roughly
-        const revenue = realPlatformFeatures.reduce((sum, feature) => {
-          const rm = feature.metrics.find((m: any) => m.title.includes("Revenue") || m.title.includes("Earnings"));
-          if (rm && typeof rm.value === "string") {
-            const v = parseFloat(rm.value.replace(/[^0-9.-]/g, "")) || 0;
-            return sum + v;
-          }
-          return sum;
-        }, 0);
-        setTotalRevenue(revenue);
-        setTotalGrowth(realPlatformFeatures.length ? realPlatformFeatures.reduce((s, f) => s + f.growth, 0) / realPlatformFeatures.length : 0);
-      });
-      
-      // Store the unsubscribe function
-      setUnsubscribeRef(() => unsubscribe);
-      
-      // Subscribe to real-time demographic updates
-      const demographicUnsubscribe = DemographicsService.subscribeToDemographicUpdates(user.id, (updatedDemographics) => {
-        setDemographics(updatedDemographics);
-      });
-      
-      // Store the demographic unsubscribe function
-      setDemographicUnsubscribeRef(() => demographicUnsubscribe);
-    }
-    
-    // Cleanup function to unsubscribe when component unmounts or user changes
-    return () => {
-      if (unsubscribeRef) {
-        unsubscribeRef();
-      }
-      if (demographicUnsubscribeRef) {
-        demographicUnsubscribeRef();
-      }
-    };
-  }, [user]);
-
   // Fetch content page (simplified / using fallback)
   const fetchContentPage = async ({
     types,
@@ -777,14 +638,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
                   <TabsTrigger value="wallet" className="flex items-center gap-2 whitespace-nowrap px-3">
                     <Wallet className="w-4 h-4" /> <span className="hidden sm:inline">Wallet</span><span className="sm:hidden">Money</span>
                   </TabsTrigger>
-                  <TabsTrigger value="ai-content" className="flex items-center gap-2 whitespace-nowrap px-3">
-                    <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Content</span><span className="sm:hidden">AI</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="ai-assistant" className="flex items-center gap-2 whitespace-nowrap px-3">
-                    <Brain className="w-4 h-4" /> <span className="hidden sm:inline">AI Assistant</span><span className="sm:hidden">AI</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="ai-insights" className="flex items-center gap-2 whitespace-nowrap px-3">
-                    <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Insights</span><span className="sm:hidden">AI</span>
+                  <TabsTrigger value="ai-studio" className="flex items-center gap-2 whitespace-nowrap px-3">
+                    <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Studio</span><span className="sm:hidden">AI</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -1837,7 +1692,7 @@ const EnhancedCreatorDashboard: React.FC = () => {
                       {demographics?.locationDistribution?.map((location: any, index: number) => (
                         <div key={index} className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{index === 0 ? '🇺🇸' : index === 1 ? '🇬🇧' : index === 2 ? '🇨🇦' : index === 3 ? '🇩🇪' : index === 4 ? '🇦����' : '🌐'}</span>
+                            <span className="text-lg">{index === 0 ? '🇺🇸' : index === 1 ? '🇬🇧' : index === 2 ? '🇨🇦' : index === 3 ? '🇩��' : index === 4 ? '🇦����' : '🌐'}</span>
                             <span className="font-medium">{location.location}</span>
                           </div>
                           <span className="text-gray-600 dark:text-gray-400">{location.percentage}%</span>
@@ -2651,84 +2506,8 @@ const EnhancedCreatorDashboard: React.FC = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="ai-content" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">AI Content Generator</h2>
-                  <p className="text-gray-600 dark:text-gray-400">Create AI-powered content for your posts</p>
-                </div>
-                <Button onClick={() => setShowAIGenerator(true)}>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate New Content
-                </Button>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Edith AI Content Generator</CardTitle>
-                  <CardDescription>Create stunning AI-generated images and videos for your content</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
-                      <Sparkles className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">Create AI-Powered Content</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-center max-w-md">
-                      Generate stunning images and videos with Edith AI to enhance your posts and engage your audience.
-                    </p>
-                    <Button onClick={() => setShowAIGenerator(true)} size="lg">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Generate Content with Edith AI
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <ImageIcon className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <h3 className="font-semibold">Image Generation</h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Create stunning images with detailed prompts for your social media posts.</p>
-                    <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(true)}>Generate Image</Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <Video className="w-5 h-5 text-red-600" />
-                      </div>
-                      <h3 className="font-semibold">Video Creation</h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Generate short videos with AI for engaging content.</p>
-                    <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(true)}>Generate Video</Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Wand2 className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <h3 className="font-semibold">Smart Editing</h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Enhance and upscale your AI-generated content with smart editing tools.</p>
-                    <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(true)}>Enhance Content</Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="ai-assistant" className="space-y-6">
-              <AIContentAssistant />
+            <TabsContent value="ai-studio" className="space-y-6">
+              <UnifiedAIStudio />
             </TabsContent>
 
             <TabsContent value="features" className="space-y-6">
@@ -2898,25 +2677,9 @@ const EnhancedCreatorDashboard: React.FC = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="ai-insights" className="space-y-6">
-              <AIPerformanceInsights />
-            </TabsContent>
           </Tabs>
         )}
       </div>
-
-      {/* AI Generator Modal (simple) */}
-      {showAIGenerator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-[90%] max-w-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Edith AI Generator</h3>
-              <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(false)}>Close</Button>
-            </div>
-            <EdithAIGenerator onGenerate={(c) => { alert("AI content generated"); setShowAIGenerator(false); }} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
