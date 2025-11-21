@@ -75,109 +75,43 @@ export class UserService {
     }
   }
 
-  // Get user by username (try users table first, then profiles table)
+  // Get user by username (use profiles table)
   static async getUserByUsername(username: string): Promise<UserWithProfile | null> {
     try {
-      // First try to get from users table
-      const usersResponse = await supabaseClient
-        .from('users')
+      // Get from profiles table (primary public table)
+      const profilesResponse = await supabaseClient
+        .from('profiles')
         .select('*')
         .eq('username', username)
         .single();
 
-      if (!usersResponse.error && usersResponse.data) {
-        // Found in users table, now get profile if exists
-        const profilesResponse = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('user_id', usersResponse.data.id)
-          .single();
-
-        // Check if profiles table exists
-        if (profilesResponse.error) {
-          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
-            console.warn("Profiles table does not exist in the database");
-            // Return user data without profile
-            const userData = usersResponse.data;
-            return {
-              id: userData.id,
-              username: userData.username || null,
-              full_name: userData.full_name || null,
-              name: userData.full_name || null,
-              avatar: userData.avatar_url || null,
-              avatar_url: userData.avatar_url || null,
-              bio: userData.bio || null,
-              is_verified: userData.is_verified || false,
-              points: userData.points || 0,
-              level: userData.level || null,
-              role: userData.role || null,
-              created_at: userData.created_at || null,
-              updated_at: userData.updated_at || null,
-              profile: null
-            };
-          }
-          console.error("Error fetching user profile:", profilesResponse.error);
-        }
-
-        // Construct UserWithProfile object from user data
-        const userData = usersResponse.data;
-        return {
-          id: userData.id,
-          username: userData.username || null,
-          full_name: userData.full_name || null,
-          name: userData.full_name || null,
-          avatar: userData.avatar_url || null,
-          avatar_url: userData.avatar_url || null,
-          bio: userData.bio || null,
-          is_verified: userData.is_verified || false,
-          points: userData.points || 0,
-          level: userData.level || null,
-          role: userData.role || null,
-          created_at: userData.created_at || null,
-          updated_at: userData.updated_at || null,
-          profile: profilesResponse.data || null
-        };
-      }
-
-      // If not found in users table, try profiles table
-      try {
-        const profilesResponse = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('username', username)
-          .single();
-
-        if (profilesResponse.error) {
-          if (profilesResponse.error.code === '42P01' || profilesResponse.error.message.includes('not exist')) {
-            console.warn("Profiles table does not exist in the database");
-            return null;
-          }
-          console.error("Error fetching user by username:", profilesResponse.error);
-          return null;
-        }
-
-        // Construct UserWithProfile object from profile data
-        const profileData = profilesResponse.data;
-        return {
-          id: profileData.user_id,
-          username: profileData.username || null,
-          full_name: profileData.full_name || null,
-          name: profileData.name || null,
-          avatar: profileData.avatar || null,
-          avatar_url: profileData.avatar_url || null,
-          bio: profileData.bio || null,
-          is_verified: profileData.is_verified || false,
-          points: profileData.points || 0,
-          level: profileData.level || null,
-          role: profileData.role || null,
-          created_at: profileData.created_at || null,
-          updated_at: profileData.updated_at || null,
-          profile: profileData
-        };
-      } catch (profileError) {
-        console.error("Error accessing profiles table:", profileError);
+      if (profilesResponse.error) {
+        console.warn("Error fetching user by username:", profilesResponse.error);
         return null;
       }
+
+      // Construct UserWithProfile object from profile data
+      const profileData = profilesResponse.data;
+      if (!profileData) {
+        return null;
+      }
+
+      return {
+        id: profileData.user_id,
+        username: profileData.username || null,
+        full_name: profileData.full_name || null,
+        name: profileData.full_name || null,
+        avatar: profileData.avatar_url || null,
+        avatar_url: profileData.avatar_url || null,
+        bio: profileData.bio || null,
+        is_verified: profileData.is_verified || false,
+        points: profileData.points || 0,
+        level: profileData.level || null,
+        role: profileData.role || null,
+        created_at: profileData.created_at || null,
+        updated_at: profileData.updated_at || null,
+        profile: profileData
+      };
     } catch (error) {
       console.error("Error in getUserByUsername:", error);
       return null;
