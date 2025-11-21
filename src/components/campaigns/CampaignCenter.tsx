@@ -282,6 +282,17 @@ const CampaignCenter: React.FC = () => {
     return <IconComponent className="h-4 w-4" />;
   };
 
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-none px-0 py-6 flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="h-12 w-12 rounded-full border-2 border-blue-600 border-t-transparent animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading campaigns...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-none px-0 py-6 space-y-6">
       {/* Header */}
