@@ -109,7 +109,6 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({
   const [posts, setPosts] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<any[]>([]);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
   const [isEditingCover, setIsEditingCover] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
