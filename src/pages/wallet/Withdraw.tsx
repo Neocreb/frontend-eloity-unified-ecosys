@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
