@@ -51,22 +51,22 @@
   - Output: Verification status and next steps
   - Database: Update `is_verified`, store verification method
 
-#### 1.2 Deposit Endpoints
-- [ ] `POST /api/wallet/deposit/initiate` - Start deposit flow
+#### 1.2 Deposit Endpoints ✅
+- [x] `POST /api/wallet/deposit/initiate` - Start deposit flow
   - Input: amount, method, methodProviderId, destination, countryCode, currency
   - Output: depositId, paymentUrl (for external processors), amountWithFee
   - Validation: Min/max amount per provider, user verified if high amount
   - Database: Insert into `wallet_transactions` with status='pending'
   - External: Call payment processor API (Paystack, Flutterwave, etc.)
 
-- [ ] `POST /api/wallet/deposit/webhook` - Handle payment processor callbacks
+- [x] `POST /api/wallet/deposit/webhook` - Handle payment processor callbacks
   - Input: paymentId, status, reference, amount, timestamp
   - Output: 200 OK or error
   - Validation: Verify webhook signature from processor
   - Database: Update `wallet_transactions` status
   - Actions: If success, credit user's wallet
 
-- [ ] `GET /api/wallet/deposit/status/:depositId` - Check deposit status
+- [x] `GET /api/wallet/deposit/status/:depositId` - Check deposit status
   - Output: Transaction with status and metadata
   - Database: Query `wallet_transactions`
 
