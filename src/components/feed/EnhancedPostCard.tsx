@@ -73,7 +73,12 @@ const EnhancedPostCard: React.FC<EnhancedPostCardProps> = ({ post }) => {
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-3">
-        <p className="whitespace-pre-wrap">{post.content}</p>
+        <PostContentRenderer
+          content={post.content}
+          maxLines={4}
+          className="mb-3"
+          onSeeMore={() => navigate(`/app/post/${post.id}`)}
+        />
         {post.image && (
           <div className="mt-3 overflow-hidden rounded-lg">
             <img
