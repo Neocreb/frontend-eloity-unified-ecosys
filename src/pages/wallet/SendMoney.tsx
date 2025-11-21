@@ -31,6 +31,8 @@ const SendMoney = () => {
   const [step, setStep] = useState<"recipient" | "amount" | "review" | "success">(
     "recipient"
   );
+
+  // Note: This is for peer-to-peer transfers to other Eloity users
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(
     null
@@ -100,7 +102,7 @@ const SendMoney = () => {
   if (step === "recipient") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <WalletActionHeader title="Send Money" />
+        <WalletActionHeader title="Send Money" subtitle="Transfer to another Eloity user" />
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
