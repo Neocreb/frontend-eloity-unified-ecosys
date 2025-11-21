@@ -159,7 +159,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [sortBy, setSortBy] = useState("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
