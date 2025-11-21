@@ -109,6 +109,7 @@ const DashboardInner = () => {
       <div className="space-y-6">
         <QuickActionsWidget />
         <RecentTransactions />
+        <GiftsAndTipsWidget />
         <PaymentCards />
         <SmartRecommendations />
       </div>
