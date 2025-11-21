@@ -279,7 +279,7 @@ const Deposit = () => {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setStep("method")}
+            onClick={() => setStep("country")}
             className="w-full h-12"
           >
             Back
