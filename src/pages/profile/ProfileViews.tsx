@@ -19,6 +19,7 @@ import {
   Tablet,
 } from "lucide-react";
 import { profileService } from "@/services/profileService";
+import { profileViewsService } from "@/services/profileViewsService";
 
 interface Viewer {
   id: string;
