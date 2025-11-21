@@ -62,7 +62,7 @@ import { cn } from "@/lib/utils";
 import AudienceTargeting from "@/components/campaigns/AudienceTargeting";
 import CampaignPayment from "@/components/campaigns/CampaignPayment";
 import { useUserBoostableContent } from "@/hooks/use-user-boostable-content";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { campaignService } from "@/services/campaignService";
 
 // Available content types for boosting
