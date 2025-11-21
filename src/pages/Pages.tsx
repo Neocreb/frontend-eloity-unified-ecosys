@@ -204,62 +204,6 @@ const Pages: React.FC = () => {
         )}
       </div>
 
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogTrigger asChild>
-          <span />
-        </DialogTrigger>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Page</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="pageName">Page Name *</Label>
-              <Input
-                id="pageName"
-                value={pageForm.name}
-                onChange={(e) => setPageForm((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter page name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pageCategory">Category</Label>
-              <Input
-                id="pageCategory"
-                value={pageForm.category}
-                onChange={(e) => setPageForm((prev) => ({ ...prev, category: e.target.value }))}
-                placeholder="e.g. Business"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pageDescription">Description</Label>
-              <Textarea
-                id="pageDescription"
-                value={pageForm.description}
-                onChange={(e) => setPageForm((prev) => ({ ...prev, description: e.target.value }))}
-                rows={3}
-                placeholder="Describe your page"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pagePrivacy">Privacy</Label>
-              <Select value={pageForm.privacy} onValueChange={(v) => setPageForm((prev) => ({ ...prev, privacy: v }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select privacy" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="private">Private</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleCreatePage} className="flex-1">Create</Button>
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
