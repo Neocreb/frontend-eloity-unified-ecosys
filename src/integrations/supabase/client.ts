@@ -18,46 +18,28 @@ const debugFetch: typeof fetch = async (input, init) => {
   try {
     const res = await fetch(input as RequestInfo, init as RequestInit);
 
-    // Log headers/metadata only; avoid reading body here to prevent interfering
-    // with downstream consumers. If possible, create a fresh Response copy so
-    // later readers can safely consume it even if upstream code already consumed
-    // the original stream.
-    try {
-      const url = typeof input === 'string' ? input : (input as Request).url;
-      const ct = res.headers.get('content-type') || '';
-      const metadata = { url, status: res.status, statusText: res.statusText, type: res.type, contentType: ct };
+    // Log metadata only without trying to read/clone the body
+    if (!res.ok) {
+      try {
+        const url = typeof input === 'string' ? input : (input as Request).url;
+        const ct = res.headers.get('content-type') || '';
+        const metadata = { url, status: res.status, statusText: res.statusText, type: res.type, contentType: ct };
 
-      if ((res.status === 404 || res.status === 400) && typeof url === 'string') {
-        const restMatch = url.match(/\/rest\/v1\/([a-zA-Z0-9_]+)/);
-        const tableName = restMatch ? restMatch[1] : null;
-        if (tableName) {
-          console.warn(`Supabase REST ${res.status} for table "${tableName}": the table may not exist or is unauthorized. URL: ${url}`);
-          try { console.warn('Supabase request metadata:', JSON.stringify(metadata)); } catch (_) { console.warn('Supabase request metadata (could not stringify)'); }
+        if ((res.status === 404 || res.status === 400 || res.status === 406 || res.status === 409) && typeof url === 'string') {
+          const restMatch = url.match(/\/rest\/v1\/([a-zA-Z0-9_]+)/);
+          const tableName = restMatch ? restMatch[1] : null;
+          if (tableName) {
+            console.warn(`Supabase REST ${res.status} for table "${tableName}": the table may not exist or is unauthorized. URL: ${url}`);
+          }
+        } else {
+          console.error('Supabase request failed', metadata);
         }
-      } else if (!res.ok) {
-        console.error('Supabase request failed', metadata);
-        try { console.error('Supabase request failed (stringified):', JSON.stringify(metadata)); } catch (_) { /* ignore */ }
+      } catch (e) {
+        console.error('Supabase metadata log error', e);
       }
-    } catch (e) {
-      console.error('Supabase metadata log error', e);
     }
 
-    // Attempt to return a fresh Response instance with the same body contents so
-    // downstream consumers can read it even if the original stream was consumed.
-    try {
-      const buffer = await res.arrayBuffer();
-      const headers = new Headers();
-      res.headers.forEach((v, k) => headers.set(k, v));
-      const newRes = new Response(buffer, { status: res.status, statusText: res.statusText, headers });
-      return newRes as any;
-    } catch (readErr) {
-      // If we can't read/clone the body (it may already be consumed), fall back
-      // to returning the original response. This may still surface the original
-      // "body stream already read" error; in that case the upstream consumer is
-      // responsible for not draining the response before Supabase.
-      console.warn('debugFetch: could not clone response body, returning original response', readErr);
-      return res;
-    }
+    return res;
   } catch (networkError) {
     console.error('Supabase network error', networkError);
     throw networkError;
