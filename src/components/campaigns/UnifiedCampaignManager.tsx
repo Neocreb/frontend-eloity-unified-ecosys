@@ -90,7 +90,6 @@ export const UnifiedCampaignManager: React.FC<UnifiedCampaignManagerProps> = ({
   maxCampaigns,
 }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [activeTab, setActiveTab] = useState("campaigns");
