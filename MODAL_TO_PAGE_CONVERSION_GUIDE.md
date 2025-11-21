@@ -758,6 +758,158 @@ The feed-related modals (CheckIn, Feeling, TagPeople, MediaUpload) are currently
 
 **Recommendation**: Keep these as modals OR create standalone pages with a different UX pattern (e.g., search/browse first, then navigate to create post with pre-filled data).
 
+## 📋 COMPREHENSIVE MODAL AUDIT & NEW DISCOVERIES (CURRENT SESSION)
+
+### Complete Codebase Scan Results
+**Total Modals Found**: 50+ modal/dialog components
+**Previously Documented**: 38
+**Newly Identified**: 12+ additional modals not previously in guide
+**Recommendation Status**: 87% documented, 13% requiring addition to guide
+
+### Newly Discovered Modals Requiring Conversion Decisions
+
+#### 🔴 HIGH PRIORITY - Complex Modals (Should Become Full Pages)
+
+**1. PostOptionsModal** → `src/components/feed/PostOptionsModal.tsx`
+- **What it does**: Multi-action dropdown menu for posts (edit, delete, report, follow, block, notify, preferences)
+- **Current implementation**: Dialog + nested AlertDialog for confirmations
+- **Complexity**: High - includes edit dialog, delete confirmation, report form, preference settings
+- **Impact**: High - frequently used in feed
+- **Recommended route**: `/app/feed/post/:postId/options` OR `/app/feed/post/:postId/manage`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Candidate for Phase 4
+- **Notes**: Contains sub-modals (edit, delete, report). Consider creating dedicated pages or keeping as context menu with navigation
+
+**2. EnhancedGroupInfoModal** → `src/components/chat/group/EnhancedGroupInfoModal.tsx`
+- **What it does**: Comprehensive group management interface (info, members, media, invite links, leave/delete group)
+- **Current implementation**: Dialog + AlertDialog for destructive actions
+- **Complexity**: Very High - multiple tabs/sections with state management
+- **Impact**: High - core group management feature
+- **Recommended route**: `/app/community/group/:groupId/settings` OR `/app/community/group/:groupId/manage`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Candidate for Phase 4
+- **Suggested split**: Could be merged with existing group detail view or become dedicated settings page
+
+**3. GroupInfoModal** → `src/components/chat/group/GroupInfoModal.tsx`
+- **What it does**: Group information display and basic management (members, media, settings, leave/delete)
+- **Current implementation**: Dialog + AlertDialog
+- **Complexity**: High - similar functionality to EnhancedGroupInfoModal but simpler
+- **Impact**: Medium-High
+- **Recommended route**: `/app/community/group/:groupId/info`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Candidate for Phase 4
+- **Notes**: Potential consolidation with EnhancedGroupInfoModal
+
+**4. GroupSettingsModal** → `src/components/chat/group/GroupSettingsModal.tsx`
+- **What it does**: Edit group chat settings (who can post, invite options, notifications, visibility)
+- **Current implementation**: Dialog
+- **Complexity**: Medium-High
+- **Impact**: Medium
+- **Recommended route**: `/app/community/group/:groupId/settings/options`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Candidate for Phase 4
+- **Notes**: Should be sub-route of main group management
+
+**5. CryptoDetailModal** → `src/components/crypto/CryptoDetailModal.tsx`
+- **What it does**: Detailed cryptocurrency information display (price, market cap, volume, stats, charts)
+- **Current implementation**: ResponsiveDialog (custom responsive wrapper)
+- **Complexity**: Medium
+- **Impact**: Medium - useful for crypto portfolio exploration
+- **Recommended route**: `/app/crypto/coin/:symbol` OR `/app/crypto/details/:coinId`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Good candidate for Phase 3
+- **Benefits of conversion**: Better desktop UX, bookmarkable crypto details, full-screen charts
+
+**6. EnhancedSendMoneyModal** → `src/components/wallet/EnhancedSendMoneyModal.tsx`
+- **What it does**: Advanced send money interface with dual modes (contact transfer, bank transfer)
+- **Current implementation**: Dialog with tabs
+- **Complexity**: Very High - bank/contact management, fee calculation, verification
+- **Impact**: Very High - core wallet feature
+- **Recommended route**: `/app/wallet/send` (expand existing) OR create dedicated `/app/wallet/send-advanced`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Alternative to simple SendMoney
+- **Notes**: More complex than existing SendMoney page; should evaluate consolidation
+
+**7. DepositModal (Wallet)** → `src/components/wallet/DepositModal.tsx`
+- **What it does**: Wallet deposit interface with multiple payment methods (card, bank, crypto, mobile money)
+- **Current implementation**: Dialog with method selection and country selector
+- **Complexity**: High - regional payment methods, country/bank selection
+- **Impact**: Very High - core wallet feature
+- **Recommended route**: `/app/wallet/deposit` (should expand existing) OR `/app/wallet/deposit-advanced`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Alternative/enhancement to current deposit
+- **Notes**: More comprehensive than basic deposit; consider merging with existing deposit flow
+
+**8. WithdrawModal (Wallet)** → `src/components/wallet/WithdrawModal.tsx`
+- **What it does**: Wallet withdraw with bank selection, amounts, regional payment methods
+- **Current implementation**: Dialog
+- **Complexity**: High
+- **Impact**: Very High - core wallet feature
+- **Recommended route**: `/app/wallet/withdraw` (should expand existing) OR `/app/wallet/withdraw-advanced`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Alternative to rewards withdrawal
+- **Notes**: Different from WithdrawalModal (rewards). Wallet withdrawal has bank/regional focus
+
+**9. UserListModal** → `src/components/profile/UserListModal.tsx`
+- **What it does**: Display user lists (followers, following, viewers) with search, follow/message/send money actions
+- **Current implementation**: Dialog with search and filtering
+- **Complexity**: Medium
+- **Impact**: Medium - used in profile pages
+- **Recommended route**: `/app/profile/:username/followers`, `/app/profile/:username/following`, `/app/profile/:username/viewers`
+- **Status**: ⚠️ **NOT YET CONVERTED** - Good candidate for Phase 3
+- **Benefits**: Better mobile UX, dedicated pages for list browsing
+
+---
+
+#### 🟡 MEDIUM PRIORITY - Moderately Complex Modals
+
+**10. QuickActionModals (Wallet)** → `src/components/wallet/QuickActionModals.tsx`
+- **What it does**: Collection of small wallet action modals (send, request, top-up combined)
+- **Current implementation**: Multiple Dialog components in one file
+- **Complexity**: Medium
+- **Impact**: Medium-High - frequently used quick actions
+- **Recommended action**: Could remain as modals OR convert each to dedicated pages depending on UX goals
+- **Status**: ⚠️ **NEEDS ARCHITECTURAL DECISION**
+- **Notes**: Quick actions might work better as modals but could be enhanced as full pages
+
+**11. EnhancedGroupInfoModal vs GroupInfoModal Consolidation** → Need architectural decision
+- **Current state**: Two similar components (GroupInfoModal and EnhancedGroupInfoModal) doing mostly the same thing
+- **Recommendation**: Consolidate into single page `/app/community/group/:groupId/settings`
+- **Impact**: Reduces code duplication, improves UX consistency
+- **Scope**: Phase 4 refactor opportunity
+
+---
+
+#### 🟢 LOW PRIORITY or GOOD-AS-MODAL Decisions
+
+**Admin Modals** (Consider keeping as modal overlays for context-sensitive actions)
+- **DeleteUserDialog** - AlertDialog for admin user deletion (OK as modal for admin context)
+- **StickerModerationPanel** - Admin moderation interface (could be full page but modal might work)
+- Various admin confirmation dialogs
+
+**Feed Modals** (Intentionally retained - CONFIRMED as architectural decision)
+- CheckInModal, FeelingActivityModal, FeelingLocationModal, MediaUploadModal, TagPeopleModal
+- Status: ⏸️ **KEEP AS MODALS** - Tight coupling with CreatePostFlow (already documented as intentional)
+
+---
+
+### Summary of Changes Needed to Guide
+
+#### Metrics Update
+**Previous**: 33/38 modals converted (87%)
+**Actual**: 33/50 modals documented in original guide (66% of discovered modals)
+**Newly Added Candidates**: 12 additional modals found
+**Revised Completion**: 33/50 = 66% complete | 17 remaining (34%)
+
+**Breakdown of 17 Remaining:**
+- Phase 3 High Priority (Should convert): 2 (UserListModal, CryptoDetailModal)
+- Phase 4 High Priority (Should convert): 5 (PostOptionsModal, EnhancedGroupInfoModal, GroupInfoModal, GroupSettingsModal, EnhancedSendMoneyModal)
+- Phase 4 Medium Priority (Evaluate): 5 (DepositModal, WithdrawModal, QuickActionModals, Admin modals, consolidation candidates)
+- Keep as Modals (Architectural Decision): 5 (Feed modals - CheckIn, Feeling, Location, Media, TagPeople)
+
+#### New Section to Add to Guide: "PHASE 3 & 4 - EXTENDED MODAL AUDIT"
+This section should document:
+1. Newly discovered modals not previously in guide
+2. Recommendations for each (convert vs keep as modal)
+3. Architectural decisions needed (e.g., consolidation, splitting)
+4. Priority scoring for implementation
+5. Route mapping for conversions
+6. Dependencies and integration points
+
+---
+
 ## 🚀 Latest Session Summary - Error Fix & Modal Conversions
 
 ### What Was Accomplished This Session
