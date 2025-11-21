@@ -88,7 +88,7 @@ const Withdraw = () => {
   };
 
   const getRecipientIcon = () => {
-    const icons = { bank: "🏦", username: "👤", email: "✉️", mobile: "📱" };
+    const icons = { bank: "🏦", username: "👤", email: "��️", mobile: "📱" };
     return icons[recipientType];
   };
 
@@ -282,7 +282,7 @@ const Withdraw = () => {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setStep("account")}
+            onClick={() => setStep("recipient")}
             className="w-full h-12"
           >
             Back
@@ -293,7 +293,35 @@ const Withdraw = () => {
   }
 
   if (step === "review") {
-    const account = bankAccounts.find((a) => a.id === selectedAccount);
+    const recipientDisplay = getRecipientDisplay();
+    const amountNum = parseFloat(amount);
+    let fee = 0;
+    let processingTime = "1-2 business days";
+
+    if (recipientType === "bank" && recipient.bankAccount) {
+      const bankMethod = paymentMethods.getBanksByCountry(userCountry).find(
+        (b) => b.providerName === recipient.bankAccount?.bankName
+      );
+      if (bankMethod) {
+        const feeCalc = paymentMethods.calculateWithdrawalFee(amountNum, bankMethod);
+        fee = feeCalc.fee;
+        processingTime = `${bankMethod.processingTimeMinutes > 60 ? Math.ceil(bankMethod.processingTimeMinutes / 1440) + " business days" : bankMethod.processingTimeMinutes + " minutes"}`;
+      }
+    } else if (recipientType === "username") {
+      fee = 0;
+      processingTime = "Instant";
+    } else if (recipientType === "email") {
+      fee = 0;
+      processingTime = "5-10 minutes";
+    } else if (recipientType === "mobile") {
+      const mobileMethod = paymentMethods.getMobileProvidersByCountry(userCountry)[0];
+      if (mobileMethod) {
+        const feeCalc = paymentMethods.calculateWithdrawalFee(amountNum, mobileMethod);
+        fee = feeCalc.fee;
+        processingTime = `${mobileMethod.processingTimeMinutes} minutes`;
+      }
+    }
+
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Review Withdrawal" />
@@ -303,27 +331,37 @@ const Withdraw = () => {
               <CardContent className="p-6 space-y-6">
                 <div>
                   <p className="text-sm text-gray-600">From your wallet</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">${parseFloat(amount).toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">${amountNum.toFixed(2)}</p>
                 </div>
 
                 <div className="border-t border-gray-200 pt-6">
-                  <p className="text-sm text-gray-600">To account</p>
-                  <p className="font-semibold text-gray-900 mt-2">{account?.bank}</p>
-                  <p className="text-sm text-gray-600">{account?.accountNumber}</p>
+                  <p className="text-sm text-gray-600">{recipientDisplay?.label}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xl">{getRecipientIcon()}</span>
+                    <p className="font-semibold text-gray-900">{recipientDisplay?.value}</p>
+                  </div>
                 </div>
 
                 <div className="border-t border-gray-200 pt-6">
                   <div className="flex justify-between mb-3">
                     <span className="text-gray-600">Amount</span>
-                    <span className="font-semibold">${parseFloat(amount).toFixed(2)}</span>
+                    <span className="font-semibold">${amountNum.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600 mb-3">
                     <span>Fee</span>
-                    <span>Free</span>
+                    <span>${fee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between border-t border-gray-200 pt-3">
-                    <span className="font-semibold">Total</span>
-                    <span className="font-bold text-lg">${parseFloat(amount).toFixed(2)}</span>
+                    <span className="font-semibold">You Receive</span>
+                    <span className="font-bold text-lg text-green-600">${(amountNum - fee).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900">Processing time</p>
+                    <p className="text-xs text-blue-700 mt-0.5">{processingTime}</p>
                   </div>
                 </div>
               </CardContent>
