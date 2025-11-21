@@ -547,10 +547,6 @@ const AppRoutes = () => {
           <Route path="profile/:username/store" element={<UserStore />} />
           <Route path="profile/:username/projects" element={<UserProjects />} />
           <Route path="profile/:username/trades" element={<UserTrades />} />
-          {/* Phase 3 - User List Full Page Routes */}
-          <Route path="profile/:username/followers" element={<UserFollowers />} />
-          <Route path="profile/:username/following" element={<UserFollowing />} />
-          <Route path="profile/:username/viewers" element={<UserViewers />} />
           <Route path="user/:username" element={<EnhancedProfile />} />
           <Route path="unified-profile" element={<UnifiedProfile />} />
           <Route path="unified-profile/:username" element={<UnifiedProfile />} />
