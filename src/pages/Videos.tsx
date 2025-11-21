@@ -1728,8 +1728,59 @@ const Videos: React.FC = () => {
       });
     }
   };
-  
 
+  // Handle duet creation
+  const handleDuet = async (duetVideo: VideoData) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a duet",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedVideoForDuet(duetVideo);
+      setShowDuetModal(true);
+
+      toast({
+        title: "Duet Creation Started",
+        description: "Get ready to create your duet!",
+      });
+    } catch (error) {
+      console.error("Error initiating duet:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start duet",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle duet completion
+  const handleDuetComplete = async (duetData: any) => {
+    try {
+      // Call service to save duet
+      // await duetService.createDuet(duetData);
+
+      setShowDuetModal(false);
+      setSelectedVideoForDuet(null);
+
+      toast({
+        title: "Duet Created!",
+        description: "Your duet has been published",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error completing duet:", error);
+      toast({
+        title: "Error",
+        description: "Failed to complete duet",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loading && !loadingTimeout) {
     return (
