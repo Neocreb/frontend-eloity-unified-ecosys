@@ -2683,19 +2683,6 @@ const EnhancedCreatorDashboard: React.FC = () => {
           </Tabs>
         )}
       </div>
-
-      {/* AI Generator Modal (simple) */}
-      {showAIGenerator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-[90%] max-w-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Edith AI Generator</h3>
-              <Button variant="outline" size="sm" onClick={() => setShowAIGenerator(false)}>Close</Button>
-            </div>
-            <EdithAIGenerator onGenerate={(c) => { alert("AI content generated"); setShowAIGenerator(false); }} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
