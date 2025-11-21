@@ -200,44 +200,40 @@ export class UserService {
     }
   }
 
-  // Create or update user in users table
-  static async createOrUpdateUser(userData: Partial<DbRecord>): Promise<DbRecord | null> {
+  // Create or update user in profiles table
+  static async createOrUpdateUser(userId: string, userData: Partial<DbRecord>): Promise<DbRecord | null> {
     try {
-      if (!userData.email) {
-        console.error("User email is required to create or update user");
-        return null;
-      }
-
-      // First check if user exists by email
+      // First check if user exists in profiles
       const checkResponse = await supabaseClient
-        .from('users')
-        .select('id')
-        .eq('email', userData.email)
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', userId)
         .single();
 
       let result;
       if (checkResponse.data) {
-        // Update existing user
+        // Update existing profile
         result = await supabaseClient
-          .from('users')
+          .from('profiles')
           .update(userData)
-          .eq('id', checkResponse.data.id)
+          .eq('user_id', userId)
           .select()
           .single();
       } else {
-        // Create new user
+        // Create new profile
         const insertData = {
+          user_id: userId,
           ...userData
         };
         result = await supabaseClient
-          .from('users')
+          .from('profiles')
           .insert([insertData])
           .select()
           .single();
       }
 
       if (result.error) {
-        console.error("Error creating or updating user:", result.error);
+        console.error("Error creating or updating user profile:", result.error);
         return null;
       }
 
