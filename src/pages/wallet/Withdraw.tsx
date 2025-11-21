@@ -29,13 +29,20 @@ interface RecipientData {
 
 const Withdraw = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { walletBalance } = useWalletContext();
   const [step, setStep] = useState<"recipient" | "amount" | "review" | "success">("recipient");
   const [recipientType, setRecipientType] = useState<RecipientType>("bank");
   const [recipient, setRecipient] = useState<RecipientData>({ type: "bank" });
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [userCountry] = useState("NG"); // TODO: Get from user profile
+  const [userCountry, setUserCountry] = useState("NG");
+
+  useEffect(() => {
+    // Get country from user metadata or use default
+    const country = (user?.user_metadata?.country_code as string) || "NG";
+    setUserCountry(country);
+  }, [user]);
 
   const validateRecipient = () => {
     if (recipientType === "bank" && !recipient.bankAccount) {
