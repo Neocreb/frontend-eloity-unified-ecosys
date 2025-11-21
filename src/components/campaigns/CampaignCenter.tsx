@@ -111,60 +111,6 @@ export const CAMPAIGN_GOALS = {
   },
 };
 
-// Mock data for campaigns
-const mockActiveCampaigns = [
-  {
-    id: "1",
-    name: "Premium Product Promotion",
-    goal: CAMPAIGN_GOALS.INCREASE_SALES,
-    status: "active",
-    budget: 250.00,
-    spent: 127.50,
-    remaining: 122.50,
-    duration: 7,
-    timeLeft: "4 days",
-    performance: {
-      impressions: 15420,
-      clicks: 892,
-      conversions: 23,
-      ctr: 5.8,
-      conversionRate: 2.6,
-      costPerClick: 0.14,
-      roi: 340,
-    },
-    boostedItems: [
-      { type: "product", name: "Premium Headphones", image: "/placeholder.svg" }
-    ],
-    currency: "SOFT_POINTS",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2", 
-    name: "Freelance Profile Boost",
-    goal: CAMPAIGN_GOALS.PROMOTE_TALENT,
-    status: "active",
-    budget: 100.00,
-    spent: 45.30,
-    remaining: 54.70,
-    duration: 3,
-    timeLeft: "1 day",
-    performance: {
-      impressions: 8750,
-      clicks: 234,
-      conversions: 12,
-      ctr: 2.7,
-      conversionRate: 5.1,
-      costPerClick: 0.19,
-      roi: 180,
-    },
-    boostedItems: [
-      { type: "profile", name: "UI/UX Designer Profile", image: "/placeholder.svg" }
-    ],
-    currency: "USDT",
-    createdAt: "2024-01-20",
-  },
-];
-
 // Incentives and bonuses
 const mockIncentives = [
   {
