@@ -110,7 +110,6 @@ import {
 import { unifiedAnalyticsService } from "@/services/unifiedAnalyticsService";
 import { DemographicsService } from "@/services/demographicsService";
 import { useAuth } from "@/contexts/AuthContext";
-import EdithAIGenerator from "@/components/ai/EdithAIGenerator";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 /**
