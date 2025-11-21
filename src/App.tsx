@@ -103,6 +103,7 @@ import CreateBattle from "./pages/live/CreateBattle";
 import CreateStream from "./pages/live/CreateStream";
 import CreateStory from "./pages/feed/CreateStory";
 import CreateContent from "./pages/content/Create";
+import CreateCampaignPage from "./pages/campaigns/CreateCampaign";
 // Phase 3 - Community Modal Conversions
 import CreateGroupPage from "./pages/community/CreateGroup";
 import ContributeToGroup from "./pages/community/ContributeToGroup";
