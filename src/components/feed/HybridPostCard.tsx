@@ -74,14 +74,13 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { handleUserFollow } = useEntityFollowHandlers();
-  const { isFollowing: isUserFollowing } = useProfile(post.author.username);
 
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [quoteContent, setQuoteContent] = useState("");
   const [isVideoMuted, setIsVideoMuted] = useState(true);
-  const [isFollowing, setIsFollowing] = useState(isUserFollowing || false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const replies = getPostReplies(post.id);
   const isRootPost = !post.parentId;
