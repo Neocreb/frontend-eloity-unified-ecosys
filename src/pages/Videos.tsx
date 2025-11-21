@@ -1819,7 +1819,7 @@ const Videos: React.FC = () => {
 
   return (
     <div className={`fixed inset-0 bg-black text-white overflow-hidden z-10 ${viewportHeight.safe}`}>
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -1833,7 +1833,7 @@ const Videos: React.FC = () => {
         .animate-fade-in {
           animation: fadeIn 0.2s ease-out forwards;
         }
-        
+
         @keyframes spinSlow {
           from {
             transform: rotate(0deg);
