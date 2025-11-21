@@ -205,7 +205,7 @@ router.post('/deposit/initiate', requireAuth, async (req: Request, res: Response
 
 /**
  * POST /api/wallet/withdraw/initiate
- * Start a withdrawal transaction
+ * Start a withdrawal transaction with 2FA requirement
  */
 router.post('/withdraw/initiate', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -250,8 +250,27 @@ router.post('/withdraw/initiate', requireAuth, async (req: Request, res: Respons
       return res.status(400).json({ error: 'Mobile phone is required for mobile money withdrawal' });
     }
 
+    const today = new Date().toISOString().split('T')[0];
+    const dailySummary = await walletDatabaseService.getDailyTransactionSummary(userId, today);
+
+    const dailyLimit = 10000;
+    const totalWithdrawalToday = dailySummary.withdrawn;
+
+    if (totalWithdrawalToday + amount > dailyLimit) {
+      return res.status(400).json({
+        error: `Daily withdrawal limit of $${dailyLimit} exceeded`,
+        withdrawnToday: totalWithdrawalToday,
+        remaining: Math.max(0, dailyLimit - totalWithdrawalToday),
+        requested: amount,
+      });
+    }
+
     // Generate reference ID
     const referenceId = `WD-${Date.now()}-${uuidv4().substring(0, 8)}`;
+
+    // Generate 2FA code
+    const verificationCode = Math.random().toString().slice(2, 8).padStart(6, '0');
+    const codeExpiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     // Determine fee based on recipient type
     let fee = 0;
@@ -264,11 +283,10 @@ router.post('/withdraw/initiate', requireAuth, async (req: Request, res: Respons
       fee = 0;
       processingTime = '5-10 minutes';
     } else if (recipientType === 'bank_account') {
-      // Fee will be calculated based on bank and amount
-      fee = amount * 0.01; // 1% for demo
+      fee = amount * 0.01;
       processingTime = '1-3 business days';
     } else if (recipientType === 'mobile_money') {
-      fee = amount * 0.015; // 1.5% for demo
+      fee = amount * 0.015;
       processingTime = '5-30 minutes';
     }
 
@@ -292,6 +310,8 @@ router.post('/withdraw/initiate', requireAuth, async (req: Request, res: Respons
       referenceId,
       metadata: {
         recipientType,
+        verificationCode,
+        codeExpiry,
         initiatedAt: new Date().toISOString(),
       },
     });
@@ -310,7 +330,10 @@ router.post('/withdraw/initiate', requireAuth, async (req: Request, res: Respons
         status: transaction.status,
         recipientType,
         processingTime,
-        nextStep: 'Proceed to 2FA verification',
+        dailyRemaining: dailyLimit - totalWithdrawalToday - amount,
+        nextStep: 'Complete 2FA verification',
+        requiresVerification: true,
+        verificationCodeExpiry: codeExpiry,
       },
     });
   } catch (error: any) {
