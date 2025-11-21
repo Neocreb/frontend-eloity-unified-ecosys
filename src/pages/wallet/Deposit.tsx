@@ -88,7 +88,7 @@ const Deposit = () => {
   const getDestinationInfo = () => destinations.find((d) => d.value === selectedDestination);
   const getMethodInfo = () => paymentMethods.find((m) => m.value === selectedMethod);
 
-  if (step === "method") {
+  if (step === "country") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Add Funds" />
@@ -104,41 +104,73 @@ const Deposit = () => {
             </Card>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Payment Method</h3>
-              <div className="space-y-2">
-                {paymentMethods.map((method) => (
-                  <button
-                    key={method.value}
-                    onClick={() => {
-                      setSelectedMethod(method.value);
-                      setStep("amount");
-                    }}
-                    className="w-full text-left"
-                  >
-                    <Card
-                      className={`border-2 transition-all cursor-pointer ${
-                        selectedMethod === method.value
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-200 hover:border-green-300"
-                      }`}
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Your Country</h3>
+              <Select value={userCountry} onValueChange={(value) => setUserCountry(value)}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentMethods.getAllRegions().map((region) => (
+                    <SelectItem key={region.countryCode} value={region.countryCode}>
+                      {region.countryName} ({region.currency})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 mt-6">Available Payment Methods</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {allMethods.map((method) => {
+                  const feeInfo = paymentMethods.calculateDepositFee(100, method);
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => {
+                        setSelectedMethod(method.id);
+                        setStep("amount");
+                      }}
+                      className="w-full text-left"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <method.icon className={`h-6 w-6 ${method.color}`} />
-                            <div>
-                              <p className="font-semibold text-gray-900">{method.label}</p>
-                              <p className="text-xs text-gray-600">{method.description}</p>
+                      <Card
+                        className={`border-2 transition-all cursor-pointer ${
+                          selectedMethod === method.id
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-200 hover:border-green-300"
+                        }`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {methodTypeIcons[method.methodType]}
+                              <div>
+                                <p className="font-semibold text-gray-900">{method.providerName}</p>
+                                <p className="text-xs text-gray-600">
+                                  {method.processingTimeMinutes > 60
+                                    ? `${Math.ceil(method.processingTimeMinutes / 1440)} days`
+                                    : `${method.processingTimeMinutes}m`} •
+                                  {method.depositFeePercentage ? ` ${method.depositFeePercentage}%` : method.depositFlatFee ? ` ${method.depositFlatFee} fee` : ' No fee'}
+                                </p>
+                              </div>
                             </div>
+                            <span className="text-gray-400">→</span>
                           </div>
-                          <span className="text-gray-400">→</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </button>
-                ))}
+                        </CardContent>
+                      </Card>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            <Button
+              onClick={() => setStep("amount")}
+              disabled={!selectedMethod}
+              className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-semibold"
+            >
+              Continue
+            </Button>
           </div>
         </div>
       </div>
