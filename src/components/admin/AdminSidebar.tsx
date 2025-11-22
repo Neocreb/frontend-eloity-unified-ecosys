@@ -204,6 +204,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className = "" }) => {
       requiredPermission: "content.moderate",
       description: "Content promotion and advertising",
     },
+    {
+      path: "/admin/ads",
+      label: "Wallet Ads",
+      icon: <Zap className="w-5 h-5" />,
+      requiredPermission: "content.moderate",
+      description: "Manage carousel ads and banners",
+    },
   ];
 
   const systemItems: NavItem[] = [
