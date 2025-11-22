@@ -153,7 +153,7 @@ const QuickActionsWidget = () => {
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
               {giftActions.map((action) => (
-                <ActionCard key={action.id} action={action} />
+                <ActionCardSmall key={action.id} action={action} />
               ))}
             </div>
           </CardContent>
