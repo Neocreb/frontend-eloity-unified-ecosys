@@ -9,11 +9,7 @@ import {
   Tv,
   Lock,
   Lightbulb,
-  MoreHorizontal,
-  Coins,
-  Heart,
   Gift,
-  Settings,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
