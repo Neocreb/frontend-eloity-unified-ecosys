@@ -185,6 +185,7 @@ import AdminFinancial from "./pages/admin/AdminFinancial";
 import AdminChat from "./pages/admin/AdminChat";
 import AdminBoosts from "./pages/admin/AdminBoosts";
 import AdminSystem from "./pages/admin/AdminSystem";
+import AdminAdsManager from "./pages/admin/AdminAdsManager";
 import AdminRoute from "./components/admin/AdminRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 
