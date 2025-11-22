@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Eye, EyeOff, ChevronDown, BarChart3, List, PlugZap, Send, Repeat, Plus, MoreHorizontal, Gift, Plane, ArrowDown, ArrowUp, Wallet, Phone, CreditCard, Home, Clock, Star, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdCarousel, { Ad } from "@/components/wallet/AdCarousel";
+import WalletServicesGrid from "@/components/wallet/WalletServicesGrid";
 
 const AnimatedWave = () => {
   return (
