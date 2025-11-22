@@ -223,75 +223,8 @@ const DashboardInner = () => {
             />
           </div>
 
-          {/* Send & Receive Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Plane className="h-5 w-5 text-blue-500" />
-              <h2 className="text-lg font-bold text-gray-900">Send & Receive</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <button
-                  onClick={()=>navigate('/app/wallet/send-money')}
-                  className="w-full bg-blue-500 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-blue-600 transition-all hover:scale-105 active:scale-95"
-                >
-                  <Plane className="h-5 w-5" />
-                  <span>Send Money</span>
-                </button>
-                <p className="text-2xs text-gray-600 text-center">To Eloity users</p>
-              </div>
-              <div className="space-y-2">
-                <button
-                  onClick={()=>navigate('/app/wallet/deposit')}
-                  className="w-full bg-green-500 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-green-600 transition-all hover:scale-105 active:scale-95"
-                >
-                  <ArrowDown className="h-5 w-5" />
-                  <span>Deposit</span>
-                </button>
-                <p className="text-2xs text-gray-600 text-center">Add funds</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Pay & Services Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Wallet className="h-5 w-5 text-red-500" />
-              <h2 className="text-lg font-bold text-gray-900">Cash Out</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-              <div className="space-y-2">
-                <button
-                  onClick={()=>navigate('/app/wallet/withdraw')}
-                  className="w-full bg-purple-600 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-purple-700 transition-all hover:scale-105 active:scale-95"
-                >
-                  <ArrowUp className="h-5 w-5" />
-                  <span>Withdraw</span>
-                </button>
-                <p className="text-2xs text-gray-600 text-center">Bank, mobile money, wallets</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Local Services Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Phone className="h-5 w-5 text-orange-500" />
-              <h2 className="text-lg font-bold text-gray-900">Local Services</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-              <div className="space-y-2">
-                <button
-                  onClick={()=>navigate('/app/wallet/top-up')}
-                  className="w-full bg-orange-500 text-white rounded-xl py-4 px-3 flex flex-col items-center gap-2 font-semibold text-sm hover:bg-orange-600 transition-all hover:scale-105 active:scale-95"
-                >
-                  <Phone className="h-5 w-5" />
-                  <span>Top Up Services</span>
-                </button>
-                <p className="text-2xs text-gray-600 text-center">Data, airtime, bills & utilities</p>
-              </div>
-            </div>
-          </div>
+          {/* Wallet Services Grid */}
+          <WalletServicesGrid />
 
           {/* Gifts & Rewards Section */}
           <div>
