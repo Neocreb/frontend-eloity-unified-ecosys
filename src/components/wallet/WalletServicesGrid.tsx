@@ -92,7 +92,7 @@ const WalletServicesGrid = () => {
       icon: <Dices className="h-7 w-7" />,
       color: "text-white",
       bgColor: "from-cyan-400 to-cyan-500",
-      action: () => navigate("/app/wallet/betting"),
+      action: () => navigate("/app/wallet/top-up"),
     },
     {
       id: "tv",
@@ -112,7 +112,7 @@ const WalletServicesGrid = () => {
       icon: <Lock className="h-7 w-7" />,
       color: "text-white",
       bgColor: "from-indigo-400 to-indigo-500",
-      action: () => navigate("/app/wallet/safebox"),
+      action: () => navigate("/app/wallet/top-up"),
     },
     {
       id: "loan",
@@ -121,7 +121,7 @@ const WalletServicesGrid = () => {
       icon: <Banknote className="h-7 w-7" />,
       color: "text-white",
       bgColor: "from-amber-400 to-amber-500",
-      action: () => navigate("/app/wallet/loan"),
+      action: () => navigate("/app/wallet/top-up"),
     },
     {
       id: "play4child",
@@ -130,7 +130,7 @@ const WalletServicesGrid = () => {
       icon: <Heart className="h-7 w-7" />,
       color: "text-white",
       bgColor: "from-rose-400 to-rose-500",
-      action: () => navigate("/app/wallet/play4child"),
+      action: () => navigate("/app/wallet/top-up"),
     },
 
     // Additional Hidden Services for "More" modal
@@ -150,7 +150,7 @@ const WalletServicesGrid = () => {
       icon: <Lock className="h-7 w-7" />,
       color: "text-white",
       bgColor: "from-purple-400 to-purple-500",
-      action: () => navigate("/app/wallet/insurance"),
+      action: () => navigate("/app/wallet/top-up"),
     },
     {
       id: "education",
@@ -158,8 +158,8 @@ const WalletServicesGrid = () => {
       description: "Pay school fees",
       icon: <Smartphone className="h-7 w-7" />,
       color: "text-white",
-      bgColor: "from-blue-400 to-blue-500",
-      action: () => navigate("/app/wallet/education"),
+      bgColor: "from-teal-400 to-teal-500",
+      action: () => navigate("/app/wallet/top-up"),
     },
   ];
 
