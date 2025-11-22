@@ -8,18 +8,13 @@ import { useWalletContext } from "@/contexts/WalletContext";
 import {
   RequestMoneyModal,
 } from "./QuickActionModals";
+import WalletServicesGrid from "./WalletServicesGrid";
 import {
-  ArrowUpRight,
-  ArrowDownLeft,
-  Send,
-  Repeat,
-  CreditCard,
   Smartphone,
   Gift,
   Store,
   Users,
   Clock,
-  TrendingUp,
 } from "lucide-react";
 
 interface ActionItem {
@@ -55,56 +50,6 @@ const QuickActionsWidget = () => {
   // Modal states
   const [showSendModal, setShowSendModal] = useState(false);
 
-  // Send/Receive Actions (Primary)
-  const sendActions: ActionItem[] = [
-    {
-      id: "send",
-      label: "Send Money",
-      icon: <Send className="h-6 w-6" />,
-      color: "bg-blue-500",
-      action: () => navigate("/app/wallet/send-money"),
-    },
-    {
-      id: "deposit",
-      label: "Deposit",
-      icon: <ArrowDownLeft className="h-6 w-6" />,
-      color: "bg-green-500",
-      action: () => navigate("/app/wallet/deposit"),
-    },
-    {
-      id: "withdraw",
-      label: "Withdraw",
-      icon: <ArrowUpRight className="h-6 w-6" />,
-      color: "bg-purple-500",
-      action: () => navigate("/app/wallet/withdraw"),
-    },
-  ];
-
-  // Pay Actions (Secondary)
-  const payActions: ActionItem[] = [
-    {
-      id: "transfer",
-      label: "Transfer",
-      icon: <Repeat className="h-6 w-6" />,
-      color: "bg-orange-500",
-      action: () => navigate("/app/wallet/transfer"),
-    },
-    {
-      id: "pay-bill",
-      label: "Pay Bills",
-      icon: <CreditCard className="h-6 w-6" />,
-      color: "bg-red-500",
-      action: () => navigate("/app/wallet/pay-bills"),
-    },
-    {
-      id: "top-up",
-      label: "Top Up",
-      icon: <Smartphone className="h-6 w-6" />,
-      color: "bg-indigo-500",
-      action: () => navigate("/app/wallet/top-up"),
-      badge: { text: "New", variant: "new" },
-    },
-  ];
 
   // Virtual Gifts & Gift Cards Actions (Tertiary)
   const giftActions: ActionItem[] = [
@@ -153,39 +98,40 @@ const QuickActionsWidget = () => {
     </Button>
   );
 
+  // Quick action card component for gift actions
+  const ActionCardSmall = ({ action }: { action: ActionItem }) => (
+    <Button
+      onClick={action.action}
+      className={`${action.color} text-white border-0 hover:shadow-lg transition-all duration-200 flex flex-col items-center gap-2 h-auto py-4 px-3 rounded-xl hover:scale-105 relative group`}
+    >
+      <div className="flex-1 flex items-center justify-center">{action.icon}</div>
+      <span className="text-xs font-semibold text-center leading-tight">{action.label}</span>
+      {action.badge && (
+        <Badge
+          className={`absolute top-1 right-1 text-xs font-bold ${
+            action.badge.variant === "new"
+              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              : "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+          }`}
+        >
+          {action.badge.text}
+        </Badge>
+      )}
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Send & Receive Actions */}
+      {/* Wallet Services Grid - Main Feature */}
       <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <Send className="h-5 w-5 text-blue-500" />
-            Send & Receive
+            <Smartphone className="h-5 w-5 text-eloity-500" />
+            Wallet Services
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            {sendActions.map((action) => (
-              <ActionCard key={action.id} action={action} />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pay & Services Actions */}
-      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <CreditCard className="h-5 w-5 text-red-500" />
-            Pay & Services
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            {payActions.map((action) => (
-              <ActionCard key={action.id} action={action} />
-            ))}
-          </div>
+          <WalletServicesGrid />
         </CardContent>
       </Card>
 
@@ -201,7 +147,7 @@ const QuickActionsWidget = () => {
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
               {giftActions.map((action) => (
-                <ActionCard key={action.id} action={action} />
+                <ActionCardSmall key={action.id} action={action} />
               ))}
             </div>
           </CardContent>

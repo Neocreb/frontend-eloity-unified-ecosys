@@ -87,6 +87,12 @@ import PayBills from "./pages/wallet/PayBills";
 import TopUp from "./pages/wallet/TopUp";
 import BuyGiftCards from "./pages/wallet/BuyGiftCards";
 import SellGiftCards from "./pages/wallet/SellGiftCards";
+import Airtime from "./pages/wallet/Airtime";
+import Data from "./pages/wallet/Data";
+import TV from "./pages/wallet/TV";
+import Safebox from "./pages/wallet/Safebox";
+import Electricity from "./pages/wallet/Electricity";
+import MoneyRequest from "./pages/wallet/MoneyRequest";
 // Crypto pages
 import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
@@ -576,6 +582,12 @@ const AppRoutes = () => {
           <Route path="wallet/top-up" element={<TopUp />} />
           <Route path="wallet/buy-gift-cards" element={<BuyGiftCards />} />
           <Route path="wallet/sell-gift-cards" element={<SellGiftCards />} />
+          <Route path="wallet/airtime" element={<Airtime />} />
+          <Route path="wallet/data" element={<Data />} />
+          <Route path="wallet/tv" element={<TV />} />
+          <Route path="wallet/safebox" element={<Safebox />} />
+          <Route path="wallet/electricity" element={<Electricity />} />
+          <Route path="wallet/money-request" element={<MoneyRequest />} />
 
           {/* Crypto Trading Routes - Full Page Flows */}
           <Route path="crypto/kyc" element={<CryptoKYC />} />
