@@ -156,6 +156,19 @@ const QuickActionsWidget = () => {
 
   return (
     <div className="space-y-6">
+      {/* Wallet Services Grid - Main Feature */}
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Smartphone className="h-5 w-5 text-eloity-500" />
+            Wallet Services
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <WalletServicesGrid />
+        </CardContent>
+      </Card>
+
       {/* Send & Receive Actions */}
       <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
