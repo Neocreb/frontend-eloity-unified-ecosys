@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
@@ -15,6 +15,19 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
+import BankAccountManager, { BankAccount } from "@/components/wallet/BankAccountManager";
+import { paymentMethods } from "@/config/paymentMethods";
+
+type RecipientType = "bank" | "username" | "email" | "mobile";
+
+interface RecipientData {
+  type: RecipientType;
+  bankAccount?: BankAccount;
+  username?: string;
+  email?: string;
+  mobile?: string;
+  name?: string;
+}
 
 interface Recipient {
   id: string;
@@ -28,16 +41,21 @@ const SendMoney = () => {
   const { user } = useAuth();
   const { walletBalance } = useWalletContext();
 
-  const [step, setStep] = useState<"recipient" | "amount" | "review" | "success">(
-    "recipient"
+  const [step, setStep] = useState<"type" | "recipient" | "amount" | "review" | "success">(
+    "type"
   );
+  const [recipientType, setRecipientType] = useState<RecipientType>("username");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(
-    null
-  );
+  const [recipient, setRecipient] = useState<RecipientData>({ type: "username" });
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userCountry, setUserCountry] = useState("NG");
+
+  useEffect(() => {
+    const country = (user?.user_metadata?.country_code as string) || "NG";
+    setUserCountry(country);
+  }, [user]);
 
   // Mock recent recipients
   const recentRecipients: Recipient[] = [
@@ -67,9 +85,20 @@ const SendMoney = () => {
       r.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectRecipient = (recipient: Recipient) => {
-    setSelectedRecipient(recipient);
-    setStep("amount");
+  const validateRecipient = () => {
+    if (recipientType === "bank" && !recipient.bankAccount) {
+      return false;
+    }
+    if (recipientType === "username" && !recipient.username?.trim()) {
+      return false;
+    }
+    if (recipientType === "email" && !recipient.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return false;
+    }
+    if (recipientType === "mobile" && !recipient.mobile?.trim()) {
+      return false;
+    }
+    return true;
   };
 
   const handleContinueAmount = () => {
@@ -87,7 +116,6 @@ const SendMoney = () => {
   const handleSendMoney = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
       setStep("success");
     } catch (error) {
@@ -97,10 +125,58 @@ const SendMoney = () => {
     }
   };
 
-  if (step === "recipient") {
+  const getRecipientDisplay = () => {
+    switch (recipientType) {
+      case "bank":
+        return { label: "Bank Account", value: `${recipient.bankAccount?.bankName} - ${recipient.bankAccount?.accountNumber}` };
+      case "username":
+        return { label: "Eloity User", value: `@${recipient.username}` };
+      case "email":
+        return { label: "Email", value: recipient.email };
+      case "mobile":
+        return { label: "Mobile Wallet", value: recipient.mobile };
+    }
+  };
+
+  const getRecipientIcon = () => {
+    const icons = { bank: "🏦", username: "👤", email: "✉️", mobile: "📱" };
+    return icons[recipientType];
+  };
+
+  const getProcessingTime = () => {
+    switch (recipientType) {
+      case "bank":
+        return "1-2 business days";
+      case "username":
+        return "Instant";
+      case "email":
+        return "5-10 minutes";
+      case "mobile":
+        return "10-30 minutes";
+      default:
+        return "Processing...";
+    }
+  };
+
+  const getFee = () => {
+    const amountNum = parseFloat(amount) || 0;
+    if (recipientType === "username") return 0; // Free for Eloity users
+    if (recipientType === "email") return 0; // Free for email
+    if (recipientType === "mobile") return amountNum * 0.01; // 1% for mobile
+    if (recipientType === "bank") {
+      // Bank fees vary by amount
+      if (amountNum <= 1000) return 50;
+      if (amountNum <= 5000) return 100;
+      return amountNum * 0.02;
+    }
+    return 0;
+  };
+
+  // Step 1: Select Recipient Type
+  if (step === "type") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <WalletActionHeader title="Send Money" />
+        <WalletActionHeader title="Send Money" subtitle="Choose how to send" />
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
@@ -121,69 +197,42 @@ const SendMoney = () => {
               </CardContent>
             </Card>
 
-            {/* Search Recipients */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-3">
-                Search Recipient
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  placeholder="Name or username"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Recent Recipients */}
-            {searchQuery === "" && (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                  Recent Recipients
-                </h3>
-              </div>
-            )}
-
-            {/* Recipients List */}
-            <div className="space-y-2">
-              {filteredRecipients.length > 0 ? (
-                filteredRecipients.map((recipient) => (
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Send To</h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { type: "username" as RecipientType, label: "Eloity User", icon: "👤", desc: "P2P transfer" },
+                  { type: "bank" as RecipientType, label: "Bank Account", icon: "🏦", desc: "Direct bank" },
+                  { type: "mobile" as RecipientType, label: "Mobile Wallet", icon: "📱", desc: "MTN, Airtel" },
+                  { type: "email" as RecipientType, label: "Email", icon: "✉️", desc: "Email wallet" },
+                ].map((option) => (
                   <button
-                    key={recipient.id}
-                    onClick={() => handleSelectRecipient(recipient)}
-                    className="w-full text-left"
+                    key={option.type}
+                    onClick={() => {
+                      setRecipientType(option.type);
+                      setRecipient({ type: option.type });
+                      setStep("recipient");
+                    }}
+                    className="w-full"
                   >
-                    <Card className="border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <Avatar className="h-12 w-12 flex-shrink-0">
-                          <AvatarImage src={recipient.avatar} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
-                            {recipient.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900">
-                            {recipient.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            @{recipient.username}
-                          </p>
-                        </div>
-                        <ArrowRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <Card
+                      className={`border-2 transition-all cursor-pointer h-full ${
+                        recipientType === option.type
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      <CardContent className="p-4 flex flex-col items-center justify-center">
+                        <span className="text-3xl mb-2">{option.icon}</span>
+                        <p className="text-xs sm:text-sm font-semibold text-center text-gray-900">
+                          {option.label}
+                        </p>
+                        <p className="text-2xs text-gray-500 text-center mt-1">{option.desc}</p>
                       </CardContent>
                     </Card>
                   </button>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No recipients found
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -191,6 +240,161 @@ const SendMoney = () => {
     );
   }
 
+  // Step 2: Select Recipient Details
+  if (step === "recipient") {
+    return (
+      <div className="flex flex-col h-screen bg-gray-50">
+        <WalletActionHeader title="Recipient" subtitle={`Send to ${recipientType === "username" ? "Eloity user" : "account"}`} />
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 space-y-6">
+            {/* Eloity User Search */}
+            {recipientType === "username" && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Search Eloity User
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      placeholder="Name or username"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {searchQuery === "" && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                      Recent Recipients
+                    </h3>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {filteredRecipients.length > 0 ? (
+                    filteredRecipients.map((rec) => (
+                      <button
+                        key={rec.id}
+                        onClick={() => {
+                          setRecipient({ type: "username", username: rec.username, name: rec.name });
+                          setStep("amount");
+                        }}
+                        className="w-full text-left"
+                      >
+                        <Card className="border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
+                          <CardContent className="p-4 flex items-center gap-3">
+                            <Avatar className="h-12 w-12 flex-shrink-0">
+                              <AvatarImage src={rec.avatar} />
+                              <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
+                                {rec.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-gray-900">
+                                {rec.name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                @{rec.username}
+                              </p>
+                            </div>
+                            <ArrowRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                          </CardContent>
+                        </Card>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      No users found
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Bank Account Selection */}
+            {recipientType === "bank" && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Bank Account</h3>
+                <BankAccountManager
+                  countryCode={userCountry}
+                  onAccountSelected={(account) => {
+                    setRecipient({ type: "bank", bankAccount: account });
+                    setStep("amount");
+                  }}
+                  mode="select"
+                />
+              </div>
+            )}
+
+            {/* Email Input */}
+            {recipientType === "email" && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Enter Email Address</label>
+                <Input
+                  type="email"
+                  placeholder="recipient@example.com"
+                  value={recipient.email || ""}
+                  onChange={(e) =>
+                    setRecipient({ ...recipient, email: e.target.value })
+                  }
+                  className="h-12"
+                />
+                <Button
+                  onClick={() => setStep("amount")}
+                  disabled={!recipient.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)}
+                  className="w-full h-12 mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold"
+                >
+                  Continue
+                </Button>
+              </div>
+            )}
+
+            {/* Mobile Wallet Input */}
+            {recipientType === "mobile" && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Mobile Wallet Number</label>
+                <Input
+                  type="tel"
+                  placeholder={`${paymentMethods.getRegionConfig(userCountry)?.phonePrefix} xxxxxxxxx`}
+                  value={recipient.mobile || ""}
+                  onChange={(e) =>
+                    setRecipient({ ...recipient, mobile: e.target.value })
+                  }
+                  className="h-12"
+                />
+                <Button
+                  onClick={() => setStep("amount")}
+                  disabled={!recipient.mobile?.trim()}
+                  className="w-full h-12 mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold"
+                >
+                  Continue
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6">
+          <Button
+            variant="outline"
+            onClick={() => setStep("type")}
+            className="w-full h-12"
+          >
+            Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 3: Enter Amount
   if (step === "amount") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
@@ -199,27 +403,46 @@ const SendMoney = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
             {/* Selected Recipient */}
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-4 flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={selectedRecipient?.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
-                    {selectedRecipient?.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    {selectedRecipient?.name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    @{selectedRecipient?.username}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {recipientType === "username" && (
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
+                      {recipient.name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("") || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {recipient.name || recipient.username}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      @{recipient.username}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {recipientType !== "username" && (
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{getRecipientIcon()}</span>
+                    <div>
+                      <p className="text-xs text-gray-600">
+                        {recipientType === "bank" ? "Bank Account" : recipientType === "email" ? "Email Wallet" : "Mobile Wallet"}
+                      </p>
+                      <p className="font-semibold text-gray-900">
+                        {recipientType === "bank" ? `${recipient.bankAccount?.bankName} - ${recipient.bankAccount?.accountNumber}` : recipientType === "email" ? recipient.email : recipient.mobile}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Amount Input */}
             <div>
@@ -302,7 +525,13 @@ const SendMoney = () => {
     );
   }
 
+  // Step 4: Review Transfer
   if (step === "review") {
+    const amountNum = parseFloat(amount);
+    const fee = getFee();
+    const total = amountNum + fee;
+    const recipientDisplay = getRecipientDisplay();
+
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Review Transfer" />
@@ -341,20 +570,24 @@ const SendMoney = () => {
                   {/* To */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={selectedRecipient?.avatar} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
-                          {selectedRecipient?.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
+                      {recipientType === "username" ? (
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
+                            {recipient.name
+                              ?.split(" ")
+                              .map((n) => n[0])
+                              .join("") || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <span className="text-2xl">{getRecipientIcon()}</span>
+                      )}
                       <div>
                         <p className="text-xs text-gray-600">To</p>
                         <p className="font-semibold text-gray-900">
-                          {selectedRecipient?.name}
+                          {recipientType === "username" ? `${recipient.name} (@${recipient.username})` : recipientDisplay?.value}
                         </p>
+                        <p className="text-xs text-gray-600">{recipientDisplay?.label}</p>
                       </div>
                     </div>
                   </div>
@@ -367,7 +600,7 @@ const SendMoney = () => {
                 <div className="p-6">
                   <p className="text-sm text-gray-600 mb-2">Amount to Send</p>
                   <p className="text-4xl font-bold text-gray-900">
-                    ${parseFloat(amount).toFixed(2)}
+                    ${amountNum.toFixed(2)}
                   </p>
                   {note && (
                     <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -384,12 +617,14 @@ const SendMoney = () => {
                 <div className="p-6 space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Transfer Fee</span>
-                    <span className="font-semibold text-gray-900">Free</span>
+                    <span className="font-semibold text-gray-900">
+                      {fee === 0 ? "Free" : `$${fee.toFixed(2)}`}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-gray-200 pt-3">
-                    <span className="font-semibold text-gray-900">Total</span>
+                    <span className="font-semibold text-gray-900">Total Charge</span>
                     <span className="font-bold text-lg text-gray-900">
-                      ${parseFloat(amount).toFixed(2)}
+                      ${total.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -401,10 +636,10 @@ const SendMoney = () => {
               <Clock className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-blue-900">
-                  Instant Transfer
+                  {recipientType === "username" ? "Instant Transfer" : "Processing Time"}
                 </p>
                 <p className="text-xs text-blue-700 mt-0.5">
-                  Money will reach recipient within seconds
+                  {getProcessingTime()}
                 </p>
               </div>
             </div>
@@ -440,7 +675,10 @@ const SendMoney = () => {
     );
   }
 
+  // Step 5: Success
   if (step === "success") {
+    const recipientDisplay = getRecipientDisplay();
+
     return (
       <div className="flex flex-col h-screen bg-gradient-to-br from-green-50 to-emerald-50">
         <WalletActionHeader title="Transfer Complete" />
@@ -458,7 +696,9 @@ const SendMoney = () => {
             </h2>
             <p className="text-gray-600 mb-8">
               ${parseFloat(amount).toFixed(2)} has been sent to{" "}
-              <span className="font-semibold">{selectedRecipient?.name}</span>
+              <span className="font-semibold">
+                {recipientType === "username" ? recipient.name || recipient.username : recipientDisplay?.value}
+              </span>
             </p>
 
             {/* Details */}
@@ -467,7 +707,13 @@ const SendMoney = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Transaction ID</span>
                   <span className="font-mono text-sm text-gray-900">
-                    TXN000001
+                    TXN{String(Date.now()).slice(-6)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Type</span>
+                  <span className="text-gray-900 capitalize">
+                    {recipientType === "username" ? "P2P Transfer" : `${recipientType} Transfer`}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -494,10 +740,11 @@ const SendMoney = () => {
           <Button
             variant="outline"
             onClick={() => {
-              setStep("recipient");
+              setStep("type");
               setAmount("");
               setNote("");
-              setSelectedRecipient(null);
+              setRecipient({ type: "username" });
+              setSearchQuery("");
             }}
             className="w-full h-12"
           >

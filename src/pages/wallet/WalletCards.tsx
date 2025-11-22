@@ -2,96 +2,571 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreditCard, Plus, Trash2, CheckCircle, Lock, Unlock, AlertCircle, Eye, EyeOff, RotateCw, ShieldAlert, History } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-interface VirtualCard { id: string; nickname: string; currency: string; last4: string; spendingLimit: number; isDefault?: boolean }
+interface VirtualCard {
+  id: string;
+  nickname: string;
+  currency: string;
+  last4: string;
+  cvv?: string;
+  spendingLimit: number;
+  isDefault?: boolean;
+  isFrozen?: boolean;
+  isVirtual?: boolean;
+  createdAt?: Date;
+}
+
+interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  date: Date;
+  merchant: string;
+  status: 'completed' | 'pending' | 'declined';
+}
+
+const CardFlip3D = ({ card, isFront, setIsFront }: { card: VirtualCard; isFront: boolean; setIsFront: (v: boolean) => void }) => {
+  const [isLongPressed, setIsLongPressed] = useState(false);
+
+  const handleMouseDown = () => {
+    const timer = setTimeout(() => {
+      setIsLongPressed(true);
+      setIsFront(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  };
+
+  const handleMouseUp = () => {
+    setIsLongPressed(false);
+  };
+
+  return (
+    <div
+      className="relative w-full h-56 cursor-pointer perspective"
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      style={{ perspective: '1000px' }}
+    >
+      <style>{`
+        @keyframes flip {
+          0% { transform: rotateY(0deg) rotateX(0deg); }
+          100% { transform: rotateY(180deg) rotateX(5deg); }
+        }
+
+        .card-flip {
+          animation: flip 0.6s ease-in-out;
+          transform-style: preserve-3d;
+        }
+
+        .card-face {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+
+        .card-back {
+          transform: rotateY(180deg);
+        }
+      `}</style>
+
+      <div
+        className={`absolute inset-0 rounded-2xl transition-transform duration-500 ${
+          isFront ? '' : 'card-flip'
+        }`}
+        style={{
+          transformStyle: 'preserve-3d',
+          transform: isFront ? 'rotateY(0deg)' : 'rotateY(180deg)',
+        }}
+      >
+        {/* Front of card */}
+        <div
+          className="card-face absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-5 text-white shadow-xl flex flex-col justify-between"
+          style={{ backfaceVisibility: 'hidden' }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium opacity-90">{card.nickname}</span>
+            {card.isFrozen && <Lock className="h-5 w-5 text-red-400" />}
+          </div>
+          <div>
+            <div className="text-2xl font-bold tracking-wider mb-4">•••• {card.last4}</div>
+            <div className="flex items-center justify-between opacity-95">
+              <div className="text-sm">Balance</div>
+              <div className="text-sm font-semibold">${(Math.random() * 5000).toFixed(2)}</div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-xs opacity-75">
+            <span>{card.currency}</span>
+            <span>Long press to reveal CVV</span>
+          </div>
+        </div>
+
+        {/* Back of card */}
+        <div
+          className="card-back card-face absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 text-white shadow-xl flex flex-col justify-between"
+          style={{ backfaceVisibility: 'hidden' }}
+        >
+          <div className="h-12 bg-yellow-600 rounded w-full"></div>
+          <div className="space-y-3">
+            <div className="text-xs opacity-75">CVV</div>
+            <div className="text-2xl font-bold tracking-widest">***</div>
+            <button
+              onClick={() => setIsFront(true)}
+              className="w-full bg-white/20 hover:bg-white/30 text-white text-xs py-2 rounded font-medium transition-colors"
+            >
+              Return to Front
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const WalletCards = () => {
   const [cards, setCards] = useState<VirtualCard[]>([
-    { id: '1', nickname: 'Business Card', currency: 'USD', last4: '4532', spendingLimit: 2000, isDefault: true },
+    {
+      id: '1',
+      nickname: 'Visa Debit',
+      currency: 'USD',
+      last4: '4532',
+      cvv: '123',
+      spendingLimit: 2450,
+      isDefault: true,
+      isFrozen: false,
+      isVirtual: false,
+    },
+    {
+      id: '2',
+      nickname: 'Mastercard',
+      currency: 'USD',
+      last4: '8901',
+      cvv: '456',
+      spendingLimit: 550,
+      isFrozen: false,
+      isVirtual: false,
+    },
   ]);
 
   const [nickname, setNickname] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [spendingLimit, setSpendingLimit] = useState<number | ''>('');
+  const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
+  const [selectedCardForHistory, setSelectedCardForHistory] = useState<VirtualCard | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([
+    { id: '1', description: 'Coffee Shop', amount: -5.50, date: new Date('2025-01-20'), merchant: 'Starbucks', status: 'completed' },
+    { id: '2', description: 'Grocery Store', amount: -45.23, date: new Date('2025-01-19'), merchant: 'Whole Foods', status: 'completed' },
+    { id: '3', description: 'Gas Station', amount: -52.00, date: new Date('2025-01-18'), merchant: 'Shell', status: 'pending' },
+    { id: '4', description: 'Online Store', amount: -125.99, date: new Date('2025-01-17'), merchant: 'Amazon', status: 'declined' },
+  ]);
 
   const createVirtualCard = () => {
+    if (!nickname || !spendingLimit) {
+      alert('Please fill in all fields');
+      return;
+    }
     const id = String(Date.now());
     const last4 = Math.floor(1000 + Math.random() * 9000).toString();
     setCards(prev => [
       ...prev,
-      { id, nickname: nickname || `Card ${prev.length + 1}`, currency, last4, spendingLimit: Number(spendingLimit) || 0 }
+      {
+        id,
+        nickname: nickname || `Card ${prev.length + 1}`,
+        currency,
+        last4,
+        cvv: String(Math.floor(100 + Math.random() * 900)),
+        spendingLimit: Number(spendingLimit),
+        isFrozen: false,
+        isVirtual: true,
+        createdAt: new Date(),
+      }
     ]);
-    setNickname(''); setSpendingLimit(''); setCurrency('USD');
+    setNickname('');
+    setSpendingLimit('');
+    setCurrency('USD');
   };
 
-  const remove = (id:string)=> setCards(cards.filter(c=>c.id!==id));
-  const makeDefault = (id:string)=> setCards(cards.map(c=> ({...c, isDefault: c.id===id})));
+  const toggleFreeze = (id: string) => {
+    setCards(cards.map(c => c.id === id ? { ...c, isFrozen: !c.isFrozen } : c));
+  };
+
+  const updateSpendingLimit = (id: string, newLimit: number) => {
+    setCards(cards.map(c => c.id === id ? { ...c, spendingLimit: newLimit } : c));
+  };
+
+  const removeCard = (id: string) => setCards(cards.filter(c => c.id !== id));
+
+  const makeDefault = (id: string) => {
+    setCards(cards.map(c => ({ ...c, isDefault: c.id === id })));
+  };
+
+  const blockAndReplace = (id: string) => {
+    alert(`Card ${cards.find(c => c.id === id)?.last4} has been blocked. A new card will be sent within 7-10 business days.`);
+    removeCard(id);
+  };
+
+  const reportFraud = (id: string) => {
+    alert(`Fraud report submitted for card ending in ${cards.find(c => c.id === id)?.last4}. We'll investigate within 24-48 hours.`);
+  };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Virtual Cards</h1>
-        <Button onClick={createVirtualCard}><Plus className="h-4 w-4"/>Create Card</Button>
+    <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">My Cards</h1>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Card
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Virtual Card</DialogTitle>
+              <DialogDescription>
+                Create a new virtual card with custom spending limits and controls.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+              <div>
+                <Label htmlFor="nickname" className="text-sm font-medium">Card Nickname</Label>
+                <Input
+                  id="nickname"
+                  placeholder="e.g., Business, Travel, Shopping"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="currency" className="text-sm font-medium">Currency</Label>
+                <Input
+                  id="currency"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label htmlFor="limit" className="text-sm font-medium">Spending Limit ($)</Label>
+                <Input
+                  id="limit"
+                  type="number"
+                  value={spendingLimit}
+                  onChange={(e) => setSpendingLimit(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="5000"
+                  className="mt-1"
+                />
+              </div>
+              <div className="sm:col-span-2 flex gap-2">
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  onClick={createVirtualCard}
+                >
+                  Create Card
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {cards.map(card=> (
-        <Card key={card.id}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5"/> {card.nickname} •••• {card.last4}
-            </CardTitle>
-            {card.isDefault && (
-              <div className="flex items-center gap-1 text-emerald-600 text-sm"><CheckCircle className="h-4 w-4"/> Default</div>
-            )}
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground">Currency</div>
-              <div className="font-semibold">{card.currency}</div>
-            </div>
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {cards.map(card => (
+          <Card key={card.id} className="overflow-hidden border-2 border-gray-200 hover:border-blue-300 transition-colors">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5" />
+                  {card.nickname}
+                </CardTitle>
+                {card.isDefault && (
+                  <div className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
+                    <CheckCircle className="h-4 w-4" />
+                    Default
+                  </div>
+                )}
+              </div>
+            </CardHeader>
 
-            <div>
-              <div className="text-sm text-muted-foreground">Spending Limit</div>
-              <div className="font-semibold">${card.spendingLimit.toFixed(2)}</div>
-            </div>
+            <CardContent className="space-y-4">
+              {/* Card 3D Flip Preview */}
+              <CardFlip3D
+                card={card}
+                isFront={flippedCardId !== card.id}
+                setIsFront={(isFront) => setFlippedCardId(isFront ? null : card.id)}
+              />
 
-            <div className="flex gap-2">
-              {!card.isDefault && <Button variant="outline" onClick={()=>makeDefault(card.id)}>Make Default</Button>}
-              <Button variant="outline" onClick={()=>remove(card.id)}><Trash2 className="h-4 w-4"/></Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              {/* Card Details */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <div className="text-gray-600 font-medium">Last 4</div>
+                  <div className="font-semibold text-lg">•••• {card.last4}</div>
+                </div>
+                <div>
+                  <div className="text-gray-600 font-medium">Currency</div>
+                  <div className="font-semibold">{card.currency}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-gray-600 font-medium mb-1">Spending Limit</div>
+                  <div className="text-2xl font-bold text-blue-600">${card.spendingLimit.toFixed(2)}</div>
+                </div>
+              </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create Virtual Card</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nickname">Card Nickname</Label>
-            <Input id="nickname" placeholder="e.g. Business Card" value={nickname} onChange={(e)=>setNickname(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="currency">Currency</Label>
-            <Input id="currency" value={currency} onChange={(e)=>setCurrency(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="limit">Spending Limit</Label>
-            <Input id="limit" type="number" value={spendingLimit} onChange={(e)=>setSpendingLimit(e.target.value ? Number(e.target.value) : '')} placeholder="1000" />
-          </div>
+              {/* Freeze Status */}
+              <div className={`p-3 rounded-lg flex items-center justify-between ${card.isFrozen ? 'bg-red-50 border border-red-200' : 'bg-blue-50 border border-blue-200'}`}>
+                <div className="flex items-center gap-2">
+                  {card.isFrozen ? (
+                    <>
+                      <Lock className="h-5 w-5 text-red-600" />
+                      <span className="font-medium text-red-900">Card Frozen</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <span className="font-medium text-green-900">Card Active</span>
+                    </>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => toggleFreeze(card.id)}
+                  className={card.isFrozen ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50'}
+                >
+                  {card.isFrozen ? (
+                    <>
+                      <Unlock className="h-3 w-3 mr-1" />
+                      Unfreeze
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-3 w-3 mr-1" />
+                      Freeze
+                    </>
+                  )}
+                </Button>
+              </div>
 
-          <div>
-            <Label htmlFor="controls">Controls</Label>
-            <div className="flex gap-2">
-              <Button className="flex-1" onClick={createVirtualCard}>Create Card</Button>
-              <Button variant="outline" className="flex-1" onClick={()=>{ setNickname(''); setSpendingLimit(''); setCurrency('USD'); }}>Cancel</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              {/* Card Actions Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Set Spending Limit */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Set Limit
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[400px]">
+                    <DialogHeader>
+                      <DialogTitle>Set Spending Limit</DialogTitle>
+                      <DialogDescription>
+                        Set a monthly spending limit for {card.nickname}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label htmlFor="new-limit">New Spending Limit ($)</Label>
+                        <Input
+                          id="new-limit"
+                          type="number"
+                          defaultValue={card.spendingLimit}
+                          onBlur={(e) => {
+                            const newLimit = Number(e.target.value);
+                            if (newLimit > 0) {
+                              updateSpendingLimit(card.id, newLimit);
+                            }
+                          }}
+                          className="mt-1"
+                        />
+                      </div>
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          const input = document.getElementById('new-limit') as HTMLInputElement;
+                          const newLimit = Number(input.value);
+                          if (newLimit > 0) {
+                            updateSpendingLimit(card.id, newLimit);
+                          }
+                        }}
+                      >
+                        Update Limit
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Transaction History */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      <History className="h-3 w-3 mr-1" />
+                      History
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{card.nickname} Transaction History</DialogTitle>
+                      <DialogDescription>
+                        Card ending in {card.last4}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      {transactions.map(tx => (
+                        <div
+                          key={tx.id}
+                          className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-gray-900">{tx.merchant}</span>
+                            <span className={`font-bold ${tx.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                              {tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-gray-600">
+                            <span>{tx.description}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              tx.status === 'completed' ? 'bg-green-100 text-green-700' :
+                              tx.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {tx.status}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {tx.date.toLocaleDateString()} at {tx.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Block & Replace */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50">
+                      <RotateCw className="h-3 w-3 mr-1" />
+                      Block & Replace
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Block & Replace Card?</DialogTitle>
+                      <DialogDescription>
+                        This will permanently block {card.nickname} ending in {card.last4}. A replacement card will arrive within 7-10 business days.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                      <div className="flex gap-2">
+                        <AlertCircle className="h-5 w-5 text-yellow-700 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-yellow-800">This action cannot be undone.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          const btn = document.querySelector('[data-cancel]') as HTMLButtonElement;
+                          btn?.click();
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="flex-1 bg-red-600 hover:bg-red-700"
+                        onClick={() => {
+                          blockAndReplace(card.id);
+                          const btn = document.querySelector('[data-cancel]') as HTMLButtonElement;
+                          btn?.click();
+                        }}
+                      >
+                        Block Card
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Report Fraud */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50">
+                      <ShieldAlert className="h-3 w-3 mr-1" />
+                      Report Fraud
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Report Fraudulent Activity</DialogTitle>
+                      <DialogDescription>
+                        Card ending in {card.last4}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label htmlFor="fraud-reason" className="text-sm font-medium">What happened?</Label>
+                        <textarea
+                          id="fraud-reason"
+                          placeholder="Describe the unauthorized transaction or fraudulent activity..."
+                          className="w-full mt-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          rows={4}
+                        />
+                      </div>
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <p className="text-sm text-orange-900">
+                          We'll review your report within 24-48 hours and take appropriate action if fraud is confirmed.
+                        </p>
+                      </div>
+                      <Button
+                        className="w-full bg-orange-600 hover:bg-orange-700"
+                        onClick={() => {
+                          reportFraud(card.id);
+                          const btn = document.querySelector('[data-cancel]') as HTMLButtonElement;
+                          btn?.click();
+                        }}
+                      >
+                        Submit Fraud Report
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="flex gap-2 pt-2 border-t">
+                {!card.isDefault && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => makeDefault(card.id)}
+                    className="flex-1 text-xs"
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Make Default
+                  </Button>
+                )}
+                {card.isVirtual && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeCard(card.id)}
+                    className="flex-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
