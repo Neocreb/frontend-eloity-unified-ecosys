@@ -43,7 +43,7 @@ const WalletServicesGrid = () => {
       description: "Send to OPay users",
       icon: <User className="h-7 w-7" />,
       color: "text-white",
-      bgColor: "from-eloity-400 to-eloity-500",
+      bgColor: "from-blue-400 to-blue-500",
       action: () => navigate("/app/wallet/send-money"),
     },
     {
