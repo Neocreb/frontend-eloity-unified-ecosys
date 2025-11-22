@@ -199,26 +199,28 @@ const DashboardInner = () => {
       </div>
 
       {/* Lower Zone - White Content Area with Curved Top */}
-      <div className="relative w-screen -ml-[50vw] left-1/2 bg-white pt-16 min-h-screen">
+      <div className="relative w-screen -ml-[50vw] left-1/2 bg-white pt-2 min-h-screen">
         {/* Curved divider */}
         <div className="absolute -top-12 left-0 right-0 h-24 bg-white" style={{
           borderRadius: '48px 48px 0 0',
           backgroundColor: 'white',
         }}></div>
 
-        <div className="relative z-10 max-w-md mx-auto px-4 space-y-6 pb-12">
+        <div className="relative z-10 max-w-md mx-auto px-4 space-y-4 pb-12">
 
-          {/* Ad Carousel Banner */}
-          <AdCarousel
-            ads={ads}
-            autoScroll={true}
-            scrollInterval={6000}
-            onAdClick={(ad) => {
-              if (ad.ctaUrl) {
-                navigate(ad.ctaUrl);
-              }
-            }}
-          />
+          {/* Ad Carousel Banner - Positioned to eliminate white space */}
+          <div className="mt-0">
+            <AdCarousel
+              ads={ads}
+              autoScroll={true}
+              scrollInterval={6000}
+              onAdClick={(ad) => {
+                if (ad.ctaUrl) {
+                  navigate(ad.ctaUrl);
+                }
+              }}
+            />
+          </div>
 
           {/* Send & Receive Section */}
           <div>
