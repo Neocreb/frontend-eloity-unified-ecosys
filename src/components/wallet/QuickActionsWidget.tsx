@@ -141,40 +141,6 @@ const QuickActionsWidget = () => {
         </CardContent>
       </Card>
 
-      {/* Send & Receive Actions */}
-      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <Send className="h-5 w-5 text-blue-500" />
-            Send & Receive
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            {sendActions.map((action) => (
-              <ActionCard key={action.id} action={action} />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pay & Services Actions */}
-      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <CreditCard className="h-5 w-5 text-red-500" />
-            Pay & Services
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            {payActions.map((action) => (
-              <ActionCard key={action.id} action={action} />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Virtual Gifts & Gift Cards Actions */}
       {giftActions.length > 0 && (
         <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
