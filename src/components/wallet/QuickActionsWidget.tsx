@@ -8,6 +8,7 @@ import { useWalletContext } from "@/contexts/WalletContext";
 import {
   RequestMoneyModal,
 } from "./QuickActionModals";
+import WalletServicesGrid from "./WalletServicesGrid";
 import {
   ArrowUpRight,
   ArrowDownLeft,
