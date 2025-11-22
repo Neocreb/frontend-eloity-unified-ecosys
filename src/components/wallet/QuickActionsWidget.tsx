@@ -10,17 +10,11 @@ import {
 } from "./QuickActionModals";
 import WalletServicesGrid from "./WalletServicesGrid";
 import {
-  ArrowUpRight,
-  ArrowDownLeft,
-  Send,
-  Repeat,
-  CreditCard,
   Smartphone,
   Gift,
   Store,
   Users,
   Clock,
-  TrendingUp,
 } from "lucide-react";
 
 interface ActionItem {
