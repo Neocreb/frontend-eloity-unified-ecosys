@@ -87,6 +87,12 @@ import PayBills from "./pages/wallet/PayBills";
 import TopUp from "./pages/wallet/TopUp";
 import BuyGiftCards from "./pages/wallet/BuyGiftCards";
 import SellGiftCards from "./pages/wallet/SellGiftCards";
+import Airtime from "./pages/wallet/Airtime";
+import Data from "./pages/wallet/Data";
+import TV from "./pages/wallet/TV";
+import Safebox from "./pages/wallet/Safebox";
+import Electricity from "./pages/wallet/Electricity";
+import MoneyRequest from "./pages/wallet/MoneyRequest";
 // Crypto pages
 import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
