@@ -56,56 +56,6 @@ const QuickActionsWidget = () => {
   // Modal states
   const [showSendModal, setShowSendModal] = useState(false);
 
-  // Send/Receive Actions (Primary)
-  const sendActions: ActionItem[] = [
-    {
-      id: "send",
-      label: "Send Money",
-      icon: <Send className="h-6 w-6" />,
-      color: "bg-blue-500",
-      action: () => navigate("/app/wallet/send-money"),
-    },
-    {
-      id: "deposit",
-      label: "Deposit",
-      icon: <ArrowDownLeft className="h-6 w-6" />,
-      color: "bg-green-500",
-      action: () => navigate("/app/wallet/deposit"),
-    },
-    {
-      id: "withdraw",
-      label: "Withdraw",
-      icon: <ArrowUpRight className="h-6 w-6" />,
-      color: "bg-purple-500",
-      action: () => navigate("/app/wallet/withdraw"),
-    },
-  ];
-
-  // Pay Actions (Secondary)
-  const payActions: ActionItem[] = [
-    {
-      id: "transfer",
-      label: "Transfer",
-      icon: <Repeat className="h-6 w-6" />,
-      color: "bg-orange-500",
-      action: () => navigate("/app/wallet/transfer"),
-    },
-    {
-      id: "pay-bill",
-      label: "Pay Bills",
-      icon: <CreditCard className="h-6 w-6" />,
-      color: "bg-red-500",
-      action: () => navigate("/app/wallet/pay-bills"),
-    },
-    {
-      id: "top-up",
-      label: "Top Up",
-      icon: <Smartphone className="h-6 w-6" />,
-      color: "bg-indigo-500",
-      action: () => navigate("/app/wallet/top-up"),
-      badge: { text: "New", variant: "new" },
-    },
-  ];
 
   // Virtual Gifts & Gift Cards Actions (Tertiary)
   const giftActions: ActionItem[] = [
