@@ -6,13 +6,13 @@ import {
   ArrowUpRight,
   Phone,
   Zap,
-  Dices,
   Tv,
   Lock,
-  Banknote,
-  Heart,
+  Lightbulb,
+  Send,
+  HelpCircle,
   MoreHorizontal,
-  Smartphone,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -21,8 +21,8 @@ interface Service {
   label: string;
   description: string;
   icon: React.ReactNode;
-  color: string;
   bgColor: string;
+  bgGradient: string;
   action: () => void;
   badge?: {
     text: string;
@@ -34,210 +34,215 @@ const WalletServicesGrid = () => {
   const navigate = useNavigate();
   const [showMoreServices, setShowMoreServices] = useState(false);
 
-  const allServices: Service[] = [
-    // Primary Transfer Services
+  const mainServices: Service[] = [
+    // Row 1: Transfer Services
     {
-      id: "opay",
-      label: "To OPay",
-      description: "Send to OPay users",
-      icon: <User className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-blue-400 to-blue-500",
+      id: "to-eloity",
+      label: "To Eloity",
+      description: "Send to users",
+      icon: <User className="h-6 w-6" />,
+      bgColor: "bg-teal-100",
+      bgGradient: "from-teal-400 to-teal-500",
       action: () => navigate("/app/wallet/send-money"),
     },
     {
-      id: "bank",
+      id: "to-bank",
       label: "To Bank",
-      description: "Send to bank account",
-      icon: <Building2 className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-green-400 to-green-500",
+      description: "Bank transfer",
+      icon: <Building2 className="h-6 w-6" />,
+      bgColor: "bg-green-100",
+      bgGradient: "from-green-400 to-green-500",
       action: () => navigate("/app/wallet/transfer"),
     },
     {
-      id: "withdraw",
-      label: "Withdraw",
-      description: "Cash out funds",
-      icon: <ArrowUpRight className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-emerald-400 to-emerald-500",
-      action: () => navigate("/app/wallet/withdraw"),
+      id: "convert",
+      label: "Convert",
+      description: "Change currency",
+      icon: <ArrowLeftRight className="h-6 w-6" />,
+      bgColor: "bg-emerald-100",
+      bgGradient: "from-emerald-400 to-emerald-500",
+      action: () => navigate("/app/wallet/deposit"),
     },
 
-    // Telecom Services
+    // Row 2: Telecom & Savings
     {
       id: "airtime",
       label: "Airtime",
-      description: "Buy airtime",
-      icon: <Phone className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-orange-400 to-orange-500",
-      action: () => navigate("/app/wallet/top-up"),
+      description: "Buy credit",
+      icon: <Phone className="h-6 w-6" />,
+      bgColor: "bg-orange-100",
+      bgGradient: "from-orange-400 to-orange-500",
+      action: () => navigate("/app/wallet/airtime"),
       badge: { text: "Up to 6%", variant: "hot" },
     },
     {
       id: "data",
       label: "Data",
-      description: "Buy data bundles",
-      icon: <Zap className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-violet-400 to-violet-500",
-      action: () => navigate("/app/wallet/top-up"),
-    },
-    {
-      id: "betting",
-      label: "Betting",
-      description: "Place bets",
-      icon: <Dices className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-cyan-400 to-cyan-500",
-      action: () => navigate("/app/wallet/top-up"),
+      description: "Internet bundles",
+      icon: <Zap className="h-6 w-6" />,
+      bgColor: "bg-violet-100",
+      bgGradient: "from-violet-400 to-violet-500",
+      action: () => navigate("/app/wallet/data"),
     },
     {
       id: "tv",
       label: "TV",
-      description: "TV subscriptions",
-      icon: <Tv className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-pink-400 to-pink-500",
-      action: () => navigate("/app/wallet/top-up"),
+      description: "Subscriptions",
+      icon: <Tv className="h-6 w-6" />,
+      bgColor: "bg-pink-100",
+      bgGradient: "from-pink-400 to-pink-500",
+      action: () => navigate("/app/wallet/tv"),
     },
-
-    // Additional Services
     {
       id: "safebox",
       label: "Safebox",
-      description: "Secure savings",
-      icon: <Lock className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-indigo-400 to-indigo-500",
-      action: () => navigate("/app/wallet/top-up"),
-    },
-    {
-      id: "loan",
-      label: "Loan",
-      description: "Quick loans",
-      icon: <Banknote className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-amber-400 to-amber-500",
-      action: () => navigate("/app/wallet/top-up"),
-    },
-    {
-      id: "play4child",
-      label: "Play4aChild",
-      description: "Support children",
-      icon: <Heart className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-rose-400 to-rose-500",
-      action: () => navigate("/app/wallet/top-up"),
+      description: "Save & earn",
+      icon: <Lock className="h-6 w-6" />,
+      bgColor: "bg-indigo-100",
+      bgGradient: "from-indigo-400 to-indigo-500",
+      action: () => navigate("/app/wallet/safebox"),
     },
 
-    // Additional Hidden Services for "More" modal
+    // Row 3: Bills & Requests
     {
-      id: "paybills",
-      label: "Pay Bills",
-      description: "Pay bills & utilities",
-      icon: <Smartphone className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-red-400 to-red-500",
-      action: () => navigate("/app/wallet/pay-bills"),
+      id: "electricity",
+      label: "Electricity",
+      description: "Pay bills",
+      icon: <Lightbulb className="h-6 w-6" />,
+      bgColor: "bg-yellow-100",
+      bgGradient: "from-yellow-400 to-yellow-500",
+      action: () => navigate("/app/wallet/electricity"),
     },
     {
-      id: "insurance",
-      label: "Insurance",
-      description: "Buy insurance",
-      icon: <Lock className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-purple-400 to-purple-500",
-      action: () => navigate("/app/wallet/top-up"),
+      id: "send-money",
+      label: "Send Money",
+      description: "Quick transfer",
+      icon: <Send className="h-6 w-6" />,
+      bgColor: "bg-blue-100",
+      bgGradient: "from-blue-400 to-blue-500",
+      action: () => navigate("/app/wallet/send-money"),
     },
     {
-      id: "education",
-      label: "Education",
-      description: "Pay school fees",
-      icon: <Smartphone className="h-7 w-7" />,
-      color: "text-white",
-      bgColor: "from-teal-400 to-teal-500",
-      action: () => navigate("/app/wallet/top-up"),
+      id: "request",
+      label: "Request",
+      description: "Ask for money",
+      icon: <HelpCircle className="h-6 w-6" />,
+      bgColor: "bg-cyan-100",
+      bgGradient: "from-cyan-400 to-cyan-500",
+      action: () => navigate("/app/wallet/money-request"),
     },
   ];
 
-  // Display first 9 services in main grid, rest in modal
-  const mainServices = allServices.slice(0, 9);
-  const moreServices = allServices.slice(9);
+  const moreServices: Service[] = [
+    {
+      id: "pay-bills",
+      label: "Pay Bills",
+      description: "Utilities",
+      icon: <Lightbulb className="h-6 w-6" />,
+      bgColor: "bg-red-100",
+      bgGradient: "from-red-400 to-red-500",
+      action: () => navigate("/app/wallet/pay-bills"),
+    },
+    {
+      id: "deposit",
+      label: "Deposit",
+      description: "Add funds",
+      icon: <ArrowUpRight className="h-6 w-6" />,
+      bgColor: "bg-green-100",
+      bgGradient: "from-green-400 to-green-500",
+      action: () => navigate("/app/wallet/deposit"),
+    },
+    {
+      id: "withdraw",
+      label: "Withdraw",
+      description: "Cash out",
+      icon: <ArrowUpRight className="h-6 w-6" />,
+      bgColor: "bg-purple-100",
+      bgGradient: "from-purple-400 to-purple-500",
+      action: () => navigate("/app/wallet/withdraw"),
+    },
+    {
+      id: "gift-cards",
+      label: "Gift Cards",
+      description: "Buy & sell",
+      icon: <User className="h-6 w-6" />,
+      bgColor: "bg-pink-100",
+      bgGradient: "from-pink-400 to-pink-500",
+      action: () => navigate("/app/wallet/gift-cards"),
+    },
+  ];
 
   const ServiceCard = ({ service }: { service: Service }) => (
     <button
       onClick={service.action}
-      className={`relative h-32 rounded-2xl bg-gradient-to-br ${service.bgColor} ${service.color} shadow-md hover:shadow-lg transition-all duration-300 flex flex-col items-center justify-center gap-2 group overflow-hidden`}
+      className="relative group flex flex-col items-center gap-2 p-4 sm:p-5"
     >
-      {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      {/* Badge */}
-      {service.badge && (
-        <div
-          className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold text-white backdrop-blur-sm ${
-            service.badge.variant === "hot"
-              ? "bg-red-500/80"
-              : service.badge.variant === "popular"
-              ? "bg-amber-500/80"
-              : "bg-blue-500/80"
-          }`}
-        >
-          {service.badge.text}
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center gap-2">
-        <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full group-hover:scale-110 transition-transform duration-300">
+      {/* Icon Container with background */}
+      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+        style={{
+          backgroundColor: service.bgColor,
+        }}
+      >
+        <div className="text-white drop-shadow-md">
           {service.icon}
         </div>
-        <div className="text-center">
-          <p className="font-semibold text-sm leading-tight">{service.label}</p>
-          <p className="text-xs opacity-90">{service.description}</p>
-        </div>
+        
+        {/* Badge */}
+        {service.badge && (
+          <div
+            className={`absolute -top-1 -right-1 px-2 py-0.5 rounded-full text-xs font-bold text-white whitespace-nowrap ${
+              service.badge.variant === "hot"
+                ? "bg-red-500"
+                : service.badge.variant === "popular"
+                ? "bg-amber-500"
+                : "bg-blue-500"
+            }`}
+          >
+            {service.badge.text}
+          </div>
+        )}
+      </div>
+
+      {/* Label and Description */}
+      <div className="text-center w-full">
+        <p className="font-semibold text-gray-900 text-sm leading-tight">{service.label}</p>
+        <p className="text-xs text-gray-600 mt-0.5">{service.description}</p>
       </div>
     </button>
   );
 
   return (
     <div className="space-y-6">
-      {/* Main Services Grid - 4 columns */}
-      <div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {mainServices.map((service) => (
-            <ServiceCard key={service.id} service={service} />
-          ))}
+      {/* Main Services Grid - 12 column grid (3, 4, 4 layout) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+        {mainServices.map((service) => (
+          <ServiceCard key={service.id} service={service} />
+        ))}
 
-          {/* More Button */}
-          <button
-            onClick={() => setShowMoreServices(true)}
-            className="relative h-32 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 text-white shadow-md hover:shadow-lg transition-all duration-300 flex flex-col items-center justify-center gap-2 group overflow-hidden"
+        {/* More Button */}
+        <button
+          onClick={() => setShowMoreServices(true)}
+          className="relative group flex flex-col items-center gap-2 p-4 sm:p-5"
+        >
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg bg-gray-200"
           >
-            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative z-10 flex flex-col items-center gap-2">
-              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full group-hover:scale-110 transition-transform duration-300">
-                <MoreHorizontal className="h-7 w-7" />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-sm leading-tight">More</p>
-                <p className="text-xs opacity-90">View all</p>
-              </div>
-            </div>
-          </button>
-        </div>
+            <MoreHorizontal className="h-6 w-6 text-gray-700 drop-shadow-md" />
+          </div>
+          <div className="text-center w-full">
+            <p className="font-semibold text-gray-900 text-sm leading-tight">More</p>
+            <p className="text-xs text-gray-600 mt-0.5">View all</p>
+          </div>
+        </button>
       </div>
 
       {/* More Services Modal */}
       <Dialog open={showMoreServices} onOpenChange={setShowMoreServices}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>All Services</DialogTitle>
+            <DialogTitle>More Services</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 max-h-96 overflow-y-auto">
-            {allServices.map((service) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 max-h-96 overflow-y-auto">
+            {moreServices.map((service) => (
               <div key={service.id} onClick={() => setShowMoreServices(false)}>
                 <ServiceCard service={service} />
               </div>
