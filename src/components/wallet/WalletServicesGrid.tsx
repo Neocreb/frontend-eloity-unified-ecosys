@@ -35,7 +35,7 @@ const WalletServicesGrid = () => {
   const mainServices: Service[] = [
     // Row 1: Transfer Services (3 items)
     {
-      id: "to-opay",
+      id: "send-money",
       label: "To OPay",
       icon: <User className="h-6 w-6" />,
       action: () => navigate("/app/wallet/send-money"),
@@ -68,10 +68,10 @@ const WalletServicesGrid = () => {
       action: () => navigate("/app/wallet/data"),
     },
     {
-      id: "betting",
-      label: "Betting",
-      icon: <Settings className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/betting"),
+      id: "electricity",
+      label: "Electricity",
+      icon: <Lightbulb className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/electricity"),
     },
     {
       id: "tv",
@@ -80,7 +80,7 @@ const WalletServicesGrid = () => {
       action: () => navigate("/app/wallet/tv"),
     },
 
-    // Row 3: Savings & Community (4 items)
+    // Row 3: Savings & Other Services (4 items)
     {
       id: "safebox",
       label: "Safebox",
@@ -88,16 +88,16 @@ const WalletServicesGrid = () => {
       action: () => navigate("/app/wallet/safebox"),
     },
     {
-      id: "loan",
-      label: "Loan",
-      icon: <Coins className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/loan"),
+      id: "deposit",
+      label: "Deposit",
+      icon: <ArrowUpRight className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/deposit"),
     },
     {
-      id: "play4achild",
-      label: "Play4aChild",
-      icon: <Heart className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/play4achild"),
+      id: "pay-bills",
+      label: "Pay Bills",
+      icon: <Lightbulb className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/pay-bills"),
     },
     {
       id: "more",
@@ -109,16 +109,22 @@ const WalletServicesGrid = () => {
 
   const moreServices: Service[] = [
     {
-      id: "deposit",
-      label: "Deposit",
-      icon: <ArrowUpRight className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/deposit"),
+      id: "request",
+      label: "Request",
+      icon: <Gift className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/request"),
     },
     {
-      id: "electricity",
-      label: "Electricity",
-      icon: <Lightbulb className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/electricity"),
+      id: "money-request",
+      label: "Money Request",
+      icon: <Gift className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/money-request"),
+    },
+    {
+      id: "top-up",
+      label: "Top Up",
+      icon: <Phone className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/top-up"),
     },
     {
       id: "gift-cards",
@@ -127,10 +133,16 @@ const WalletServicesGrid = () => {
       action: () => navigate("/app/wallet/gift-cards"),
     },
     {
-      id: "pay-bills",
-      label: "Pay Bills",
-      icon: <Lightbulb className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/pay-bills"),
+      id: "buy-gift-cards",
+      label: "Buy Gift Cards",
+      icon: <Gift className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/buy-gift-cards"),
+    },
+    {
+      id: "sell-gift-cards",
+      label: "Sell Gift Cards",
+      icon: <Gift className="h-6 w-6" />,
+      action: () => navigate("/app/wallet/sell-gift-cards"),
     },
   ];
 
