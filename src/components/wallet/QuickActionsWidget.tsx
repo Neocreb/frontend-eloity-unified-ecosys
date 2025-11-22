@@ -104,6 +104,28 @@ const QuickActionsWidget = () => {
     </Button>
   );
 
+  // Quick action card component for gift actions
+  const ActionCardSmall = ({ action }: { action: ActionItem }) => (
+    <Button
+      onClick={action.action}
+      className={`${action.color} text-white border-0 hover:shadow-lg transition-all duration-200 flex flex-col items-center gap-2 h-auto py-4 px-3 rounded-xl hover:scale-105 relative group`}
+    >
+      <div className="flex-1 flex items-center justify-center">{action.icon}</div>
+      <span className="text-xs font-semibold text-center leading-tight">{action.label}</span>
+      {action.badge && (
+        <Badge
+          className={`absolute top-1 right-1 text-xs font-bold ${
+            action.badge.variant === "new"
+              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              : "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+          }`}
+        >
+          {action.badge.text}
+        </Badge>
+      )}
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
       {/* Wallet Services Grid - Main Feature */}
