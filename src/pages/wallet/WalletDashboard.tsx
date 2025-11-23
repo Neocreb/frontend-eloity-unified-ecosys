@@ -234,7 +234,7 @@ const DashboardInner = () => {
             </div>
             <div className="grid grid-cols-3 gap-2">
               <button
-                onClick={()=>navigate('/app/wallet/send-gifts')}
+                onClick={()=>navigate('/app/send-gifts')}
                 className="bg-red-500 text-white rounded-xl py-4 px-2 flex flex-col items-center gap-1 font-semibold text-xs hover:bg-red-600 transition-all hover:scale-105 relative"
               >
                 <Gift className="h-5 w-5" />
