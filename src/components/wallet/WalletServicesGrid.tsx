@@ -27,7 +27,6 @@ interface Service {
 
 const WalletServicesGrid = () => {
   const navigate = useNavigate();
-  const [showMoreServices, setShowMoreServices] = useState(false);
 
   const mainServices: Service[] = [
     // Row 1: Transfer Services (3 items)
