@@ -394,6 +394,9 @@ const DashboardInner = () => {
             </div>
           </div>
 
+          {/* Smart Recommendations */}
+          <SmartRecommendations />
+
           {/* Recent Activity */}
           <div>
             <div className="flex items-center justify-between mb-4">
