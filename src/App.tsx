@@ -93,6 +93,7 @@ import TV from "./pages/wallet/TV";
 import Safebox from "./pages/wallet/Safebox";
 import Electricity from "./pages/wallet/Electricity";
 import MoneyRequest from "./pages/wallet/MoneyRequest";
+import MoreServices from "./pages/wallet/MoreServices";
 // Crypto pages
 import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
