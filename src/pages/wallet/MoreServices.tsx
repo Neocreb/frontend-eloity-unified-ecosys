@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ServiceBadges from "@/components/wallet/ServiceBadges";
+import { useServiceFavorites } from "@/hooks/useServiceFavorites";
 import {
   HelpCircle,
   Phone,
