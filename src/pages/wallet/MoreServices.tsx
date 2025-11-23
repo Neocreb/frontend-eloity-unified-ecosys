@@ -29,6 +29,7 @@ import {
   Clock,
   ArrowLeft,
   MoreHorizontal,
+  Heart as HeartIcon,
 } from "lucide-react";
 
 interface Service {
