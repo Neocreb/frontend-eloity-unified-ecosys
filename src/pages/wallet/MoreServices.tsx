@@ -337,7 +337,7 @@ const MoreServices = () => {
       className="relative group flex flex-col items-center gap-2 p-3 sm:p-4 w-full transition-all duration-300 hover:scale-105"
     >
       {/* Badges */}
-      <div className="absolute top-0 right-0 flex gap-1">
+      <div className="absolute top-0 right-0 flex gap-1 z-10">
         {service.isHot && (
           <Badge className="bg-red-500 text-white text-xs h-5">HOT</Badge>
         )}
@@ -363,6 +363,17 @@ const MoreServices = () => {
             {service.description}
           </p>
         )}
+
+        {/* Integration Badges */}
+        <div className="mt-2 flex justify-center">
+          <ServiceBadges
+            serviceId={service.id}
+            size="sm"
+            showLabel={false}
+            maxBadges={2}
+            className="justify-center"
+          />
+        </div>
       </div>
     </button>
   );
