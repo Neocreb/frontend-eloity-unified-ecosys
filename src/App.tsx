@@ -93,6 +93,7 @@ import TV from "./pages/wallet/TV";
 import Safebox from "./pages/wallet/Safebox";
 import Electricity from "./pages/wallet/Electricity";
 import MoneyRequest from "./pages/wallet/MoneyRequest";
+import MoreServices from "./pages/wallet/MoreServices";
 // Crypto pages
 import CryptoKYC from "./pages/CryptoKYC";
 import UniversalCryptoPayment from "./pages/UniversalCryptoPayment";
@@ -588,6 +589,7 @@ const AppRoutes = () => {
           <Route path="wallet/safebox" element={<Safebox />} />
           <Route path="wallet/electricity" element={<Electricity />} />
           <Route path="wallet/money-request" element={<MoneyRequest />} />
+          <Route path="wallet/more-services" element={<MoreServices />} />
 
           {/* Crypto Trading Routes - Full Page Flows */}
           <Route path="crypto/kyc" element={<CryptoKYC />} />

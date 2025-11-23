@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -11,9 +10,7 @@ import {
   Lightbulb,
   Gift,
   Plus,
-  HelpCircle,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Service {
   id: string;
@@ -30,7 +27,6 @@ interface Service {
 
 const WalletServicesGrid = () => {
   const navigate = useNavigate();
-  const [showMoreServices, setShowMoreServices] = useState(false);
 
   const mainServices: Service[] = [
     // Row 1: Transfer Services (3 items)
@@ -123,62 +119,12 @@ const WalletServicesGrid = () => {
       id: "more",
       label: "More",
       icon: <Gift className="h-6 w-6" />,
-      action: () => setShowMoreServices(true),
+      action: () => navigate("/app/wallet/more-services"),
       gradient: "bg-gradient-to-br from-gray-400 to-gray-500",
       iconColor: "text-white",
     },
   ];
 
-  const moreServices: Service[] = [
-    {
-      id: "request",
-      label: "Request",
-      icon: <HelpCircle className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/request"),
-      gradient: "bg-gradient-to-br from-rose-400 to-red-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "money-request",
-      label: "Money Request",
-      icon: <HelpCircle className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/money-request"),
-      gradient: "bg-gradient-to-br from-pink-400 to-rose-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "top-up",
-      label: "Top Up",
-      icon: <Phone className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/top-up"),
-      gradient: "bg-gradient-to-br from-orange-400 to-yellow-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "gift-cards",
-      label: "Gift Cards",
-      icon: <Gift className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/gift-cards"),
-      gradient: "bg-gradient-to-br from-purple-400 to-pink-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "buy-gift-cards",
-      label: "Buy Gift Cards",
-      icon: <Gift className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/buy-gift-cards"),
-      gradient: "bg-gradient-to-br from-pink-400 to-rose-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "sell-gift-cards",
-      label: "Sell Gift Cards",
-      icon: <Gift className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/sell-gift-cards"),
-      gradient: "bg-gradient-to-br from-green-400 to-teal-500",
-      iconColor: "text-white",
-    },
-  ];
 
   const ServiceCard = ({ service }: { service: Service }) => (
     <button
@@ -240,21 +186,6 @@ const WalletServicesGrid = () => {
         </div>
       </div>
 
-      {/* More Services Modal */}
-      <Dialog open={showMoreServices} onOpenChange={setShowMoreServices}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>More Services</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-h-96 overflow-y-auto p-4">
-            {moreServices.map((service) => (
-              <div key={service.id} onClick={() => setShowMoreServices(false)}>
-                <ServiceCard service={service} />
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
