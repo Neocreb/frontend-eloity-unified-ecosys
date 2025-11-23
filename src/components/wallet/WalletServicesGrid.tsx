@@ -119,7 +119,7 @@ const WalletServicesGrid = () => {
       id: "more",
       label: "More",
       icon: <Gift className="h-6 w-6" />,
-      action: () => setShowMoreServices(true),
+      action: () => navigate("/app/wallet/more-services"),
       gradient: "bg-gradient-to-br from-gray-400 to-gray-500",
       iconColor: "text-white",
     },
