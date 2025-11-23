@@ -1,8 +1,9 @@
 import express, { Request, Response } from 'express';
-import { walletDatabaseService } from '../services/walletDatabaseService.js';
+import { walletDatabaseService } from '../../src/services/walletDatabaseService';
 import { paymentProcessorService } from '../services/paymentProcessorService.js';
 import { logger } from '../utils/logger.js';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 
 const router = express.Router();
 
@@ -445,8 +446,91 @@ router.post('/withdraw/confirm', requireAuth, async (req: Request, res: Response
       });
     }
 
-    // In a real implementation, verify the 2FA code here
-    // For now, we'll just mark it as processing
+    // Verify the 2FA code
+    const storedCode = transaction.metadata?.verificationCode;
+    const codeExpiry = transaction.metadata?.codeExpiry;
+    
+    if (!storedCode || storedCode !== verificationCode) {
+      return res.status(400).json({
+        error: 'Invalid verification code',
+      });
+    }
+    
+    if (!codeExpiry || new Date(codeExpiry) < new Date()) {
+      return res.status(400).json({
+        error: 'Verification code has expired',
+      });
+    }
+
+    // Check if user has sufficient balance using atomic function to prevent race conditions
+    let hasSufficientBalance = false;
+    
+    try {
+      // Use the atomic function to check balance with row-level locking
+      const { data: result, error: lockError } = await supabase.rpc('update_wallet_balance_atomic', {
+        p_user_id: userId,
+        p_amount: transaction.amount,
+        p_currency: transaction.currency,
+        p_operation: 'check_and_lock'
+      });
+      
+      if (lockError) {
+        throw new Error(`Failed to check balance atomically: ${lockError.message}`);
+      }
+      
+      hasSufficientBalance = result?.has_sufficient_balance || false;
+    } catch (lockError) {
+      logger.error('Error during atomic balance check:', lockError);
+      // If atomic check fails, fall back to a simple check but still process the transaction
+      // This ensures the system continues to work even if the atomic function has issues
+      try {
+        const { data: wallets, error: walletError } = await supabase
+          .from('wallets')
+          .select('*')
+          .eq('user_id', userId)
+          .limit(1);
+
+        if (walletError || !wallets || wallets.length === 0) {
+          throw new Error('Failed to retrieve wallet information');
+        }
+
+        const wallet = wallets[0];
+        let balance = 0;
+        switch (transaction.currency) {
+          case 'USDT':
+            balance = parseFloat(wallet.usdt_balance?.toString() || '0');
+            break;
+          case 'ETH':
+            balance = parseFloat(wallet.eth_balance?.toString() || '0');
+            break;
+          case 'BTC':
+            balance = parseFloat(wallet.btc_balance?.toString() || '0');
+            break;
+          default:
+            balance = parseFloat(wallet.usdt_balance?.toString() || '0');
+        }
+        
+        hasSufficientBalance = balance >= transaction.amount;
+      } catch (fallbackError) {
+        logger.error('Fallback balance check also failed:', fallbackError);
+        // In case of any error, we'll be conservative and assume insufficient funds
+        hasSufficientBalance = false;
+      }
+    }
+
+    if (!hasSufficientBalance) {
+      // Update transaction status to failed due to insufficient funds
+      await walletDatabaseService.updateTransactionStatus(withdrawalId, userId, 'failed', {
+        failedAt: new Date().toISOString(),
+        failureReason: 'Insufficient funds',
+      });
+      
+      return res.status(400).json({
+        error: 'Insufficient funds for withdrawal',
+      });
+    }
+
+    // Mark withdrawal as processing
     const updated = await walletDatabaseService.updateTransactionStatus(withdrawalId, userId, 'processing', {
       verifiedAt: new Date().toISOString(),
       verificationMethod: '2FA',
@@ -838,7 +922,7 @@ router.get('/export', requireAuth, async (req: Request, res: Response) => {
         'Created At',
       ];
 
-      const rows = result.transactions.map((tx) => [
+      const rows = result.transactions.map((tx: any) => [
         tx.id,
         tx.referenceId || '',
         tx.transactionType,
@@ -854,7 +938,7 @@ router.get('/export', requireAuth, async (req: Request, res: Response) => {
       ]);
 
       const csv = [headers, ...rows]
-        .map((row) => row.map((cell) => `"${cell}"`).join(','))
+        .map((row: any) => row.map((cell: any) => `"${cell}"`).join(','))
         .join('\n');
 
       res.setHeader('Content-Type', 'text/csv');
@@ -862,14 +946,14 @@ router.get('/export', requireAuth, async (req: Request, res: Response) => {
       res.send(csv);
     } else if (format === 'pdf') {
       const totalIncome = result.transactions
-        .filter((tx) => tx.transactionType === 'deposit' || tx.transactionType === 'earned')
-        .reduce((sum, tx) => sum + tx.amount, 0);
+        .filter((tx: any) => tx.transactionType === 'deposit' || tx.transactionType === 'earned')
+        .reduce((sum: number, tx: any) => sum + tx.amount, 0);
 
       const totalExpense = result.transactions
-        .filter((tx) => tx.transactionType === 'withdrawal' || tx.transactionType === 'transfer')
-        .reduce((sum, tx) => sum + tx.amount, 0);
+        .filter((tx: any) => tx.transactionType === 'withdrawal' || tx.transactionType === 'transfer')
+        .reduce((sum: number, tx: any) => sum + tx.amount, 0);
 
-      const totalFees = result.transactions.reduce((sum, tx) => sum + (tx.feeAmount || 0), 0);
+      const totalFees = result.transactions.reduce((sum: number, tx: any) => sum + (tx.feeAmount || 0), 0);
 
       const pdfContent = `
 TRANSACTION REPORT
@@ -888,7 +972,7 @@ TRANSACTION DETAILS
 -------------------
 ${result.transactions
   .map(
-    (tx) => `
+    (tx: any) => `
 ID: ${tx.id}
 Type: ${tx.transactionType}
 Amount: ${tx.amount} ${tx.currency}
@@ -954,7 +1038,7 @@ router.get('/export/csv', requireAuth, async (req: Request, res: Response) => {
       'Created At',
     ];
 
-    const rows = result.transactions.map((tx) => [
+    const rows2 = result.transactions.map((tx: any) => [
       tx.id,
       tx.referenceId || '',
       tx.transactionType,
@@ -969,13 +1053,13 @@ router.get('/export/csv', requireAuth, async (req: Request, res: Response) => {
       new Date(tx.metadata?.initiatedAt || '').toLocaleString(),
     ]);
 
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${cell}"`).join(','))
-      .join('\n');
+    const csv2 = [headers, ...rows2]
+        .map((row: any) => row.map((cell: any) => `"${cell}"`).join(','))
+        .join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"');
-    res.send(csv);
+    res.send(csv2);
 
     logger.info(`Transactions exported for user ${userId}`);
   } catch (error: any) {
