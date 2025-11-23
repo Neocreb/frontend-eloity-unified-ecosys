@@ -302,6 +302,9 @@ const DashboardInner = () => {
             />
           </div>
 
+          {/* Service Favorites Bar */}
+          <ServiceFavoritesBar />
+
           {/* Wallet Services Grid */}
           <WalletServicesGrid />
 
