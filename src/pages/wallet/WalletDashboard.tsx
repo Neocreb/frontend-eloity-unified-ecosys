@@ -7,6 +7,7 @@ import { Eye, EyeOff, ChevronDown, BarChart3, List, PlugZap, Send, Repeat, Plus,
 import { useNavigate } from "react-router-dom";
 import AdCarousel, { Ad } from "@/components/wallet/AdCarousel";
 import WalletServicesGrid from "@/components/wallet/WalletServicesGrid";
+import SmartRecommendations from "@/components/wallet/SmartRecommendations";
 
 const AnimatedWave = () => {
   return (
