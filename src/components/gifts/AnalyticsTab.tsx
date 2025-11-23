@@ -74,106 +74,182 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ onRefresh }) => {
   const loadAnalyticsData = async () => {
     setIsLoading(true);
     try {
-      // Load statistics
-      const [gifts, tips, sentGifts] = await Promise.all([
-        virtualGiftsService.getGiftStatistics(user?.id || ""),
-        virtualGiftsService.getTipStatistics(user?.id || ""),
-        virtualGiftsService.getSentGifts(user?.id || "", 50),
-      ]);
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
 
-      setGiftStats(gifts);
-      setTipStats(tips);
+      // Load statistics with safe defaults
+      let gifts = null;
+      let tips = null;
+      let sentGifts: any[] = [];
+
+      try {
+        gifts = await virtualGiftsService.getGiftStatistics(user.id);
+        if (!gifts) {
+          gifts = {
+            totalReceived: 0,
+            totalSent: 0,
+            totalValue: 0,
+            topGifts: [],
+          };
+        }
+        setGiftStats(gifts);
+      } catch (error) {
+        console.error("Error loading gift statistics:", error);
+        setGiftStats({
+          totalReceived: 0,
+          totalSent: 0,
+          totalValue: 0,
+          topGifts: [],
+        });
+      }
+
+      try {
+        tips = await virtualGiftsService.getTipStatistics(user.id);
+        if (!tips) {
+          tips = {
+            totalTipsReceived: 0,
+            totalTipValue: 0,
+            averageTip: 0,
+            topTippers: [],
+          };
+        }
+        setTipStats(tips);
+      } catch (error) {
+        console.error("Error loading tip statistics:", error);
+        setTipStats({
+          totalTipsReceived: 0,
+          totalTipValue: 0,
+          averageTip: 0,
+          topTippers: [],
+        });
+      }
+
+      try {
+        const result = await virtualGiftsService.getSentGifts(user.id, 50);
+        sentGifts = Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.error("Error loading sent gifts:", error);
+        sentGifts = [];
+      }
 
       // Process recent gifts and build top recipients
-      const enrichedGifts = await Promise.all(
-        sentGifts.slice(0, 10).map(async (gift) => {
-          try {
-            const { data: profile } = await (window as any).supabase
-              .from("profiles")
-              .select("display_name, avatar_url, username")
-              .eq("id", gift.to_user_id)
-              .single();
-
-            return {
-              ...gift,
-              recipientName: profile?.display_name || "Unknown",
-              recipientUsername: profile?.username || "",
-              recipientAvatar: profile?.avatar_url,
-            };
-          } catch (error) {
-            return {
-              ...gift,
-              recipientName: "Unknown",
-              recipientUsername: "",
-            };
-          }
-        }),
-      );
-
-      setRecentGifts(enrichedGifts);
-
-      // Get recent tips
-      const tips_data = await virtualGiftsService.getReceivedTips(user?.id || "", 10);
-      setRecentTips(tips_data);
-
-      // Calculate top recipients
-      const recipientMap = new Map<
-        string,
-        { totalAmount: number; giftCount: number; giftIds: string[] }
-      >();
-
-      sentGifts.forEach((gift) => {
-        const key = gift.to_user_id;
-        if (recipientMap.has(key)) {
-          const existing = recipientMap.get(key)!;
-          existing.totalAmount += gift.total_amount;
-          existing.giftCount += 1;
-          existing.giftIds.push(gift.gift_id);
-        } else {
-          recipientMap.set(key, {
-            totalAmount: gift.total_amount,
-            giftCount: 1,
-            giftIds: [gift.gift_id],
-          });
-        }
-      });
-
-      // Fetch profile data for top recipients
-      const topRecipientsData = await Promise.all(
-        Array.from(recipientMap.entries())
-          .sort((a, b) => b[1].totalAmount - a[1].totalAmount)
-          .slice(0, 5)
-          .map(async ([userId, stats]) => {
+      if (sentGifts && sentGifts.length > 0) {
+        const enrichedGifts = await Promise.all(
+          sentGifts.slice(0, 10).map(async (gift) => {
             try {
               const { data: profile } = await (window as any).supabase
                 .from("profiles")
-                .select("id, username, display_name, avatar_url")
-                .eq("id", userId)
+                .select("display_name, avatar_url, username")
+                .eq("id", gift.to_user_id)
                 .single();
 
               return {
-                id: profile?.id || userId,
-                username: profile?.username || "",
-                display_name: profile?.display_name || "Unknown",
-                avatar_url: profile?.avatar_url,
-                totalAmount: stats.totalAmount,
-                giftCount: stats.giftCount,
+                ...gift,
+                recipientName: profile?.display_name || "Unknown",
+                recipientUsername: profile?.username || "",
+                recipientAvatar: profile?.avatar_url,
               };
             } catch (error) {
               return {
-                id: userId,
-                username: "",
-                display_name: "Unknown User",
-                totalAmount: stats.totalAmount,
-                giftCount: stats.giftCount,
+                ...gift,
+                recipientName: "Unknown",
+                recipientUsername: "",
               };
             }
           }),
-      );
+        );
 
-      setTopRecipients(topRecipientsData);
+        setRecentGifts(enrichedGifts);
+
+        // Calculate top recipients
+        const recipientMap = new Map<
+          string,
+          { totalAmount: number; giftCount: number; giftIds: string[] }
+        >();
+
+        sentGifts.forEach((gift) => {
+          const key = gift.to_user_id;
+          const amount = gift.total_amount || 0;
+          if (recipientMap.has(key)) {
+            const existing = recipientMap.get(key)!;
+            existing.totalAmount += amount;
+            existing.giftCount += 1;
+            existing.giftIds.push(gift.gift_id);
+          } else {
+            recipientMap.set(key, {
+              totalAmount: amount,
+              giftCount: 1,
+              giftIds: [gift.gift_id],
+            });
+          }
+        });
+
+        // Fetch profile data for top recipients
+        const topRecipientsData = await Promise.all(
+          Array.from(recipientMap.entries())
+            .sort((a, b) => (b[1].totalAmount || 0) - (a[1].totalAmount || 0))
+            .slice(0, 5)
+            .map(async ([userId, stats]) => {
+              try {
+                const { data: profile } = await (window as any).supabase
+                  .from("profiles")
+                  .select("id, username, display_name, avatar_url")
+                  .eq("id", userId)
+                  .single();
+
+                return {
+                  id: profile?.id || userId,
+                  username: profile?.username || "",
+                  display_name: profile?.display_name || "Unknown",
+                  avatar_url: profile?.avatar_url,
+                  totalAmount: stats.totalAmount || 0,
+                  giftCount: stats.giftCount || 0,
+                };
+              } catch (error) {
+                return {
+                  id: userId,
+                  username: "",
+                  display_name: "Unknown User",
+                  totalAmount: stats.totalAmount || 0,
+                  giftCount: stats.giftCount || 0,
+                };
+              }
+            }),
+        );
+
+        setTopRecipients(topRecipientsData);
+      } else {
+        setRecentGifts([]);
+        setTopRecipients([]);
+      }
+
+      // Get recent tips
+      try {
+        const tips_data = await virtualGiftsService.getReceivedTips(user.id, 10);
+        setRecentTips(Array.isArray(tips_data) ? tips_data : []);
+      } catch (error) {
+        console.error("Error loading received tips:", error);
+        setRecentTips([]);
+      }
     } catch (error) {
       console.error("Error loading analytics data:", error);
+      setGiftStats({
+        totalReceived: 0,
+        totalSent: 0,
+        totalValue: 0,
+        topGifts: [],
+      });
+      setTipStats({
+        totalTipsReceived: 0,
+        totalTipValue: 0,
+        averageTip: 0,
+        topTippers: [],
+      });
+      setRecentGifts([]);
+      setRecentTips([]);
+      setTopRecipients([]);
     } finally {
       setIsLoading(false);
     }
