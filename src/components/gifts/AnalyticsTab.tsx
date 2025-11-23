@@ -516,19 +516,23 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ onRefresh }) => {
           <CardContent className="space-y-2">
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-muted-foreground">Total Tips Received</span>
-              <span className="font-bold">${tipStats.totalTipValue.toFixed(2)}</span>
+              <span className="font-bold">
+                ${((tipStats?.totalTipValue || 0).toFixed(2))}
+              </span>
             </div>
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-muted-foreground">Average Tip Amount</span>
-              <span className="font-bold">${tipStats.averageTip.toFixed(2)}</span>
+              <span className="font-bold">
+                ${((tipStats?.averageTip || 0).toFixed(2))}
+              </span>
             </div>
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-muted-foreground">Top Tippers</span>
-              <span className="font-bold">{tipStats.topTippers.length}</span>
+              <span className="font-bold">{tipStats?.topTippers?.length || 0}</span>
             </div>
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-muted-foreground">Gift Recipients</span>
-              <span className="font-bold">{topRecipients.length}</span>
+              <span className="font-bold">{topRecipients?.length || 0}</span>
             </div>
           </CardContent>
         </Card>
