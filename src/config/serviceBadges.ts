@@ -1,10 +1,7 @@
-import { ReactNode } from 'react';
-import { Zap, Repeat, Gift, Award, Shield, Smartphone } from 'lucide-react';
-
 export interface Badge {
   id: string;
   label: string;
-  icon: ReactNode;
+  iconName: 'zap' | 'repeat' | 'gift' | 'award' | 'shield' | 'smartphone';
   color: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'secondary';
   description?: string;
   bgColor: string;
@@ -16,7 +13,7 @@ export const AVAILABLE_BADGES: Record<string, Badge> = {
   instant: {
     id: 'instant',
     label: 'Instant',
-    icon: <Zap className="h-3 w-3" />,
+    iconName: 'zap',
     color: 'primary',
     description: 'Instant processing',
     bgColor: 'bg-blue-100',
@@ -26,7 +23,7 @@ export const AVAILABLE_BADGES: Record<string, Badge> = {
   recurring: {
     id: 'recurring',
     label: 'Recurring',
-    icon: <Repeat className="h-3 w-3" />,
+    iconName: 'repeat',
     color: 'info',
     description: 'Set up recurring payments',
     bgColor: 'bg-cyan-100',
@@ -36,7 +33,7 @@ export const AVAILABLE_BADGES: Record<string, Badge> = {
   rewards: {
     id: 'rewards',
     label: 'Rewards',
-    icon: <Gift className="h-3 w-3" />,
+    iconName: 'gift',
     color: 'success',
     description: 'Earn rewards on this service',
     bgColor: 'bg-green-100',
@@ -46,7 +43,7 @@ export const AVAILABLE_BADGES: Record<string, Badge> = {
   crypto: {
     id: 'crypto',
     label: 'Crypto',
-    icon: <Shield className="h-3 w-3" />,
+    iconName: 'shield',
     color: 'warning',
     description: 'Crypto enabled',
     bgColor: 'bg-amber-100',
@@ -56,7 +53,7 @@ export const AVAILABLE_BADGES: Record<string, Badge> = {
   partnership: {
     id: 'partnership',
     label: 'Partnership',
-    icon: <Award className="h-3 w-3" />,
+    iconName: 'award',
     color: 'secondary',
     description: 'Featured partner',
     bgColor: 'bg-purple-100',
@@ -66,7 +63,7 @@ export const AVAILABLE_BADGES: Record<string, Badge> = {
   popular: {
     id: 'popular',
     label: 'Popular',
-    icon: <Smartphone className="h-3 w-3" />,
+    iconName: 'smartphone',
     color: 'danger',
     description: 'Most used service',
     bgColor: 'bg-red-100',
