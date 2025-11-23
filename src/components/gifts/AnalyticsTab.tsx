@@ -350,11 +350,11 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ onRefresh }) => {
                         {recipient.display_name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {recipient.giftCount} gifts • ${recipient.totalAmount.toFixed(2)}
+                        {recipient.giftCount || 0} gifts • ${((recipient?.totalAmount || 0).toFixed(2))}
                       </p>
                     </div>
                   </div>
-                  <Badge className="text-xs flex-shrink-0">🎁 x{recipient.giftCount}</Badge>
+                  <Badge className="text-xs flex-shrink-0">🎁 x{recipient?.giftCount || 0}</Badge>
                 </div>
               ))}
             </div>
@@ -379,7 +379,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ onRefresh }) => {
                   <Skeleton key={i} className="h-12 rounded" />
                 ))}
               </div>
-            ) : recentGifts.length > 0 ? (
+            ) : recentGifts && recentGifts.length > 0 ? (
               <div className="space-y-2">
                 {recentGifts.slice(0, 5).map((gift, index) => (
                   <div key={index} className="flex items-center justify-between p-2 rounded border">
@@ -394,14 +394,14 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ onRefresh }) => {
                         </Avatar>
                       )}
                       <div className="min-w-0">
-                        <p className="text-xs font-medium truncate">{gift.recipientName}</p>
+                        <p className="text-xs font-medium truncate">{gift.recipientName || "Unknown"}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(gift.createdAt).toLocaleDateString()}
+                          {gift.createdAt ? new Date(gift.createdAt).toLocaleDateString() : "Unknown date"}
                         </p>
                       </div>
                     </div>
                     <Badge variant="secondary" className="text-xs flex-shrink-0">
-                      ${gift.totalAmount.toFixed(2)}
+                      ${((gift?.totalAmount || 0).toFixed(2))}
                     </Badge>
                   </div>
                 ))}
@@ -429,20 +429,20 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ onRefresh }) => {
                   <Skeleton key={i} className="h-12 rounded" />
                 ))}
               </div>
-            ) : recentTips.length > 0 ? (
+            ) : recentTips && recentTips.length > 0 ? (
               <div className="space-y-2">
                 {recentTips.slice(0, 5).map((tip, index) => (
                   <div key={index} className="flex items-center justify-between p-2 rounded border">
                     <div className="min-w-0">
                       <p className="text-xs font-medium">
-                        Tip {tip.isAnonymous ? "(Anonymous)" : `from ${tip.fromUserId.slice(0, 8)}`}
+                        Tip {tip?.isAnonymous ? "(Anonymous)" : `from ${tip?.fromUserId?.slice(0, 8) || "Unknown"}`}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(tip.createdAt).toLocaleDateString()}
+                        {tip?.createdAt ? new Date(tip.createdAt).toLocaleDateString() : "Unknown date"}
                       </p>
                     </div>
                     <Badge variant="secondary" className="text-xs flex-shrink-0">
-                      ${tip.amount.toFixed(2)}
+                      ${((tip?.amount || 0).toFixed(2))}
                     </Badge>
                   </div>
                 ))}
