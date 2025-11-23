@@ -467,31 +467,38 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ onRefresh }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {giftStats.topGifts.map((item, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{item.gift.emoji}</span>
-                      <span className="text-xs sm:text-sm font-medium">{item.gift.name}</span>
-                    </div>
-                    <span className="text-xs sm:text-sm font-bold text-primary">
-                      {item.count} sent
+              {giftStats &&
+          giftStats.topGifts &&
+          giftStats.topGifts.length > 0 &&
+          giftStats.topGifts.map((item, index) => {
+            const maxCount = Math.max(
+              ...(giftStats.topGifts?.map((g) => g?.count || 0) || [1]),
+              1,
+            );
+            return (
+              <div key={index} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{item?.gift?.emoji || "🎁"}</span>
+                    <span className="text-xs sm:text-sm font-medium">
+                      {item?.gift?.name || "Gift"}
                     </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full transition-all"
-                      style={{
-                        width: `${
-                          (item.count /
-                            Math.max(...giftStats.topGifts.map((g) => g.count), 1)) *
-                          100
-                        }%`,
-                      }}
-                    />
-                  </div>
+                  <span className="text-xs sm:text-sm font-bold text-primary">
+                    {item?.count || 0} sent
+                  </span>
                 </div>
-              ))}
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full transition-all"
+                    style={{
+                      width: `${((item?.count || 0) / maxCount) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
             </div>
           </CardContent>
         </Card>
