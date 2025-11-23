@@ -334,7 +334,10 @@ const MoreServices = () => {
 
   const categories = Array.from(new Set(allServices.map((s) => s.category)));
 
-  const ServiceCard = ({ service }: { service: Service }) => (
+  const ServiceCard = ({ service }: { service: Service }) => {
+    const isFav = isFavorited(service.id);
+
+    return (
     <button
       onClick={service.action}
       className="relative group flex flex-col items-center gap-2 p-3 sm:p-4 w-full transition-all duration-300 hover:scale-105"
@@ -347,6 +350,17 @@ const MoreServices = () => {
         {service.isNew && (
           <Badge className="bg-blue-500 text-white text-xs h-5">NEW</Badge>
         )}
+        {/* Favorite Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(service.id);
+          }}
+          className="bg-white text-red-500 text-xs h-5 px-1.5 rounded-full hover:bg-red-50 transition-colors flex items-center justify-center"
+          title={isFav ? "Remove from favorites" : "Add to favorites"}
+        >
+          <Heart className={`h-3 w-3 ${isFav ? 'fill-red-500' : ''}`} />
+        </button>
       </div>
 
       {/* Icon Container */}
@@ -379,7 +393,8 @@ const MoreServices = () => {
         </div>
       </div>
     </button>
-  );
+    );
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
