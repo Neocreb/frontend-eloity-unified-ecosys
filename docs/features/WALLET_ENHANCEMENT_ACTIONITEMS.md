@@ -61,23 +61,37 @@ This document outlines specific action items to improve the wallet experience us
 
 ---
 
-### 1.3 Connect "Recent Activity" to Real Transaction Data
-**Current State:** Shows placeholder "No transactions yet"  
-**Location:** `src/pages/wallet/WalletDashboard.tsx` (Lines 305-317)  
-**Action Items:**
-- [ ] Pull last 5 transactions from WalletContext
-- [ ] Format transaction display with type, amount, date
-- [ ] Add proper transaction icons based on type
-- [ ] Show "See All" link to full transaction history
+### 1.3 Connect "Recent Activity" to Real Transaction Data ✅ COMPLETED
+**Status:** IMPLEMENTED
+**Location:** `src/pages/wallet/WalletDashboard.tsx` (Lines 397-440)
+**Implementation Details:**
+- ✅ Displays last 3 transactions from WalletContext
+- ✅ Shows transaction type, amount, date, and status
+- ✅ Color-codes amounts (green for positive, red for negative)
+- ✅ Displays status (Completed, Pending, Failed)
+- ✅ Shows "See All" link to full transaction history
+- ✅ Handles empty state gracefully
 
-**Implementation Steps:**
-1. Access `transactions` from `useWalletContext()`
-2. Filter and sort by timestamp (most recent first)
-3. Slice to get last 5
-4. Map to display with formatted data
-5. Show empty state only when no transactions exist
+**What Changed:**
+1. Replaced hardcoded "No transactions yet" placeholder with dynamic list
+2. Uses real transaction data from useWalletContext()
+3. Displays last 3 most recent transactions
+4. Added proper formatting for dates and amounts
+5. Conditional rendering for empty state
 
-**Estimated Effort:** 1.5 hours
+**Transaction Display:**
+- Transaction type icon (first letter of type)
+- Transaction description
+- Date and time formatted for readability
+- Amount with +/- prefix
+- Status badge (Completed, Pending, Failed)
+
+**Performance:** No additional hooks needed, uses existing transaction data from context
+
+**Edge Cases Handled:**
+- Empty transaction list shows helpful message
+- Missing timestamps handled gracefully
+- String amounts converted to numbers for display
 
 ---
 
