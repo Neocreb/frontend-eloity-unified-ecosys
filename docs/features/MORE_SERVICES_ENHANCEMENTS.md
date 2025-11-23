@@ -36,7 +36,12 @@ This document provides implementation guidance for enhanced features on the `/ap
 
 ---
 
-## 1. Recent Transactions Quick View
+## 1. Recent Transactions Quick View ✅ IMPLEMENTED
+
+**Current Status:** Already exists on main `/app/wallet` page as "Recent Activity" section
+**Location:** `src/pages/wallet/WalletDashboard.tsx` (Lines 305-317)
+**Component:** Built-in section with transaction history preview
+**Note:** This feature is complete. See [WALLET_FEATURES_STATUS.md](./WALLET_FEATURES_STATUS.md#1-recent-transactions-quick-view-) for details.
 
 ### Purpose
 Display user's last 3-5 transactions with quick action buttons to repeat similar transactions.
