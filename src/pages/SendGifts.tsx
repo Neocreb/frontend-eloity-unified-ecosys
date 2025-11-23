@@ -10,10 +10,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import VirtualGiftsAndTips from "@/components/premium/VirtualGiftsAndTips";
+import QuickSendTab from "@/components/gifts/QuickSendTab";
+import BrowseGiftsTab from "@/components/gifts/BrowseGiftsTab";
+import AnalyticsTab from "@/components/gifts/AnalyticsTab";
 import SuggestedUsers from "@/components/profile/SuggestedUsers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -23,8 +24,6 @@ import {
   VirtualGift,
   GiftTransaction,
   TipTransaction,
-  CreatorTipSettings,
-  VIRTUAL_GIFTS,
 } from "@/services/virtualGiftsService";
 import {
   Gift,
@@ -46,18 +45,20 @@ import {
   Award,
   TrendingDown,
   Clock,
+  BookOpen,
 } from "lucide-react";
 
 const SendGifts = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [showGiftModal, setShowGiftModal] = useState(false);
+
   const [activeTab, setActiveTab] = useState("quick-send");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Selected user for modal (used in Browse Gifts)
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showGiftModal, setShowGiftModal] = useState(false);
 
   // Virtual Gifts & Tips state
   const [selectedGift, setSelectedGift] = useState<VirtualGift | null>(null);
@@ -69,70 +70,6 @@ const SendGifts = () => {
   const [availableGifts, setAvailableGifts] = useState<VirtualGift[]>([]);
   const [recentGifts, setRecentGifts] = useState<GiftTransaction[]>([]);
   const [recentTips, setRecentTips] = useState<TipTransaction[]>([]);
-  const [tipSettings, setTipSettings] = useState<CreatorTipSettings | null>(null);
-
-  // Mock recent recipients for quick send
-  const [recentRecipients, setRecentRecipients] = useState<any[]>([
-    {
-      id: "1",
-      name: "Alice Johnson",
-      username: "alice_j",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b06c?w=100&h=100&fit=crop&crop=face",
-      lastGift: "2 days ago",
-      totalGifts: 5,
-      lastGiftEmoji: "❤️",
-    },
-    {
-      id: "2",
-      name: "Bob Smith",
-      username: "bob_smith",
-      avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop&crop=face",
-      lastGift: "1 week ago",
-      totalGifts: 3,
-      lastGiftEmoji: "☕",
-    },
-    {
-      id: "3",
-      name: "Carol White",
-      username: "carol_w",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
-      lastGift: "2 weeks ago",
-      totalGifts: 8,
-      lastGiftEmoji: "🏆",
-    },
-  ]);
-
-  // Gift categories for browse section
-  const giftCategories = [
-    {
-      id: "basic",
-      name: "Basic Gifts",
-      icon: Heart,
-      color: "bg-red-500",
-      description: "Love and appreciation",
-    },
-    {
-      id: "premium",
-      name: "Premium Gifts",
-      icon: Crown,
-      color: "bg-purple-500",
-      description: "Exclusive and special",
-    },
-    {
-      id: "seasonal",
-      name: "Seasonal Gifts",
-      icon: Sparkles,
-      color: "bg-green-500",
-      description: "Holiday and events",
-    },
-    {
-      id: "special",
-      name: "Special Events",
-      icon: Trophy,
-      color: "bg-yellow-500",
-      description: "Celebrations",
-    },
-  ];
 
   // Load virtual gifts data
   useEffect(() => {
@@ -142,7 +79,7 @@ const SendGifts = () => {
   const loadVirtualGiftsData = async () => {
     setIsLoading(true);
     try {
-      const gifts = virtualGiftsService.getAvailableGifts();
+      const gifts = await virtualGiftsService.getVirtualGiftsFromDB();
       setAvailableGifts(gifts);
 
       try {
@@ -171,7 +108,7 @@ const SendGifts = () => {
       }
     } catch (error) {
       console.error("Error loading virtual gifts data:", error);
-      setAvailableGifts(VIRTUAL_GIFTS || []);
+      setAvailableGifts([]);
       setRecentGifts([]);
       setRecentTips([]);
     } finally {
@@ -292,8 +229,8 @@ const SendGifts = () => {
   const totalGiftsSent = recentGifts.reduce((sum, g) => sum + (g.quantity || 1), 0);
   const totalTipsGiven = recentTips.reduce((sum, t) => sum + (t.amount || 0), 0);
   const totalRecipients = new Set([
-    ...recentGifts.map(g => g.recipientId),
-    ...recentTips.map(t => t.recipientId),
+    ...recentGifts.map((g) => g.toUserId),
+    ...recentTips.map((t) => t.toUserId),
   ]).size;
 
   return (
@@ -337,26 +274,34 @@ const SendGifts = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
               <Card>
                 <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-purple-600">{totalGiftsSent}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-purple-600">
+                    {totalGiftsSent}
+                  </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">Gifts Sent</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-green-600">${totalTipsGiven.toFixed(0)}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-green-600">
+                    ${totalTipsGiven.toFixed(0)}
+                  </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">Tips Given</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-blue-600">{totalRecipients}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                    {totalRecipients}
+                  </div>
                   <div className="text-xs sm:text-sm text-muted-foreground">Recipients</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-orange-600">4.9</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Score</div>
+                  <div className="text-xl sm:text-2xl font-bold text-orange-600">
+                    {availableGifts.length}
+                  </div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Available Gifts</div>
                 </CardContent>
               </Card>
             </div>
@@ -398,132 +343,35 @@ const SendGifts = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* Quick Send Tab */}
+            {/* Quick Send Tab - New Enhanced Component */}
             <TabsContent value="quick-send" className="space-y-4 sm:space-y-6 mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Recent Recipients
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 sm:space-y-3">
-                    {recentRecipients.map((recipient) => (
-                      <div
-                        key={recipient.id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                          <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
-                            <AvatarImage src={recipient.avatar} alt={recipient.name} />
-                            <AvatarFallback>{recipient.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <div className="font-medium text-sm truncate">{recipient.name}</div>
-                            <div className="text-xs text-muted-foreground">@{recipient.username}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {recipient.lastGiftEmoji} {recipient.lastGift}
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => handleSendGift(recipient)}
-                          className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-xs sm:text-sm h-8 sm:h-auto py-1 sm:py-2 flex-shrink-0 whitespace-nowrap"
-                        >
-                          <Gift className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                          Send
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <QuickSendTab onGiftSent={loadVirtualGiftsData} />
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Suggested Creators</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SuggestedUsers
-                    maxUsers={6}
-                    showGiftButton={true}
-                    onSendGift={handleSendGift}
-                    variant="grid"
-                  />
+              {/* Link to Recent Recipients Page */}
+              <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-200/50">
+                <CardContent className="p-4 sm:p-6 flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold text-sm sm:text-base mb-1">
+                      View All Recent Recipients
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      See a full list of everyone you've sent gifts to
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => navigate("/app/recent-recipients")}
+                    className="flex-shrink-0 text-xs sm:text-sm"
+                  >
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    View All
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            {/* Browse Gifts Tab */}
+            {/* Browse Gifts Tab - New Enhanced Component */}
             <TabsContent value="browse" className="space-y-4 sm:space-y-6 mt-4">
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                {giftCategories.map((category) => (
-                  <Card
-                    key={category.id}
-                    className="hover:shadow-lg transition-all duration-300 group cursor-pointer"
-                    onClick={() => {
-                      const categoryGifts = groupedGifts[category.id];
-                      if (categoryGifts) {
-                        setSelectedGift(categoryGifts[0]);
-                      }
-                    }}
-                  >
-                    <CardContent className="p-3 sm:p-4 text-center">
-                      <div
-                        className={`w-10 h-10 sm:w-14 sm:h-14 ${category.color} rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform`}
-                      >
-                        <category.icon className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-xs sm:text-base mb-0.5 sm:mb-1">
-                        {category.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        {category.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Gift Grid by Category */}
-              <div className="space-y-4 sm:space-y-6">
-                {Object.entries(groupedGifts).map(([category, gifts]) => (
-                  <Card key={category}>
-                    <CardHeader>
-                      <CardTitle className="capitalize text-base sm:text-lg">{category} Gifts</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 sm:gap-3">
-                        {gifts.map((gift) => (
-                          <Card
-                            key={gift.id}
-                            className={`cursor-pointer transition-all p-2 text-center hover:shadow-md ${
-                              selectedGift?.id === gift.id ? "ring-2 ring-primary" : ""
-                            }`}
-                            onClick={() => setSelectedGift(gift)}
-                          >
-                            <CardContent className="p-1.5 sm:p-2">
-                              <div className="text-2xl sm:text-3xl mb-1">
-                                {gift.emoji}
-                              </div>
-                              <h3 className="font-medium text-xs line-clamp-1">
-                                {gift.name}
-                              </h3>
-                              <p className="text-xs text-muted-foreground">
-                                ${gift.price.toFixed(2)}
-                              </p>
-                              <Badge className={`text-xs mt-1 ${getRarityColor(gift.rarity)} text-white`}>
-                                {gift.rarity}
-                              </Badge>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <BrowseGiftsTab onSelectGift={setSelectedGift} />
             </TabsContent>
 
             {/* Tips Tab */}
@@ -547,7 +395,6 @@ const SendGifts = () => {
                       <Input
                         placeholder="Search creators..."
                         className="pl-10 text-sm"
-                        onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
                   </div>
@@ -588,100 +435,15 @@ const SendGifts = () => {
               />
             </TabsContent>
 
-            {/* Analytics Tab */}
+            {/* Analytics Tab - New Enhanced Component */}
             <TabsContent value="analytics" className="space-y-4 sm:space-y-6 mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
-                      Top Recipients
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {recentRecipients.slice(0, 3).map((recipient) => (
-                        <div key={recipient.id} className="flex items-center justify-between p-2 rounded border">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Avatar className="h-8 w-8 flex-shrink-0">
-                              <AvatarImage src={recipient.avatar} />
-                              <AvatarFallback>{recipient.name[0]}</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <p className="font-medium text-xs truncate">{recipient.name}</p>
-                              <p className="text-xs text-muted-foreground">{recipient.totalGifts} gifts</p>
-                            </div>
-                          </div>
-                          <span className="text-xs font-medium flex-shrink-0">{recipient.lastGiftEmoji}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Award className="h-4 w-4 sm:h-5 sm:w-5" />
-                      Activity Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">Gifts Sent This Month</span>
-                        <Badge variant="secondary" className="text-xs">{Math.floor(totalGiftsSent / 2)}</Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">Tips This Month</span>
-                        <Badge variant="secondary" className="text-xs">${(totalTipsGiven / 2).toFixed(0)}</Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">Avg Gift Value</span>
-                        <Badge variant="secondary" className="text-xs">$5.50</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <History className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Recent Activity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {recentGifts.slice(0, 5).map((gift, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 border rounded text-sm">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-lg">{gift.giftEmoji}</span>
-                          <div className="min-w-0">
-                            <p className="font-medium text-xs truncate">{gift.giftName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(gift.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="font-medium text-xs flex-shrink-0">${gift.totalAmount}</span>
-                      </div>
-                    ))}
-                    {recentGifts.length === 0 && (
-                      <p className="text-center text-muted-foreground text-sm py-4">
-                        No gifts sent yet
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <AnalyticsTab onRefresh={loadVirtualGiftsData} />
             </TabsContent>
           </Tabs>
         </div>
       </div>
 
-      {/* Enhanced Gift Modal */}
+      {/* Enhanced Gift Modal - For Browse Gifts Tab */}
       {selectedUser && showGiftModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-background rounded-t-lg sm:rounded-lg w-full sm:max-w-2xl sm:w-[95vw] max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom sm:fade-in">
@@ -703,8 +465,12 @@ const SendGifts = () => {
 
               <Tabs defaultValue="gifts" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="gifts" className="text-xs sm:text-sm">Gifts</TabsTrigger>
-                  <TabsTrigger value="tips" className="text-xs sm:text-sm">Tips</TabsTrigger>
+                  <TabsTrigger value="gifts" className="text-xs sm:text-sm">
+                    Gifts
+                  </TabsTrigger>
+                  <TabsTrigger value="tips" className="text-xs sm:text-sm">
+                    Tips
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* Gifts Tab */}
@@ -740,8 +506,12 @@ const SendGifts = () => {
                         </p>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-sm sm:text-base font-bold">${selectedGift.price}</span>
-                          <Badge className={`${getRarityColor(selectedGift.rarity)} text-white text-xs`}>
+                          <span className="text-sm sm:text-base font-bold">
+                            ${selectedGift.price}
+                          </span>
+                          <Badge
+                            className={`${getRarityColor(selectedGift.rarity)} text-white text-xs`}
+                          >
                             {selectedGift.rarity}
                           </Badge>
                         </div>
@@ -770,7 +540,9 @@ const SendGifts = () => {
                         </div>
 
                         <div>
-                          <Label htmlFor="modal-msg" className="text-xs">Message (Optional)</Label>
+                          <Label htmlFor="modal-msg" className="text-xs">
+                            Message (Optional)
+                          </Label>
                           <Textarea
                             id="modal-msg"
                             placeholder="Add a message..."
@@ -782,7 +554,9 @@ const SendGifts = () => {
                         </div>
 
                         <div className="flex items-center justify-between py-1">
-                          <Label htmlFor="modal-anon" className="text-xs">Anonymous</Label>
+                          <Label htmlFor="modal-anon" className="text-xs">
+                            Anonymous
+                          </Label>
                           <Switch
                             id="modal-anon"
                             checked={isAnonymous}
@@ -800,10 +574,14 @@ const SendGifts = () => {
                             onClick={handleSendVirtualGift}
                             disabled={sending}
                           >
-                            {sending ? "Sending..." : <>
-                              <Send className="h-3 w-3 mr-1" />
-                              Send Gift
-                            </>}
+                            {sending ? (
+                              "Sending..."
+                            ) : (
+                              <>
+                                <Send className="h-3 w-3 mr-1" />
+                                Send Gift
+                              </>
+                            )}
                           </Button>
                         </div>
                       </CardContent>
@@ -833,7 +611,9 @@ const SendGifts = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="custom-tip" className="text-xs">Custom</Label>
+                        <Label htmlFor="custom-tip" className="text-xs">
+                          Custom
+                        </Label>
                         <Input
                           id="custom-tip"
                           type="number"
@@ -845,7 +625,9 @@ const SendGifts = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="tip-msg-modal" className="text-xs">Message (Optional)</Label>
+                        <Label htmlFor="tip-msg-modal" className="text-xs">
+                          Message (Optional)
+                        </Label>
                         <Textarea
                           id="tip-msg-modal"
                           placeholder="Say thanks..."
@@ -857,7 +639,9 @@ const SendGifts = () => {
                       </div>
 
                       <div className="flex items-center justify-between py-1">
-                        <Label htmlFor="tip-anon" className="text-xs">Anonymous</Label>
+                        <Label htmlFor="tip-anon" className="text-xs">
+                          Anonymous
+                        </Label>
                         <Switch
                           id="tip-anon"
                           checked={isAnonymous}
@@ -870,10 +654,14 @@ const SendGifts = () => {
                         onClick={handleSendTip}
                         disabled={sending}
                       >
-                        {sending ? "Sending..." : <>
-                          <DollarSign className="h-3 w-3 mr-1" />
-                          Send ${tipAmount}
-                        </>}
+                        {sending ? (
+                          "Sending..."
+                        ) : (
+                          <>
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            Send ${tipAmount}
+                          </>
+                        )}
                       </Button>
                     </CardContent>
                   </Card>
