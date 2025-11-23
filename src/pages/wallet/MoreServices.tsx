@@ -49,6 +49,7 @@ const MoreServices = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { isFavorited, toggleFavorite } = useServiceFavorites();
 
   // All available services
   const allServices: Service[] = [
