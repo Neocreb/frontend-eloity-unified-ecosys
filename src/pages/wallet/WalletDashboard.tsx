@@ -57,7 +57,7 @@ interface Recipient {
 }
 
 const DashboardInner = () => {
-  const { walletBalance, refreshWallet } = useWalletContext();
+  const { walletBalance, refreshWallet, transactions } = useWalletContext();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -73,11 +73,88 @@ const DashboardInner = () => {
     }
   }, []);
 
-  const [recipients, setRecipients] = useState<Recipient[]>([
-    { id: '1', initials: 'JD', name: 'John Doe', lastAmount: 250, timesUsed: 5 },
-    { id: '2', initials: 'SS', name: 'Sarah Smith', lastAmount: 100, timesUsed: 3 },
-    { id: '3', initials: 'MJ', name: 'Mike Johnson', lastAmount: 75, timesUsed: 2 },
-  ]);
+  // Extract frequent recipients from transactions
+  const recipients = useMemo(() => {
+    try {
+      if (!transactions || transactions.length === 0) {
+        return [];
+      }
+
+      // Filter for transfer/send type transactions
+      const sendTransactions = transactions.filter(tx =>
+        tx.type?.toLowerCase().includes('transfer') ||
+        tx.type?.toLowerCase().includes('send') ||
+        tx.description?.toLowerCase().includes('send') ||
+        tx.description?.toLowerCase().includes('transfer')
+      );
+
+      if (sendTransactions.length === 0) {
+        return [];
+      }
+
+      // Group transactions by recipient
+      const recipientMap = new Map<string, {
+        name: string;
+        initials: string;
+        amounts: number[];
+        timestamps: Date[];
+      }>();
+
+      sendTransactions.forEach(tx => {
+        // Try to extract recipient name from description
+        const descParts = tx.description?.split('-') || [];
+        let recipientName = 'Unknown';
+
+        if (descParts.length > 1) {
+          recipientName = descParts.slice(1).join('-').trim();
+        }
+
+        if (!recipientName || recipientName === 'Unknown') {
+          recipientName = tx.description?.split('to ')?.pop() || 'Unknown';
+        }
+
+        const key = recipientName.toLowerCase();
+        const amount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
+
+        if (!recipientMap.has(key)) {
+          const initials = recipientName
+            .split(' ')
+            .map(part => part[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2) || 'U';
+
+          recipientMap.set(key, {
+            name: recipientName,
+            initials: initials,
+            amounts: [amount],
+            timestamps: [new Date(tx.timestamp || tx.createdAt || '')],
+          });
+        } else {
+          const existing = recipientMap.get(key)!;
+          existing.amounts.push(amount);
+          existing.timestamps.push(new Date(tx.timestamp || tx.createdAt || ''));
+        }
+      });
+
+      // Convert map to array and sort by frequency and recency
+      const recipientList = Array.from(recipientMap.entries()).map(([_, data]) => ({
+        id: data.name.toLowerCase().replace(/\s+/g, '-'),
+        initials: data.initials,
+        name: data.name,
+        lastAmount: data.amounts[0] || 0,
+        timesUsed: data.amounts.length,
+      }));
+
+      // Sort by frequency (descending) then by most recent
+      recipientList.sort((a, b) => b.timesUsed - a.timesUsed);
+
+      return recipientList.slice(0, 5);
+    } catch (error) {
+      console.error('Error processing recipients:', error);
+      return [];
+    }
+  }, [transactions]);
 
   const viewBalance = useMemo(()=>{
     if (!walletBalance) return 0;
