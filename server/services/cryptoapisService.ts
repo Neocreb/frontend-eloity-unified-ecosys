@@ -31,7 +31,7 @@ export async function getAddressLatestActivity(blockchain: string, network: stri
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get address latest activity error:', error);
     return {
       success: false,
@@ -53,7 +53,7 @@ export async function getAddressHistory(blockchain: string, network: string, add
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get address history error:', error);
     return {
       success: false,
@@ -75,7 +75,7 @@ export async function getBlockData(blockchain: string, network: string, blockId:
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get block data error:', error);
     return {
       success: false,
@@ -97,7 +97,7 @@ export async function getTransactionData(blockchain: string, network: string, tr
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get transaction data error:', error);
     return {
       success: false,
@@ -125,7 +125,7 @@ export async function simulateTransaction(blockchain: string, network: string, t
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Simulate transaction error:', error);
     return {
       success: false,
@@ -146,7 +146,7 @@ export async function blockchainUtils(utility: string, data: any) {
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Blockchain utilities error:', error);
     return {
       success: false,
@@ -174,7 +174,7 @@ export async function broadcastTransaction(blockchain: string, network: string, 
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Broadcast transaction error:', error);
     return {
       success: false,
@@ -200,7 +200,7 @@ export async function manageHDWallet(blockchain: string, network: string, wallet
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - HD Wallet management error:', error);
     return {
       success: false,
@@ -223,7 +223,7 @@ export async function getWalletAddresses(blockchain: string, network: string, wa
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get wallet addresses error:', error);
     return {
       success: false,
@@ -249,7 +249,7 @@ export async function getTokenContractMetadata(blockchain: string, network: stri
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get token contract metadata error:', error);
     return {
       success: false,
@@ -275,7 +275,7 @@ export async function estimateTransactionFees(blockchain: string, network: strin
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Estimate transaction fees error:', error);
     return {
       success: false,
@@ -299,7 +299,7 @@ export async function createWebhook(webhookData: any) {
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Create webhook error:', error);
     return {
       success: false,
@@ -325,7 +325,7 @@ export async function getExchangeRates(baseAssetId: string, quoteAssetId: string
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get exchange rates error:', error);
     return {
       success: false,
@@ -344,7 +344,7 @@ export async function getSupportedAssets() {
       success: true,
       data: response.data.data
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('CRYPTO APIs - Get supported assets error:', error);
     return {
       success: false,

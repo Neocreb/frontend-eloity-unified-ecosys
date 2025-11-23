@@ -50,8 +50,7 @@ export class CryptoService {
   // Enhanced method to get cryptocurrencies with real data from CRYPTO APIs and database
   async getCryptocurrencies(): Promise<Cryptocurrency[]> {
     try {
-      // For now, we'll use the database to get cryptocurrency data
-      // In a full implementation, we would fetch from CRYPTO APIs market data endpoints
+      // Fetch cryptocurrency data from database
       
       // If we're on the server side and have access to the database
       if (typeof window === 'undefined' && supabase) {
@@ -165,8 +164,7 @@ export class CryptoService {
   async getTradingPairs(): Promise<TradingPair[]> {
     // Fetch trading pairs/prices from database
     try {
-      // For now, we'll use the database to get trading pair data
-      // In a full implementation, we would fetch from CRYPTO APIs market data endpoints
+      // Fetch trading pair data from database
       
       // If we're on the server side and have access to the database
       if (typeof window === 'undefined' && supabase) {
@@ -713,7 +711,6 @@ export class CryptoService {
   async getCryptocurrencyById(id: string): Promise<Cryptocurrency | null> {
     try {
       // Fetch real data from database
-      // In a full implementation, we would fetch from CRYPTO APIs market data endpoints
       
       // If we're on the server side and have access to the database
       if (typeof window === 'undefined' && supabase) {
@@ -1001,7 +998,6 @@ export class CryptoService {
   static async getCryptoPrices(symbols: string[]): Promise<Record<string, number>> {
     try {
       // Fetch prices from database
-      // In a full implementation, we would fetch from CRYPTO APIs market data endpoints
       
       // If we're on the server side and have access to the database
       if (typeof window === 'undefined' && supabase) {
@@ -1186,9 +1182,9 @@ export class CryptoService {
         userId: offer.user_id,
         type: offer.offer_type.toUpperCase(),
         asset: offer.crypto_type,
-        fiatCurrency: 'USD', // Default for now
+        fiatCurrency: 'USD', // Default currency
         price: parseFloat(offer.price_per_unit),
-        minAmount: 0, // Not in current schema
+        minAmount: 0, // Not stored in current schema
         maxAmount: parseFloat(offer.amount),
         totalAmount: parseFloat(offer.amount),
         availableAmount: parseFloat(offer.amount),
@@ -1201,9 +1197,9 @@ export class CryptoService {
         })) : [],
         terms: offer.notes || '',
         status: offer.status.toUpperCase(),
-        completionRate: 0, // Would need separate table for stats
-        avgReleaseTime: 0,
-        totalTrades: 0,
+        completionRate: 0, // Would require separate stats table
+        avgReleaseTime: 0, // Would require separate stats table
+        totalTrades: 0, // Would require separate stats table
         createdAt: offer.created_at,
         updatedAt: offer.created_at,
         user: {
@@ -1213,9 +1209,9 @@ export class CryptoService {
           isVerified: offer.profiles?.is_verified || false,
           kycLevel: 1,
           rating: 5.0,
-          totalTrades: 0,
-          completionRate: 100,
-          avgReleaseTime: 15,
+          totalTrades: 0, // Would require separate stats table
+          completionRate: 100, // Would require separate stats table
+          avgReleaseTime: 15, // Would require separate stats table
           isOnline: true
         }
       }));

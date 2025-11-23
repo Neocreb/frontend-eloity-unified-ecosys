@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 import { cryptoService } from '../src/services/cryptoService';
 
 describe('CryptoService', () => {

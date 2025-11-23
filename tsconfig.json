@@ -25,7 +25,7 @@
     },
     
     /* Node.js types */
-    "types": ["node"],
+    "types": ["node", "jest"],
     
     /* Silence deprecation warnings */
     "ignoreDeprecations": "5.0"
