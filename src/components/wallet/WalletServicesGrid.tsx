@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -11,9 +10,7 @@ import {
   Lightbulb,
   Gift,
   Plus,
-  HelpCircle,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Service {
   id: string;
