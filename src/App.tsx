@@ -258,6 +258,7 @@ import PageDetailView from "./components/pages/PageDetailView";
 import GroupManagement from "./pages/GroupManagement";
 import PageManagement from "./pages/PageManagement";
 import SendGifts from "./pages/SendGifts";
+import RecentRecipientsPage from "./pages/RecentRecipientsPage";
 import PostDetail from "./pages/PostDetail";
 // import FeedToggleDemo from "./pages/FeedToggleDemo";
 // import IntegratedFeedDemo from "./pages/IntegratedFeedDemo";
@@ -769,6 +770,7 @@ const AppRoutes = () => {
           <Route path="creator-studio" element={<CreatorStudio />} />
           <Route path="unified-creator-studio" element={<UnifiedCreatorStudio />} />
           <Route path="send-gifts" element={<SendGifts />} />
+          <Route path="recent-recipients" element={<RecentRecipientsPage />} />
           <Route path="post/:postId" element={<PostDetail />} />
           {/* <Route path="feed-toggle-demo" element={<FeedToggleDemo />} /> */}
           {/* <Route path="feed-demo" element={<IntegratedFeedDemo />} /> */}

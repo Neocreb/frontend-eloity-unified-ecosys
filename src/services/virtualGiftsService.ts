@@ -193,7 +193,7 @@ export const VIRTUAL_GIFTS: VirtualGift[] = [
   {
     id: "pumpkin",
     name: "Spooky Pumpkin",
-    emoji: "🎃",
+    emoji: "���",
     description: "Halloween special!",
     price: 3.99,
     currency: "USD",
@@ -755,6 +755,121 @@ class VirtualGiftsService {
     } catch (error) {
       console.error("Error getting tip history:", error);
       return [];
+    }
+  }
+
+  // Get recent gift recipients for a user
+  async getRecentRecipients(
+    userId: string,
+    limit: number = 10,
+  ): Promise<
+    Array<{
+      id: string;
+      username: string;
+      display_name: string;
+      avatar_url?: string;
+      bio?: string;
+      lastGiftDate: string;
+      totalGiftsReceived: number;
+    }>
+  > {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("gift_transactions")
+        .select(
+          `
+          to_user_id,
+          created_at,
+          profiles:to_user_id (id, username, display_name, avatar_url, bio)
+        `,
+        )
+        .eq("from_user_id", userId)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(limit * 3); // Get extra to account for duplicates when grouping
+
+      if (error) throw error;
+
+      // Group by recipient and keep latest gift date
+      const recipientMap = new Map<
+        string,
+        {
+          id: string;
+          username: string;
+          display_name: string;
+          avatar_url?: string;
+          bio?: string;
+          lastGiftDate: string;
+          totalGiftsReceived: number;
+        }
+      >();
+
+      if (data) {
+        data.forEach((transaction: any) => {
+          const profile = transaction.profiles;
+          const recipientId = transaction.to_user_id;
+
+          if (recipientMap.has(recipientId)) {
+            const existing = recipientMap.get(recipientId)!;
+            existing.totalGiftsReceived += 1;
+          } else if (profile) {
+            recipientMap.set(recipientId, {
+              id: profile.id,
+              username: profile.username,
+              display_name: profile.display_name,
+              avatar_url: profile.avatar_url,
+              bio: profile.bio,
+              lastGiftDate: transaction.created_at,
+              totalGiftsReceived: 1,
+            });
+          }
+        });
+      }
+
+      return Array.from(recipientMap.values()).slice(0, limit);
+    } catch (error) {
+      console.error("Error getting recent recipients:", error);
+      return [];
+    }
+  }
+
+  // Get virtual gifts from database with fallback to static data
+  async getVirtualGiftsFromDB(): Promise<VirtualGift[]> {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("virtual_gifts")
+        .select("*")
+        .eq("available", true)
+        .order("category", { ascending: true })
+        .order("price", { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Map database format to VirtualGift interface
+        return data.map((gift: any) => ({
+          id: gift.id,
+          name: gift.name,
+          emoji: gift.emoji,
+          description: gift.description,
+          price: gift.price,
+          currency: gift.currency,
+          category: gift.category,
+          rarity: gift.rarity,
+          animation: gift.animation,
+          sound: gift.sound,
+          effects: gift.effects || [],
+          available: gift.available,
+          seasonalStart: gift.seasonal_start,
+          seasonalEnd: gift.seasonal_end,
+        }));
+      }
+
+      // Fallback to static data
+      return this.getAvailableGifts();
+    } catch (error) {
+      console.error("Error fetching gifts from database, using static data:", error);
+      return this.getAvailableGifts();
     }
   }
 }
