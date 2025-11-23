@@ -186,21 +186,6 @@ const WalletServicesGrid = () => {
         </div>
       </div>
 
-      {/* More Services Modal */}
-      <Dialog open={showMoreServices} onOpenChange={setShowMoreServices}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>More Services</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-h-96 overflow-y-auto p-4">
-            {moreServices.map((service) => (
-              <div key={service.id} onClick={() => setShowMoreServices(false)}>
-                <ServiceCard service={service} />
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
