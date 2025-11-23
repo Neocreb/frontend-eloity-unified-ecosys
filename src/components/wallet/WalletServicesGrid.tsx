@@ -125,56 +125,6 @@ const WalletServicesGrid = () => {
     },
   ];
 
-  const moreServices: Service[] = [
-    {
-      id: "request",
-      label: "Request",
-      icon: <HelpCircle className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/request"),
-      gradient: "bg-gradient-to-br from-rose-400 to-red-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "money-request",
-      label: "Money Request",
-      icon: <HelpCircle className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/money-request"),
-      gradient: "bg-gradient-to-br from-pink-400 to-rose-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "top-up",
-      label: "Top Up",
-      icon: <Phone className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/top-up"),
-      gradient: "bg-gradient-to-br from-orange-400 to-yellow-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "gift-cards",
-      label: "Gift Cards",
-      icon: <Gift className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/gift-cards"),
-      gradient: "bg-gradient-to-br from-purple-400 to-pink-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "buy-gift-cards",
-      label: "Buy Gift Cards",
-      icon: <Gift className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/buy-gift-cards"),
-      gradient: "bg-gradient-to-br from-pink-400 to-rose-500",
-      iconColor: "text-white",
-    },
-    {
-      id: "sell-gift-cards",
-      label: "Sell Gift Cards",
-      icon: <Gift className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/sell-gift-cards"),
-      gradient: "bg-gradient-to-br from-green-400 to-teal-500",
-      iconColor: "text-white",
-    },
-  ];
 
   const ServiceCard = ({ service }: { service: Service }) => (
     <button
