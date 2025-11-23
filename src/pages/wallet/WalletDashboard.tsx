@@ -370,11 +370,25 @@ const DashboardInner = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Earned Today</span>
-                <span className="font-semibold text-green-600">+$0.00</span>
+                <span className="font-semibold text-green-600">
+                  +$
+                  {(() => {
+                    const today = new Date().toDateString();
+                    const todayEarnings = transactions
+                      .filter(tx => new Date(tx.timestamp || tx.createdAt || '').toDateString() === today && (typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount) > 0)
+                      .reduce((sum, tx) => sum + (typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount), 0);
+                    return todayEarnings.toFixed(2);
+                  })()}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Transactions</span>
-                <span className="font-semibold text-blue-600">0</span>
+                <span className="font-semibold text-blue-600">
+                  {(() => {
+                    const today = new Date().toDateString();
+                    return transactions.filter(tx => new Date(tx.timestamp || tx.createdAt || '').toDateString() === today).length;
+                  })()}
+                </span>
               </div>
             </div>
           </div>
@@ -388,9 +402,37 @@ const DashboardInner = () => {
               </div>
               <button onClick={()=>navigate('/app/wallet/transactions')} className="text-blue-600 text-sm font-medium hover:underline">See All</button>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-              <div className="text-gray-600 text-sm">No transactions yet.</div>
-            </div>
+            {transactions && transactions.length > 0 ? (
+              <div className="space-y-2">
+                {transactions.slice(0, 3).map((tx, idx) => (
+                  <div key={tx.id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                        {tx.type?.charAt(0).toUpperCase() || 'T'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-gray-900 truncate">{tx.description || 'Transaction'}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(tx.timestamp || tx.createdAt || '').toLocaleDateString()} {new Date(tx.timestamp || tx.createdAt || '').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-semibold text-sm ${(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount) > 0 ? '+' : ''}{(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount).toFixed(2)}
+                      </div>
+                      <div className={`text-xs ${tx.status === 'completed' ? 'text-green-600' : tx.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}`}>
+                        {tx.status?.charAt(0).toUpperCase() + tx.status?.slice(1) || 'Completed'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                <div className="text-gray-600 text-sm">No transactions yet.</div>
+              </div>
+            )}
           </div>
 
           {/* Gifts & Tips */}
