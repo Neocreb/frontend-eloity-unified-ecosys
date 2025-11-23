@@ -85,8 +85,9 @@ import ledgerRouter from './routes/ledger.js';
 import bybitRouter from './routes/bybit.js';
 import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
+import reloadlyRouter from './routes/reloadly.js';
 import startMetricsSync from './tasks/metricsSync.js';
-import startReconciliation from './tasks/reconcileBalances.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -103,7 +104,7 @@ if (!process.env.DATABASE_URL) {
   console.log('✅ DATABASE_URL is set');
 }
 
-let client, db;
+let client: any, db: any;
 let useMockData = false;
 
 try {
@@ -124,8 +125,8 @@ try {
   console.log('🔄 Testing database connection...');
   await client`SELECT 1`;
   console.log('✅ Database connection initialized');
-} catch (error) {
-  console.error('❌ Database connection failed:', error.message);
+} catch (error: unknown) {
+  console.error('❌ Database connection failed:', (error as Error).message);
   console.error('🔍 Full error details:', error);
   console.warn('⚠️  Running in mock mode. Some features may not work.');
   useMockData = true;
@@ -140,7 +141,7 @@ try {
 }
 
 // Make mock mode status available globally
-global.useMockData = useMockData;
+(global as any).useMockData = useMockData;
 
 // Export the database connection for use in routes
 export { db };
@@ -154,7 +155,10 @@ try {
 
 // Start reconciliation job for platform balances
 try {
-  startReconciliation();
+  // @ts-ignore
+  import('./tasks/reconcileBalances.js').then((module: any) => {
+    module.default();
+  });
 } catch (e) {
   console.error('Failed to start reconciliation job:', e);
 }
@@ -407,7 +411,7 @@ if (process.env.NODE_ENV === 'production') {
 app.get('/api/health', async (req, res) => {
   try {
     // Test database connection only if not in mock mode
-    if (!global.useMockData) {
+    if (!(global as any).useMockData) {
       await db.select().from(users).limit(1);
     }
     
@@ -417,7 +421,7 @@ app.get('/api/health', async (req, res) => {
       timestamp: new Date().toISOString(),
       version: '2.0.0',
       environment: process.env.NODE_ENV,
-      database: global.useMockData ? 'mock' : 'connected',
+      database: (global as any).useMockData ? 'mock' : 'connected',
       features: {
         payments: 'enabled',
         video: 'enabled',
@@ -501,6 +505,7 @@ app.use('/api/wallet', walletRouter);
 app.use('/api/ledger', ledgerRouter);
 app.use('/api/bybit', bybitRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
+app.use('/api/reloadly', reloadlyRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 
@@ -791,7 +796,7 @@ wss.on('connection', (ws: any, req) => {
   });
 
   // Handle errors
-  ws.on('error', (error) => {
+  ws.on('error', (error: Error) => {
     console.error('WebSocket error:', error);
   });
 });

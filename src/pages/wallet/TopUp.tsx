@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle2, AlertCircle, Phone, Zap, FileText, Grid3x3 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface ServiceProvider {
   id: string;
@@ -26,7 +27,7 @@ interface Plan {
 
 const TopUp = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { walletBalance } = useWalletContext();
   const [step, setStep] = useState<"category" | "provider" | "plan" | "phone" | "review" | "success">("category");
   const [selectedCategory, setSelectedCategory] = useState<"airtime" | "data" | "utilities" | "bills" | null>(null);
@@ -34,6 +35,43 @@ const TopUp = () => {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [operators, setOperators] = useState<any[]>([]);
+  const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
+
+  // Fetch operators when provider is selected
+  useEffect(() => {
+    const fetchOperators = async () => {
+      if (selectedProvider && user) {
+        try {
+          const token = session?.access_token;
+          const countryCode = 'NG'; // Default to Nigeria, should be dynamic based on user location
+          
+          const response = await fetch(`/api/reloadly/operators/${countryCode}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            setOperators(result.operators);
+            // Auto-select the first operator for simplicity
+            if (result.operators.length > 0) {
+              setSelectedOperatorId(result.operators[0].id);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch operators:', error);
+          toast.error('Failed to load service providers');
+        }
+      }
+    };
+
+    if (selectedProvider) {
+      fetchOperators();
+    }
+  }, [selectedProvider, user, session]);
 
   // Mock providers
   const airimeProviders: ServiceProvider[] = [
@@ -112,8 +150,66 @@ const TopUp = () => {
   const handleTopUp = async () => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
+      const token = session?.access_token;
+      
+      let response;
+      let result;
+      
+      // Determine which API endpoint to call based on category
+      if (selectedCategory === "airtime") {
+        response = await fetch('/api/reloadly/airtime/topup', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            operatorId: selectedOperatorId,
+            amount: selectedPlan?.price,
+            recipientPhone: phoneNumber
+          })
+        });
+      } else if (selectedCategory === "data") {
+        response = await fetch('/api/reloadly/data/bundle', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            operatorId: selectedOperatorId,
+            amount: selectedPlan?.price,
+            recipientPhone: phoneNumber
+          })
+        });
+      } else if (selectedCategory === "bills" || selectedCategory === "utilities") {
+        response = await fetch('/api/reloadly/bills/pay', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            operatorId: selectedOperatorId,
+            amount: selectedPlan?.price,
+            recipientPhone: phoneNumber
+          })
+        });
+      }
+      
+      if (response) {
+        result = await response.json();
+        
+        if (result.success) {
+          setStep("success");
+          toast.success('Transaction successful!');
+        } else {
+          toast.error(result.error || 'Transaction failed');
+        }
+      }
+    } catch (error) {
+      console.error('Top up error:', error);
+      toast.error('Transaction failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
