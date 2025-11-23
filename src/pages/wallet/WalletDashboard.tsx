@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import AdCarousel, { Ad } from "@/components/wallet/AdCarousel";
 import WalletServicesGrid from "@/components/wallet/WalletServicesGrid";
 import SmartRecommendations from "@/components/wallet/SmartRecommendations";
+import ServiceFavoritesBar from "@/components/wallet/ServiceFavoritesBar";
 
 const AnimatedWave = () => {
   return (
