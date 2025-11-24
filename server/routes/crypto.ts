@@ -590,7 +590,8 @@ router.post('/escrow/:escrowId/release', requireTier2(), async (req, res) => {
 });
 
 // Initiate dispute
-router.post('/escrow/:escrowId/dispute', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/escrow/:escrowId/dispute', requireTier2(), async (req, res) => {
   try {
     const { escrowId } = req.params;
     const { reason, description, evidence } = req.body;
