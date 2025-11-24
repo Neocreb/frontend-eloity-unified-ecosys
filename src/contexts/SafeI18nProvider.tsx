@@ -1,11 +1,9 @@
-import React, { Component, ReactNode, Suspense, lazy } from "react";
-
-// Lazy load the I18nProvider to avoid initialization issues
-const I18nProvider = lazy(() => import("./I18nContext").then(m => ({ default: m.I18nProvider })));
+import React, { Component, ReactNode } from "react";
 
 interface SafeI18nProviderState {
   hasError: boolean;
   error?: Error;
+  I18nProvider?: any;
 }
 
 interface SafeI18nProviderProps {
@@ -25,7 +23,20 @@ class SafeI18nProvider extends Component<
 > {
   constructor(props: SafeI18nProviderProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, I18nProvider: undefined };
+    this.loadI18nProvider();
+  }
+
+  async loadI18nProvider() {
+    try {
+      if (!this.state.I18nProvider) {
+        const module = await import("./I18nContext");
+        this.setState({ I18nProvider: module.I18nProvider });
+      }
+    } catch (error) {
+      console.error("Failed to load I18nProvider:", error);
+      this.setState({ hasError: true, error: error as Error });
+    }
   }
 
   static getDerivedStateFromError(error: Error): SafeI18nProviderState {
@@ -48,12 +59,15 @@ class SafeI18nProvider extends Component<
       );
     }
 
-    try {
+    if (!this.state.I18nProvider) {
       return (
-        <Suspense fallback={<FallbackI18nProvider>{this.props.children}</FallbackI18nProvider>}>
-          <I18nProvider>{this.props.children}</I18nProvider>
-        </Suspense>
+        <FallbackI18nProvider>{this.props.children}</FallbackI18nProvider>
       );
+    }
+
+    try {
+      const I18nProvider = this.state.I18nProvider;
+      return <I18nProvider>{this.props.children}</I18nProvider>;
     } catch (error) {
       console.error("Error in I18nProvider render:", error);
       return (

@@ -1,11 +1,9 @@
-import React, { Component, ReactNode, Suspense, lazy } from "react";
-
-// Lazy load the CurrencyProvider to avoid initialization issues
-const CurrencyProvider = lazy(() => import("./CurrencyContext").then(m => ({ default: m.CurrencyProvider })));
+import React, { Component, ReactNode } from "react";
 
 interface SafeCurrencyProviderState {
   hasError: boolean;
   error?: Error;
+  CurrencyProvider?: any;
 }
 
 interface SafeCurrencyProviderProps {
@@ -26,7 +24,20 @@ class SafeCurrencyProvider extends Component<
 > {
   constructor(props: SafeCurrencyProviderProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, CurrencyProvider: undefined };
+    this.loadCurrencyProvider();
+  }
+
+  async loadCurrencyProvider() {
+    try {
+      if (!this.state.CurrencyProvider) {
+        const module = await import("./CurrencyContext");
+        this.setState({ CurrencyProvider: module.CurrencyProvider });
+      }
+    } catch (error) {
+      console.error("Failed to load CurrencyProvider:", error);
+      this.setState({ hasError: true, error: error as Error });
+    }
   }
 
   static getDerivedStateFromError(error: Error): SafeCurrencyProviderState {
@@ -49,13 +60,18 @@ class SafeCurrencyProvider extends Component<
       );
     }
 
-    try {
+    if (!this.state.CurrencyProvider) {
       return (
-        <Suspense fallback={<FallbackCurrencyProvider>{this.props.children}</FallbackCurrencyProvider>}>
-          <CurrencyProvider defaultCurrency={this.props.defaultCurrency}>
-            {this.props.children}
-          </CurrencyProvider>
-        </Suspense>
+        <FallbackCurrencyProvider>{this.props.children}</FallbackCurrencyProvider>
+      );
+    }
+
+    try {
+      const CurrencyProvider = this.state.CurrencyProvider;
+      return (
+        <CurrencyProvider defaultCurrency={this.props.defaultCurrency}>
+          {this.props.children}
+        </CurrencyProvider>
       );
     } catch (error) {
       console.error("Error in CurrencyProvider render:", error);
