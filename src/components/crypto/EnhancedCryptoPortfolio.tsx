@@ -241,6 +241,12 @@ function EnhancedCryptoPortfolioContent({
   return (
     <div className="space-y-6">
       {/* Header */}
+      {assetsError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          Error loading portfolio: {assetsError}
+        </div>
+      )}
+
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -266,12 +272,12 @@ function EnhancedCryptoPortfolioContent({
             <Button
               variant="outline"
               onClick={refreshPortfolio}
-              disabled={isRefreshing}
+              disabled={isRefreshing || assetsLoading}
               size="sm"
               className="flex-shrink-0"
             >
               <RefreshCw
-                className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+                className={cn("h-4 w-4", (isRefreshing || assetsLoading) && "animate-spin")}
               />
             </Button>
           </div>
