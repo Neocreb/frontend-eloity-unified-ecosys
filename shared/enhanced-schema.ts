@@ -582,6 +582,17 @@ export const userRewardsRelations = relations(user_rewards, ({ one }) => ({
   }),
 }));
 
+// Relations for feature gates
+export const featureGatesRelations = relations(feature_gates, () => ({}));
+
+// Relations for tier access history
+export const tierAccessHistoryRelations = relations(tier_access_history, ({ one }) => ({
+  user: one(users, {
+    fields: [tier_access_history.user_id],
+    references: [users.id],
+  }),
+}));
+
 // Flash Sales table
 export const flash_sales = pgTable('flash_sales', {
   id: uuid('id').primaryKey().defaultRandom(),
