@@ -175,7 +175,12 @@ const BuyGiftCards = () => {
 
             {/* Gift Cards Grid */}
             <div className="grid grid-cols-2 gap-3">
-              {filteredCards.length > 0 ? (
+              {productsLoading ? (
+                <div className="col-span-2 text-center py-8 text-gray-500">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                  Loading gift cards...
+                </div>
+              ) : filteredCards.length > 0 ? (
                 filteredCards.map((card) => (
                   <button
                     key={card.id}
@@ -184,10 +189,10 @@ const BuyGiftCards = () => {
                   >
                     <Card className="border hover:border-pink-300 hover:shadow-md transition-all h-full">
                       <CardContent className="p-4 flex flex-col items-center justify-center gap-2 text-center">
-                        <span className="text-4xl">{card.logo}</span>
-                        <p className="font-semibold text-gray-900 text-sm">{card.retailer}</p>
+                        <span className="text-4xl">🎁</span>
+                        <p className="font-semibold text-gray-900 text-sm">{card.brandName}</p>
                         <p className="text-xs text-gray-600">
-                          ${card.minAmount}-${card.maxAmount}
+                          {card.currencyCode} {card.minAmount}-{card.maxAmount}
                         </p>
                       </CardContent>
                     </Card>
