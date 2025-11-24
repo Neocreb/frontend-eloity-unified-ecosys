@@ -909,9 +909,9 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
         const axios = (await import('axios')).default;
         // Bybit private endpoints require signing; here we attempt a public wallet balance via unified account (may require proper auth)
         // For safety, call CoinGecko price as fallback numeric value zero for actual asset amount retrieval
-        logger.debug('BYBIT credentials present but private balance fetch not implemented, falling back to 0');
-      } catch (byErr) {
-        logger.debug('Bybit balance fetch failed:', byErr?.message || byErr);
+        logger.debug('Private balance fetch not implemented, falling back to 0');
+      } catch (err) {
+        logger.debug('Balance fetch failed:', err?.message || err);
       }
     }
 
