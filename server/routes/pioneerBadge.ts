@@ -257,14 +257,19 @@ router.post('/claim', authenticateToken, async (req, res) => {
     // Determine badge number (next available)
     const nextBadgeNumber = (awardedBadges[0]?.count || 0) + 1;
 
-    // Create pioneer badge
+    // Calculate premium expiry (1 year from now)
+    const premiumExpiryDate = new Date(Date.now() + PIONEER_PREMIUM_DURATION_MS);
+
+    // Create pioneer badge with auto-granted premium
     const newBadge = await db.insert(pioneer_badges).values({
       user_id: userId,
       badge_number: nextBadgeNumber,
       eligibility_score: eligibilityData.score,
       activity_metrics: eligibilityData.activityMetrics,
       verification_data: eligibilityData.verificationData,
-      is_verified: true
+      is_verified: true,
+      premium_granted: true,
+      premium_expiry: premiumExpiryDate
     }).returning();
 
     logger.info('Pioneer badge awarded', {
