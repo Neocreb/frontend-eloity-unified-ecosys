@@ -178,14 +178,33 @@ CREATE TABLE tier_access_history (
 - ✅ Support role-based tier upgrades
 
 #### 1.3 Feature Gates Implementation
-**Status**: ⏳ Pending
+**Status**: ✅ COMPLETED
 
-**Routes to Gate**:
-- POST `/api/crypto/trade` → Tier 2 only
-- POST `/api/marketplace/products` → Tier 2 only
-- GET `/api/freelance/offers` → Tier 2 only
-- POST `/api/withdraw` → Tier 2 only
-- POST `/api/creator/payout` → Tier 2 only
+**Routes Gated to Tier 2 Only**:
+
+**Cryptocurrency Routes** (`server/routes/crypto.ts`):
+- ✅ POST `/api/crypto/wallet/withdraw` → Requires Tier 2
+- ✅ POST `/api/crypto/p2p/orders` → Requires Tier 2
+- ✅ POST `/api/crypto/p2p/orders/:orderId/trade` → Requires Tier 2
+- ✅ POST `/api/crypto/escrow/:escrowId/confirm-payment` → Requires Tier 2
+- ✅ POST `/api/crypto/escrow/:escrowId/release` → Requires Tier 2
+- ✅ POST `/api/crypto/escrow/:escrowId/dispute` → Requires Tier 2
+- ℹ️ GET `/api/crypto/prices/*` → Available to Tier 1 (view only)
+
+**Marketplace Routes** (`server/routes/products.ts`):
+- ✅ POST `/api/products` (create) → Requires Tier 2
+- ✅ PUT `/api/products/:id` (update) → Requires Tier 2
+- ✅ DELETE `/api/products/:id` (delete) → Requires Tier 2
+- ℹ️ GET `/api/products` (browse) → Available to Tier 1
+
+**Freelance Routes** (`server/routes/freelance.ts`):
+- ✅ POST `/api/freelance/jobs` (post job) → Requires Tier 2
+- ✅ PUT `/api/freelance/jobs/:id` → Requires Tier 2
+- ✅ DELETE `/api/freelance/jobs/:id` → Requires Tier 2
+- ℹ️ GET `/api/freelance/jobs` (browse) → Available to Tier 1
+
+**Rewards/Withdrawal Routes** (`server/routes/enhancedRewards.ts`):
+- ✅ POST `/api/enhanced-rewards/request-redemption` → Requires Tier 2
 
 #### 1.4 Pioneer Badge System Update
 **Status**: ⏳ Pending
