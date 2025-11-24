@@ -5,6 +5,7 @@ import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ServiceBadges from "@/components/wallet/ServiceBadges";
 import { useServiceFavorites } from "@/hooks/useServiceFavorites";
 import {
@@ -30,6 +31,7 @@ import {
   ArrowLeft,
   MoreHorizontal,
   Heart as HeartIcon,
+  Sparkles,
 } from "lucide-react";
 
 interface Service {
