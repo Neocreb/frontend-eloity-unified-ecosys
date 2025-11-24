@@ -228,7 +228,7 @@ const MoreServices = () => {
       id: "safebox",
       label: "SafeBox",
       icon: <Lock className="h-6 w-6" />,
-      action: () => navigate("/app/safebox"),
+      action: () => navigate("/app/wallet/safebox"),
       gradient: "bg-gradient-to-br from-slate-400 to-gray-600",
       category: "Finance & Investment",
       description: "Secure your money",
