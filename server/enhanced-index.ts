@@ -39,7 +39,7 @@ import {
   user_preferences 
 } from '../shared/schema.js';
 
-import { 
+import {
   profiles,
   marketplace_profiles,
   freelance_profiles,
@@ -57,7 +57,9 @@ import {
   reward_sharing_transactions,
   pioneer_badges,
   user_activity_sessions,
-  freelance_jobs
+  freelance_jobs,
+  feature_gates,
+  tier_access_history
 } from '../shared/enhanced-schema.js';
 
 import { 
