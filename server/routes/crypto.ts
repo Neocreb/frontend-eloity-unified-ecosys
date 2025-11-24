@@ -249,7 +249,8 @@ router.post('/wallet/withdraw', requireTier2(), async (req, res) => {
 // =============================================================================
 
 // Create P2P trading order
-router.post('/p2p/orders', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/p2p/orders', requireTier2(), async (req, res) => {
   try {
     const { 
       type, 
