@@ -12,8 +12,9 @@ import { db } from '../../server/enhanced-index.js'; // Use shared database conn
 const router = express.Router();
 
 // Constants
-const MAX_PIONEER_BADGES = 500;
+const MAX_PIONEER_BADGES = 100; // Updated: First 100 users get pioneer badge with 1-year premium
 const MIN_ELIGIBILITY_SCORE = 75; // Minimum score to be eligible for pioneer badge
+const PIONEER_PREMIUM_DURATION_MS = 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
 
 // Track user activity session
 router.post('/track-session', authenticateToken, async (req, res) => {
