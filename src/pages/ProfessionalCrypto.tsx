@@ -210,7 +210,7 @@ const ProfessionalCrypto = () => {
       console.error("Error loading crypto data:", error);
       toast({
         title: "Error",
-        description: "Failed to load cryptocurrency data from Bybit.",
+        description: "Failed to load cryptocurrency data.",
         variant: "destructive",
       });
       throw error; // No fallback to mock data
