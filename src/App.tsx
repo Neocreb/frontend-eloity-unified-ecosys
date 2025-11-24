@@ -589,6 +589,7 @@ const AppRoutes = () => {
           <Route path="wallet/data" element={<Data />} />
           <Route path="wallet/tv" element={<TV />} />
           <Route path="wallet/safebox" element={<Safebox />} />
+          <Route path="wallet/savings-goals" element={<SavingsGoals />} />
           <Route path="wallet/electricity" element={<Electricity />} />
           <Route path="wallet/money-request" element={<MoneyRequest />} />
           <Route path="wallet/more-services" element={<MoreServices />} />
