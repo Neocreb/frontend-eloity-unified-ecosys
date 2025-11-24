@@ -36,6 +36,45 @@ const Airtime = () => {
   const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
 
+  // Fetch operators on component mount
+  useEffect(() => {
+    const fetchOperators = async () => {
+      if (!user || !session) return;
+
+      try {
+        const token = session?.access_token;
+        const countryCode = 'NG'; // Default to Nigeria
+
+        const response = await fetch(`/api/reloadly/operators/${countryCode}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success && result.operators) {
+          // Map operators to provider format
+          const mappedProviders = result.operators.map((op: any) => ({
+            id: op.id,
+            name: op.name,
+            icon: '🟡',
+            description: op.name
+          }));
+          setProviders(mappedProviders);
+          if (mappedProviders.length > 0) {
+            setSelectedOperatorId(mappedProviders[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch operators:', error);
+        toast.error('Failed to load service providers');
+      }
+    };
+
+    fetchOperators();
+  }, [user, session]);
+
   const amounts: Plan[] = [
     { id: "500", name: "₦500", price: 500 },
     { id: "1000", name: "₦1,000", price: 1000 },
@@ -47,8 +86,32 @@ const Airtime = () => {
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
+      const token = session?.access_token;
+
+      const response = await fetch('/api/reloadly/airtime/topup', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          operatorId: selectedOperatorId,
+          amount: selectedAmount,
+          recipientPhone: phoneNumber
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStep("success");
+        toast.success('Airtime purchase successful!');
+      } else {
+        toast.error(result.error || 'Transaction failed');
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error('Transaction failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
