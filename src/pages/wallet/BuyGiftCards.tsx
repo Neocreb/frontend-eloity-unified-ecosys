@@ -228,25 +228,42 @@ const BuyGiftCards = () => {
             </div>
 
             {/* Amount Input */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-3">
-                Amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-600">
-                  $
-                </span>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="pl-10 h-16 text-3xl font-bold border-gray-300"
-                />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Amount ({selectedCard?.currencyCode})
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-600">
+                    {selectedCard?.currencyCode}
+                  </span>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="pl-10 h-16 text-3xl font-bold border-gray-300"
+                  />
+                </div>
+                <div className="mt-3 flex justify-between text-xs text-gray-600">
+                  <span>Min: {selectedCard?.minAmount}</span>
+                  <span>Max: {selectedCard?.maxAmount}</span>
+                </div>
               </div>
-              <div className="mt-3 flex justify-between text-xs text-gray-600">
-                <span>Min: ${selectedCard?.minAmount}</span>
-                <span>Max: ${selectedCard?.maxAmount}</span>
+
+              {/* Email Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Email Address
+                </label>
+                <Input
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 border-gray-300"
+                />
+                <p className="text-xs text-gray-600 mt-2">Gift card code will be sent to this email</p>
               </div>
             </div>
 
