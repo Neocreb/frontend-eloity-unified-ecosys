@@ -247,7 +247,8 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new product
-router.post('/', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification for selling
+router.post('/', requireTier2(), triggerKYCIfNeeded('marketplace_sell'), async (req, res) => {
   try {
     const {
       title,
