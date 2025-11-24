@@ -161,22 +161,30 @@ const Data = () => {
           {step === "provider" && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-900">Select Network</h3>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {providers.map((provider) => (
-                  <button
-                    key={provider.id}
-                    onClick={() => {
-                      setSelectedProvider(provider);
-                      setStep("plan");
-                    }}
-                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-cyan-500 hover:bg-cyan-50 transition text-center"
-                  >
-                    <div className="text-3xl mb-2">{provider.icon}</div>
-                    <p className="font-semibold text-gray-900">{provider.name}</p>
-                    <p className="text-xs text-gray-600 mt-1">{provider.description}</p>
-                  </button>
-                ))}
-              </div>
+              {providers.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                  Loading providers...
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  {providers.map((provider) => (
+                    <button
+                      key={provider.id}
+                      onClick={() => {
+                        setSelectedProvider(provider);
+                        setSelectedOperatorId(provider.id);
+                        setStep("plan");
+                      }}
+                      className="p-4 rounded-lg border-2 border-gray-200 hover:border-cyan-500 hover:bg-cyan-50 transition text-center"
+                    >
+                      <div className="text-3xl mb-2">{provider.icon}</div>
+                      <p className="font-semibold text-gray-900">{provider.name}</p>
+                      <p className="text-xs text-gray-600 mt-1">{provider.description}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
