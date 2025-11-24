@@ -325,8 +325,7 @@ const BuyGiftCards = () => {
   }
 
   if (step === "review") {
-    const fee = selectedCard ? parseFloat(amount) * (selectedCard.fee / 100) : 0;
-    const total = parseFloat(amount) + fee;
+    const total = parseFloat(amount);
 
     return (
       <div className="flex flex-col h-screen bg-gray-50">
