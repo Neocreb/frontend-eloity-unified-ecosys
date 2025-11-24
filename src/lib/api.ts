@@ -293,21 +293,22 @@ class ApiClient {
       });
       
       if (!response.ok) {
-        throw new Error(`Bybit API error: ${response.status}`);
+        throw new Error(`API error: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      return data.result.list.map((trade: any) => ({
-        id: trade.execId,
-        symbol: 'BTCUSDT',
-        price: parseFloat(trade.price),
-        quantity: parseFloat(trade.size),
-        time: trade.time,
-        isBuyerMaker: trade.side === 'Sell'
+      const transactions = data.data || [];
+      return transactions.slice(0, 50).map((tx: any, index: number) => ({
+        id: tx.transactionId || `tx_${index}`,
+        symbol: 'BTC',
+        price: parseFloat(tx.gasPrice) || 0,
+        quantity: parseFloat(tx.amount) || 0,
+        time: tx.transactionTimestamp || new Date().toISOString(),
+        isBuyerMaker: tx.senderAddress ? false : true
       }));
     } catch (error) {
-      console.error('Error fetching crypto trades from Bybit:', error);
-      throw error; // No fallback to mock data
+      console.error('Error fetching crypto trades:', error);
+      throw error;
     }
   }
 }
