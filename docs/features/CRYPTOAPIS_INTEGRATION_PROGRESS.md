@@ -14,6 +14,14 @@ All critical components have been updated to use real blockchain data from Crypt
 - Components use real-time data from exchange rates and transaction history
 - Database schema is prepared for caching portfolio and transaction data
 - All presentation components properly display real data with appropriate error handling and loading states
+- Removed all direct Bybit API calls from frontend and replaced with backend CryptoAPIs endpoints
+- All frontend requests go through backend API, properly authenticated with CRYPTOAPIS_API_KEY
+
+### Frontend → Backend Integration
+- AdvancedTradingInterface: Now uses `/api/cryptoapis/orderbook` endpoint
+- ProfessionalCrypto: Now uses `/api/crypto/prices` endpoint
+- realAPIService: Now uses `/api/crypto/prices` endpoint
+- ApiClient: Now uses backend endpoints instead of direct Bybit API
 
 ---
 
