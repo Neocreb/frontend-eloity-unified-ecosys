@@ -168,15 +168,21 @@ function EnhancedCryptoPortfolioContent({
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const totalValue = portfolioAssets.reduce(
-    (sum, asset) => sum + asset.value,
-    0,
-  );
-  const totalPnl = portfolioAssets.reduce((sum, asset) => sum + asset.pnl, 0);
-  const totalPnlPercent = (totalPnl / (totalValue - totalPnl)) * 100;
+  const totalValue = useMemo(() => {
+    return portfolioAssets.reduce((sum, asset) => sum + asset.value, 0);
+  }, [portfolioAssets]);
+
+  const totalPnl = useMemo(() => {
+    return portfolioAssets.reduce((sum, asset) => sum + asset.pnl, 0);
+  }, [portfolioAssets]);
+
+  const totalPnLPercent = useMemo(() => {
+    if (totalValue === 0) return 0;
+    return (totalPnl / (totalValue - totalPnl)) * 100;
+  }, [totalValue, totalPnl]);
+
   const last24hChange = performanceData[performanceData.length - 1]?.pnl || 0;
-  const last24hChangePercent =
-    performanceData[performanceData.length - 1]?.pnlPercent || 0;
+  const last24hChangePercent = performanceData[performanceData.length - 1]?.pnlPercent || 0;
 
   const refreshPortfolio = async () => {
     setIsRefreshing(true);
