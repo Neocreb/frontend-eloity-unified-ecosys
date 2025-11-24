@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,7 @@ import {
   FileText,
   Plus,
   Minus,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -56,6 +57,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext, WalletProvider } from "@/contexts/WalletContext";
 import { cn } from "@/lib/utils";
 import useCrypto from "@/hooks/use-crypto";
+import { useCryptoPortfolio } from "@/hooks/useCryptoPortfolio";
+import { useCryptoTransactions } from "@/hooks/useCryptoTransactions";
 
 interface PortfolioAsset {
   id: string;
