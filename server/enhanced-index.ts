@@ -86,6 +86,7 @@ import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
+import tierAccessRouter from './routes/tierAccess.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
