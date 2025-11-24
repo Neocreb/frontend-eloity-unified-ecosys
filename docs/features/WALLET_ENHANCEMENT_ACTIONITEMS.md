@@ -327,37 +327,94 @@ CREATE TABLE service_rating_summary (
 
 ---
 
-### 2.5 Implement Loyalty Rewards Integration
-**Status:** Not started  
-**Priority:** High  
-**Location:** Integrate with existing rewards system  
-**Action Items:**
-- [ ] Create service rewards configuration: `src/config/serviceRewards.ts`
-- [ ] Create service: `src/services/serviceRewardsService.ts`
-- [ ] Add rewards tracking to service transactions
-- [ ] Create component: `src/components/wallet/ServiceRewardsInfo.tsx`
-- [ ] Integrate with activity economy system
-- [ ] Create rewards display on service cards
+### 2.5 Implement Loyalty Rewards Integration ✅ COMPLETED
+**Status:** IMPLEMENTED
+**Priority:** High
+**Location:**
+- Service: `src/services/serviceRewardsService.ts`
+- Hook: `src/hooks/useServiceRewards.ts`
+- Info Component: `src/components/wallet/ServiceRewardsInfo.tsx`
+- Dashboard: `src/components/wallet/RewardsDashboard.tsx`
+
+**What Was Implemented:**
+- ✅ Complete service rewards configuration for 10 services
+- ✅ Points calculation with bonus multiplier system
+- ✅ Badge achievement tracking
+- ✅ User service rewards storage and retrieval
+- ✅ React hook for UI integration
+- ✅ Rewards info component with progress tracking
+- ✅ Comprehensive rewards dashboard
+- ✅ Leaderboard support (overall and per-service)
+- ✅ Milestone calculation and next badge tracking
 
 **Rewards Configuration:**
 ```typescript
-const SERVICE_REWARDS = {
-  'electricity': { pointsPerTransaction: 10 },
-  'airtime': { pointsPerTransaction: 5 },
-  'send-money': { pointsPerTransaction: 15, bonusThreshold: 5 },
-  'freelance': { pointsPerTransaction: 50, badge: 'HUSTLER' },
-  'creator-rewards': { pointsPerTransaction: 100, badge: 'CREATOR' }
-};
+{
+  'send-money': 15 points/transaction, 1.5x bonus at 5 transactions → MONEY_MOVER badge
+  'airtime': 5 points/transaction, 1.2x bonus at 10 transactions → AIRTIME_PRO badge
+  'electricity': 10 points/transaction, 1.3x bonus at 8 transactions → BILL_PAYER badge
+  'freelance': 50 points/transaction, 2x bonus at 5 transactions → HUSTLER badge
+  'marketplace': 20 points/transaction, 1.5x bonus at 10 transactions → SHOPPER badge
+  'buy-gift-cards': 8 points/transaction, 1.25x bonus at 15 transactions → GIFT_GIVER badge
+  'data': 5 points/transaction, 1.2x bonus at 10 transactions → DATA_KING badge
+  'transfer': 12 points/transaction, 1.4x bonus at 7 transactions
+  'crypto': 30 points/transaction, 1.8x bonus at 5 transactions → CRYPTO_TRADER badge
+  'investments': 40 points/transaction, 2x bonus at 3 transactions → INVESTOR badge
+}
+```
+
+**UI Components:**
+- **ServiceRewardsInfo**: Shows points, badges, and next milestone progress
+- **RewardsDashboard**: Comprehensive dashboard with:
+  - Total points earned
+  - Total badges earned
+  - Active services count
+  - Service breakdown with transaction history and badges
+
+**Service Features:**
+- Calculate points for transactions with multipliers
+- Award points and badges automatically
+- Get user rewards for specific service
+- Get all service rewards for user
+- Get service leaderboard
+- Get overall leaderboard
+- Get all available badges
+- Track next milestone and bonus threshold
+
+**Database Schema:**
+```sql
+CREATE TABLE user_service_rewards (
+  user_id UUID,
+  service_id VARCHAR(50),
+  total_points INT,
+  total_transactions INT,
+  badges TEXT[],
+  last_transaction_date TIMESTAMP,
+  PRIMARY KEY (user_id, service_id)
+);
+
+CREATE TABLE service_reward_transactions (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  service_id VARCHAR(50),
+  transaction_id VARCHAR(100),
+  points_awarded INT,
+  multiplier DECIMAL(2,1),
+  bonus_applied BOOLEAN,
+  created_at TIMESTAMP
+);
 ```
 
 **Features:**
-- Point awards based on service usage
-- Bonus multipliers for milestone usage
-- Badge unlocks for achievement
-- Rewards display on service cards
-- Gamification elements (leaderboard, etc.)
+- ✅ Point awards based on service usage
+- ✅ Bonus multipliers for milestone usage
+- ✅ Badge unlocks for achievements
+- ✅ Progress tracking to next milestone
+- ✅ Leaderboard for gamification
+- ✅ Comprehensive rewards dashboard
+- ✅ Service-specific rewards info
 
-**Estimated Effort:** 8 hours
+**Estimated Effort:** 8 hours - COMPLETED
 
 ---
 
