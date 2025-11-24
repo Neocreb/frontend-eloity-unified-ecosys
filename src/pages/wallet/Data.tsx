@@ -10,7 +10,7 @@ import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface Provider {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   description: string;
@@ -26,20 +26,16 @@ interface DataPlan {
 
 const Data = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
   const [step, setStep] = useState<"provider" | "plan" | "phone" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  const providers: Provider[] = [
-    { id: "mtn", name: "MTN Data", icon: "📊", description: "Fast 4G/5G" },
-    { id: "airtel", name: "Airtel Data", icon: "📈", description: "Premium speeds" },
-    { id: "glo", name: "Glo Data", icon: "📉", description: "Affordable bundles" },
-    { id: "9mobile", name: "9Mobile Data", icon: "📡", description: "Best value" },
-  ];
+  const [operators, setOperators] = useState<any[]>([]);
+  const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
+  const [providers, setProviders] = useState<Provider[]>([]);
 
   const dataPlans: DataPlan[] = [
     { id: "d500mb", name: "500MB", volume: "500MB", validity: "1 day", price: 100 },
@@ -148,7 +144,7 @@ const Data = () => {
                         <p className="font-semibold text-gray-900">{plan.volume}</p>
                         <p className="text-xs text-gray-600">{plan.validity}</p>
                       </div>
-                      <p className="font-semibold text-gray-900">₦{plan.price.toLocaleString()}</p>
+                      <p className="font-semibold text-gray-900">���{plan.price.toLocaleString()}</p>
                     </div>
                   </button>
                 ))}
