@@ -222,9 +222,9 @@ const BuyGiftCards = () => {
           <div className="p-4 sm:p-6 space-y-6">
             {/* Selected Card */}
             <div className="text-center py-6">
-              <span className="text-6xl">{selectedCard?.logo}</span>
+              <span className="text-6xl">🎁</span>
               <p className="text-xl font-semibold text-gray-900 mt-2">
-                {selectedCard?.retailer}
+                {selectedCard?.brandName}
               </p>
             </div>
 
