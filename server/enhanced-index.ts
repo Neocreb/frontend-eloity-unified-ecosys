@@ -164,6 +164,18 @@ try {
   console.error('Failed to start reconciliation job:', e);
 }
 
+// Start CryptoAPIs data sync if API key is configured
+try {
+  if (process.env.CRYPTOAPIS_API_KEY) {
+    startCryptoDataSync(5 * 60 * 1000); // Sync every 5 minutes
+    console.log('✅ CryptoAPIs data sync started');
+  } else {
+    console.warn('⚠️  CRYPTOAPIS_API_KEY not set, crypto data sync disabled');
+  }
+} catch (e) {
+  console.error('Failed to start crypto data sync:', e);
+}
+
 // Optional: start BullMQ-based queue if REDIS_URL is provided for more robust scheduling
 import { startMetricsQueue } from './queue/metricsQueue.js';
 try {
