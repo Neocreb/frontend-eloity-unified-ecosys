@@ -353,6 +353,30 @@ export const user_activity_sessions = pgTable('user_activity_sessions', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
+// Feature gates table for tier-based access control
+export const feature_gates = pgTable('feature_gates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  feature_name: text('feature_name').notNull().unique(),
+  feature_description: text('feature_description'),
+  tier_1_access: boolean('tier_1_access').default(false),
+  tier_2_access: boolean('tier_2_access').default(true),
+  requires_kyc: boolean('requires_kyc').default(false),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Tier access history table for audit trail
+export const tier_access_history = pgTable('tier_access_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull(),
+  from_tier: text('from_tier'),
+  to_tier: text('to_tier').notNull(),
+  kyc_verified_at: timestamp('kyc_verified_at'),
+  action_type: text('action_type').notNull(), // 'upgrade', 'downgrade', 'reactivate'
+  reason: text('reason'),
+  created_at: timestamp('created_at').defaultNow(),
+});
+
 // Content analytics table used by dashboards and aggregations
 export const content_analytics = pgTable('content_analytics', {
   id: uuid('id').primaryKey().defaultRandom(),
