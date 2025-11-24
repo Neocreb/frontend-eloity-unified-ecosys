@@ -342,7 +342,8 @@ router.put('/jobs/:id', requireTier2(), async (req, res) => {
 });
 
 // Delete job
-router.delete('/jobs/:id', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.delete('/jobs/:id', requireTier2(), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
