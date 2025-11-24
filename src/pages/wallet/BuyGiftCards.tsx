@@ -273,35 +273,27 @@ const BuyGiftCards = () => {
                 Quick Amount
               </p>
               <div className="grid grid-cols-3 gap-2">
-                {[25, 50, 100].map((quickAmount) => (
+                {[10, 25, 50].map((quickAmount) => (
                   <Button
                     key={quickAmount}
                     variant="outline"
                     onClick={() => setAmount(quickAmount.toString())}
                     className="h-10 text-sm font-semibold"
                   >
-                    ${quickAmount}
+                    {quickAmount}
                   </Button>
                 ))}
               </div>
             </div>
 
-            {/* Fee Info */}
+            {/* Amount Summary */}
             {amount && selectedCard && (
               <div className="p-4 bg-pink-50 border border-pink-200 rounded-lg">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Amount</span>
-                  <span className="font-semibold text-gray-900">${parseFloat(amount).toFixed(2)}</span>
-                </div>
-                {fee > 0 && (
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Fee ({selectedCard.fee}%)</span>
-                    <span className="font-semibold text-gray-900">${fee.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm border-t border-pink-300 pt-2">
-                  <span className="font-semibold text-gray-900">Total</span>
-                  <span className="font-bold text-lg text-pink-600">${total.toFixed(2)}</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total Amount</span>
+                  <span className="font-bold text-lg text-pink-600">
+                    {selectedCard.currencyCode} {parseFloat(amount).toFixed(2)}
+                  </span>
                 </div>
               </div>
             )}
