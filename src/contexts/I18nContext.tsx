@@ -50,7 +50,7 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export const I18nProvider: FC<{ children: ReactNode }> = ({
+const I18nProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -79,9 +79,26 @@ export const I18nProvider: FC<{ children: ReactNode }> = ({
 
     try {
       // Load saved preferences or detect automatically (only in browser)
-      const savedLanguage = typeof window !== "undefined" ? localStorage.getItem("eloity_language") : null;
-      const savedCurrency = typeof window !== "undefined" ? localStorage.getItem("eloity_currency") : null;
-      const savedRegion = typeof window !== "undefined" ? localStorage.getItem("eloity_region") : null;
+      let savedLanguage = null;
+      let savedCurrency = null;
+
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        try {
+          savedLanguage = localStorage.getItem("eloity_language");
+          savedCurrency = localStorage.getItem("eloity_currency");
+        } catch (storageError) {
+          console.warn("Failed to access localStorage:", storageError);
+        }
+      }
+
+      let savedRegion = null;
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        try {
+          savedRegion = localStorage.getItem("eloity_region");
+        } catch (storageError) {
+          console.warn("Failed to access localStorage for region:", storageError);
+        }
+      }
 
       if (savedLanguage) {
         i18nService.setLanguage(savedLanguage);
@@ -221,4 +238,5 @@ export const useI18n = () => {
   return context;
 };
 
+export { I18nProvider };
 export default I18nContext;

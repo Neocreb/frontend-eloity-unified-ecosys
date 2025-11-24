@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRewards } from "@/hooks/use-rewards";
 import { useToast } from "@/hooks/use-toast";
@@ -86,10 +86,12 @@ interface RewardData {
 
 export default function EnhancedRewards() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { data: rewardsData, isLoading, error, refresh } = useRewards();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const tabParam = searchParams.get("tab") || "dashboard";
+  const [activeTab, setActiveTab] = useState(tabParam);
 
   // Transform rewards data to match the expected format
   const rewardData: RewardData | null = rewardsData?.calculatedUserRewards ? {

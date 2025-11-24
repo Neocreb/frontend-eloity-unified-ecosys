@@ -1,7 +1,6 @@
 import React, { Component, ReactNode } from "react";
-import { ThemeProvider } from "./ThemeContext";
 
-// Fallback theme provider that applies light theme
+// Minimal fallback theme provider that applies light theme
 class FallbackThemeProvider extends Component<{ children: ReactNode }> {
   componentDidMount() {
     if (typeof document !== "undefined") {
@@ -23,6 +22,7 @@ class FallbackThemeProvider extends Component<{ children: ReactNode }> {
 interface SafeThemeProviderState {
   hasError: boolean;
   error?: Error;
+  ThemeProvider?: any;
 }
 
 interface SafeThemeProviderProps {
@@ -35,7 +35,20 @@ class SafeThemeProvider extends Component<
 > {
   constructor(props: SafeThemeProviderProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, ThemeProvider: undefined };
+    this.loadThemeProvider();
+  }
+
+  async loadThemeProvider() {
+    try {
+      if (!this.state.ThemeProvider) {
+        const module = await import("./ThemeContext");
+        this.setState({ ThemeProvider: module.ThemeProvider });
+      }
+    } catch (error) {
+      console.error("Failed to load ThemeProvider:", error);
+      this.setState({ hasError: true, error: error as Error });
+    }
   }
 
   static getDerivedStateFromError(error: Error): SafeThemeProviderState {
@@ -72,7 +85,14 @@ class SafeThemeProvider extends Component<
       );
     }
 
+    if (!this.state.ThemeProvider) {
+      return (
+        <FallbackThemeProvider>{this.props.children}</FallbackThemeProvider>
+      );
+    }
+
     try {
+      const ThemeProvider = this.state.ThemeProvider;
       return <ThemeProvider>{this.props.children}</ThemeProvider>;
     } catch (error) {
       console.error("Error in ThemeProvider render:", error);
