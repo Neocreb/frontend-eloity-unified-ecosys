@@ -90,7 +90,15 @@ export const I18nProvider: FC<{ children: ReactNode }> = ({
           console.warn("Failed to access localStorage:", storageError);
         }
       }
-      const savedRegion = typeof window !== "undefined" ? localStorage.getItem("eloity_region") : null;
+
+      let savedRegion = null;
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        try {
+          savedRegion = localStorage.getItem("eloity_region");
+        } catch (storageError) {
+          console.warn("Failed to access localStorage for region:", storageError);
+        }
+      }
 
       if (savedLanguage) {
         i18nService.setLanguage(savedLanguage);
