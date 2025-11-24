@@ -181,20 +181,17 @@ function EnhancedCryptoPortfolioContent({
   const refreshPortfolio = async () => {
     setIsRefreshing(true);
     try {
-      await refreshWallet();
-      // Simulate portfolio refresh
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await refetchAssets();
 
       toast({
         title: "Portfolio Updated",
         description: "Your portfolio data has been refreshed.",
       });
 
-      // Send unified notification for significant portfolio changes
-      if (user?.id && Math.abs(totalPnlPercent) > 5) {
+      if (user?.id && Math.abs(totalPnLPercent) > 5) {
         await cryptoNotificationService.notifyPortfolioUpdate(
           user.id,
-          totalPnlPercent,
+          totalPnLPercent,
           totalValue
         );
       }
