@@ -195,7 +195,8 @@ router.post('/wallet/deposit', authenticateToken, async (req, res) => {
 });
 
 // Process cryptocurrency withdrawal
-router.post('/wallet/withdraw', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/wallet/withdraw', requireTier2(), async (req, res) => {
   try {
     const { currency, amount, address, memo } = req.body;
     const userId = req.userId;
