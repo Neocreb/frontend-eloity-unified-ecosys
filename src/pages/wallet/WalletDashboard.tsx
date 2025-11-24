@@ -7,6 +7,8 @@ import { Eye, EyeOff, ChevronDown, BarChart3, List, PlugZap, Send, Repeat, Plus,
 import { useNavigate } from "react-router-dom";
 import AdCarousel, { Ad } from "@/components/wallet/AdCarousel";
 import WalletServicesGrid from "@/components/wallet/WalletServicesGrid";
+import SmartRecommendations from "@/components/wallet/SmartRecommendations";
+import ServiceFavoritesBar from "@/components/wallet/ServiceFavoritesBar";
 
 const AnimatedWave = () => {
   return (
@@ -57,7 +59,7 @@ interface Recipient {
 }
 
 const DashboardInner = () => {
-  const { walletBalance, refreshWallet } = useWalletContext();
+  const { walletBalance, refreshWallet, transactions } = useWalletContext();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -73,11 +75,88 @@ const DashboardInner = () => {
     }
   }, []);
 
-  const [recipients, setRecipients] = useState<Recipient[]>([
-    { id: '1', initials: 'JD', name: 'John Doe', lastAmount: 250, timesUsed: 5 },
-    { id: '2', initials: 'SS', name: 'Sarah Smith', lastAmount: 100, timesUsed: 3 },
-    { id: '3', initials: 'MJ', name: 'Mike Johnson', lastAmount: 75, timesUsed: 2 },
-  ]);
+  // Extract frequent recipients from transactions
+  const recipients = useMemo(() => {
+    try {
+      if (!transactions || transactions.length === 0) {
+        return [];
+      }
+
+      // Filter for transfer/send type transactions
+      const sendTransactions = transactions.filter(tx =>
+        tx.type?.toLowerCase().includes('transfer') ||
+        tx.type?.toLowerCase().includes('send') ||
+        tx.description?.toLowerCase().includes('send') ||
+        tx.description?.toLowerCase().includes('transfer')
+      );
+
+      if (sendTransactions.length === 0) {
+        return [];
+      }
+
+      // Group transactions by recipient
+      const recipientMap = new Map<string, {
+        name: string;
+        initials: string;
+        amounts: number[];
+        timestamps: Date[];
+      }>();
+
+      sendTransactions.forEach(tx => {
+        // Try to extract recipient name from description
+        const descParts = tx.description?.split('-') || [];
+        let recipientName = 'Unknown';
+
+        if (descParts.length > 1) {
+          recipientName = descParts.slice(1).join('-').trim();
+        }
+
+        if (!recipientName || recipientName === 'Unknown') {
+          recipientName = tx.description?.split('to ')?.pop() || 'Unknown';
+        }
+
+        const key = recipientName.toLowerCase();
+        const amount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
+
+        if (!recipientMap.has(key)) {
+          const initials = recipientName
+            .split(' ')
+            .map(part => part[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2) || 'U';
+
+          recipientMap.set(key, {
+            name: recipientName,
+            initials: initials,
+            amounts: [amount],
+            timestamps: [new Date(tx.timestamp || tx.createdAt || '')],
+          });
+        } else {
+          const existing = recipientMap.get(key)!;
+          existing.amounts.push(amount);
+          existing.timestamps.push(new Date(tx.timestamp || tx.createdAt || ''));
+        }
+      });
+
+      // Convert map to array and sort by frequency and recency
+      const recipientList = Array.from(recipientMap.entries()).map(([_, data]) => ({
+        id: data.name.toLowerCase().replace(/\s+/g, '-'),
+        initials: data.initials,
+        name: data.name,
+        lastAmount: data.amounts[0] || 0,
+        timesUsed: data.amounts.length,
+      }));
+
+      // Sort by frequency (descending) then by most recent
+      recipientList.sort((a, b) => b.timesUsed - a.timesUsed);
+
+      return recipientList.slice(0, 5);
+    } catch (error) {
+      console.error('Error processing recipients:', error);
+      return [];
+    }
+  }, [transactions]);
 
   const viewBalance = useMemo(()=>{
     if (!walletBalance) return 0;
@@ -223,6 +302,9 @@ const DashboardInner = () => {
             />
           </div>
 
+          {/* Service Favorites Bar */}
+          <ServiceFavoritesBar />
+
           {/* Wallet Services Grid */}
           <WalletServicesGrid />
 
@@ -293,14 +375,31 @@ const DashboardInner = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Earned Today</span>
-                <span className="font-semibold text-green-600">+$0.00</span>
+                <span className="font-semibold text-green-600">
+                  +$
+                  {(() => {
+                    const today = new Date().toDateString();
+                    const todayEarnings = transactions
+                      .filter(tx => new Date(tx.timestamp || tx.createdAt || '').toDateString() === today && (typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount) > 0)
+                      .reduce((sum, tx) => sum + (typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount), 0);
+                    return todayEarnings.toFixed(2);
+                  })()}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Transactions</span>
-                <span className="font-semibold text-blue-600">0</span>
+                <span className="font-semibold text-blue-600">
+                  {(() => {
+                    const today = new Date().toDateString();
+                    return transactions.filter(tx => new Date(tx.timestamp || tx.createdAt || '').toDateString() === today).length;
+                  })()}
+                </span>
               </div>
             </div>
           </div>
+
+          {/* Smart Recommendations */}
+          <SmartRecommendations />
 
           {/* Recent Activity */}
           <div>
@@ -311,9 +410,37 @@ const DashboardInner = () => {
               </div>
               <button onClick={()=>navigate('/app/wallet/transactions')} className="text-blue-600 text-sm font-medium hover:underline">See All</button>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
-              <div className="text-gray-600 text-sm">No transactions yet.</div>
-            </div>
+            {transactions && transactions.length > 0 ? (
+              <div className="space-y-2">
+                {transactions.slice(0, 3).map((tx, idx) => (
+                  <div key={tx.id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                        {tx.type?.charAt(0).toUpperCase() || 'T'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-gray-900 truncate">{tx.description || 'Transaction'}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(tx.timestamp || tx.createdAt || '').toLocaleDateString()} {new Date(tx.timestamp || tx.createdAt || '').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-semibold text-sm ${(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount) > 0 ? '+' : ''}{(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount).toFixed(2)}
+                      </div>
+                      <div className={`text-xs ${tx.status === 'completed' ? 'text-green-600' : tx.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}`}>
+                        {tx.status?.charAt(0).toUpperCase() + tx.status?.slice(1) || 'Completed'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                <div className="text-gray-600 text-sm">No transactions yet.</div>
+              </div>
+            )}
           </div>
 
           {/* Gifts & Tips */}

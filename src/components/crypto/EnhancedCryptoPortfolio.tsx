@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,7 @@ import {
   FileText,
   Plus,
   Minus,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -56,6 +57,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext, WalletProvider } from "@/contexts/WalletContext";
 import { cn } from "@/lib/utils";
 import useCrypto from "@/hooks/use-crypto";
+import { useCryptoPortfolio } from "@/hooks/useCryptoPortfolio";
+import { useCryptoTransactions } from "@/hooks/useCryptoTransactions";
 
 interface PortfolioAsset {
   id: string;
@@ -103,46 +106,13 @@ const COLORS = [
   "#82CA9D",
 ];
 
-// Import centralized crypto balance to ensure consistency
-import { CENTRALIZED_CRYPTO_BALANCE } from "@/services/cryptoService";
-
-const mockPortfolioAssets: PortfolioAsset[] = [
-  {
-    id: "bitcoin",
-    symbol: "BTC",
-    name: "Bitcoin",
-    amount: 2.5, // Match cryptoService.ts mockPortfolio
-    value: 108126.68, // Match cryptoService.ts mockPortfolio
-    avgBuyPrice: 41500,
-    currentPrice: 43250.67,
-    pnl: 2675.55, // Match cryptoService.ts mockPortfolio
-    pnlPercent: 2.54, // Match cryptoService.ts mockPortfolio
-    allocation: 86.1, // Match cryptoService.ts mockPortfolio
-    color: "#F7931A",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "ethereum",
-    symbol: "ETH",
-    name: "Ethereum",
-    amount: 6.8, // Match cryptoService.ts mockPortfolio
-    value: 17593.51, // Match cryptoService.ts mockPortfolio
-    avgBuyPrice: 2400,
-    currentPrice: 2587.34,
-    pnl: 361.9, // Match cryptoService.ts mockPortfolio
-    pnlPercent: 2.1, // Match cryptoService.ts mockPortfolio
-    allocation: 14.0, // Match cryptoService.ts mockPortfolio
-    color: "#627EEA",
-    lastUpdated: new Date().toISOString(),
-  },
-];
-
-const mockPerformanceData: PerformanceData[] = Array.from(
-  { length: 30 },
-  (_, i) => {
+function generatePerformanceData(assets: PortfolioAsset[]): PerformanceData[] {
+  const totalValue = assets.reduce((sum, asset) => sum + asset.value, 0);
+  return Array.from({ length: 30 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (29 - i));
-    const baseValue = 30000 + Math.sin(i / 5) * 2000 + Math.random() * 1000;
+    const variance = Math.sin(i / 5) * 2000 + Math.random() * 1000;
+    const baseValue = Math.max(1000, totalValue + variance);
 
     return {
       date: date.toISOString().split("T")[0],
@@ -150,86 +120,42 @@ const mockPerformanceData: PerformanceData[] = Array.from(
       btcValue: baseValue * 0.65,
       ethValue: baseValue * 0.33,
       altcoinsValue: baseValue * 0.02,
-      pnl: baseValue - 30000,
-      pnlPercent: ((baseValue - 30000) / 30000) * 100,
+      pnl: baseValue - totalValue,
+      pnlPercent: ((baseValue - totalValue) / Math.max(totalValue, 1)) * 100,
     };
-  },
-);
+  });
+}
 
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    type: "BUY",
-    asset: "BTC",
-    amount: 0.1,
-    price: 43250,
-    value: 4325,
-    fee: 21.63,
-    timestamp: "2024-01-15T10:30:00Z",
-    status: "COMPLETED",
-  },
-  {
-    id: "2",
-    type: "SELL",
-    asset: "ETH",
-    amount: 0.5,
-    price: 2587,
-    value: 1293.5,
-    fee: 6.47,
-    timestamp: "2024-01-14T15:20:00Z",
-    status: "COMPLETED",
-  },
-  {
-    id: "3",
-    type: "DEPOSIT",
-    asset: "USDT",
-    amount: 1000,
-    price: 1,
-    value: 1000,
-    fee: 0,
-    timestamp: "2024-01-13T09:15:00Z",
-    status: "COMPLETED",
-  },
-];
+interface EnhancedCryptoPortfolioContentProps {
+  walletAddress?: string;
+  blockchain?: string;
+  network?: string;
+}
 
-function EnhancedCryptoPortfolioContent() {
+function EnhancedCryptoPortfolioContent({
+  walletAddress = "0x1234567890123456789012345678901234567890",
+  blockchain = "ethereum",
+  network = "mainnet",
+}: EnhancedCryptoPortfolioContentProps) {
   const crypto = useCrypto();
 
-  const [portfolioAssets, setPortfolioAssets] =
-    useState<PortfolioAsset[]>(() => {
-        // Initialize from central portfolio if available
-      const p = crypto?.portfolio;
-      if (p && p.assets) {
-        return p.assets.map((a: any) => ({
-          id: String(a.asset).toLowerCase(),
-          symbol: String(a.asset).toUpperCase(),
-          name: String(a.asset).toUpperCase(),
-          amount: Number(a.total || a.free || 0),
-          value: Number(a.usdValue || a.usd_value || a.usd || 0),
-          avgBuyPrice: Number(a.avgBuyPrice || 0),
-          currentPrice: Number(a.price || 0),
-          pnl: Number((a.usdValue || 0) - ((a.avgBuyPrice || 0) * (a.total || a.free || 0))),
-          pnlPercent: 0,
-          allocation: Number(a.allocation || 0),
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          lastUpdated: new Date().toISOString(),
-        }));
-      }
+  const { assets: portfolioAssets, loading: assetsLoading, error: assetsError, refetch: refetchAssets } = useCryptoPortfolio(
+    walletAddress,
+    blockchain,
+    network
+  );
 
-      // If no portfolio available from backend, return empty list (do not use mock data)
-      return [];
-    });
+  const { transactions: recentTransactions, loading: transactionsLoading } = useCryptoTransactions(
+    walletAddress,
+    blockchain,
+    network,
+    50
+  );
 
-  const [performanceData, setPerformanceData] =
-    useState<PerformanceData[]>(() => {
-      // If crypto.marketData exists, create a basic performance array
-      if (crypto?.marketData) {
-        return mockPerformanceData; // keep mock for now
-      }
-      return mockPerformanceData;
-    });
-  const [transactions, setTransactions] =
-    useState<Transaction[]>(mockTransactions);
+  const performanceData = useMemo(() => {
+    return generatePerformanceData(portfolioAssets);
+  }, [portfolioAssets]);
+
   const [timeframe, setTimeframe] = useState("30D");
   const [activeTab, setActiveTab] = useState("overview");
   const [showValues, setShowValues] = useState(true);
@@ -242,55 +168,36 @@ function EnhancedCryptoPortfolioContent() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Update when central portfolio changes
-  useEffect(() => {
-    if (crypto?.portfolio && crypto.portfolio.assets) {
-      setPortfolioAssets(
-        crypto.portfolio.assets.map((a: any) => ({
-          id: String(a.asset).toLowerCase(),
-          symbol: String(a.asset).toUpperCase(),
-          name: String(a.asset).toUpperCase(),
-          amount: Number(a.total || a.free || 0),
-          value: Number(a.usdValue || a.usd_value || a.usd || 0),
-          avgBuyPrice: Number(a.avgBuyPrice || 0),
-          currentPrice: Number(a.price || 0),
-          pnl: Number((a.usdValue || 0) - ((a.avgBuyPrice || 0) * (a.total || a.free || 0))),
-          pnlPercent: 0,
-          allocation: Number(a.allocation || 0),
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          lastUpdated: new Date().toISOString(),
-        })),
-      );
-    }
-  }, [crypto?.portfolio]);
+  const totalValue = useMemo(() => {
+    return portfolioAssets.reduce((sum, asset) => sum + asset.value, 0);
+  }, [portfolioAssets]);
 
-  const totalValue = portfolioAssets.reduce(
-    (sum, asset) => sum + asset.value,
-    0,
-  );
-  const totalPnl = portfolioAssets.reduce((sum, asset) => sum + asset.pnl, 0);
-  const totalPnlPercent = (totalPnl / (totalValue - totalPnl)) * 100;
+  const totalPnl = useMemo(() => {
+    return portfolioAssets.reduce((sum, asset) => sum + asset.pnl, 0);
+  }, [portfolioAssets]);
+
+  const totalPnLPercent = useMemo(() => {
+    if (totalValue === 0) return 0;
+    return (totalPnl / (totalValue - totalPnl)) * 100;
+  }, [totalValue, totalPnl]);
+
   const last24hChange = performanceData[performanceData.length - 1]?.pnl || 0;
-  const last24hChangePercent =
-    performanceData[performanceData.length - 1]?.pnlPercent || 0;
+  const last24hChangePercent = performanceData[performanceData.length - 1]?.pnlPercent || 0;
 
   const refreshPortfolio = async () => {
     setIsRefreshing(true);
     try {
-      await refreshWallet();
-      // Simulate portfolio refresh
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await refetchAssets();
 
       toast({
         title: "Portfolio Updated",
         description: "Your portfolio data has been refreshed.",
       });
 
-      // Send unified notification for significant portfolio changes
-      if (user?.id && Math.abs(totalPnlPercent) > 5) {
+      if (user?.id && Math.abs(totalPnLPercent) > 5) {
         await cryptoNotificationService.notifyPortfolioUpdate(
           user.id,
-          totalPnlPercent,
+          totalPnLPercent,
           totalValue
         );
       }
@@ -334,6 +241,12 @@ function EnhancedCryptoPortfolioContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
+      {assetsError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          Error loading portfolio: {assetsError}
+        </div>
+      )}
+
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -359,12 +272,12 @@ function EnhancedCryptoPortfolioContent() {
             <Button
               variant="outline"
               onClick={refreshPortfolio}
-              disabled={isRefreshing}
+              disabled={isRefreshing || assetsLoading}
               size="sm"
               className="flex-shrink-0"
             >
               <RefreshCw
-                className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+                className={cn("h-4 w-4", (isRefreshing || assetsLoading) && "animate-spin")}
               />
             </Button>
           </div>
