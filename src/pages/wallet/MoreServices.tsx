@@ -292,7 +292,7 @@ const MoreServices = () => {
       id: "travel",
       label: "Travel & Hotel",
       icon: <Plane className="h-6 w-6" />,
-      action: () => navigate("/app/wallet"),
+      action: () => setShowTravelComingSoon(true),
       gradient: "bg-gradient-to-br from-sky-400 to-cyan-600",
       category: "Lifestyle",
       description: "Book travel & hotels",
