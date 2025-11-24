@@ -398,7 +398,8 @@ router.put('/:id', requireTier2(), async (req, res) => {
 });
 
 // Delete product
-router.delete('/:id', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.delete('/:id', requireTier2(), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId as string;
