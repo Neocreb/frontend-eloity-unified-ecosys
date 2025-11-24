@@ -501,7 +501,8 @@ router.get('/escrow/:escrowId', authenticateToken, async (req, res) => {
 });
 
 // Confirm payment (buyer action)
-router.post('/escrow/:escrowId/confirm-payment', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/escrow/:escrowId/confirm-payment', requireTier2(), async (req, res) => {
   try {
     const { escrowId } = req.params;
     const { paymentProof, transactionId } = req.body;
@@ -547,7 +548,8 @@ router.post('/escrow/:escrowId/confirm-payment', authenticateToken, async (req, 
 });
 
 // Release funds (seller action)
-router.post('/escrow/:escrowId/release', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/escrow/:escrowId/release', requireTier2(), async (req, res) => {
   try {
     const { escrowId } = req.params;
     const userId = req.userId;
