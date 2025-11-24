@@ -438,7 +438,7 @@ const BuyGiftCards = () => {
               Gift Card Purchased!
             </h2>
             <p className="text-gray-600 mb-8">
-              Your {selectedCard?.retailer} gift card has been delivered
+              Your {selectedCard?.brandName} gift card has been sent to {email}
             </p>
 
             {/* Details */}
@@ -447,16 +447,16 @@ const BuyGiftCards = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Card Value</span>
                   <span className="font-semibold text-gray-900">
-                    ${parseFloat(amount).toFixed(2)}
+                    {selectedCard?.currencyCode} {parseFloat(amount).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Code</span>
-                  <span className="font-mono text-sm text-gray-900">GC****1234</span>
+                  <span className="text-gray-600">Recipient</span>
+                  <span className="font-mono text-sm text-gray-900">{email}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status</span>
-                  <span className="text-green-600 font-semibold">Activated</span>
+                  <span className="text-green-600 font-semibold">Delivered</span>
                 </div>
               </CardContent>
             </Card>
