@@ -79,8 +79,17 @@ export const I18nProvider: FC<{ children: ReactNode }> = ({
 
     try {
       // Load saved preferences or detect automatically (only in browser)
-      const savedLanguage = typeof window !== "undefined" ? localStorage.getItem("eloity_language") : null;
-      const savedCurrency = typeof window !== "undefined" ? localStorage.getItem("eloity_currency") : null;
+      let savedLanguage = null;
+      let savedCurrency = null;
+
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        try {
+          savedLanguage = localStorage.getItem("eloity_language");
+          savedCurrency = localStorage.getItem("eloity_currency");
+        } catch (storageError) {
+          console.warn("Failed to access localStorage:", storageError);
+        }
+      }
       const savedRegion = typeof window !== "undefined" ? localStorage.getItem("eloity_region") : null;
 
       if (savedLanguage) {
