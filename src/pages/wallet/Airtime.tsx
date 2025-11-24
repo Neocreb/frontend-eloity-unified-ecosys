@@ -11,7 +11,7 @@ import { Loader2, CheckCircle2, AlertCircle, Phone } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface Provider {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   description: string;
@@ -25,20 +25,16 @@ interface Plan {
 
 const Airtime = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
   const [step, setStep] = useState<"provider" | "amount" | "phone" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  const providers: Provider[] = [
-    { id: "mtn", name: "MTN", icon: "🟡", description: "Nigeria, Ghana, Cameroon" },
-    { id: "airtel", name: "Airtel", icon: "🔴", description: "Fast & reliable" },
-    { id: "glo", name: "Globacom", icon: "🟢", description: "Nigeria's largest network" },
-    { id: "9mobile", name: "9Mobile", icon: "🔵", description: "Best rates" },
-  ];
+  const [operators, setOperators] = useState<any[]>([]);
+  const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
+  const [providers, setProviders] = useState<Provider[]>([]);
 
   const amounts: Plan[] = [
     { id: "500", name: "₦500", price: 500 },
