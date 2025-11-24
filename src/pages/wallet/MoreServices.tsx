@@ -197,7 +197,7 @@ const MoreServices = () => {
       id: "creator-rewards",
       label: "Creator Rewards",
       icon: <Star className="h-6 w-6" />,
-      action: () => navigate("/app/creator-studio"),
+      action: () => navigate("/app/rewards"),
       gradient: "bg-gradient-to-br from-yellow-400 to-yellow-600",
       category: "Creator Features",
       description: "Earn from content creation",
