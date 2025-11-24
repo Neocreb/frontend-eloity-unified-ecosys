@@ -291,10 +291,18 @@ router.post('/claim', authenticateToken, async (req, res) => {
         activity_metrics: newBadge[0].activity_metrics,
         verification_data: newBadge[0].verification_data,
         is_verified: newBadge[0].is_verified,
+        premium_granted: newBadge[0].premium_granted,
+        premium_expiry: newBadge[0].premium_expiry,
         created_at: newBadge[0].created_at
       },
       badgeNumber: nextBadgeNumber,
-      message: `Congratulations! You've earned Pioneer Badge #${nextBadgeNumber}!`
+      premium: {
+        granted: true,
+        expiryDate: premiumExpiryDate.toISOString(),
+        durationDays: 365,
+        message: 'Congratulations! You\'ve earned 1 year of premium access!'
+      },
+      message: `Congratulations! You've earned Pioneer Badge #${nextBadgeNumber} with 1-year premium access!`
     });
 
   } catch (error) {
