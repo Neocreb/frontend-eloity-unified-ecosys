@@ -150,9 +150,17 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
 
   const fetchOrderBook = async () => {
     try {
+      const token = localStorage.getItem('accessToken');
       const [baseAsset, quoteAsset] = selectedPair.split('/');
       const url = `/api/cryptoapis/orderbook/${baseAsset}/${quoteAsset}?limit=25`;
-      const response = await fetch(url);
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, { headers });
       const data = await response.json();
 
       if (data.success && data.data) {

@@ -61,8 +61,8 @@ export class RealAPIService {
     if (cached) return cached;
 
     try {
-      // Try Bybit API (requires API key)
-      const response = await this.fetchBybitData(symbol);
+      // Fetch from backend CryptoAPIs integration
+      const response = await this.fetchCryptoData(symbol);
       if (response.success) {
         this.setCache(cacheKey, response);
         return response;
@@ -147,19 +147,22 @@ export class RealAPIService {
 
   // Real API Integration Methods (when API keys are available)
 
-  private async fetchBybitData(
+  private async fetchCryptoData(
     symbol: string,
   ): Promise<APIResponse<CryptoPrice>> {
-    // Use backend endpoint that uses CryptoAPIs
+    // Use backend endpoint that uses CryptoAPIs integration
     const symbolMap: Record<string, string> = {
-      'bitcoin': 'BTC',
-      'ethereum': 'ETH',
-      'tether': 'USDT',
-      'binancecoin': 'BNB',
-      'solana': 'SOL',
-      'cardano': 'ADA',
-      'polkadot': 'DOT',
-      'avalanche': 'AVAX'
+      'bitcoin': 'bitcoin',
+      'ethereum': 'ethereum',
+      'tether': 'tether',
+      'binancecoin': 'binancecoin',
+      'solana': 'solana',
+      'cardano': 'cardano',
+      'polkadot': 'polkadot',
+      'avalanche': 'avalanche',
+      'chainlink': 'chainlink',
+      'polygon': 'polygon',
+      'dogecoin': 'dogecoin'
     };
 
     const coinId = Object.keys(symbolMap).find(key => key.includes(symbol.toLowerCase())) || symbol.toLowerCase();
