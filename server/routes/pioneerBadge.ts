@@ -229,8 +229,8 @@ router.post('/claim', authenticateToken, async (req, res) => {
     const remainingSlots = MAX_PIONEER_BADGES - (awardedBadges[0]?.count || 0);
 
     if (remainingSlots <= 0) {
-      return res.status(400).json({ 
-        error: 'All 500 Pioneer Badges have been awarded'
+      return res.status(400).json({
+        error: 'All 100 Pioneer Badges have been awarded'
       });
     }
 
