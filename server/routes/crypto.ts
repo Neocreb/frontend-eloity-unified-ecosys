@@ -395,7 +395,8 @@ router.get('/p2p/orders/my', authenticateToken, async (req, res) => {
 });
 
 // Initiate P2P trade (respond to order)
-router.post('/p2p/orders/:orderId/trade', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/p2p/orders/:orderId/trade', requireTier2(), async (req, res) => {
   try {
     const { orderId } = req.params;
     const { amount, message } = req.body;
