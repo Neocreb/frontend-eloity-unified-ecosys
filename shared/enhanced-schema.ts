@@ -327,12 +327,15 @@ export const reward_sharing_transactions = pgTable('reward_sharing_transactions'
 export const pioneer_badges = pgTable('pioneer_badges', {
   id: uuid('id').primaryKey().defaultRandom(),
   user_id: uuid('user_id').notNull(),
-  badge_number: integer('badge_number').notNull(), // 1-500
+  badge_number: integer('badge_number').notNull(), // 1-100 (updated from 500)
   earned_at: timestamp('earned_at').defaultNow(),
   eligibility_score: numeric('eligibility_score', { precision: 8, scale: 2 }).notNull(),
   activity_metrics: jsonb('activity_metrics'),
   verification_data: jsonb('verification_data'),
   is_verified: boolean('is_verified').default(true),
+  // Premium fields for first 100 users
+  premium_granted: boolean('premium_granted').default(true),
+  premium_expiry: timestamp('premium_expiry'),
   created_at: timestamp('created_at').defaultNow(),
 });
 
