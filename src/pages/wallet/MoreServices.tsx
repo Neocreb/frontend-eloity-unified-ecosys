@@ -52,6 +52,7 @@ const MoreServices = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [showTravelComingSoon, setShowTravelComingSoon] = useState(false);
   const { isFavorited, toggleFavorite } = useServiceFavorites();
 
   // All available services
