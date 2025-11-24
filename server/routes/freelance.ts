@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
+import { requireTier2, triggerKYCIfNeeded } from '../middleware/tierAccessControl.js';
 import { logger } from '../utils/logger.js';
 import { db } from '../../server/enhanced-index.js';
 import { freelance_projects as freelance_jobs, freelance_profiles as profiles } from '../../shared/freelance-schema.js';
