@@ -1,6 +1,7 @@
 import express from 'express';
 import { eq, and, desc, sql, count, asc } from 'drizzle-orm';
 import { authenticateToken } from '../middleware/auth.js';
+import { upgradeTierAfterKYC } from '../middleware/tierAccessControl.js';
 import { logger } from '../utils/logger.js';
 import { 
   pioneer_badges, 
