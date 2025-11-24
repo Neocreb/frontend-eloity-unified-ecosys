@@ -38,6 +38,10 @@ export const profiles = pgTable('profiles', {
   allow_notifications: boolean('allow_notifications').default(true),
   preferred_currency: text('preferred_currency').default('USD'),
   timezone: text('timezone'),
+  // Tier system fields
+  tier_level: text('tier_level').default('tier_1'),
+  kyc_trigger_reason: text('kyc_trigger_reason'),
+  tier_upgraded_at: timestamp('tier_upgraded_at'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });
