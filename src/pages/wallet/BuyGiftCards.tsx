@@ -70,36 +70,64 @@ const BuyGiftCards = () => {
   const handleSelectCard = (card: GiftCard) => {
     setSelectedCard(card);
     setAmount("");
+    setEmail("");
     setStep("amount");
   };
 
   const handleContinueAmount = () => {
     if (!amount || parseFloat(amount) <= 0) {
-      alert("Please enter a valid amount");
+      toast.error("Please enter a valid amount");
       return;
     }
     if (parseFloat(amount) < (selectedCard?.minAmount || 10)) {
-      alert(`Minimum amount is $${selectedCard?.minAmount}`);
+      toast.error(`Minimum amount is ${selectedCard?.currencyCode} ${selectedCard?.minAmount}`);
       return;
     }
     if (parseFloat(amount) > (selectedCard?.maxAmount || 500)) {
-      alert(`Maximum amount is $${selectedCard?.maxAmount}`);
+      toast.error(`Maximum amount is ${selectedCard?.currencyCode} ${selectedCard?.maxAmount}`);
       return;
     }
-    if (parseFloat(amount) + (selectedCard?.fee || 0) > (walletBalance?.total || 0)) {
-      alert("Insufficient balance");
+    if (parseFloat(amount) > (walletBalance?.total || 0)) {
+      toast.error("Insufficient balance");
       return;
     }
     setStep("review");
   };
 
   const handleBuy = async () => {
+    if (!email || !email.includes('@')) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
+      const token = session?.access_token;
+
+      const response = await fetch('/api/reloadly/gift-cards/purchase', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: selectedCard?.id,
+          amount: parseFloat(amount),
+          email: email
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStep("success");
+        toast.success('Gift card purchased successfully!');
+      } else {
+        toast.error(result.error || 'Purchase failed');
+      }
     } catch (error) {
-      alert("Error purchasing gift card");
+      console.error('Gift card purchase error:', error);
+      toast.error('Purchase failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
