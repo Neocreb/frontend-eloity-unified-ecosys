@@ -319,7 +319,8 @@ router.post('/', requireTier2(), triggerKYCIfNeeded('marketplace_sell'), async (
 });
 
 // Update product
-router.put('/:id', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.put('/:id', requireTier2(), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId as string;
