@@ -238,4 +238,5 @@ export const useI18n = () => {
   return context;
 };
 
+export { I18nProvider };
 export default I18nContext;
