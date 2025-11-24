@@ -49,15 +49,7 @@ async function retrieveSecrets() {
       // Crypto Services
       'COINGECKO_API_KEY',
       'COINGECKO_API',
-      // Bybit API - Required permissions:
-      // - Contracts - Orders & Positions
-      // - USDC Contracts - Trade
-      // - Unified Trading - Trade
-      // - SPOT - Trade
-      // - Wallet - Account Transfer & Subaccount Transfer
-      // - Exchange - Convert & Exchange History
-      'BYBIT_PUBLIC_API',
-      'BYBIT_SECRET_API',
+      'CRYPTOAPIS_API_KEY',
       
       // AI Services
       'OPENAI_API_KEY',
