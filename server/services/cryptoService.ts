@@ -76,51 +76,75 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
       return result;
     }
 
-    // Fallback to Bybit if CoinGecko didn't work
-    logger.info('Falling back to Bybit API');
+    // Fallback to CryptoAPIs if CoinGecko didn't work
+    logger.info('Falling back to CryptoAPIs for missing prices');
+    const cryptoapisBase = 'https://rest.cryptoapis.io/v2';
+    const cryptoapisKey = process.env.CRYPTOAPIS_API_KEY;
+
+    if (!cryptoapisKey) {
+      logger.warn('CRYPTOAPIS_API_KEY not configured, using CoinGecko only');
+      return result;
+    }
+
     const fetchPromises = symbols.map(async (symbol) => {
       const lower = symbol.toLowerCase();
-      try {
-        const pair = bybitMap[lower];
-        if (pair) {
-          // Use the newer Bybit v5 API for better reliability
-          const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${pair}`;
-          logger.info(`Fetching Bybit data for ${pair} from ${url}`);
-          const resp = await axios.get(url, { timeout: 10000 });
-          
-          logger.info(`Bybit response for ${pair}:`, {
-            status: resp.status,
-            data: resp.data
-          });
-          
-          if (resp.data.retCode === 0 && resp.data.result.list.length > 0) {
-            const data = resp.data.result.list[0];
-            const price = data.lastPrice || data.markPrice || null;
-            if (price) {
-              result[lower] = {
-                usd: parseFloat(price),
-                usd_24h_change: parseFloat(data.price24hPcnt || '0') * 100 || 0,
-                usd_market_cap: null,
-                usd_24h_vol: parseFloat(data.turnover24h || data.volume24h || '0')
-              };
-              logger.info(`Successfully fetched Bybit data for ${pair}: ${price}`);
-              return;
-            } else {
-              logger.warn(`Bybit price data missing for ${pair}`, data);
-            }
-          } else {
-            logger.warn('Bybit price fetch returned no data for', pair, resp.data.retMsg);
-          }
-        } else {
-          logger.warn(`No Bybit pair mapping found for ${lower}`);
-        }
-      } catch (err) {
-        logger.error('Bybit price fetch failed for', symbol, err?.message || err);
+
+      // Skip if we already have data for this symbol
+      if (result[lower]) {
+        return;
       }
 
-      // Final fallback: mock
-      logger.warn(`Using mock data for ${lower}`);
-      result[lower] = { usd: 0, usd_24h_change: 0, usd_market_cap: 0, usd_24h_vol: 0 };
+      try {
+        // Use CryptoAPIs exchange rates endpoint
+        // Map symbols to asset IDs used by CryptoAPIs
+        const assetMap: Record<string, string> = {
+          bitcoin: 'BTC',
+          ethereum: 'ETH',
+          tether: 'USDT',
+          binancecoin: 'BNB',
+          solana: 'SOL',
+          cardano: 'ADA',
+          chainlink: 'LINK',
+          polygon: 'MATIC',
+          avalanche: 'AVAX',
+          polkadot: 'DOT',
+          dogecoin: 'DOGE'
+        };
+
+        const assetId = assetMap[lower] || lower.toUpperCase();
+        const url = `${cryptoapisBase}/market-data/exchange-rates/realtime/${assetId}/USD`;
+
+        logger.info(`Fetching CryptoAPIs data for ${lower} from ${url}`);
+        const resp = await axios.get(url, {
+          timeout: 10000,
+          headers: {
+            'X-API-Key': cryptoapisKey,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (resp.data.data) {
+          const rate = parseFloat(resp.data.data.rate || '0');
+          if (rate > 0) {
+            result[lower] = {
+              usd: rate,
+              usd_24h_change: 0, // CryptoAPIs exchange rates don't include 24h change
+              usd_market_cap: null,
+              usd_24h_vol: null
+            };
+            logger.info(`Successfully fetched CryptoAPIs data for ${lower}: $${rate}`);
+            return;
+          }
+        }
+      } catch (err) {
+        logger.error('CryptoAPIs price fetch failed for', symbol, err?.message || err);
+      }
+
+      // Final fallback: use last known value or zero
+      if (!result[lower]) {
+        logger.warn(`Using default data for ${lower}`);
+        result[lower] = { usd: 0, usd_24h_change: 0, usd_market_cap: 0, usd_24h_vol: 0 };
+      }
     });
 
     await Promise.all(fetchPromises);
