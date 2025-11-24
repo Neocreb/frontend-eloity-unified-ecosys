@@ -191,3 +191,25 @@ export const cryptoTradesRelations = relations(crypto_trades, ({ one }) => ({
 export const cryptoPricesRelations = relations(crypto_prices, ({ one }) => ({
   // No relations for prices as it's a standalone table
 }));
+
+export const cryptoExchangeRatesRelations = relations(crypto_exchange_rates, ({ one }) => ({
+  // No relations for exchange rates as it's a standalone table
+}));
+
+export const cryptoBalancesCacheRelations = relations(crypto_balances_cache, ({ one }) => ({
+  user: one(users, {
+    fields: [crypto_balances_cache.user_id],
+    references: [users.id],
+  }),
+  wallet: one(crypto_wallets, {
+    fields: [crypto_balances_cache.wallet_id],
+    references: [crypto_wallets.id],
+  }),
+}));
+
+export const cryptoWalletAddressesRelations = relations(crypto_wallet_addresses, ({ one }) => ({
+  user: one(users, {
+    fields: [crypto_wallet_addresses.user_id],
+    references: [users.id],
+  }),
+}));
