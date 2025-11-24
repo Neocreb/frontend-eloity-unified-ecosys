@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import { 
+import { requireTier2, triggerKYCIfNeeded } from '../middleware/tierAccessControl.js';
+import {
   createP2POrder,
   matchP2POrders,
   createEscrowTransaction,
