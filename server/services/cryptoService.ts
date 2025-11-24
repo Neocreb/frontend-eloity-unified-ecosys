@@ -10,21 +10,8 @@ import axios from 'axios';
 export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'usd') {
   try {
     const result: any = {};
-    const bybitMap: Record<string, string> = {
-      bitcoin: 'BTCUSDT',
-      ethereum: 'ETHUSDT',
-      tether: 'USDTUSDC',
-      binancecoin: 'BNBUSDT',
-      solana: 'SOLUSDT',
-      cardano: 'ADAUSDT',
-      chainlink: 'LINKUSDT',
-      polygon: 'MATICUSDT',
-      avalanche: 'AVAXUSDT',
-      polkadot: 'DOTUSDT',
-      dogecoin: 'DOGEUSDT'
-    };
 
-    // First, try CoinGecko as primary source since Bybit seems to have connectivity issues
+    // First, try CoinGecko as primary source for cryptocurrency prices
     try {
       logger.info('Attempting to fetch data from CoinGecko as primary source');
       const cgIdMap: Record<string, string> = { 
