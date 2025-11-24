@@ -10,35 +10,61 @@ import { Search, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface GiftCard {
-  id: string;
-  retailer: string;
-  logo: string;
+  id: number;
+  name: string;
+  brandName: string;
   minAmount: number;
   maxAmount: number;
-  fee: number;
+  currencyCode: string;
 }
 
 const BuyGiftCards = () => {
   const navigate = useNavigate();
+  const { user, session } = useAuth();
   const { walletBalance } = useWalletContext();
 
   const [step, setStep] = useState<"retailer" | "amount" | "review" | "success">("retailer");
   const [searchQuery, setSearchQuery] = useState("");
+  const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<GiftCard | null>(null);
   const [amount, setAmount] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(true);
 
-  const giftCards: GiftCard[] = [
-    { id: "1", retailer: "Amazon", logo: "🛒", minAmount: 10, maxAmount: 500, fee: 0 },
-    { id: "2", retailer: "Google Play", logo: "🎮", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "3", retailer: "Apple iTunes", logo: "🎵", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "4", retailer: "Spotify", logo: "🎧", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "5", retailer: "Netflix", logo: "🎬", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "6", retailer: "Steam", logo: "🕹️", minAmount: 5, maxAmount: 500, fee: 3 },
-  ];
+  // Fetch gift card products from Reloadly API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (!user || !session) return;
+
+      try {
+        const token = session?.access_token;
+
+        const response = await fetch('/api/reloadly/gift-cards/products', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success && result.products) {
+          setGiftCards(result.products);
+        }
+      } catch (error) {
+        console.error('Failed to fetch gift card products:', error);
+        toast.error('Failed to load gift card products');
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [user, session]);
 
   const filteredCards = giftCards.filter((card) =>
-    card.retailer.toLowerCase().includes(searchQuery.toLowerCase())
+    card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    card.brandName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSelectCard = (card: GiftCard) => {
