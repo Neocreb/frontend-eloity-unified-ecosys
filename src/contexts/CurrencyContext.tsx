@@ -40,18 +40,24 @@ interface CurrencyProviderProps {
   defaultCurrency?: string;
 }
 
-export const CurrencyProvider: FC<CurrencyProviderProps> = ({ 
-  children, 
-  defaultCurrency = DEFAULT_CURRENCY 
+export const CurrencyProvider: FC<CurrencyProviderProps> = ({
+  children,
+  defaultCurrency = DEFAULT_CURRENCY
 }) => {
   const [userCurrency, setUserCurrencyState] = useState<Currency>(() => {
-    // Try to get from localStorage first
-    const saved = localStorage.getItem('preferred-currency');
-    if (saved) {
-      const currency = getCurrencyByCode(saved);
-      if (currency) return currency;
+    try {
+      // Try to get from localStorage first, but only in browser
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem('preferred-currency');
+        if (saved) {
+          const currency = getCurrencyByCode(saved);
+          if (currency) return currency;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to access localStorage for currency:', error);
     }
-    
+
     // Fallback to default
     return getCurrencyByCode(defaultCurrency) || getDefaultCurrency();
   });
