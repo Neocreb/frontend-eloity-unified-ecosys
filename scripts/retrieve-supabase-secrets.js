@@ -49,15 +49,7 @@ async function retrieveSecrets() {
       // Crypto Services
       'COINGECKO_API_KEY',
       'COINGECKO_API',
-      // Bybit API - Required permissions:
-      // - Contracts - Orders & Positions
-      // - USDC Contracts - Trade
-      // - Unified Trading - Trade
-      // - SPOT - Trade
-      // - Wallet - Account Transfer & Subaccount Transfer
-      // - Exchange - Convert & Exchange History
-      'BYBIT_PUBLIC_API',
-      'BYBIT_SECRET_API',
+      'CRYPTOAPIS_API_KEY',
       
       // AI Services
       'OPENAI_API_KEY',
@@ -185,15 +177,7 @@ TERMII_API_KEY=your_actual_termii_api_key
 # Crypto Services
 COINGECKO_API_KEY=your_actual_coingecko_api_key
 COINGECKO_API=your_actual_coingecko_api
-# Bybit API - Required permissions:
-# - Contracts - Orders & Positions
-# - USDC Contracts - Trade
-# - Unified Trading - Trade
-# - SPOT - Trade
-# - Wallet - Account Transfer & Subaccount Transfer
-# - Exchange - Convert & Exchange History
-BYBIT_PUBLIC_API=your_actual_bybit_public_api
-BYBIT_SECRET_API=your_actual_bybit_secret_api
+CRYPTOAPIS_API_KEY=your_actual_cryptoapis_api_key
 
 # AI Services
 OPENAI_API_KEY=your_actual_openai_api_key

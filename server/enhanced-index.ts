@@ -82,7 +82,6 @@ import adminRouter from './routes/admin.js';
 import exploreRouter from './routes/explore.js';
 import walletRouter from './routes/wallet.js';
 import ledgerRouter from './routes/ledger.js';
-import bybitRouter from './routes/bybit.js';
 import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
@@ -504,7 +503,6 @@ app.use('/api/admin', adminRouter);
 app.use('/api/explore', exploreRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/ledger', ledgerRouter);
-app.use('/api/bybit', bybitRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 app.use('/api/reloadly', reloadlyRouter);
 app.use('/api/cryptoapis', cryptoapisRouter);

@@ -10,21 +10,8 @@ import axios from 'axios';
 export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'usd') {
   try {
     const result: any = {};
-    const bybitMap: Record<string, string> = {
-      bitcoin: 'BTCUSDT',
-      ethereum: 'ETHUSDT',
-      tether: 'USDTUSDC',
-      binancecoin: 'BNBUSDT',
-      solana: 'SOLUSDT',
-      cardano: 'ADAUSDT',
-      chainlink: 'LINKUSDT',
-      polygon: 'MATICUSDT',
-      avalanche: 'AVAXUSDT',
-      polkadot: 'DOTUSDT',
-      dogecoin: 'DOGEUSDT'
-    };
 
-    // First, try CoinGecko as primary source since Bybit seems to have connectivity issues
+    // First, try CoinGecko as primary source for cryptocurrency prices
     try {
       logger.info('Attempting to fetch data from CoinGecko as primary source');
       const cgIdMap: Record<string, string> = { 
@@ -916,19 +903,8 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
       logger.debug('DB wallet_address lookup failed in getCurrencyBalance:', dbErr2?.message || dbErr2);
     }
 
-    // As last resort, if BYBIT keys present try to query Bybit unified account balance for the currency
-    if (process.env.BYBIT_PUBLIC_API && process.env.BYBIT_SECRET_API) {
-      try {
-        const axios = (await import('axios')).default;
-        // Bybit private endpoints require signing; here we attempt a public wallet balance via unified account (may require proper auth)
-        // For safety, call CoinGecko price as fallback numeric value zero for actual asset amount retrieval
-        logger.debug('BYBIT credentials present but private balance fetch not implemented, falling back to 0');
-      } catch (byErr) {
-        logger.debug('Bybit balance fetch failed:', byErr?.message || byErr);
-      }
-    }
-
     // Final fallback – return 0 to avoid showing misleading random balances
+    logger.debug('Using default balance of 0 for currency:', currency);
     return 0;
   } catch (error) {
     logger.error('getCurrencyBalance error:', error);

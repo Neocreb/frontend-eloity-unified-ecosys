@@ -443,12 +443,14 @@ export class CryptoService {
   }
 
   async getDeFiProtocols(): Promise<any[]> {
-    // Bybit doesn't have DeFi protocols, but we can return an empty array
+    // Return supported DeFi protocols
+    // Integration with CryptoAPIs or other DeFi data sources can be implemented here
     return [];
   }
 
   async getDeFiPositions(userId: string): Promise<DeFiPosition[]> {
-    // Bybit doesn't have DeFi positions, but we can return an empty array
+    // Return user's DeFi positions
+    // Integration with CryptoAPIs or blockchain data sources can be implemented here
     return [];
   }
 
