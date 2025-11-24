@@ -218,4 +218,5 @@ export const useCurrencyFormatting = () => {
   return { formatAmount, formatPrice, formatUserCurrency };
 };
 
+export { CurrencyProvider };
 export default CurrencyContext;
