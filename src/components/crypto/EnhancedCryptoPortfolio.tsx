@@ -106,46 +106,13 @@ const COLORS = [
   "#82CA9D",
 ];
 
-// Import centralized crypto balance to ensure consistency
-import { CENTRALIZED_CRYPTO_BALANCE } from "@/services/cryptoService";
-
-const mockPortfolioAssets: PortfolioAsset[] = [
-  {
-    id: "bitcoin",
-    symbol: "BTC",
-    name: "Bitcoin",
-    amount: 2.5, // Match cryptoService.ts mockPortfolio
-    value: 108126.68, // Match cryptoService.ts mockPortfolio
-    avgBuyPrice: 41500,
-    currentPrice: 43250.67,
-    pnl: 2675.55, // Match cryptoService.ts mockPortfolio
-    pnlPercent: 2.54, // Match cryptoService.ts mockPortfolio
-    allocation: 86.1, // Match cryptoService.ts mockPortfolio
-    color: "#F7931A",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "ethereum",
-    symbol: "ETH",
-    name: "Ethereum",
-    amount: 6.8, // Match cryptoService.ts mockPortfolio
-    value: 17593.51, // Match cryptoService.ts mockPortfolio
-    avgBuyPrice: 2400,
-    currentPrice: 2587.34,
-    pnl: 361.9, // Match cryptoService.ts mockPortfolio
-    pnlPercent: 2.1, // Match cryptoService.ts mockPortfolio
-    allocation: 14.0, // Match cryptoService.ts mockPortfolio
-    color: "#627EEA",
-    lastUpdated: new Date().toISOString(),
-  },
-];
-
-const mockPerformanceData: PerformanceData[] = Array.from(
-  { length: 30 },
-  (_, i) => {
+function generatePerformanceData(assets: PortfolioAsset[]): PerformanceData[] {
+  const totalValue = assets.reduce((sum, asset) => sum + asset.value, 0);
+  return Array.from({ length: 30 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (29 - i));
-    const baseValue = 30000 + Math.sin(i / 5) * 2000 + Math.random() * 1000;
+    const variance = Math.sin(i / 5) * 2000 + Math.random() * 1000;
+    const baseValue = Math.max(1000, totalValue + variance);
 
     return {
       date: date.toISOString().split("T")[0],
@@ -153,47 +120,11 @@ const mockPerformanceData: PerformanceData[] = Array.from(
       btcValue: baseValue * 0.65,
       ethValue: baseValue * 0.33,
       altcoinsValue: baseValue * 0.02,
-      pnl: baseValue - 30000,
-      pnlPercent: ((baseValue - 30000) / 30000) * 100,
+      pnl: baseValue - totalValue,
+      pnlPercent: ((baseValue - totalValue) / Math.max(totalValue, 1)) * 100,
     };
-  },
-);
-
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    type: "BUY",
-    asset: "BTC",
-    amount: 0.1,
-    price: 43250,
-    value: 4325,
-    fee: 21.63,
-    timestamp: "2024-01-15T10:30:00Z",
-    status: "COMPLETED",
-  },
-  {
-    id: "2",
-    type: "SELL",
-    asset: "ETH",
-    amount: 0.5,
-    price: 2587,
-    value: 1293.5,
-    fee: 6.47,
-    timestamp: "2024-01-14T15:20:00Z",
-    status: "COMPLETED",
-  },
-  {
-    id: "3",
-    type: "DEPOSIT",
-    asset: "USDT",
-    amount: 1000,
-    price: 1,
-    value: 1000,
-    fee: 0,
-    timestamp: "2024-01-13T09:15:00Z",
-    status: "COMPLETED",
-  },
-];
+  });
+}
 
 function EnhancedCryptoPortfolioContent() {
   const crypto = useCrypto();
