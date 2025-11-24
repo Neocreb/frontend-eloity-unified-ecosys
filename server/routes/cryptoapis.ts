@@ -528,4 +528,76 @@ router.get('/assets', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * Get order book for a trading pair
+ * GET /api/cryptoapis/orderbook/:baseAsset/:quoteAsset
+ */
+router.get('/orderbook/:baseAsset/:quoteAsset', authenticateToken, async (req, res) => {
+  try {
+    const { baseAsset, quoteAsset } = req.params;
+    const limit = parseInt(req.query.limit as string) || 25;
+
+    // Get current exchange rate
+    const rateResult = await cryptoapisService.getExchangeRates(baseAsset, quoteAsset, 'realtime');
+
+    if (!rateResult.success || !rateResult.data) {
+      return res.status(400).json({
+        success: false,
+        error: 'Unable to fetch exchange rate for orderbook generation'
+      });
+    }
+
+    const basePrice = parseFloat(rateResult.data.rate || '0');
+
+    // Generate realistic mock orderbook data based on current price
+    const generateOrderbook = (currentPrice: number, levels: number) => {
+      const asks = [];
+      const bids = [];
+
+      // Generate asks (selling orders) - prices above current
+      for (let i = 1; i <= levels; i++) {
+        const askPrice = currentPrice * (1 + (i * 0.001));
+        asks.push({
+          price: parseFloat(askPrice.toFixed(8)),
+          amount: parseFloat((Math.random() * 5 + 0.1).toFixed(8)),
+          total: parseFloat((askPrice * (Math.random() * 5 + 0.1)).toFixed(2))
+        });
+      }
+
+      // Generate bids (buying orders) - prices below current
+      for (let i = 1; i <= levels; i++) {
+        const bidPrice = currentPrice * (1 - (i * 0.001));
+        bids.push({
+          price: parseFloat(bidPrice.toFixed(8)),
+          amount: parseFloat((Math.random() * 5 + 0.1).toFixed(8)),
+          total: parseFloat((bidPrice * (Math.random() * 5 + 0.1)).toFixed(2))
+        });
+      }
+
+      return { asks, bids };
+    };
+
+    const orderbook = generateOrderbook(basePrice, limit);
+
+    res.json({
+      success: true,
+      data: {
+        symbol: `${baseAsset}${quoteAsset}`,
+        baseAsset,
+        quoteAsset,
+        currentPrice: basePrice,
+        timestamp: new Date().toISOString(),
+        ...orderbook
+      }
+    });
+  } catch (error: unknown) {
+    logger.error('Get orderbook error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    res.status(500).json({
+      success: false,
+      error: errorMessage
+    });
+  }
+});
+
 export default router;
