@@ -61,8 +61,8 @@ export class RealAPIService {
     if (cached) return cached;
 
     try {
-      // Try Bybit API (requires API key)
-      const response = await this.fetchBybitData(symbol);
+      // Fetch from backend CryptoAPIs integration
+      const response = await this.fetchCryptoData(symbol);
       if (response.success) {
         this.setCache(cacheKey, response);
         return response;
@@ -147,34 +147,48 @@ export class RealAPIService {
 
   // Real API Integration Methods (when API keys are available)
 
-  private async fetchBybitData(
+  private async fetchCryptoData(
     symbol: string,
   ): Promise<APIResponse<CryptoPrice>> {
-    // Bybit API with optional key for higher rate limits
-    const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol.toUpperCase()}USDT`;
-    
-    // Note: In a real frontend application, API keys should be handled on the server-side
-    // This is just for demonstration purposes. In production, this should be proxied through your backend.
-    const apiKey = import.meta.env?.VITE_BYBIT_API_KEY || '';
-    const headers = apiKey ? { 'X-BAPI-API-KEY': apiKey } : {};
+    // Use backend endpoint that uses CryptoAPIs integration
+    const symbolMap: Record<string, string> = {
+      'bitcoin': 'bitcoin',
+      'ethereum': 'ethereum',
+      'tether': 'tether',
+      'binancecoin': 'binancecoin',
+      'solana': 'solana',
+      'cardano': 'cardano',
+      'polkadot': 'polkadot',
+      'avalanche': 'avalanche',
+      'chainlink': 'chainlink',
+      'polygon': 'polygon',
+      'dogecoin': 'dogecoin'
+    };
+
+    const coinId = Object.keys(symbolMap).find(key => key.includes(symbol.toLowerCase())) || symbol.toLowerCase();
 
     try {
-      const response = await fetch(url, { headers });
+      const response = await fetch(`/api/crypto/prices?symbols=${coinId}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
       if (!response.ok) throw new Error("API request failed");
 
       const data = await response.json();
-      const tickerData = data.result.list[0];
+      const priceData = data.prices?.[coinId];
 
-      if (!tickerData) throw new Error("Coin not found");
+      if (!priceData) throw new Error("Coin not found");
 
       return {
         success: true,
         data: {
-          symbol: symbol,
-          price: parseFloat(tickerData.lastPrice),
-          change24h: parseFloat(tickerData.price24hPcnt) * 100 || 0,
-          marketCap: 0, // Bybit doesn't provide market cap directly
-          volume24h: parseFloat(tickerData.volume24h),
+          symbol: symbol.toUpperCase(),
+          price: parseFloat(priceData.usd || '0'),
+          change24h: parseFloat(priceData.usd_24h_change || '0'),
+          marketCap: parseFloat(priceData.usd_market_cap || '0'),
+          volume24h: parseFloat(priceData.usd_24h_vol || '0'),
         },
         source: "real_api",
         timestamp: Date.now(),

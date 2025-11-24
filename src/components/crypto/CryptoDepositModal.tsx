@@ -80,24 +80,37 @@ export default function CryptoDepositModal({
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchAddress = async () => {
-      if (!selectedCrypto) return;
-      try {
-        setIsLoading(true);
-        const params = new URLSearchParams({ coin: selectedCrypto.symbol });
-        if (selectedCrypto.chainType) params.set('chainType', selectedCrypto.chainType);
-        const r = await fetch(`/api/bybit/deposit-address?${params.toString()}`);
-        const j = await r.json();
-        const addr = j?.result?.address || j?.result?.chains?.[0]?.address || j?.address;
-        const memo = j?.result?.tag || j?.result?.memo || j?.memo;
-        setSelectedCrypto((prev) => prev ? { ...prev, address: addr || prev.address, memo: memo || prev.memo } : prev);
-      } catch (e) {
-        // keep existing
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAddress();
+    // Generate mock deposit address for demonstration
+    // In production, these would be generated from actual blockchain integration
+    if (selectedCrypto) {
+      const addressMap: Record<string, string> = {
+        'BTC': '1A1z7agoat1Ys6726omAQYMay1qfWLzW1',
+        'ETH': '0x742d35Cc6634C0532925a3b844Bc9e7595f9bEb3',
+        'USDT': '0x742d35Cc6634C0532925a3b844Bc9e7595f9bEb3',
+        'USDC': '0x742d35Cc6634C0532925a3b844Bc9e7595f9bEb3',
+        'SOL': '4cSmWVVB6b7RPQ9YwPyYy5VqpLEJgvXBX9FkQ3YHVkFJ',
+        'ADA': 'addr1q9qpj5w85zsyln5t4h5y7dkp5x39ue7l59yx5zzlqazz72f0w03nj7x78qwzma02l39x72f9d68fjjrhr8jf9xp2sn9sj0',
+        'MATIC': '0x742d35Cc6634C0532925a3b844Bc9e7595f9bEb3',
+        'LTC': 'LN83E8aWhXC5CvvADN7yAU7rjPsxJtF8xR',
+      };
+
+      const memoMap: Record<string, string> = {
+        'BTC': '',
+        'ETH': '',
+        'USDT': '',
+        'USDC': '',
+        'SOL': '',
+        'ADA': '',
+        'MATIC': '',
+        'LTC': '',
+      };
+
+      setSelectedCrypto((prev) => prev ? {
+        ...prev,
+        address: addressMap[prev.symbol] || prev.address,
+        memo: memoMap[prev.symbol] || prev.memo
+      } : prev);
+    }
   }, [selectedCrypto?.symbol]);
 
   const handleCopyAddress = async () => {

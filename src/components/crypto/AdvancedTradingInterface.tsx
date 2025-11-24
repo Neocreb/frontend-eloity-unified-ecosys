@@ -150,23 +150,27 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
 
   const fetchOrderBook = async () => {
     try {
-      const symbol = selectedPair.replace('/', '');
-      const u = `https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${encodeURIComponent(symbol)}&limit=25`;
-      const r = await fetch(u);
-      const j = await r.json();
-      const rows = j?.result?.list || [];
-      const asks: OrderBookEntry[] = [];
-      const bids: OrderBookEntry[] = [];
-      for (const row of rows) {
-        const [priceStr, qtyStr, side] = Array.isArray(row) ? row : [row.price, row.size, row.side];
-        const price = parseFloat(priceStr);
-        const qty = parseFloat(qtyStr);
-        const item = { price, amount: qty, total: price * qty } as OrderBookEntry;
-        if ((row.side || side) === 'Sell') asks.push(item); else bids.push(item);
+      const token = localStorage.getItem('accessToken');
+      const [baseAsset, quoteAsset] = selectedPair.split('/');
+      const url = `/api/cryptoapis/orderbook/${baseAsset}/${quoteAsset}?limit=25`;
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-      setOrderBook({ asks, bids });
-    } catch (e) {
-      // ignore if CORS
+
+      const response = await fetch(url, { headers });
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setOrderBook({
+          asks: data.data.asks || [],
+          bids: data.data.bids || []
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch orderbook:', error);
     }
   };
 

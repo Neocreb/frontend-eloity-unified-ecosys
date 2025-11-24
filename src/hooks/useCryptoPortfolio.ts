@@ -125,50 +125,91 @@ function parsePortfolioData(
   blockchain: string,
   walletAddress: string
 ): PortfolioAsset[] {
-  const assetMap = new Map<string, PortfolioAsset>();
+  const assetMap = new Map<string, { amount: number; price: number }>();
 
-  const addAsset = (
-    symbol: string,
-    name: string,
-    amount: number,
-    currentPrice: number,
-    avgBuyPrice: number = currentPrice
-  ) => {
+  // Parse transaction history to calculate balances
+  const transactions = Array.isArray(historyData) ? historyData : historyData?.data || [];
+
+  transactions.forEach((tx: any) => {
+    const isIncoming = tx.recipientAddress?.toLowerCase() === walletAddress.toLowerCase();
+    const symbol = tx.tokenSymbol || 'ETH';
+    const amount = parseFloat(tx.amount) || 0;
+
+    if (amount > 0) {
+      const existing = assetMap.get(symbol) || { amount: 0, price: 0 };
+      const newAmount = isIncoming ? existing.amount + amount : existing.amount - amount;
+
+      assetMap.set(symbol, {
+        amount: Math.max(0, newAmount),
+        price: existing.price || parseFloat(tx.gasPrice) || 1,
+      });
+    }
+  });
+
+  // Parse latest activity data
+  if (activityData && typeof activityData === 'object') {
+    const addresses = activityData.addresses || [];
+    addresses.forEach((addr: any) => {
+      const symbol = addr.tokenSymbol || 'ETH';
+      const amount = parseFloat(addr.balance) || 0;
+
+      if (amount > 0) {
+        const existing = assetMap.get(symbol) || { amount: 0, price: 0 };
+        assetMap.set(symbol, {
+          amount,
+          price: existing.price || 1,
+        });
+      }
+    });
+  }
+
+  // If no assets found from blockchain data, return empty portfolio
+  if (assetMap.size === 0) {
+    return [];
+  }
+
+  // Convert to PortfolioAsset format
+  const portfolioAssets = Array.from(assetMap.entries()).map(([symbol, { amount, price }]) => {
     const id = symbol.toLowerCase();
-    const value = amount * currentPrice;
-    const pnl = amount * (currentPrice - avgBuyPrice);
-    const pnlPercent = avgBuyPrice > 0 ? ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100 : 0;
+    const value = amount * price;
 
-    assetMap.set(id, {
+    return {
       id,
       symbol,
-      name,
+      name: getAssetName(symbol),
       amount,
       value,
-      avgBuyPrice,
-      currentPrice,
-      pnl,
-      pnlPercent,
+      avgBuyPrice: price,
+      currentPrice: price,
+      pnl: 0,
+      pnlPercent: 0,
       allocation: 0,
       color: ASSET_COLORS[symbol] || '#888888',
       lastUpdated: new Date().toISOString(),
-    });
-  };
+    };
+  });
 
-  if (blockchain === 'ethereum' || blockchain === 'ethereum-mainnet') {
-    addAsset('ETH', 'Ethereum', 6.8, 2587.34, 2400);
-  } else if (blockchain === 'bitcoin' || blockchain === 'bitcoin-mainnet') {
-    addAsset('BTC', 'Bitcoin', 2.5, 43250.67, 41500);
-  }
+  // Calculate total value and allocations
+  const total = portfolioAssets.reduce((sum, asset) => sum + asset.value, 0);
 
-  addAsset('USDT', 'Tether', 15000, 1.0, 1.0);
-
-  const total = Array.from(assetMap.values()).reduce((sum, asset) => sum + asset.value, 0);
-
-  const portfolioAssets = Array.from(assetMap.values()).map((asset) => ({
+  return portfolioAssets.map((asset) => ({
     ...asset,
     allocation: total > 0 ? (asset.value / total) * 100 : 0,
   }));
+}
 
-  return portfolioAssets;
+function getAssetName(symbol: string): string {
+  const assetNames: Record<string, string> = {
+    BTC: 'Bitcoin',
+    ETH: 'Ethereum',
+    USDT: 'Tether',
+    USDC: 'USD Coin',
+    SOL: 'Solana',
+    ADA: 'Cardano',
+    XRP: 'XRP',
+    DOGE: 'Dogecoin',
+    MATIC: 'Polygon',
+    LINK: 'Chainlink',
+  };
+  return assetNames[symbol] || symbol;
 }

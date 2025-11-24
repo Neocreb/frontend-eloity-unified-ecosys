@@ -81,40 +81,41 @@ const ProfessionalCrypto = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // 1) Fetch live prices from Bybit API instead of CoinGecko
-      const pricesRes = await fetch(`https://api.bybit.com/v5/market/tickers?category=spot`, {
+      // 1) Fetch live prices from backend (using CryptoAPIs)
+      const pricesRes = await fetch(`/api/crypto/prices?symbols=bitcoin,ethereum,tether,binancecoin,solana,cardano,polkadot,avalanche`, {
         headers: {
-          'X-BAPI-API-KEY': import.meta.env?.VITE_BYBIT_API_KEY || ''
+          'Content-Type': 'application/json'
         }
       });
-      
+
       // Check if response is OK and is actually JSON
       if (!pricesRes.ok) {
         const errorText = await pricesRes.text();
         console.error(`HTTP error! status: ${pricesRes.status}`, errorText);
         throw new Error(`HTTP error! status: ${pricesRes.status}`);
       }
-      
+
       const contentType = pricesRes.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await pricesRes.text();
         console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
-        throw new Error('Received non-JSON response from Bybit API');
+        throw new Error('Received non-JSON response from API');
       }
-      
+
       const pricesPayload = await pricesRes.json();
-      const prices = {};
-      
-      // Process Bybit data into the format expected by the UI
-      pricesPayload.result.list.forEach((ticker: any) => {
-        const symbol = ticker.symbol.toLowerCase().replace('usdt', '');
-        prices[symbol] = {
-          usd: parseFloat(ticker.lastPrice),
-          usd_market_cap: 0, // Bybit doesn't provide market cap
-          usd_24h_change: parseFloat(ticker.price24hPcnt) * 100,
-          usd_24h_vol: parseFloat(ticker.volume24h)
-        };
-      });
+      const prices: Record<string, any> = {};
+
+      // Process backend data into the format expected by the UI
+      if (pricesPayload.prices) {
+        Object.entries(pricesPayload.prices).forEach(([symbol, data]: [string, any]) => {
+          prices[symbol] = {
+            usd: parseFloat(data.usd || '0'),
+            usd_market_cap: parseFloat(data.usd_market_cap || '0'),
+            usd_24h_change: parseFloat(data.usd_24h_change || '0'),
+            usd_24h_vol: parseFloat(data.usd_24h_vol || '0')
+          };
+        });
+      }
 
       // Normalize into UI list with metadata
       const list: Cryptocurrency[] = TRACKED.map((id) => {
