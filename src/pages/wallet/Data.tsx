@@ -37,6 +37,47 @@ const Data = () => {
   const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
 
+  // Fetch operators on component mount
+  useEffect(() => {
+    const fetchOperators = async () => {
+      if (!user || !session) return;
+
+      try {
+        const token = session?.access_token;
+        const countryCode = 'NG'; // Default to Nigeria
+
+        const response = await fetch(`/api/reloadly/operators/${countryCode}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success && result.operators) {
+          // Map operators to provider format, filter for those supporting data
+          const mappedProviders = result.operators
+            .filter((op: any) => op.data)
+            .map((op: any) => ({
+              id: op.id,
+              name: op.name + ' Data',
+              icon: '📊',
+              description: op.name
+            }));
+          setProviders(mappedProviders);
+          if (mappedProviders.length > 0) {
+            setSelectedOperatorId(mappedProviders[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch operators:', error);
+        toast.error('Failed to load service providers');
+      }
+    };
+
+    fetchOperators();
+  }, [user, session]);
+
   const dataPlans: DataPlan[] = [
     { id: "d500mb", name: "500MB", volume: "500MB", validity: "1 day", price: 100 },
     { id: "d1gb", name: "1GB", volume: "1GB", validity: "7 days", price: 250 },
@@ -48,8 +89,32 @@ const Data = () => {
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
+      const token = session?.access_token;
+
+      const response = await fetch('/api/reloadly/data/bundle', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          operatorId: selectedOperatorId,
+          amount: selectedPlan?.price,
+          recipientPhone: phoneNumber
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStep("success");
+        toast.success('Data purchase successful!');
+      } else {
+        toast.error(result.error || 'Transaction failed');
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error('Transaction failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +209,7 @@ const Data = () => {
                         <p className="font-semibold text-gray-900">{plan.volume}</p>
                         <p className="text-xs text-gray-600">{plan.validity}</p>
                       </div>
-                      <p className="font-semibold text-gray-900">���{plan.price.toLocaleString()}</p>
+                      <p className="font-semibold text-gray-900">₦{plan.price.toLocaleString()}</p>
                     </div>
                   </button>
                 ))}
