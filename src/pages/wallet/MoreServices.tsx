@@ -207,7 +207,7 @@ const MoreServices = () => {
       id: "referral",
       label: "Referral Program",
       icon: <Trophy className="h-6 w-6" />,
-      action: () => navigate("/app/referral"),
+      action: () => navigate("/app/rewards?tab=referrals"),
       gradient: "bg-gradient-to-br from-green-400 to-green-600",
       category: "Creator Features",
       description: "Earn from referrals",
