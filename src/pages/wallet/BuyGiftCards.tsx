@@ -337,9 +337,9 @@ const BuyGiftCards = () => {
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6 space-y-6">
                 <div className="text-center py-4">
-                  <span className="text-5xl">{selectedCard?.logo}</span>
+                  <span className="text-5xl">🎁</span>
                   <p className="text-xl font-semibold text-gray-900 mt-2">
-                    {selectedCard?.retailer} Gift Card
+                    {selectedCard?.brandName} Gift Card
                   </p>
                 </div>
 
@@ -350,27 +350,28 @@ const BuyGiftCards = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Amount to Purchase</p>
                   <p className="text-4xl font-bold text-gray-900">
-                    ${parseFloat(amount).toFixed(2)}
+                    {selectedCard?.currencyCode} {parseFloat(amount).toFixed(2)}
                   </p>
                 </div>
 
                 {/* Divider */}
                 <div className="border-t border-gray-200" />
 
-                {/* Fees */}
-                <div className="space-y-3">
-                  {fee > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Fee ({selectedCard?.fee}%)</span>
-                      <span className="font-semibold text-gray-900">${fee.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm border-t border-gray-200 pt-3">
-                    <span className="font-semibold text-gray-900">Total to Pay</span>
-                    <span className="font-bold text-lg text-pink-600">
-                      ${total.toFixed(2)}
-                    </span>
-                  </div>
+                {/* Email */}
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Delivery Email</p>
+                  <p className="font-semibold text-gray-900">{email}</p>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200" />
+
+                {/* Total */}
+                <div className="flex justify-between text-sm">
+                  <span className="font-semibold text-gray-900">Total to Pay</span>
+                  <span className="font-bold text-lg text-pink-600">
+                    {selectedCard?.currencyCode} {total.toFixed(2)}
+                  </span>
                 </div>
               </CardContent>
             </Card>
