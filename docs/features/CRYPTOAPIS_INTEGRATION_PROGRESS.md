@@ -158,10 +158,23 @@ Cache Duration: 5 minutes for portfolio data, 1 minute for prices
 
 ---
 
-## Next Steps
+## Next Steps / Production Recommendations
 
 1. ✅ Set up database schema (ready for user to run on Supabase)
 2. ✅ Create frontend API client and hooks
 3. ✅ Update critical components
-4. ⏳ Test with real blockchain data
-5. ⏳ Finalize remaining components
+4. ⏳ **Test with real blockchain data** - Verify with testnet first before mainnet
+5. ⏳ **Set up caching layer** - Implement database caching for portfolio and exchange rates
+6. ⏳ **Monitor API usage** - Track CryptoAPIs rate limits and implement backoff strategies
+7. ⏳ **Setup alerts** - Configure error monitoring for failed API calls
+8. ⏳ **Wallet integration** - Connect user wallet addresses to the system
+9. ⏳ **Real-time updates** - Consider WebSocket integration for live price updates
+
+## Remaining Work
+
+- [ ] Integrate database caching for frequently accessed data
+- [ ] Implement wallet address management UI
+- [ ] Add real-time WebSocket support for price updates
+- [ ] Setup comprehensive error logging and monitoring
+- [ ] Create data sync mechanism for portfolio updates
+- [ ] Implement rate limiting and throttling on frontend
