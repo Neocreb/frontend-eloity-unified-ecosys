@@ -50,7 +50,7 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export const I18nProvider: FC<{ children: ReactNode }> = ({
+const I18nProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [isLoading, setIsLoading] = useState(true);

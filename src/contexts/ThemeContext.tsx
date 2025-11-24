@@ -30,7 +30,7 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-export const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
+const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
   // Initialize theme state with immediate localStorage check to avoid hydration issues
   const [theme, setTheme] = useState<Theme>(() => {
     try {
@@ -140,4 +140,5 @@ export const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
   );
 };
 
+export { ThemeProvider };
 export default ThemeProvider;
