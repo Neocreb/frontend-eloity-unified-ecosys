@@ -204,26 +204,51 @@ const {
 
 ---
 
-### 2.3 Implement One-Click Recurring Payments
-**Status:** Not started  
-**Priority:** High  
-**Location:** New files needed
-**Action Items:**
-- [ ] Create database migrations for recurring_payments tables
-- [ ] Create service: `src/services/recurringPaymentService.ts`
-- [ ] Create component: `src/components/wallet/RecurringPaymentSetup.tsx`
-- [ ] Add "Auto-pay" button to eligible services
-- [ ] Implement payment scheduler/cron job
-- [ ] Create management interface in wallet settings
+### 2.3 Implement One-Click Recurring Payments ✅ COMPLETED
+**Status:** IMPLEMENTED
+**Priority:** High
+**Location:**
+- Service: `src/services/recurringPaymentService.ts`
+- Hook: `src/hooks/useRecurringPayments.ts`
+- Setup Component: `src/components/wallet/RecurringPaymentSetup.tsx`
+- Manager Component: `src/components/wallet/RecurringPaymentManager.tsx`
+
+**What Was Implemented:**
+- ✅ Full CRUD service for recurring payments
+- ✅ React hook for managing recurring payments in UI
+- ✅ Setup modal component with form validation
+- ✅ Manager component to view, pause, resume, and cancel payments
+- ✅ Support for daily, weekly, biweekly, monthly, quarterly, and annually frequencies
+- ✅ Day-of-month selection for monthly/quarterly/annual payments
+- ✅ Auto-renew toggle option
+- ✅ Next payment date tracking
+- ✅ Payment history tracking
+
+**Service Features:**
+- Create recurring payments with frequency configuration
+- Pause/resume payments without cancellation
+- Full cancellation with confirmation
+- Update payment details
+- Track payment history
+- Calculate next payment dates automatically
+
+**UI Components:**
+- **RecurringPaymentSetup**: Form for setting up new recurring payments
+- **RecurringPaymentManager**: List view with pause/resume/cancel actions
 
 **Eligible Services:**
 - Electricity
 - Airtime
 - Data
 - TV subscription
-- Any recurring bill
+- And any other recurring service
 
-**Estimated Effort:** 6-8 hours
+**Database Schema:**
+- recurring_payments table with all frequency options
+- recurring_payment_history table for tracking payments
+- Support for payment limits and auto-renew settings
+
+**Estimated Effort:** 6-8 hours - COMPLETED
 
 ---
 
