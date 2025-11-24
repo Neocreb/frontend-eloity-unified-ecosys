@@ -551,6 +551,59 @@ const MoreServices = () => {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Travel & Hotel Coming Soon Modal */}
+      <Dialog open={showTravelComingSoon} onOpenChange={setShowTravelComingSoon}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-cyan-500" />
+              Travel & Hotel Coming Soon
+            </DialogTitle>
+            <DialogDescription className="text-center pt-4">
+              We're building a seamless travel and hotel booking platform for you
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 space-y-3">
+              <h4 className="font-semibold text-cyan-900">What's Coming:</h4>
+              <ul className="space-y-2 text-sm text-cyan-900">
+                <li className="flex items-start gap-2">
+                  <span className="text-cyan-500 mt-1">✓</span>
+                  <span>Flight bookings worldwide</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-cyan-500 mt-1">✓</span>
+                  <span>Hotel reservations & deals</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-cyan-500 mt-1">✓</span>
+                  <span>Car rentals & ground transport</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-cyan-500 mt-1">✓</span>
+                  <span>Travel insurance options</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-cyan-500 mt-1">✓</span>
+                  <span>Earn rewards on every trip</span>
+                </li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Be the first to know when it launches! Follow our blog for updates.
+              </p>
+            </div>
+          </div>
+          <Button
+            className="w-full bg-cyan-600 hover:bg-cyan-700"
+            onClick={() => setShowTravelComingSoon(false)}
+          >
+            Got it, notify me
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
