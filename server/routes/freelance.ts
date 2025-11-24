@@ -219,7 +219,8 @@ router.get('/jobs/:id', async (req, res) => {
 });
 
 // Create new job
-router.post('/jobs', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification for job posting
+router.post('/jobs', requireTier2(), triggerKYCIfNeeded('freelance_offer'), async (req, res) => {
   try {
     const {
       title,
