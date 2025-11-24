@@ -1,5 +1,7 @@
-import React, { Component, ReactNode } from "react";
-import { I18nProvider } from "./I18nContext";
+import React, { Component, ReactNode, Suspense, lazy } from "react";
+
+// Lazy load the I18nProvider to avoid initialization issues
+const I18nProvider = lazy(() => import("./I18nContext").then(m => ({ default: m.I18nProvider })));
 
 interface SafeI18nProviderState {
   hasError: boolean;
@@ -47,7 +49,11 @@ class SafeI18nProvider extends Component<
     }
 
     try {
-      return <I18nProvider>{this.props.children}</I18nProvider>;
+      return (
+        <Suspense fallback={<FallbackI18nProvider>{this.props.children}</FallbackI18nProvider>}>
+          <I18nProvider>{this.props.children}</I18nProvider>
+        </Suspense>
+      );
     } catch (error) {
       console.error("Error in I18nProvider render:", error);
       return (

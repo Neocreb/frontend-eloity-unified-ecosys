@@ -1,5 +1,7 @@
-import React, { Component, ReactNode } from "react";
-import { ThemeProvider } from "./ThemeContext";
+import React, { Component, ReactNode, Suspense, lazy } from "react";
+
+// Lazy load the ThemeProvider to avoid initialization issues
+const ThemeProvider = lazy(() => import("./ThemeContext").then(m => ({ default: m.ThemeProvider })));
 
 // Fallback theme provider that applies light theme
 class FallbackThemeProvider extends Component<{ children: ReactNode }> {
@@ -73,7 +75,11 @@ class SafeThemeProvider extends Component<
     }
 
     try {
-      return <ThemeProvider>{this.props.children}</ThemeProvider>;
+      return (
+        <Suspense fallback={<FallbackThemeProvider>{this.props.children}</FallbackThemeProvider>}>
+          <ThemeProvider>{this.props.children}</ThemeProvider>
+        </Suspense>
+      );
     } catch (error) {
       console.error("Error in ThemeProvider render:", error);
       return (

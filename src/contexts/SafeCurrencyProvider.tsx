@@ -1,5 +1,7 @@
-import React, { Component, ReactNode } from "react";
-import { CurrencyProvider } from "./CurrencyContext";
+import React, { Component, ReactNode, Suspense, lazy } from "react";
+
+// Lazy load the CurrencyProvider to avoid initialization issues
+const CurrencyProvider = lazy(() => import("./CurrencyContext").then(m => ({ default: m.CurrencyProvider })));
 
 interface SafeCurrencyProviderState {
   hasError: boolean;
@@ -49,9 +51,11 @@ class SafeCurrencyProvider extends Component<
 
     try {
       return (
-        <CurrencyProvider defaultCurrency={this.props.defaultCurrency}>
-          {this.props.children}
-        </CurrencyProvider>
+        <Suspense fallback={<FallbackCurrencyProvider>{this.props.children}</FallbackCurrencyProvider>}>
+          <CurrencyProvider defaultCurrency={this.props.defaultCurrency}>
+            {this.props.children}
+          </CurrencyProvider>
+        </Suspense>
       );
     } catch (error) {
       console.error("Error in CurrencyProvider render:", error);
