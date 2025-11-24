@@ -497,6 +497,59 @@ const MoreServices = () => {
           </div>
         </div>
       </div>
+
+      {/* Coming Soon Modal */}
+      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-500" />
+              Investment Platform Coming Soon
+            </DialogTitle>
+            <DialogDescription className="text-center pt-4">
+              We're building a comprehensive investment platform to help you grow your wealth
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <h4 className="font-semibold text-blue-900">What's Coming:</h4>
+              <ul className="space-y-2 text-sm text-blue-900">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Stock market investments</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Mutual funds & ETFs</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Crypto portfolio management</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Real-time market data</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Investment education & insights</span>
+                </li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Be the first to know when it launches! Follow our blog for updates.
+              </p>
+            </div>
+          </div>
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700"
+            onClick={() => setShowComingSoon(false)}
+          >
+            Got it, notify me
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
