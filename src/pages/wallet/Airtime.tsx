@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle2, AlertCircle, Phone } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface Provider {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   description: string;
@@ -24,20 +25,55 @@ interface Plan {
 
 const Airtime = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
   const [step, setStep] = useState<"provider" | "amount" | "phone" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [operators, setOperators] = useState<any[]>([]);
+  const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
+  const [providers, setProviders] = useState<Provider[]>([]);
 
-  const providers: Provider[] = [
-    { id: "mtn", name: "MTN", icon: "🟡", description: "Nigeria, Ghana, Cameroon" },
-    { id: "airtel", name: "Airtel", icon: "🔴", description: "Fast & reliable" },
-    { id: "glo", name: "Globacom", icon: "🟢", description: "Nigeria's largest network" },
-    { id: "9mobile", name: "9Mobile", icon: "🔵", description: "Best rates" },
-  ];
+  // Fetch operators on component mount
+  useEffect(() => {
+    const fetchOperators = async () => {
+      if (!user || !session) return;
+
+      try {
+        const token = session?.access_token;
+        const countryCode = 'NG'; // Default to Nigeria
+
+        const response = await fetch(`/api/reloadly/operators/${countryCode}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success && result.operators) {
+          // Map operators to provider format
+          const mappedProviders = result.operators.map((op: any) => ({
+            id: op.id,
+            name: op.name,
+            icon: '🟡',
+            description: op.name
+          }));
+          setProviders(mappedProviders);
+          if (mappedProviders.length > 0) {
+            setSelectedOperatorId(mappedProviders[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch operators:', error);
+        toast.error('Failed to load service providers');
+      }
+    };
+
+    fetchOperators();
+  }, [user, session]);
 
   const amounts: Plan[] = [
     { id: "500", name: "₦500", price: 500 },
@@ -50,8 +86,32 @@ const Airtime = () => {
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
+      const token = session?.access_token;
+
+      const response = await fetch('/api/reloadly/airtime/topup', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          operatorId: selectedOperatorId,
+          amount: selectedAmount,
+          recipientPhone: phoneNumber
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStep("success");
+        toast.success('Airtime purchase successful!');
+      } else {
+        toast.error(result.error || 'Transaction failed');
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error('Transaction failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -98,22 +158,30 @@ const Airtime = () => {
           {step === "provider" && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-900">Select Network</h3>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {providers.map((provider) => (
-                  <button
-                    key={provider.id}
-                    onClick={() => {
-                      setSelectedProvider(provider);
-                      setStep("amount");
-                    }}
-                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition text-center"
-                  >
-                    <div className="text-3xl mb-2">{provider.icon}</div>
-                    <p className="font-semibold text-gray-900">{provider.name}</p>
-                    <p className="text-xs text-gray-600 mt-1">{provider.description}</p>
-                  </button>
-                ))}
-              </div>
+              {providers.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                  Loading providers...
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  {providers.map((provider) => (
+                    <button
+                      key={provider.id}
+                      onClick={() => {
+                        setSelectedProvider(provider);
+                        setSelectedOperatorId(provider.id);
+                        setStep("amount");
+                      }}
+                      className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition text-center"
+                    >
+                      <div className="text-3xl mb-2">{provider.icon}</div>
+                      <p className="font-semibold text-gray-900">{provider.name}</p>
+                      <p className="text-xs text-gray-600 mt-1">{provider.description}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
