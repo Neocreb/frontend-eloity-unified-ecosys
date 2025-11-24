@@ -903,19 +903,8 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
       logger.debug('DB wallet_address lookup failed in getCurrencyBalance:', dbErr2?.message || dbErr2);
     }
 
-    // As last resort, if BYBIT keys present try to query Bybit unified account balance for the currency
-    if (process.env.BYBIT_PUBLIC_API && process.env.BYBIT_SECRET_API) {
-      try {
-        const axios = (await import('axios')).default;
-        // Bybit private endpoints require signing; here we attempt a public wallet balance via unified account (may require proper auth)
-        // For safety, call CoinGecko price as fallback numeric value zero for actual asset amount retrieval
-        logger.debug('Private balance fetch not implemented, falling back to 0');
-      } catch (err) {
-        logger.debug('Balance fetch failed:', err?.message || err);
-      }
-    }
-
     // Final fallback – return 0 to avoid showing misleading random balances
+    logger.debug('Using default balance of 0 for currency:', currency);
     return 0;
   } catch (error) {
     logger.error('getCurrencyBalance error:', error);
