@@ -5,6 +5,7 @@ import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ServiceBadges from "@/components/wallet/ServiceBadges";
 import { useServiceFavorites } from "@/hooks/useServiceFavorites";
 import {
@@ -30,6 +31,7 @@ import {
   ArrowLeft,
   MoreHorizontal,
   Heart as HeartIcon,
+  Sparkles,
 } from "lucide-react";
 
 interface Service {
@@ -49,6 +51,7 @@ const MoreServices = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const { isFavorited, toggleFavorite } = useServiceFavorites();
 
   // All available services
@@ -215,7 +218,7 @@ const MoreServices = () => {
       id: "savings",
       label: "Savings Goals",
       icon: <Wallet className="h-6 w-6" />,
-      action: () => navigate("/app/wallet"),
+      action: () => navigate("/app/wallet/savings-goals"),
       gradient: "bg-gradient-to-br from-emerald-400 to-teal-600",
       category: "Finance & Investment",
       description: "Create savings goals",
@@ -235,7 +238,7 @@ const MoreServices = () => {
       id: "investments",
       label: "Invest",
       icon: <TrendingUp className="h-6 w-6" />,
-      action: () => navigate("/app/wallet"),
+      action: () => setShowComingSoon(true),
       gradient: "bg-gradient-to-br from-blue-500 to-purple-600",
       category: "Finance & Investment",
       description: "Investment opportunities",
@@ -246,7 +249,7 @@ const MoreServices = () => {
       id: "virtual-card",
       label: "Virtual Card",
       icon: <CreditCard className="h-6 w-6" />,
-      action: () => navigate("/app/wallet"),
+      action: () => navigate("/app/wallet/cards?type=virtual"),
       gradient: "bg-gradient-to-br from-cyan-400 to-blue-600",
       category: "Cards & Virtual",
       description: "Create virtual cards",
@@ -256,7 +259,7 @@ const MoreServices = () => {
       id: "physical-card",
       label: "Physical Card",
       icon: <CreditCard className="h-6 w-6" />,
-      action: () => navigate("/app/wallet"),
+      action: () => navigate("/app/wallet/cards?type=physical"),
       gradient: "bg-gradient-to-br from-indigo-400 to-purple-600",
       category: "Cards & Virtual",
       description: "Order physical card",
@@ -494,6 +497,59 @@ const MoreServices = () => {
           </div>
         </div>
       </div>
+
+      {/* Coming Soon Modal */}
+      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-500" />
+              Investment Platform Coming Soon
+            </DialogTitle>
+            <DialogDescription className="text-center pt-4">
+              We're building a comprehensive investment platform to help you grow your wealth
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <h4 className="font-semibold text-blue-900">What's Coming:</h4>
+              <ul className="space-y-2 text-sm text-blue-900">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Stock market investments</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Mutual funds & ETFs</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Crypto portfolio management</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Real-time market data</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500 mt-1">✓</span>
+                  <span>Investment education & insights</span>
+                </li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Be the first to know when it launches! Follow our blog for updates.
+              </p>
+            </div>
+          </div>
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700"
+            onClick={() => setShowComingSoon(false)}
+          >
+            Got it, notify me
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
