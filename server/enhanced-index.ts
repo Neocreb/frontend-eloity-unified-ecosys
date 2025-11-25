@@ -89,6 +89,7 @@ import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this lin
 import reloadlyRouter from './routes/reloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
 import tierAccessRouter from './routes/tierAccess.js';
+import subscriptionsRouter from './routes/subscriptions.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
