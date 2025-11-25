@@ -63,7 +63,7 @@ This document outlines the implementation of Eloity's two-tier monetization and 
 | Source | Margin | Priority |
 |--------|--------|----------|
 | Ad revenue (feed/marketplace) | 100% | 🔴 High |
-| Cosmetic purchases (themes, boosts) | 80% | 🟡 Medium |
+| Cosmetic purchases (themes, boosts) | 80% | �� Medium |
 | Tip tokens (collected at T2 withdrawal) | 0-20% | 🟡 Medium |
 | Pioneer badge premium bonus | 100% | 🟢 Low |
 
@@ -173,7 +173,7 @@ CREATE TABLE tier_access_history (
 **Features**:
 - ✅ Check user tier before feature access
 - ✅ Enforce KYC requirements
-- ✅ Log access attempts for audit trail
+- �� Log access attempts for audit trail
 - ✅ Return helpful error messages to direct users to KYC
 - ✅ Support role-based tier upgrades
 
@@ -600,7 +600,10 @@ export async function checkTierAccess(
 |------|---------|
 | `shared/enhanced-schema.ts` | Database schema definitions |
 | `server/middleware/auth.ts` | Authentication middleware |
-| `server/middleware/tierAccessControl.ts` | NEW - Tier validation |
+| `server/middleware/tierAccessControl.ts` | Tier validation middleware |
+| `server/routes/referralBonus.ts` | Referral bonus API routes |
+| `src/services/referralBonusService.ts` | Referral bonus service layer |
+| `src/components/referral/ReferralBonusWidget.tsx` | Referral widget component |
 | `src/contexts/AuthContext.tsx` | User state management |
 | `src/components/kyc/EnhancedKYCVerification.tsx` | KYC component |
 | `src/services/premiumService.ts` | Premium features logic |
