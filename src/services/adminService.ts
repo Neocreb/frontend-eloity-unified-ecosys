@@ -30,20 +30,46 @@ export class AdminService {
         });
 
       if (authError) {
-        return { success: false, error: authError.message };
+        console.error("Supabase auth error:", authError);
+        return { success: false, error: `Authentication failed: ${authError.message}` };
       }
 
       if (!authData.user) {
-        return { success: false, error: "Authentication failed" };
+        console.error("No user returned from authentication");
+        return { success: false, error: "Authentication failed: No user returned" };
       }
 
-      // Check if user has admin permissions
-      const adminUser = await this.getAdminUser(authData.user.id);
-      if (!adminUser || !adminUser.isActive) {
+      console.log("Authentication successful for user:", authData.user.id);
+
+      // Store the auth token immediately after successful authentication
+      if (authData.session?.access_token) {
+        localStorage.setItem('authToken', authData.session.access_token);
+        sessionStorage.setItem('authToken', authData.session.access_token);
+      }
+
+      // Check if user has admin permissions using Supabase directly
+      console.log("Checking admin permissions for user:", authData.user.id);
+      const adminUser = await this.getAdminUserDirect(authData.user.id);
+
+      if (!adminUser) {
+        console.error("User is not an admin or admin record not found");
         await supabase.auth.signOut();
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
         return {
           success: false,
-          error: "Access denied. Admin privileges required.",
+          error: "Access denied. User is not an admin.",
+        };
+      }
+
+      if (!adminUser.isActive) {
+        console.error("Admin user is not active");
+        await supabase.auth.signOut();
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
+        return {
+          success: false,
+          error: "Access denied. Admin account is inactive.",
         };
       }
 
@@ -56,12 +82,16 @@ export class AdminService {
         action: "admin_login",
         targetType: "session",
         details: { ip: window.location.hostname },
-      });
+      }).catch(err => console.error("Failed to log admin activity:", err));
 
+      console.log("Admin login successful");
       return { success: true, user: adminUser, session };
     } catch (error) {
       console.error("Admin login error:", error);
-      return { success: false, error: "Login failed" };
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Login failed: ${errorMsg}` };
     }
   }
 
@@ -126,6 +156,41 @@ export class AdminService {
       };
     } catch (error) {
       console.error("Error fetching admin user:", error);
+      return null;
+    }
+  }
+
+  // Get admin user directly from Supabase without API call
+  static async getAdminUserDirect(userId: string): Promise<AdminUser | null> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error("Error fetching admin user from Supabase:", error);
+        return null;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        avatar: data.avatar_url,
+        roles: data.roles,
+        permissions: data.permissions,
+        isActive: data.is_active,
+        createdAt: data.created_at,
+      };
+    } catch (error) {
+      console.error("Error fetching admin user directly:", error);
       return null;
     }
   }
