@@ -373,6 +373,7 @@ router.get('/slots', async (req, res) => {
 
     const awardedCount = awardedBadges[0]?.count || 0;
     const remainingSlots = MAX_PIONEER_BADGES - awardedCount;
+    const percentageAwarded = (awardedCount / MAX_PIONEER_BADGES) * 100;
 
     res.json({
       success: true,
