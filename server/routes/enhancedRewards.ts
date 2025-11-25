@@ -180,11 +180,11 @@ router.post('/update-trust-score', verifyAuth, async (req, res) => {
   }
 });
 
-// Request redemption
+// Request redemption with automatic fee calculation
 // Requires Tier 2 verification to withdraw earnings
 router.post('/request-redemption', verifyAuth, async (req, res) => {
   try {
-    const { userId, amount, payoutMethod, payoutDetails } = req.body;
+    const { userId, amount, payoutMethod, payoutDetails, category = 'creator' } = req.body;
 
     // Verify user is accessing their own data
     if (req.user.id !== userId) {
@@ -201,8 +201,49 @@ router.post('/request-redemption', verifyAuth, async (req, res) => {
       });
     }
 
-    const result = await enhancedEloitsService.requestRedemption(userId, amount, payoutMethod, payoutDetails);
-    res.json({ success: true, data: result });
+    // Calculate withdrawal fee
+    const validCategories = ['marketplace', 'crypto', 'creator', 'freelance'];
+    const feeCategory = validCategories.includes(category) ? category : 'creator';
+    const feeCalculation = withdrawalFeeService.calculateFee(amount, feeCategory);
+
+    // Create redemption with fee information
+    const result = await enhancedEloitsService.requestRedemption(userId, feeCalculation.netAmount, payoutMethod, payoutDetails);
+
+    // Record the fee in revenue tracking
+    const feeBreakdown = {
+      category: feeCategory,
+      source: payoutMethod,
+      grossAmount: amount,
+      feePercentage: feeCalculation.feePercentage,
+      feeAmount: feeCalculation.feeAmount,
+      netAmount: feeCalculation.netAmount,
+      appliedAt: new Date().toISOString()
+    };
+
+    await withdrawalFeeService.recordFeeRevenue(userId, feeBreakdown, result.id || '');
+
+    // Update redemption record with fee details
+    if (result.id) {
+      await supabase
+        .from('redemptions')
+        .update({
+          fee_amount: feeCalculation.feeAmount,
+          net_amount: feeCalculation.netAmount,
+          fee_breakdown: feeBreakdown,
+          fee_calculated_at: new Date().toISOString()
+        })
+        .eq('id', result.id);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...result,
+        feeBreakdown: feeBreakdown,
+        grossAmount: amount,
+        netAmount: feeCalculation.netAmount
+      }
+    });
   } catch (error) {
     console.error('Error requesting redemption:', error);
     res.status(500).json({ error: 'Failed to request redemption' });
