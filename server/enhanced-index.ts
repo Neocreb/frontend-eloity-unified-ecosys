@@ -90,6 +90,7 @@ import reloadlyRouter from './routes/reloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
 import tierAccessRouter from './routes/tierAccess.js';
 import subscriptionsRouter from './routes/subscriptions.js';
+import referralBonusRouter from './routes/referralBonus.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
