@@ -154,7 +154,7 @@ CREATE TABLE tier_access_history (
 - ✅ Feature gate fetching (`getFeatureGate`)
 - ✅ Feature access validation (`canAccessFeature`)
 - ✅ Tier upgrade logic (`upgradeTierAfterKYC`)
-- ✅ Tier change logging (`logTierChange`)
+- �� Tier change logging (`logTierChange`)
 - ✅ Express middleware for tier validation (`requireTierAccess`, `requireTier2`, `triggerKYCIfNeeded`)
 - ✅ Access summary generation (`getTierAccessSummary`)
 - ✅ Custom error classes (`TierAccessError`, `KYCRequiredError`)
@@ -421,12 +421,81 @@ Super Seller: $19.99/month
 - ✅ Price calculation with discounts
 
 #### 2.3 Withdrawal Fee Enforcement
-**Status**: ⏳ Pending - Ready for implementation in next phase
+**Status**: ✅ COMPLETED
 
-**Planned Features**:
-- Automatic fee deduction at payout
-- Fee breakdown display
-- Revenue tracking by category
+**Components Created**:
+- ✅ `src/services/withdrawalFeeService.ts` - Complete fee calculation and revenue tracking service (356 lines)
+- ✅ `src/components/wallet/WithdrawalFeeBreakdown.tsx` - Fee breakdown display component (209 lines)
+- ✅ `src/components/admin/WithdrawalFeeManagement.tsx` - Admin panel for fee management (326 lines)
+
+**Features Implemented**:
+- ✅ Automatic fee calculation and deduction at withdrawal
+- ✅ Category-based fee rates:
+  - Marketplace: 1.5% ($0.25-$100)
+  - Crypto: 0.3% ($0.10-$50)
+  - Creator: 3.0% ($0.50-$200)
+  - Freelance: 2.0% ($0.25-$75)
+- ✅ Fee breakdown display showing gross/net amounts
+- ✅ Revenue tracking by category with daily aggregation
+- ✅ Admin endpoints for revenue statistics and fee configuration
+- ✅ Database tables for withdrawal_fee_revenue and fee_configurations
+- ✅ Admin dashboard to view and manage fees
+
+**Files Created**:
+- `src/services/withdrawalFeeService.ts` - Fee calculation logic (356 lines)
+- `src/components/wallet/WithdrawalFeeBreakdown.tsx` - Fee display components (209 lines)
+- `src/components/admin/WithdrawalFeeManagement.tsx` - Admin UI (326 lines)
+- `scripts/database/add-withdrawal-fee-system-migration.js` - DB migration (145 lines)
+
+**API Endpoints Added**:
+- `POST /api/enhanced-rewards/request-redemption` - Updated to apply fees automatically
+- `GET /api/enhanced-rewards/admin/fee-configs` - Get all fee configurations
+- `PATCH /api/enhanced-rewards/admin/fee-configs/:category` - Update fee config
+- `GET /api/enhanced-rewards/admin/revenue-by-category` - Revenue breakdown by category
+- `GET /api/enhanced-rewards/admin/revenue-total` - Total revenue in date range
+- `GET /api/enhanced-rewards/admin/revenue-stats` - Overall revenue statistics
+
+**Database Changes**:
+```sql
+-- New withdrawal_fee_revenue table for tracking
+CREATE TABLE withdrawal_fee_revenue (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES profiles(user_id),
+  category TEXT NOT NULL,
+  source TEXT NOT NULL,
+  gross_amount DECIMAL(18, 8),
+  fee_percentage DECIMAL(5, 2),
+  fee_amount DECIMAL(18, 8),
+  net_amount DECIMAL(18, 8),
+  transaction_id TEXT,
+  recorded_at TIMESTAMP
+);
+
+-- Fee configurations for admin control
+CREATE TABLE fee_configurations (
+  id UUID PRIMARY KEY,
+  category TEXT UNIQUE,
+  fee_percentage DECIMAL(5, 2),
+  min_fee DECIMAL(18, 8),
+  max_fee DECIMAL(18, 8),
+  description TEXT,
+  active BOOLEAN,
+  updated_at TIMESTAMP,
+  updated_by UUID
+);
+
+-- Added to redemptions table
+ALTER TABLE redemptions ADD COLUMN fee_amount DECIMAL(18, 8);
+ALTER TABLE redemptions ADD COLUMN net_amount DECIMAL(18, 8);
+ALTER TABLE redemptions ADD COLUMN fee_breakdown JSONB;
+ALTER TABLE redemptions ADD COLUMN fee_calculated_at TIMESTAMP;
+```
+
+**Integration**:
+- ✅ Automatic fee deduction in redemption requests
+- ✅ Fee information included in redemption response
+- ✅ Revenue automatically tracked and recorded
+- ✅ Admin can view revenue statistics and adjust fee rates
 
 ---
 
