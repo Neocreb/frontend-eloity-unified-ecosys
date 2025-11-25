@@ -528,6 +528,7 @@ app.use('/api/cryptoapis', cryptoapisRouter);
 app.use('/api/tier', tierAccessRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/referral', referralBonusRouter);
+app.use('/api/creator-boost', creatorFundBoostRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 
