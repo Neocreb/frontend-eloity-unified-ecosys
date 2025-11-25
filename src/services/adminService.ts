@@ -30,12 +30,16 @@ export class AdminService {
         });
 
       if (authError) {
-        return { success: false, error: authError.message };
+        console.error("Supabase auth error:", authError);
+        return { success: false, error: `Authentication failed: ${authError.message}` };
       }
 
       if (!authData.user) {
-        return { success: false, error: "Authentication failed" };
+        console.error("No user returned from authentication");
+        return { success: false, error: "Authentication failed: No user returned" };
       }
+
+      console.log("Authentication successful for user:", authData.user.id);
 
       // Store the auth token immediately after successful authentication
       if (authData.session?.access_token) {
@@ -44,14 +48,28 @@ export class AdminService {
       }
 
       // Check if user has admin permissions using Supabase directly
+      console.log("Checking admin permissions for user:", authData.user.id);
       const adminUser = await this.getAdminUserDirect(authData.user.id);
-      if (!adminUser || !adminUser.isActive) {
+
+      if (!adminUser) {
+        console.error("User is not an admin or admin record not found");
         await supabase.auth.signOut();
         localStorage.removeItem('authToken');
         sessionStorage.removeItem('authToken');
         return {
           success: false,
-          error: "Access denied. Admin privileges required.",
+          error: "Access denied. User is not an admin.",
+        };
+      }
+
+      if (!adminUser.isActive) {
+        console.error("Admin user is not active");
+        await supabase.auth.signOut();
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
+        return {
+          success: false,
+          error: "Access denied. Admin account is inactive.",
         };
       }
 
@@ -64,14 +82,16 @@ export class AdminService {
         action: "admin_login",
         targetType: "session",
         details: { ip: window.location.hostname },
-      });
+      }).catch(err => console.error("Failed to log admin activity:", err));
 
+      console.log("Admin login successful");
       return { success: true, user: adminUser, session };
     } catch (error) {
       console.error("Admin login error:", error);
       localStorage.removeItem('authToken');
       sessionStorage.removeItem('authToken');
-      return { success: false, error: "Login failed" };
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Login failed: ${errorMsg}` };
     }
   }
 
