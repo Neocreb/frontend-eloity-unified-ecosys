@@ -90,28 +90,71 @@ const SafeReferralComponent: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Referral Program</h1>
-          <p className="text-muted-foreground">
-            Earn rewards by inviting friends to join Eloity
-          </p>
+    <div className="space-y-8">
+      {/* Header Section - Premium Design */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 p-8 text-white shadow-lg">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24" />
+
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Gift className="w-6 h-6" />
+                <span className="text-sm font-semibold text-white/90 uppercase tracking-wide">Referral Program</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Grow Your Network</h1>
+              <p className="text-white/90 text-lg">Earn rewards by inviting friends to join Eloity and unlock exclusive benefits</p>
+            </div>
+            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+              <Zap className="w-4 h-4 text-yellow-300" />
+              <span className="text-sm font-semibold">Silver Tier</span>
+            </div>
+          </div>
         </div>
-        <Button className="bg-purple-600 hover:bg-purple-700">
-          <Share2 className="w-4 h-4 mr-2" />
-          Generate New Link
-        </Button>
       </div>
 
-      {/* Automatic Reward Sharing Info */}
-      <Alert className="border-blue-200 bg-blue-50">
-        <Gift className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-800">
-          <div className="flex items-center justify-between">
+      {/* Quick Stats Overview - Featured Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <Users className="w-5 h-5 opacity-80" />
+            <span className="text-xs font-semibold bg-white/20 px-2 py-1 rounded-full">Active</span>
+          </div>
+          <p className="text-sm opacity-90 mb-1">Total Referrals</p>
+          <p className="text-3xl font-bold">23</p>
+          <p className="text-xs opacity-75 mt-2">18 active referrals</p>
+        </div>
+
+        <div className="rounded-xl bg-gradient-to-br from-green-500 to-green-600 p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <DollarSign className="w-5 h-5 opacity-80" />
+            <TrendingUp className="w-4 h-4 opacity-80" />
+          </div>
+          <p className="text-sm opacity-90 mb-1">Total Earnings</p>
+          <p className="text-3xl font-bold">{formatCurrency(340.50)}</p>
+          <p className="text-xs opacity-75 mt-2">{formatCurrency(45.2)} this month</p>
+        </div>
+
+        <div className="rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <Heart className="w-5 h-5 opacity-80" />
+            <CheckCircle2 className="w-4 h-4 opacity-80" />
+          </div>
+          <p className="text-sm opacity-90 mb-1">Auto Shared</p>
+          <p className="text-3xl font-bold">{isLoading ? "..." : formatCurrency(sharingStats?.totalShared || 0)}</p>
+          <p className="text-xs opacity-75 mt-2">0.5% auto-shared</p>
+        </div>
+      </div>
+
+      {/* Automatic Reward Sharing - Premium Alert */}
+      <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50 shadow-md">
+        <Zap className="h-5 w-5 text-blue-600" />
+        <AlertDescription className="text-blue-900">
+          <div className="flex items-center justify-between flex-col sm:flex-row gap-3">
             <div className="flex-1">
-              <strong>Community Sharing Active:</strong> 0.5% of creator earnings automatically shared with your referrals.
+              <strong className="text-blue-900">🎁 Community Sharing Active</strong>
+              <p className="text-sm text-blue-800 mt-1">0.5% of your creator economy earnings are automatically shared with your referrals — keep them motivated!</p>
             </div>
             <div className="text-right text-xs">
               <div className="text-blue-600">This Month</div>
