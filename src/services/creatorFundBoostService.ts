@@ -1,378 +1,481 @@
-import { fetchWithAuth } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CreatorBoost {
   id: string;
   userId: string;
-  boostType: 'new_tier_2' | 'seasonal' | 'achievement' | 'promotional';
+  boostType: 'tier_upgrade' | 'seasonal' | 'promotional' | 'referral';
   multiplier: number;
-  baseBenefit: string;
   description: string;
   startDate: string;
   endDate: string;
   isActive: boolean;
-  totalBoosted: number;
-  appliedEarnings: number;
-  appliedAt?: string;
+  appliedEarnings?: number;
+  createdAt: string;
 }
 
-export interface CreatorFundStats {
-  totalEarnings: number;
-  boostedEarnings: number;
-  standardEarnings: number;
-  activeBoosters: CreatorBoost[];
-  activeSeason?: SeasonalPromotion;
-  nextBoostOpportunity?: string;
-  tier2UpgradeDate?: string;
-  daysInBoostPeriod?: number;
-}
-
-export interface SeasonalPromotion {
+export interface BoostConfig {
   id: string;
-  name: string;
-  description: string;
+  boostType: string;
   multiplier: number;
-  badgeTrialDays?: number;
-  startDate: string;
-  endDate: string;
-  eligibility: string[];
-  maxParticipants?: number;
-  currentParticipants: number;
-  isActive: boolean;
+  durationDays: number;
+  description: string;
+  enabled: boolean;
+  conditions?: Record<string, any>;
 }
 
-export interface BoostOpportunity {
-  type: 'seasonal' | 'achievement' | 'tier_upgrade' | 'challenge';
-  title: string;
-  description: string;
+export interface CreatorEarningsWithBoost {
+  baseEarnings: number;
   multiplier: number;
-  duration: number;
-  requirements: string[];
-  reward: string;
-  claimUrl?: string;
+  boostEarnings: number;
+  totalEarnings: number;
+  boostInfo: CreatorBoost | null;
 }
 
-export class CreatorFundBoostService {
-  private static apiBase = '/api';
+class CreatorFundBoostService {
+  private readonly TIER_UPGRADE_MULTIPLIER = 1.5;
+  private readonly TIER_UPGRADE_DURATION_DAYS = 30;
 
   /**
-   * Get creator fund stats including active boosts
+   * Apply boost to newly verified Tier 2 creator
    */
-  static async getCreatorFundStats(): Promise<CreatorFundStats | null> {
+  async applyTierUpgradeBoost(userId: string): Promise<CreatorBoost | null> {
     try {
-      const response = await fetchWithAuth(`${this.apiBase}/creator-fund/stats`);
+      const startDate = new Date().toISOString();
+      const endDate = new Date(Date.now() + this.TIER_UPGRADE_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch creator fund stats');
+      const { data, error } = await supabase
+        .from('creator_boosts')
+        .insert({
+          user_id: userId,
+          boost_type: 'tier_upgrade',
+          multiplier: this.TIER_UPGRADE_MULTIPLIER,
+          description: `Welcome to Tier 2! Earn ${this.TIER_UPGRADE_MULTIPLIER}x for your first month`,
+          start_date: startDate,
+          end_date: endDate,
+          is_active: true,
+          created_at: startDate
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error applying tier upgrade boost:', error);
+        return null;
       }
 
-      const data = await response.json();
-      return data.data || null;
+      return this.mapBoostRecord(data);
     } catch (error) {
-      console.error('Error fetching creator fund stats:', error);
+      console.error('Error applying tier upgrade boost:', error);
       return null;
     }
   }
 
   /**
-   * Get active boosts for current creator
+   * Get active boost for a creator
    */
-  static async getActiveBoosts(): Promise<CreatorBoost[]> {
+  async getActiveBoost(userId: string): Promise<CreatorBoost | null> {
     try {
-      const response = await fetchWithAuth(`${this.apiBase}/creator-fund/boosts/active`);
+      const now = new Date().toISOString();
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch active boosts');
+      const { data, error } = await supabase
+        .from('creator_boosts')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .lte('start_date', now)
+        .gte('end_date', now)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching active boost:', error);
+        return null;
       }
 
-      const data = await response.json();
-      return data.data || [];
+      return data ? this.mapBoostRecord(data) : null;
     } catch (error) {
-      console.error('Error fetching active boosts:', error);
+      console.error('Error fetching active boost:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all boosts for a creator
+   */
+  async getCreatorBoosts(userId: string): Promise<CreatorBoost[]> {
+    try {
+      const { data, error } = await supabase
+        .from('creator_boosts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching creator boosts:', error);
+        return [];
+      }
+
+      return data?.map(this.mapBoostRecord) || [];
+    } catch (error) {
+      console.error('Error fetching creator boosts:', error);
       return [];
     }
   }
 
   /**
-   * Get boost history for creator
+   * Calculate earnings with boost applied
    */
-  static async getBoostHistory(limit: number = 10): Promise<CreatorBoost[]> {
+  async calculateEarningsWithBoost(userId: string, baseEarnings: number): Promise<CreatorEarningsWithBoost> {
     try {
-      const response = await fetchWithAuth(
-        `${this.apiBase}/creator-fund/boosts/history?limit=${limit}`
-      );
+      const boost = await this.getActiveBoost(userId);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch boost history');
+      if (!boost) {
+        return {
+          baseEarnings,
+          multiplier: 1,
+          boostEarnings: 0,
+          totalEarnings: baseEarnings,
+          boostInfo: null
+        };
       }
 
-      const data = await response.json();
-      return data.data || [];
-    } catch (error) {
-      console.error('Error fetching boost history:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Apply Tier 2 new creator boost
-   */
-  static async applyTier2CreatorBoost(): Promise<boolean> {
-    try {
-      const response = await fetchWithAuth(
-        `${this.apiBase}/creator-fund/boosts/apply-tier2`,
-        {
-          method: 'POST'
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to apply Tier 2 creator boost');
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error applying Tier 2 boost:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Get seasonal promotions
-   */
-  static async getSeasonalPromotions(): Promise<SeasonalPromotion[]> {
-    try {
-      const response = await fetch(`${this.apiBase}/creator-fund/seasonal-promotions`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch seasonal promotions');
-      }
-
-      const data = await response.json();
-      return data.data || [];
-    } catch (error) {
-      console.error('Error fetching seasonal promotions:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Claim seasonal promotion boost
-   */
-  static async claimSeasonalPromotion(promotionId: string): Promise<boolean> {
-    try {
-      const response = await fetchWithAuth(
-        `${this.apiBase}/creator-fund/seasonal-promotions/${promotionId}/claim`,
-        {
-          method: 'POST'
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to claim seasonal promotion');
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error claiming seasonal promotion:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Get available boost opportunities
-   */
-  static async getBoostOpportunities(): Promise<BoostOpportunity[]> {
-    try {
-      const response = await fetchWithAuth(`${this.apiBase}/creator-fund/boost-opportunities`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch boost opportunities');
-      }
-
-      const data = await response.json();
-      return data.data || [];
-    } catch (error) {
-      console.error('Error fetching boost opportunities:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Calculate boosted earnings
-   */
-  static calculateBoostedEarnings(
-    baseEarnings: number,
-    boosts: CreatorBoost[]
-  ): {
-    totalEarnings: number;
-    boostedAmount: number;
-    breakdown: Array<{ boost: string; amount: number; multiplier: number }>;
-  } {
-    let totalBoostedAmount = 0;
-    const breakdown: Array<{ boost: string; amount: number; multiplier: number }> = [];
-
-    for (const boost of boosts) {
-      const boostedAmount = baseEarnings * (boost.multiplier - 1);
-      totalBoostedAmount += boostedAmount;
-      breakdown.push({
-        boost: boost.boostType,
-        amount: boostedAmount,
-        multiplier: boost.multiplier
-      });
-    }
-
-    return {
-      totalEarnings: baseEarnings + totalBoostedAmount,
-      boostedAmount: totalBoostedAmount,
-      breakdown
-    };
-  }
-
-  /**
-   * Check if creator is eligible for Tier 2 new account boost
-   */
-  static async checkTier2EligibilityForBoost(): Promise<{
-    eligible: boolean;
-    reason?: string;
-    daysRemaining?: number;
-  }> {
-    try {
-      const response = await fetchWithAuth(`${this.apiBase}/creator-fund/check-tier2-eligibility`);
-
-      if (!response.ok) {
-        throw new Error('Failed to check eligibility');
-      }
-
-      const data = await response.json();
-      return data.data || { eligible: false, reason: 'Unknown error' };
-    } catch (error) {
-      console.error('Error checking eligibility:', error);
-      return { eligible: false, reason: 'Unable to check eligibility' };
-    }
-  }
-
-  /**
-   * Get boost timeline
-   */
-  static getBoostTimeline(boost: CreatorBoost): {
-    daysRemaining: number;
-    percentComplete: number;
-    startDate: string;
-    endDate: string;
-  } {
-    const now = new Date();
-    const start = new Date(boost.startDate);
-    const end = new Date(boost.endDate);
-
-    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const daysElapsed = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const daysRemaining = Math.max(0, totalDays - daysElapsed);
-    const percentComplete = Math.min(100, (daysElapsed / totalDays) * 100);
-
-    return {
-      daysRemaining,
-      percentComplete,
-      startDate: start.toLocaleDateString(),
-      endDate: end.toLocaleDateString()
-    };
-  }
-
-  /**
-   * Format boost display
-   */
-  static getBoostDisplay(boost: CreatorBoost): string {
-    switch (boost.boostType) {
-      case 'new_tier_2':
-        return 'New Tier 2 Creator Boost';
-      case 'seasonal':
-        return 'Seasonal Promotion';
-      case 'achievement':
-        return 'Achievement Bonus';
-      case 'promotional':
-        return 'Limited Time Promotion';
-      default:
-        return 'Creator Boost';
-    }
-  }
-
-  /**
-   * Get boost icon
-   */
-  static getBoostIcon(boostType: string): string {
-    switch (boostType) {
-      case 'new_tier_2':
-        return '🚀';
-      case 'seasonal':
-        return '🎉';
-      case 'achievement':
-        return '🏆';
-      case 'promotional':
-        return '⭐';
-      default:
-        return '✨';
-    }
-  }
-
-  /**
-   * Check if boost is about to expire
-   */
-  static isBoostExpiringSoon(boost: CreatorBoost, daysThreshold: number = 3): boolean {
-    const timeline = this.getBoostTimeline(boost);
-    return timeline.daysRemaining <= daysThreshold && timeline.daysRemaining > 0;
-  }
-
-  /**
-   * Get estimated earnings with all active boosts
-   */
-  static async getEstimatedBoostedEarnings(baseEarnings: number): Promise<{
-    baseEarnings: number;
-    boostedAmount: number;
-    totalEarnings: number;
-    activeBoosts: number;
-  }> {
-    try {
-      const boosts = await this.getActiveBoosts();
-      const calculated = this.calculateBoostedEarnings(baseEarnings, boosts);
+      const totalEarnings = Math.round(baseEarnings * boost.multiplier * 100) / 100;
+      const boostEarnings = Math.round((totalEarnings - baseEarnings) * 100) / 100;
 
       return {
         baseEarnings,
-        boostedAmount: calculated.boostedAmount,
-        totalEarnings: calculated.totalEarnings,
-        activeBoosts: boosts.length
+        multiplier: boost.multiplier,
+        boostEarnings,
+        totalEarnings,
+        boostInfo: boost
       };
     } catch (error) {
-      console.error('Error calculating estimated earnings:', error);
+      console.error('Error calculating earnings with boost:', error);
       return {
         baseEarnings,
-        boostedAmount: 0,
+        multiplier: 1,
+        boostEarnings: 0,
         totalEarnings: baseEarnings,
-        activeBoosts: 0
+        boostInfo: null
       };
     }
   }
 
   /**
-   * Format promotion for display
+   * Create seasonal boost configuration
    */
-  static formatPromotion(promo: SeasonalPromotion): {
-    title: string;
-    description: string;
-    multiplier: string;
-    duration: string;
-    participationRate: number;
-  } {
-    const start = new Date(promo.startDate);
-    const end = new Date(promo.endDate);
-    const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  async createSeasonalBoost(
+    boostType: 'seasonal' | 'promotional',
+    multiplier: number,
+    durationDays: number,
+    description: string,
+    conditions?: Record<string, any>
+  ): Promise<BoostConfig | null> {
+    try {
+      const { data, error } = await supabase
+        .from('boost_configurations')
+        .insert({
+          boost_type: boostType,
+          multiplier,
+          duration_days: durationDays,
+          description,
+          enabled: true,
+          conditions: conditions || {}
+        })
+        .select()
+        .single();
 
+      if (error) {
+        console.error('Error creating seasonal boost:', error);
+        return null;
+      }
+
+      return this.mapBoostConfig(data);
+    } catch (error) {
+      console.error('Error creating seasonal boost:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Apply seasonal boost to all eligible creators
+   */
+  async applySeasonalBoostToAll(boostConfigId: string): Promise<number> {
+    try {
+      const config = await this.getBoostConfig(boostConfigId);
+      if (!config) {
+        throw new Error('Boost configuration not found');
+      }
+
+      // Get all Tier 2 creators
+      const { data: creators, error: creatorError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('tier_level', 'tier_2')
+        .eq('is_creator', true);
+
+      if (creatorError) {
+        console.error('Error fetching creators:', creatorError);
+        return 0;
+      }
+
+      if (!creators || creators.length === 0) {
+        return 0;
+      }
+
+      const startDate = new Date().toISOString();
+      const endDate = new Date(Date.now() + config.durationDays * 24 * 60 * 60 * 1000).toISOString();
+
+      const boosts = creators.map(creator => ({
+        user_id: creator.user_id,
+        boost_type: config.boostType,
+        multiplier: config.multiplier,
+        description: config.description,
+        start_date: startDate,
+        end_date: endDate,
+        is_active: true,
+        config_id: boostConfigId,
+        created_at: startDate
+      }));
+
+      const { error: insertError } = await supabase
+        .from('creator_boosts')
+        .insert(boosts);
+
+      if (insertError) {
+        console.error('Error applying seasonal boosts:', insertError);
+        return 0;
+      }
+
+      return creators.length;
+    } catch (error) {
+      console.error('Error applying seasonal boost to all:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get boost configuration
+   */
+  async getBoostConfig(configId: string): Promise<BoostConfig | null> {
+    try {
+      const { data, error } = await supabase
+        .from('boost_configurations')
+        .select('*')
+        .eq('id', configId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching boost config:', error);
+        return null;
+      }
+
+      return this.mapBoostConfig(data);
+    } catch (error) {
+      console.error('Error fetching boost config:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all boost configurations
+   */
+  async getAllBoostConfigs(): Promise<BoostConfig[]> {
+    try {
+      const { data, error } = await supabase
+        .from('boost_configurations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching boost configs:', error);
+        return [];
+      }
+
+      return data?.map(this.mapBoostConfig) || [];
+    } catch (error) {
+      console.error('Error fetching boost configs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Update boost configuration
+   */
+  async updateBoostConfig(
+    configId: string,
+    updates: Partial<BoostConfig>
+  ): Promise<BoostConfig | null> {
+    try {
+      const { data, error } = await supabase
+        .from('boost_configurations')
+        .update({
+          multiplier: updates.multiplier,
+          duration_days: updates.durationDays,
+          description: updates.description,
+          enabled: updates.enabled,
+          conditions: updates.conditions
+        })
+        .eq('id', configId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating boost config:', error);
+        return null;
+      }
+
+      return this.mapBoostConfig(data);
+    } catch (error) {
+      console.error('Error updating boost config:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get boost usage statistics
+   */
+  async getBoostStats(): Promise<{
+    totalActiveBoosts: number;
+    boostsByType: Record<string, number>;
+    totalBoostedEarnings: number;
+    averageMultiplier: number;
+  }> {
+    try {
+      const now = new Date().toISOString();
+
+      const { data, error } = await supabase
+        .from('creator_boosts')
+        .select('boost_type, multiplier, applied_earnings')
+        .eq('is_active', true)
+        .lte('start_date', now)
+        .gte('end_date', now);
+
+      if (error) {
+        console.error('Error fetching boost stats:', error);
+        return {
+          totalActiveBoosts: 0,
+          boostsByType: {},
+          totalBoostedEarnings: 0,
+          averageMultiplier: 0
+        };
+      }
+
+      if (!data || data.length === 0) {
+        return {
+          totalActiveBoosts: 0,
+          boostsByType: {},
+          totalBoostedEarnings: 0,
+          averageMultiplier: 0
+        };
+      }
+
+      const boostsByType: Record<string, number> = {};
+      let totalEarnings = 0;
+      let totalMultiplier = 0;
+
+      data.forEach(boost => {
+        boostsByType[boost.boost_type] = (boostsByType[boost.boost_type] || 0) + 1;
+        totalEarnings += boost.applied_earnings || 0;
+        totalMultiplier += boost.multiplier;
+      });
+
+      return {
+        totalActiveBoosts: data.length,
+        boostsByType,
+        totalBoostedEarnings: Math.round(totalEarnings * 100) / 100,
+        averageMultiplier: Math.round((totalMultiplier / data.length) * 100) / 100
+      };
+    } catch (error) {
+      console.error('Error getting boost stats:', error);
+      return {
+        totalActiveBoosts: 0,
+        boostsByType: {},
+        totalBoostedEarnings: 0,
+        averageMultiplier: 0
+      };
+    }
+  }
+
+  /**
+   * Deactivate boost
+   */
+  async deactivateBoost(boostId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('creator_boosts')
+        .update({ is_active: false })
+        .eq('id', boostId);
+
+      if (error) {
+        console.error('Error deactivating boost:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deactivating boost:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Record boost earnings for analytics
+   */
+  async recordBoostEarnings(boostId: string, earnings: number): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('creator_boosts')
+        .update({
+          applied_earnings: earnings
+        })
+        .eq('id', boostId);
+
+      if (error) {
+        console.error('Error recording boost earnings:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error recording boost earnings:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Helper: Map database record to boost object
+   */
+  private mapBoostRecord(data: any): CreatorBoost {
     return {
-      title: promo.name,
-      description: promo.description,
-      multiplier: `${(promo.multiplier * 100).toFixed(0)}% boost`,
-      duration: `${durationDays} days`,
-      participationRate: promo.maxParticipants
-        ? (promo.currentParticipants / promo.maxParticipants) * 100
-        : 0
+      id: data.id,
+      userId: data.user_id,
+      boostType: data.boost_type,
+      multiplier: data.multiplier,
+      description: data.description,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      isActive: data.is_active,
+      appliedEarnings: data.applied_earnings,
+      createdAt: data.created_at
+    };
+  }
+
+  /**
+   * Helper: Map database record to boost config object
+   */
+  private mapBoostConfig(data: any): BoostConfig {
+    return {
+      id: data.id,
+      boostType: data.boost_type,
+      multiplier: data.multiplier,
+      durationDays: data.duration_days,
+      description: data.description,
+      enabled: data.enabled,
+      conditions: data.conditions
     };
   }
 }
+
+export const creatorFundBoostService = new CreatorFundBoostService();
