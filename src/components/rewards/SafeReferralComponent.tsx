@@ -348,76 +348,95 @@ const SafeReferralComponent: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Automatic Reward Sharing Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="w-5 h-5" />
+      {/* Automatic Reward Sharing - Enhanced Premium Design */}
+      <Card className="shadow-xl border-0 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-red-50 via-pink-50 to-rose-50 border-b">
+          <CardTitle className="flex items-center gap-3 text-2xl">
+            <Heart className="w-6 h-6 text-red-500" />
             Automatic Reward Sharing
           </CardTitle>
+          <p className="text-gray-600 mt-2">Grow your network while supporting your referrals</p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-gray-900 mb-2">How It Works</h3>
-              <p className="text-sm text-gray-700 mb-3">
-                0.5% of creator economy earnings are automatically shared with your referrals.
+        <CardContent className="p-8">
+          <div className="space-y-6">
+            {/* How It Works Section */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-blue-600" />
+                How It Works
+              </h3>
+              <p className="text-gray-700 font-semibold mb-4">
+                0.5% of your creator economy earnings are automatically shared with your referrals
               </p>
-              <div className="grid grid-cols-2 gap-6 text-xs">
-                <div>
-                  <h4 className="font-medium text-gray-800 mb-1">✅ Included</h4>
-                  <p className="text-gray-600">Content, engagement, ads, challenges</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div className="space-y-2">
+                  <h4 className="font-bold text-green-700 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    ✅ Included Earnings
+                  </h4>
+                  <div className="bg-white/60 p-3 rounded-lg border border-green-200">
+                    <p className="text-gray-700">Content, engagement, ads, challenges</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-800 mb-1">❌ Excluded</h4>
-                  <p className="text-gray-600">Freelance, marketplace, crypto trading</p>
+                <div className="space-y-2">
+                  <h4 className="font-bold text-red-700">❌ Excluded Earnings</h4>
+                  <div className="bg-white/60 p-3 rounded-lg border border-red-200">
+                    <p className="text-gray-700">Freelance, marketplace, crypto trading</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <h4 className="font-semibold text-green-800 mb-2">Your Sharing Impact</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Total Shared:</span>
-                    <span className="font-medium text-green-900">
-                      {isLoading ? "Loading..." : formatCurrency(sharingStats?.totalShared || 0)}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <h4 className="font-bold text-green-900">Your Sharing Impact</h4>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
+                    <span className="text-gray-700">Total Shared</span>
+                    <span className="font-bold text-lg text-green-700">
+                      {isLoading ? "..." : formatCurrency(sharingStats?.totalShared || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Transactions:</span>
-                    <span className="font-medium text-green-900">
+                  <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
+                    <span className="text-gray-700">Transactions</span>
+                    <span className="font-bold text-lg text-green-700">
                       {isLoading ? "..." : (sharingStats?.sharingTransactionsCount || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-700">This Month:</span>
-                    <span className="font-medium text-green-900">
+                  <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg border border-green-300">
+                    <span className="text-gray-700">This Month</span>
+                    <span className="font-bold text-lg text-green-700">
                       {isLoading ? "..." : formatCurrency(sharingStats?.thisMonthShared || 0)}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-semibold text-blue-800 mb-2">You've Received</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-blue-700">Total Received:</span>
-                    <span className="font-medium text-blue-900">
-                      {isLoading ? "Loading..." : formatCurrency(sharingStats?.totalReceived || 0)}
+              <div className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <Gift className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-bold text-blue-900">You've Received</h4>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
+                    <span className="text-gray-700">Total Received</span>
+                    <span className="font-bold text-lg text-blue-700">
+                      {isLoading ? "..." : formatCurrency(sharingStats?.totalReceived || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-700">From Others:</span>
-                    <span className="font-medium text-blue-900">
+                  <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
+                    <span className="text-gray-700">From Others</span>
+                    <span className="font-bold text-lg text-blue-700">
                       {isLoading ? "..." : (sharingStats?.receivingTransactionsCount || 0)} people
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-700">This Month:</span>
-                    <span className="font-medium text-blue-900">
+                  <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg border border-blue-300">
+                    <span className="text-gray-700">This Month</span>
+                    <span className="font-bold text-lg text-blue-700">
                       {isLoading ? "..." : formatCurrency(sharingStats?.thisMonthReceived || 0)}
                     </span>
                   </div>
@@ -425,63 +444,113 @@ const SafeReferralComponent: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-              <div className="flex items-start gap-2">
-                <Info className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-yellow-700">
-                    Automatic sharing is part of our Terms of Service.
-                    <a href="/terms" className="underline hover:text-yellow-800 ml-1">Terms of Service</a>
-                  </p>
-                </div>
+            {/* Info Banner */}
+            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex gap-3">
+              <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-amber-900">
+                  <strong>Automatic sharing</strong> is part of our commitment to community growth.
+                  <a href="/terms" className="underline font-semibold hover:text-amber-700 ml-1">Learn more in our Terms of Service</a>
+                </p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Referral Tiers */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="w-5 h-5" />
+      {/* Referral Tiers - Premium Design */}
+      <Card className="shadow-xl border-0 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
+          <CardTitle className="flex items-center gap-3 text-2xl">
+            <Star className="w-6 h-6 text-yellow-500" />
             Referral Tiers & Benefits
           </CardTitle>
+          <p className="text-gray-600 mt-2">Unlock better rewards as you grow</p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 border rounded-lg bg-orange-50 border-orange-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-orange-500" />
-                  <span className="font-semibold text-orange-700">Bronze (0-4 referrals)</span>
-                </div>
-                <ul className="text-sm text-orange-600 space-y-1">
-                  <li>• 10 Eloity Points per referral</li>
-                  <li>• 5% revenue share</li>
-                </ul>
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Bronze Tier */}
+            <div className="relative group rounded-xl overflow-hidden border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 p-6 hover:shadow-lg transition-all duration-300">
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-orange-500 text-white">Bronze</Badge>
               </div>
-              <div className="p-4 border rounded-lg bg-gray-50 border-gray-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-gray-500" />
-                  <span className="font-semibold text-gray-700">Silver (5-24 referrals)</span>
-                  <Badge className="bg-gray-500 text-white text-xs">Current</Badge>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
+                  <Star className="w-6 h-6 text-orange-600" />
                 </div>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• 25 Eloity Points per referral</li>
-                  <li>• 7.5% revenue share</li>
-                </ul>
+                <div>
+                  <h3 className="font-bold text-orange-900">Bronze Tier</h3>
+                  <p className="text-xs text-orange-700">0-4 referrals</p>
+                </div>
               </div>
-              <div className="p-4 border rounded-lg bg-yellow-50 border-yellow-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span className="font-semibold text-yellow-700">Gold (25+ referrals)</span>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-orange-800">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>10 Eloity Points per referral</span>
                 </div>
-                <ul className="text-sm text-yellow-600 space-y-1">
-                  <li>• 50 Eloity Points per referral</li>
-                  <li>• 10% revenue share</li>
-                  <li>• Priority support</li>
-                </ul>
+                <div className="flex items-center gap-2 text-sm text-orange-800">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>5% revenue share</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Silver Tier - Current */}
+            <div className="relative group rounded-xl overflow-hidden border-2 border-gray-400 bg-gradient-to-br from-gray-50 to-slate-50 p-6 shadow-lg hover:shadow-xl transition-all duration-300 ring-2 ring-purple-500 ring-offset-2">
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">Current</Badge>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+                  <Star className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Silver Tier</h3>
+                  <p className="text-xs text-gray-700">5-24 referrals</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-gray-800">
+                  <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                  <span className="font-semibold">25 Eloity Points per referral</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-800">
+                  <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                  <span className="font-semibold">7.5% revenue share</span>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-300">
+                <p className="text-xs font-semibold text-purple-600">Keep inviting to reach Gold!</p>
+              </div>
+            </div>
+
+            {/* Gold Tier */}
+            <div className="relative group rounded-xl overflow-hidden border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50 p-6 hover:shadow-lg transition-all duration-300">
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">Premium</Badge>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center">
+                  <Star className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-yellow-900">Gold Tier</h3>
+                  <p className="text-xs text-yellow-700">25+ referrals</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-yellow-800">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>50 Eloity Points per referral</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-yellow-800">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>10% revenue share</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-yellow-800">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Priority support 🎁</span>
+                </div>
               </div>
             </div>
           </div>
