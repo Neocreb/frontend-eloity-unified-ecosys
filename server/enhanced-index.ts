@@ -91,6 +91,7 @@ import cryptoapisRouter from './routes/cryptoapis.js';
 import tierAccessRouter from './routes/tierAccess.js';
 import subscriptionsRouter from './routes/subscriptions.js';
 import referralBonusRouter from './routes/referralBonus.js';
+import creatorFundBoostRouter from './routes/creatorFundBoost.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
@@ -527,6 +528,7 @@ app.use('/api/cryptoapis', cryptoapisRouter);
 app.use('/api/tier', tierAccessRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/referral', referralBonusRouter);
+app.use('/api/creator-boost', creatorFundBoostRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 
