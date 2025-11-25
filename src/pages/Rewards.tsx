@@ -12,6 +12,8 @@ import BoostManager from "@/components/rewards/BoostManager";
 import Subscribers from "@/components/rewards/Subscribers";
 import WithdrawEarnings from "@/components/rewards/WithdrawEarnings";
 import { PartnershipSystem } from "@/components/rewards/PartnershipSystem";
+import SafeReferralComponent from "@/components/rewards/SafeReferralComponent";
+import { ActivityEconomyDashboard } from "@/components/activity-economy/ActivityEconomyDashboard";
 
 interface CreatorRevenueData {
   totalEarnings: number;
