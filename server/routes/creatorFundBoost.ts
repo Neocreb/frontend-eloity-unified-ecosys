@@ -1,562 +1,247 @@
-import express, { Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth.js';
-import { db } from '../utils/db.js';
-import { profiles, user_rewards } from '../../shared/enhanced-schema.js';
-import { eq, and, gte, lte, desc } from 'drizzle-orm';
-import { logger } from '../utils/logger.js';
+import { Router, Request, Response } from 'express';
+import { creatorFundBoostService } from '../../src/services/creatorFundBoostService';
+import { requireAuth } from '../middleware/auth';
+import { supabase } from '../../src/integrations/supabase/client';
 
-const router = express.Router();
+const router = Router();
 
-// Creator Fund Boost Configuration
-const BOOST_CONFIG = {
-  tier2NewCreator: {
-    multiplier: 1.5,
-    durationDays: 30,
-    description: 'New Tier 2 Creator Boost - 1.5x earnings for 30 days',
-    maxBoosts: 1
-  },
-  seasonalPromotions: [
-    {
-      id: 'summer_2024',
-      name: 'Summer Creator Surge',
-      description: 'Boost your earnings this summer with 1.25x multiplier',
-      multiplier: 1.25,
-      badgeTrialDays: 14,
-      startDate: '2024-06-01',
-      endDate: '2024-08-31',
-      eligibility: ['tier_2'],
-      maxParticipants: 5000
-    },
-    {
-      id: 'holiday_2024',
-      name: 'Holiday Creator Celebration',
-      description: '1.5x earnings boost + free premium features during holidays',
-      multiplier: 1.5,
-      badgeTrialDays: 30,
-      startDate: '2024-11-01',
-      endDate: '2024-12-31',
-      eligibility: ['tier_2'],
-      maxParticipants: 10000
-    },
-    {
-      id: 'new_year_2025',
-      name: 'New Year New Heights',
-      description: 'Start 2025 strong with 1.3x earnings multiplier',
-      multiplier: 1.3,
-      badgeTrialDays: 7,
-      startDate: '2025-01-01',
-      endDate: '2025-01-31',
-      eligibility: ['tier_2'],
-      maxParticipants: 8000
-    }
-  ]
+// Helper middleware
+const verifyAuth = requireAuth;
+
+const verifyAdmin = (req: any, res: Response, next: Function) => {
+  const userRole = req.user?.role;
+  if (userRole !== 'admin' && userRole !== 'super_admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
 };
 
 /**
- * GET /api/creator-fund/stats
- * Get creator fund statistics including active boosts
+ * GET /api/creator-boost/my-boost
+ * Get active boost for current user
  */
-router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
+router.get('/my-boost', verifyAuth, async (req: any, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user.id;
+    const boost = await creatorFundBoostService.getActiveBoost(userId);
+    res.json({ success: true, data: boost });
+  } catch (error) {
+    console.error('Error fetching active boost:', error);
+    res.status(500).json({ error: 'Failed to fetch active boost' });
+  }
+});
 
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
+/**
+ * GET /api/creator-boost/my-boosts
+ * Get all boosts for current user (active and expired)
+ */
+router.get('/my-boosts', verifyAuth, async (req: any, res: Response) => {
+  try {
+    const userId = req.user.id;
+    const boosts = await creatorFundBoostService.getCreatorBoosts(userId);
+    res.json({ success: true, data: boosts });
+  } catch (error) {
+    console.error('Error fetching creator boosts:', error);
+    res.status(500).json({ error: 'Failed to fetch creator boosts' });
+  }
+});
+
+/**
+ * POST /api/creator-boost/calculate-earnings
+ * Calculate earnings with boost applied
+ */
+router.post('/calculate-earnings', verifyAuth, async (req: any, res: Response) => {
+  try {
+    const userId = req.user.id;
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Valid amount required' });
     }
 
-    // Get user profile
-    const userProfile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.user_id, userId))
-      .limit(1);
+    const earnings = await creatorFundBoostService.calculateEarningsWithBoost(userId, amount);
+    res.json({ success: true, data: earnings });
+  } catch (error) {
+    console.error('Error calculating earnings:', error);
+    res.status(500).json({ error: 'Failed to calculate earnings' });
+  }
+});
 
-    if (!userProfile.length) {
-      return res.status(404).json({ error: 'User profile not found' });
+/**
+ * POST /api/creator-boost/admin/apply-tier-upgrade/:userId
+ * Apply tier upgrade boost to a user (admin)
+ */
+router.post('/admin/apply-tier-upgrade/:userId', verifyAuth, verifyAdmin, async (req: any, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const boost = await creatorFundBoostService.applyTierUpgradeBoost(userId);
+
+    if (!boost) {
+      return res.status(400).json({ error: 'Failed to apply tier upgrade boost' });
     }
 
-    const profile = userProfile[0];
-    const isTier2 = profile.tier_level === 'tier_2';
+    res.json({ success: true, data: boost });
+  } catch (error) {
+    console.error('Error applying tier upgrade boost:', error);
+    res.status(500).json({ error: 'Failed to apply tier upgrade boost' });
+  }
+});
 
-    // Mock active boosts - in production would query from creator_boosts table
-    const activeBoosters = [];
-    if (isTier2 && profile.tier_upgraded_at) {
-      const upgradeDate = new Date(profile.tier_upgraded_at);
-      const boostEndDate = new Date(upgradeDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+/**
+ * GET /api/creator-boost/admin/configurations
+ * Get all boost configurations (admin)
+ */
+router.get('/admin/configurations', verifyAuth, verifyAdmin, async (req: any, res: Response) => {
+  try {
+    const configs = await creatorFundBoostService.getAllBoostConfigs();
+    res.json({ success: true, data: configs });
+  } catch (error) {
+    console.error('Error fetching boost configurations:', error);
+    res.status(500).json({ error: 'Failed to fetch boost configurations' });
+  }
+});
 
-      if (new Date() < boostEndDate) {
-        activeBoosters.push({
-          id: `boost_${userId}`,
-          userId,
-          boostType: 'new_tier_2',
-          multiplier: 1.5,
-          baseBenefit: '50% earnings increase',
-          description: 'New Tier 2 Creator Boost - 1.5x earnings for 30 days',
-          startDate: upgradeDate.toISOString(),
-          endDate: boostEndDate.toISOString(),
-          isActive: true,
-          totalBoosted: 500,
-          appliedEarnings: 250
-        });
-      }
+/**
+ * POST /api/creator-boost/admin/configurations
+ * Create new boost configuration (admin)
+ */
+router.post('/admin/configurations', verifyAuth, verifyAdmin, async (req: any, res: Response) => {
+  try {
+    const { boostType, multiplier, durationDays, description, conditions, enabled } = req.body;
+
+    if (!boostType || !multiplier || !durationDays) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Get current season
-    const now = new Date();
-    const activeSeason = BOOST_CONFIG.seasonalPromotions.find(
-      promo => new Date(promo.startDate) <= now && now <= new Date(promo.endDate)
+    const config = await creatorFundBoostService.createSeasonalBoost(
+      boostType,
+      multiplier,
+      durationDays,
+      description || '',
+      conditions
     );
 
-    // Mock stats
-    const totalEarnings = 10000;
-    const boostedEarnings = activeBoosters.length > 0 ? totalEarnings * 0.33 : 0;
+    if (!config) {
+      return res.status(400).json({ error: 'Failed to create boost configuration' });
+    }
+
+    res.json({ success: true, data: config });
+  } catch (error) {
+    console.error('Error creating boost configuration:', error);
+    res.status(500).json({ error: 'Failed to create boost configuration' });
+  }
+});
+
+/**
+ * PATCH /api/creator-boost/admin/configurations/:configId
+ * Update boost configuration (admin)
+ */
+router.patch('/admin/configurations/:configId', verifyAuth, verifyAdmin, async (req: any, res: Response) => {
+  try {
+    const { configId } = req.params;
+    const { multiplier, durationDays, description, enabled, conditions } = req.body;
+
+    const config = await creatorFundBoostService.updateBoostConfig(configId, {
+      multiplier,
+      durationDays,
+      description,
+      enabled,
+      conditions
+    });
+
+    if (!config) {
+      return res.status(404).json({ error: 'Boost configuration not found' });
+    }
+
+    res.json({ success: true, data: config });
+  } catch (error) {
+    console.error('Error updating boost configuration:', error);
+    res.status(500).json({ error: 'Failed to update boost configuration' });
+  }
+});
+
+/**
+ * POST /api/creator-boost/admin/seasonal/apply/:configId
+ * Apply seasonal boost to all eligible creators (admin)
+ */
+router.post('/admin/seasonal/apply/:configId', verifyAuth, verifyAdmin, async (req: any, res: Response) => {
+  try {
+    const { configId } = req.params;
+
+    const appliedCount = await creatorFundBoostService.applySeasonalBoostToAll(configId);
 
     res.json({
       success: true,
       data: {
-        totalEarnings,
-        boostedEarnings,
-        standardEarnings: totalEarnings - boostedEarnings,
-        activeBoosters,
-        activeSeason: activeSeason ? {
-          ...activeSeason,
-          currentParticipants: Math.floor((activeSeason.maxParticipants || 1000) * 0.6)
-        } : null,
-        tier2UpgradeDate: isTier2 ? profile.tier_upgraded_at : null,
-        daysInBoostPeriod: isTier2 && profile.tier_upgraded_at
-          ? Math.max(0, 30 - Math.floor(
-              (Date.now() - new Date(profile.tier_upgraded_at).getTime()) / (1000 * 60 * 60 * 24)
-            ))
-          : null
+        appliedCount,
+        message: `Boost applied to ${appliedCount} creators`
       }
     });
   } catch (error) {
-    logger.error('Error fetching creator fund stats:', error);
-    res.status(500).json({ error: 'Failed to fetch creator fund stats' });
+    console.error('Error applying seasonal boost:', error);
+    res.status(500).json({ error: 'Failed to apply seasonal boost' });
   }
 });
 
 /**
- * GET /api/creator-fund/boosts/active
- * Get active boosts for creator
+ * GET /api/creator-boost/admin/stats
+ * Get boost statistics (admin)
  */
-router.get('/boosts/active', authenticateToken, async (req: Request, res: Response) => {
+router.get('/admin/stats', verifyAuth, verifyAdmin, async (req: any, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    // Get user profile
-    const userProfile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.user_id, userId))
-      .limit(1);
-
-    if (!userProfile.length) {
-      return res.status(404).json({ error: 'User profile not found' });
-    }
-
-    const profile = userProfile[0];
-    const activeBoosters = [];
-
-    // Check if eligible for Tier 2 boost
-    if (profile.tier_level === 'tier_2' && profile.tier_upgraded_at) {
-      const upgradeDate = new Date(profile.tier_upgraded_at);
-      const boostEndDate = new Date(upgradeDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-      if (new Date() < boostEndDate) {
-        activeBoosters.push({
-          id: `boost_${userId}`,
-          userId,
-          boostType: 'new_tier_2',
-          multiplier: 1.5,
-          baseBenefit: '50% earnings increase',
-          description: 'New Tier 2 Creator Boost - 1.5x earnings for 30 days',
-          startDate: upgradeDate.toISOString(),
-          endDate: boostEndDate.toISOString(),
-          isActive: true,
-          totalBoosted: 0,
-          appliedEarnings: 0
-        });
-      }
-    }
-
-    res.json({
-      success: true,
-      data: activeBoosters
-    });
+    const stats = await creatorFundBoostService.getBoostStats();
+    res.json({ success: true, data: stats });
   } catch (error) {
-    logger.error('Error fetching active boosts:', error);
-    res.status(500).json({ error: 'Failed to fetch active boosts' });
+    console.error('Error fetching boost stats:', error);
+    res.status(500).json({ error: 'Failed to fetch boost stats' });
   }
 });
 
 /**
- * GET /api/creator-fund/boosts/history
- * Get boost history for creator
+ * POST /api/creator-boost/admin/deactivate/:boostId
+ * Deactivate a boost (admin)
  */
-router.get('/boosts/history', authenticateToken, async (req: Request, res: Response) => {
+router.post('/admin/deactivate/:boostId', verifyAuth, verifyAdmin, async (req: any, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
-    const { limit = 10 } = req.query;
+    const { boostId } = req.params;
 
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
+    const success = await creatorFundBoostService.deactivateBoost(boostId);
+
+    if (!success) {
+      return res.status(400).json({ error: 'Failed to deactivate boost' });
     }
 
-    // Mock history - in production would query from creator_boosts table
-    const mockHistory = [
-      {
-        id: 'hist_1',
-        userId,
-        boostType: 'new_tier_2' as const,
-        multiplier: 1.5,
-        baseBenefit: '50% earnings increase',
-        description: 'New Tier 2 Creator Boost',
-        startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        endDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
-        isActive: true,
-        totalBoosted: 500,
-        appliedEarnings: 250
-      },
-      {
-        id: 'hist_2',
-        userId,
-        boostType: 'seasonal' as const,
-        multiplier: 1.25,
-        baseBenefit: 'Seasonal multiplier',
-        description: 'Spring Promotion 2024',
-        startDate: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-        endDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        isActive: false,
-        totalBoosted: 300,
-        appliedEarnings: 75
-      }
-    ];
-
-    res.json({
-      success: true,
-      data: mockHistory.slice(0, Number(limit))
-    });
+    res.json({ success: true, message: 'Boost deactivated successfully' });
   } catch (error) {
-    logger.error('Error fetching boost history:', error);
-    res.status(500).json({ error: 'Failed to fetch boost history' });
+    console.error('Error deactivating boost:', error);
+    res.status(500).json({ error: 'Failed to deactivate boost' });
   }
 });
 
 /**
- * POST /api/creator-fund/boosts/apply-tier2
- * Apply Tier 2 new creator boost
+ * POST /api/creator-boost/record-earnings/:boostId
+ * Record earnings for a boost (internal use)
  */
-router.post('/boosts/apply-tier2', authenticateToken, async (req: Request, res: Response) => {
+router.post('/record-earnings/:boostId', verifyAuth, async (req: any, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const { boostId } = req.params;
+    const { earnings } = req.body;
 
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
+    if (!earnings || earnings <= 0) {
+      return res.status(400).json({ error: 'Valid earnings amount required' });
     }
 
-    // Get user profile
-    const userProfile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.user_id, userId))
-      .limit(1);
+    const success = await creatorFundBoostService.recordBoostEarnings(boostId, earnings);
 
-    if (!userProfile.length) {
-      return res.status(404).json({ error: 'User profile not found' });
+    if (!success) {
+      return res.status(400).json({ error: 'Failed to record boost earnings' });
     }
 
-    const profile = userProfile[0];
-
-    // Check tier
-    if (profile.tier_level !== 'tier_2') {
-      return res.status(400).json({ error: 'Only Tier 2 creators can claim this boost' });
-    }
-
-    // Check if already has active boost
-    if (profile.tier_upgraded_at) {
-      const upgradeDate = new Date(profile.tier_upgraded_at);
-      const boostEndDate = new Date(upgradeDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-      if (new Date() < boostEndDate) {
-        return res.status(400).json({
-          error: 'You already have an active Tier 2 boost',
-          expiresAt: boostEndDate.toISOString()
-        });
-      }
-    }
-
-    // In production: Create entry in creator_boosts table
-    logger.info(`Tier 2 boost applied for user ${userId}`);
-
-    res.json({
-      success: true,
-      message: 'Tier 2 creator boost activated',
-      data: {
-        multiplier: BOOST_CONFIG.tier2NewCreator.multiplier,
-        duration: BOOST_CONFIG.tier2NewCreator.durationDays,
-        activatedAt: new Date().toISOString()
-      }
-    });
+    res.json({ success: true, message: 'Boost earnings recorded' });
   } catch (error) {
-    logger.error('Error applying Tier 2 boost:', error);
-    res.status(500).json({ error: 'Failed to apply Tier 2 boost' });
-  }
-});
-
-/**
- * GET /api/creator-fund/seasonal-promotions
- * Get all seasonal promotions
- */
-router.get('/seasonal-promotions', async (req: Request, res: Response) => {
-  try {
-    const now = new Date();
-    const promotions = BOOST_CONFIG.seasonalPromotions.map(promo => {
-      const startDate = new Date(promo.startDate);
-      const endDate = new Date(promo.endDate);
-      const isActive = startDate <= now && now <= endDate;
-
-      return {
-        ...promo,
-        isActive,
-        currentParticipants: Math.floor((promo.maxParticipants || 1000) * 0.6)
-      };
-    });
-
-    res.json({
-      success: true,
-      data: promotions
-    });
-  } catch (error) {
-    logger.error('Error fetching seasonal promotions:', error);
-    res.status(500).json({ error: 'Failed to fetch seasonal promotions' });
-  }
-});
-
-/**
- * POST /api/creator-fund/seasonal-promotions/:promotionId/claim
- * Claim seasonal promotion boost
- */
-router.post(
-  '/seasonal-promotions/:promotionId/claim',
-  authenticateToken,
-  async (req: Request, res: Response) => {
-    try {
-      const userId = (req as any).user?.id;
-      const { promotionId } = req.params;
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      // Get user profile
-      const userProfile = await db
-        .select()
-        .from(profiles)
-        .where(eq(profiles.user_id, userId))
-        .limit(1);
-
-      if (!userProfile.length) {
-        return res.status(404).json({ error: 'User profile not found' });
-      }
-
-      // Find promotion
-      const promotion = BOOST_CONFIG.seasonalPromotions.find(p => p.id === promotionId);
-
-      if (!promotion) {
-        return res.status(404).json({ error: 'Promotion not found' });
-      }
-
-      // Check eligibility
-      const userTier = userProfile[0].tier_level;
-      if (!promotion.eligibility.includes(userTier)) {
-        return res.status(403).json({
-          error: `This promotion requires ${promotion.eligibility.join(' or ')} tier`
-        });
-      }
-
-      // Check if active
-      const now = new Date();
-      if (!(new Date(promotion.startDate) <= now && now <= new Date(promotion.endDate))) {
-        return res.status(400).json({ error: 'This promotion is not currently active' });
-      }
-
-      logger.info(`Seasonal promotion claimed: ${promotionId} by user ${userId}`);
-
-      res.json({
-        success: true,
-        message: 'Seasonal promotion claimed successfully',
-        data: {
-          promotionId,
-          multiplier: promotion.multiplier,
-          badgeTrialDays: promotion.badgeTrialDays || 0,
-          activatedAt: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      logger.error('Error claiming seasonal promotion:', error);
-      res.status(500).json({ error: 'Failed to claim seasonal promotion' });
-    }
-  }
-);
-
-/**
- * GET /api/creator-fund/boost-opportunities
- * Get available boost opportunities for creator
- */
-router.get('/boost-opportunities', authenticateToken, async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    // Get user profile
-    const userProfile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.user_id, userId))
-      .limit(1);
-
-    if (!userProfile.length) {
-      return res.status(404).json({ error: 'User profile not found' });
-    }
-
-    const profile = userProfile[0];
-    const opportunities = [];
-
-    // Tier 2 new creator boost
-    if (profile.tier_level === 'tier_2' && profile.tier_upgraded_at) {
-      const upgradeDate = new Date(profile.tier_upgraded_at);
-      const boostEndDate = new Date(upgradeDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-      if (new Date() < boostEndDate) {
-        opportunities.push({
-          type: 'tier_upgrade',
-          title: 'New Tier 2 Creator Boost',
-          description: 'Earn 1.5x of your regular earnings for the next 30 days',
-          multiplier: 1.5,
-          duration: 30,
-          requirements: ['Tier 2 account'],
-          reward: '50% earnings increase',
-          claimUrl: '/creator-studio?tab=boosts'
-        });
-      }
-    }
-
-    // Seasonal opportunities
-    const now = new Date();
-    const activeSeasons = BOOST_CONFIG.seasonalPromotions.filter(
-      promo =>
-        new Date(promo.startDate) <= now &&
-        now <= new Date(promo.endDate) &&
-        promo.eligibility.includes(profile.tier_level)
-    );
-
-    for (const season of activeSeasons) {
-      opportunities.push({
-        type: 'seasonal',
-        title: season.name,
-        description: season.description,
-        multiplier: season.multiplier,
-        duration: Math.ceil(
-          (new Date(season.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-        ),
-        requirements: [`${season.eligibility.join(' or ')} tier`],
-        reward: `${(season.multiplier * 100).toFixed(0)}% earnings increase${
-          season.badgeTrialDays ? ` + ${season.badgeTrialDays} day badge trial` : ''
-        }`
-      });
-    }
-
-    res.json({
-      success: true,
-      data: opportunities
-    });
-  } catch (error) {
-    logger.error('Error fetching boost opportunities:', error);
-    res.status(500).json({ error: 'Failed to fetch boost opportunities' });
-  }
-});
-
-/**
- * GET /api/creator-fund/check-tier2-eligibility
- * Check Tier 2 eligibility for boost
- */
-router.get('/check-tier2-eligibility', authenticateToken, async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    // Get user profile
-    const userProfile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.user_id, userId))
-      .limit(1);
-
-    if (!userProfile.length) {
-      return res.status(404).json({ error: 'User profile not found' });
-    }
-
-    const profile = userProfile[0];
-
-    if (profile.tier_level !== 'tier_2') {
-      return res.json({
-        success: true,
-        data: {
-          eligible: false,
-          reason: 'Must be Tier 2 creator to qualify for this boost'
-        }
-      });
-    }
-
-    if (!profile.tier_upgraded_at) {
-      return res.json({
-        success: true,
-        data: {
-          eligible: false,
-          reason: 'Tier 2 upgrade date not found'
-        }
-      });
-    }
-
-    const upgradeDate = new Date(profile.tier_upgraded_at);
-    const boostEndDate = new Date(upgradeDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const daysRemaining = Math.max(
-      0,
-      Math.ceil((boostEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    );
-
-    if (daysRemaining <= 0) {
-      return res.json({
-        success: true,
-        data: {
-          eligible: false,
-          reason: 'Your 30-day boost period has ended'
-        }
-      });
-    }
-
-    res.json({
-      success: true,
-      data: {
-        eligible: true,
-        daysRemaining,
-        reason: `You have ${daysRemaining} days remaining in your boost period`
-      }
-    });
-  } catch (error) {
-    logger.error('Error checking Tier 2 eligibility:', error);
-    res.status(500).json({ error: 'Failed to check eligibility' });
+    console.error('Error recording boost earnings:', error);
+    res.status(500).json({ error: 'Failed to record boost earnings' });
   }
 });
 
