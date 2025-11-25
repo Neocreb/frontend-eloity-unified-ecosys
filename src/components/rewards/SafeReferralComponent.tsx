@@ -16,6 +16,9 @@ import {
   Heart,
   Info,
   Gift,
+  Zap,
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/utils/formatters";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +28,7 @@ const SafeReferralComponent: React.FC = () => {
   const { toast } = useToast();
   const [sharingStats, setSharingStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const referralLink = "https://eloity.app/join?ref=DEMO123";
 
@@ -43,13 +47,23 @@ const SafeReferralComponent: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
-  const copyReferralLink = () => {
-    navigator.clipboard.writeText(referralLink);
-    toast({
-      title: "Copied!",
-      description: "Referral link copied to clipboard",
-    });
+
+  const copyReferralLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopiedLink(true);
+      toast({
+        title: "✓ Copied!",
+        description: "Referral link copied to clipboard",
+      });
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
   const shareReferralLink = (platform: string) => {
