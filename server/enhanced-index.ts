@@ -39,7 +39,7 @@ import {
   user_preferences 
 } from '../shared/schema.js';
 
-import { 
+import {
   profiles,
   marketplace_profiles,
   freelance_profiles,
@@ -57,7 +57,9 @@ import {
   reward_sharing_transactions,
   pioneer_badges,
   user_activity_sessions,
-  freelance_jobs
+  freelance_jobs,
+  feature_gates,
+  tier_access_history
 } from '../shared/enhanced-schema.js';
 
 import { 
@@ -86,6 +88,9 @@ import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
+import tierAccessRouter from './routes/tierAccess.js';
+import subscriptionsRouter from './routes/subscriptions.js';
+import referralBonusRouter from './routes/referralBonus.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
@@ -519,6 +524,9 @@ app.use('/api/ledger', ledgerRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 app.use('/api/reloadly', reloadlyRouter);
 app.use('/api/cryptoapis', cryptoapisRouter);
+app.use('/api/tier', tierAccessRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
+app.use('/api/referral', referralBonusRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 

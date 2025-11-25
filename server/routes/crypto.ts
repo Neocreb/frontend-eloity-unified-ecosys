@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import { 
+import { requireTier2, triggerKYCIfNeeded } from '../middleware/tierAccessControl.js';
+import {
   createP2POrder,
   matchP2POrders,
   createEscrowTransaction,
@@ -194,7 +195,8 @@ router.post('/wallet/deposit', authenticateToken, async (req, res) => {
 });
 
 // Process cryptocurrency withdrawal
-router.post('/wallet/withdraw', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/wallet/withdraw', requireTier2(), async (req, res) => {
   try {
     const { currency, amount, address, memo } = req.body;
     const userId = req.userId;
@@ -247,7 +249,8 @@ router.post('/wallet/withdraw', authenticateToken, async (req, res) => {
 // =============================================================================
 
 // Create P2P trading order
-router.post('/p2p/orders', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/p2p/orders', requireTier2(), async (req, res) => {
   try {
     const { 
       type, 
@@ -392,7 +395,8 @@ router.get('/p2p/orders/my', authenticateToken, async (req, res) => {
 });
 
 // Initiate P2P trade (respond to order)
-router.post('/p2p/orders/:orderId/trade', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/p2p/orders/:orderId/trade', requireTier2(), async (req, res) => {
   try {
     const { orderId } = req.params;
     const { amount, message } = req.body;
@@ -497,7 +501,8 @@ router.get('/escrow/:escrowId', authenticateToken, async (req, res) => {
 });
 
 // Confirm payment (buyer action)
-router.post('/escrow/:escrowId/confirm-payment', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/escrow/:escrowId/confirm-payment', requireTier2(), async (req, res) => {
   try {
     const { escrowId } = req.params;
     const { paymentProof, transactionId } = req.body;
@@ -543,7 +548,8 @@ router.post('/escrow/:escrowId/confirm-payment', authenticateToken, async (req, 
 });
 
 // Release funds (seller action)
-router.post('/escrow/:escrowId/release', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/escrow/:escrowId/release', requireTier2(), async (req, res) => {
   try {
     const { escrowId } = req.params;
     const userId = req.userId;
@@ -584,7 +590,8 @@ router.post('/escrow/:escrowId/release', authenticateToken, async (req, res) => 
 });
 
 // Initiate dispute
-router.post('/escrow/:escrowId/dispute', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.post('/escrow/:escrowId/dispute', requireTier2(), async (req, res) => {
   try {
     const { escrowId } = req.params;
     const { reason, description, evidence } = req.body;

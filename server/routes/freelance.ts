@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
+import { requireTier2, triggerKYCIfNeeded } from '../middleware/tierAccessControl.js';
 import { logger } from '../utils/logger.js';
 import { db } from '../../server/enhanced-index.js';
 import { freelance_projects as freelance_jobs, freelance_profiles as profiles } from '../../shared/freelance-schema.js';
@@ -218,7 +219,8 @@ router.get('/jobs/:id', async (req, res) => {
 });
 
 // Create new job
-router.post('/jobs', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification for job posting
+router.post('/jobs', requireTier2(), triggerKYCIfNeeded('freelance_offer'), async (req, res) => {
   try {
     const {
       title,
@@ -276,7 +278,8 @@ router.post('/jobs', authenticateToken, async (req, res) => {
 });
 
 // Update job
-router.put('/jobs/:id', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.put('/jobs/:id', requireTier2(), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
@@ -339,7 +342,8 @@ router.put('/jobs/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete job
-router.delete('/jobs/:id', authenticateToken, async (req, res) => {
+// Requires Tier 2 verification
+router.delete('/jobs/:id', requireTier2(), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;

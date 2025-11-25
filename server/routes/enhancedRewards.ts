@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { supabase } from '../../src/integrations/supabase/client';
 import { enhancedEloitsService } from '../../src/services/enhancedEloitsService';
+import { isTier2Verified } from '../middleware/tierAccessControl.js';
 
 const router = Router();
 
@@ -179,15 +180,26 @@ router.post('/update-trust-score', verifyAuth, async (req, res) => {
 });
 
 // Request redemption
+// Requires Tier 2 verification to withdraw earnings
 router.post('/request-redemption', verifyAuth, async (req, res) => {
   try {
     const { userId, amount, payoutMethod, payoutDetails } = req.body;
-    
+
     // Verify user is accessing their own data
     if (req.user.id !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
-    
+
+    // Check Tier 2 verification
+    const isTier2 = await isTier2Verified(userId);
+    if (!isTier2) {
+      return res.status(403).json({
+        error: 'KYC verification required to withdraw earnings',
+        code: 'KYC_REQUIRED',
+        message: 'Complete KYC verification to access withdrawal features'
+      });
+    }
+
     const result = await enhancedEloitsService.requestRedemption(userId, amount, payoutMethod, payoutDetails);
     res.json({ success: true, data: result });
   } catch (error) {
