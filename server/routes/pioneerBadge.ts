@@ -381,7 +381,14 @@ router.get('/slots', async (req, res) => {
         totalSlots: MAX_PIONEER_BADGES,
         awardedSlots: awardedCount,
         remainingSlots: Math.max(0, remainingSlots),
-        nextBadgeNumber: awardedCount + 1
+        nextBadgeNumber: awardedCount + 1,
+        percentageAwarded: Math.round(percentageAwarded),
+        isSoldOut: remainingSlots <= 0,
+        premiumBenefit: {
+          duration: '1 year',
+          expiresAt: new Date(Date.now() + PIONEER_PREMIUM_DURATION_MS).toISOString(),
+          features: ['Ad-free experience', 'Premium badges', 'Priority support', 'Exclusive content']
+        }
       }
     });
 
