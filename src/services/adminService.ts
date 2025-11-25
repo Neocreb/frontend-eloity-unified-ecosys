@@ -140,6 +140,41 @@ export class AdminService {
     }
   }
 
+  // Get admin user directly from Supabase without API call
+  static async getAdminUserDirect(userId: string): Promise<AdminUser | null> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error("Error fetching admin user from Supabase:", error);
+        return null;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        avatar: data.avatar_url,
+        roles: data.roles,
+        permissions: data.permissions,
+        isActive: data.is_active,
+        createdAt: data.created_at,
+      };
+    } catch (error) {
+      console.error("Error fetching admin user directly:", error);
+      return null;
+    }
+  }
+
   static async createAdminUser(
     email: string,
     roles: AdminRole[],
