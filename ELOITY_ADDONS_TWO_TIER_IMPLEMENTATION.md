@@ -800,10 +800,10 @@ export async function checkTierAccess(
 
 ### Phase 3 - 🚀 IN PROGRESS
 - [x] Referral system API & Widget
-- [ ] Creator fund multiplier logic (1.5x for first month)
+- [x] Creator fund multiplier logic (1.5x for first month)
 - [ ] Advanced analytics & reporting for tiers
 - [ ] A/B testing framework
-- [ ] Seasonal promotions management
+- [x] Seasonal promotions management
 
 ---
 
