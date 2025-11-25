@@ -33,6 +33,7 @@ import RewardsActivitiesTab from "@/components/rewards/RewardsActivitiesTab";
 import RewardsChallengesTab from "@/components/rewards/RewardsChallengesTab";
 import RewardsBattleTab from "@/components/rewards/RewardsBattleTab";
 import SafeReferralManager from "@/components/rewards/SafeReferralManager";
+import ReferralBonusWidget from "@/components/referral/ReferralBonusWidget";
 import AchievementSystem from "@/components/rewards/AchievementSystem";
 import GoalTracking from "@/components/rewards/GoalTracking";
 import AdvancedAnalytics from "@/components/rewards/AdvancedAnalytics";
