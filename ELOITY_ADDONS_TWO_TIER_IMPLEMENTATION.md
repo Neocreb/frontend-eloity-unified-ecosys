@@ -154,7 +154,7 @@ CREATE TABLE tier_access_history (
 - ✅ Feature gate fetching (`getFeatureGate`)
 - ✅ Feature access validation (`canAccessFeature`)
 - ✅ Tier upgrade logic (`upgradeTierAfterKYC`)
-- �� Tier change logging (`logTierChange`)
+- ✅ Tier change logging (`logTierChange`)
 - ✅ Express middleware for tier validation (`requireTierAccess`, `requireTier2`, `triggerKYCIfNeeded`)
 - ✅ Access summary generation (`getTierAccessSummary`)
 - ✅ Custom error classes (`TierAccessError`, `KYCRequiredError`)
@@ -187,7 +187,7 @@ CREATE TABLE tier_access_history (
 - ✅ POST `/api/crypto/p2p/orders` → Requires Tier 2
 - ✅ POST `/api/crypto/p2p/orders/:orderId/trade` → Requires Tier 2
 - ✅ POST `/api/crypto/escrow/:escrowId/confirm-payment` → Requires Tier 2
-- ✅ POST `/api/crypto/escrow/:escrowId/release` → Requires Tier 2
+- ✅ POST `/api/crypto/escrow/:escrowId/release` ��� Requires Tier 2
 - ✅ POST `/api/crypto/escrow/:escrowId/dispute` → Requires Tier 2
 - ℹ️ GET `/api/crypto/prices/*` → Available to Tier 1 (view only)
 
@@ -547,8 +547,12 @@ ALTER TABLE redemptions ADD COLUMN fee_calculated_at TIMESTAMP;
 
 #### 3.2 Creator Fund Boost
 **Status**: ⏳ Pending - Ready for implementation
+
+**Planned Features**:
 - Tier 2 creators get 1.5x earnings multiplier for first month
 - Seasonal promotions (free badge trials, discounts)
+- Automatic multiplier application on first KYC upgrade
+- Admin control for multiplier rates and duration
 
 ---
 
