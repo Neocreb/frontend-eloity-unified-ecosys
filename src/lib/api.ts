@@ -353,5 +353,29 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   return data;
 }
 
+// Wrapper for fetch with automatic auth header
+export async function fetchWithAuth(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const url = endpoint.startsWith("/api")
+    ? endpoint
+    : endpoint.startsWith("/")
+      ? `/api${endpoint}`
+      : `/api/${endpoint}`;
+
+  const token = getAuthToken();
+  const config: RequestInit = {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { "Authorization": `Bearer ${token}` }),
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  return fetch(url, config);
+}
+
 // Export token helper for other modules
 export { getAuthToken };
