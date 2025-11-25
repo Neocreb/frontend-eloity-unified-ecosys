@@ -135,6 +135,14 @@ const CreatorEconomy = () => {
         <TabsContent value="partnerships" className="mt-0">
           <PartnershipSystem />
         </TabsContent>
+
+        <TabsContent value="activity" className="mt-0">
+          <ActivityEconomyDashboard />
+        </TabsContent>
+
+        <TabsContent value="referrals" className="mt-0">
+          <SafeReferralComponent />
+        </TabsContent>
       </Tabs>
     </div>
   );
