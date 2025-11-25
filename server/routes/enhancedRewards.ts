@@ -390,4 +390,81 @@ router.patch('/admin/redemptions/:redemptionId', verifyAdmin, async (req, res) =
   }
 });
 
+// Get fee configurations (admin)
+router.get('/admin/fee-configs', verifyAdmin, async (req, res) => {
+  try {
+    const configs = withdrawalFeeService.getAllFeeConfigs();
+    res.json({ success: true, data: configs });
+  } catch (error) {
+    console.error('Error fetching fee configurations:', error);
+    res.status(500).json({ error: 'Failed to fetch fee configurations' });
+  }
+});
+
+// Update fee configuration (admin)
+router.patch('/admin/fee-configs/:category', verifyAdmin, async (req, res) => {
+  try {
+    const { category } = req.params;
+    const { feePercentage, minFee, maxFee } = req.body;
+
+    const success = await withdrawalFeeService.updateFeeConfig(
+      category,
+      feePercentage,
+      minFee,
+      maxFee
+    );
+
+    if (!success) {
+      return res.status(404).json({ error: 'Fee configuration not found' });
+    }
+
+    const config = withdrawalFeeService.getFeeConfig(category);
+    res.json({ success: true, data: config });
+  } catch (error) {
+    console.error('Error updating fee configuration:', error);
+    res.status(500).json({ error: 'Failed to update fee configuration' });
+  }
+});
+
+// Get revenue by category (admin)
+router.get('/admin/revenue-by-category', verifyAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const revenue = await withdrawalFeeService.getRevenueByCategory(
+      startDate?.toString(),
+      endDate?.toString()
+    );
+    res.json({ success: true, data: revenue });
+  } catch (error) {
+    console.error('Error fetching revenue by category:', error);
+    res.status(500).json({ error: 'Failed to fetch revenue by category' });
+  }
+});
+
+// Get total revenue (admin)
+router.get('/admin/revenue-total', verifyAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const total = await withdrawalFeeService.getTotalRevenue(
+      startDate?.toString(),
+      endDate?.toString()
+    );
+    res.json({ success: true, data: { totalRevenue: total } });
+  } catch (error) {
+    console.error('Error fetching total revenue:', error);
+    res.status(500).json({ error: 'Failed to fetch total revenue' });
+  }
+});
+
+// Get revenue statistics (admin)
+router.get('/admin/revenue-stats', verifyAdmin, async (req, res) => {
+  try {
+    const stats = await withdrawalFeeService.getRevenueStats();
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching revenue statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch revenue statistics' });
+  }
+});
+
 export default router;
