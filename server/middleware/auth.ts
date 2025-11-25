@@ -38,3 +38,5 @@ export const authenticateAdmin = async (req: any, res: any, next: any) => {
     return res.status(403).json({ error: 'Admin access denied' });
   }
 };
+
+export const requireAuth = authenticateToken;
