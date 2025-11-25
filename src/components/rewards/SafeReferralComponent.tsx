@@ -250,77 +250,100 @@ const SafeReferralComponent: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Recent Referral Activity
+      {/* Recent Activity - Enhanced */}
+      <Card className="shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+          <CardTitle className="flex items-center gap-3">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <span>Recent Referral Activity</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { name: "Alice Johnson", action: "signed up", reward: "$10", time: "2 hours ago", status: "completed" },
-              { name: "Mike Smith", action: "made first purchase", reward: "$5", time: "1 day ago", status: "completed" },
-              { name: "Sarah Wilson", action: "signed up", reward: "$10", time: "3 days ago", status: "pending" }
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    {activity.name.charAt(0)}
+        <CardContent className="p-6">
+          {!isLoading && (
+            <div className="space-y-3">
+              {[
+                { name: "Alice Johnson", action: "signed up", reward: "$10", time: "2 hours ago", status: "completed" },
+                { name: "Mike Smith", action: "made first purchase", reward: "$5", time: "1 day ago", status: "completed" },
+                { name: "Sarah Wilson", action: "signed up", reward: "$10", time: "3 days ago", status: "pending" }
+              ].map((activity, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white border rounded-xl hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                      {activity.name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">{activity.name}</p>
+                      <p className="text-xs text-gray-500">{activity.action} • {activity.time}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">{activity.name} {activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.time}</p>
+                  <div className="text-right flex items-center gap-3">
+                    <div>
+                      <p className="font-bold text-green-600 text-lg">{activity.reward}</p>
+                      <Badge variant={activity.status === "completed" ? "default" : "secondary"} className="text-xs">
+                        {activity.status === "completed" ? "✓ Completed" : "⏳ Pending"}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-green-600">{activity.reward}</p>
-                  <Badge variant={activity.status === "completed" ? "default" : "secondary"} className="text-xs">
-                    {activity.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+          {isLoading && (
+            <div className="text-center py-8">
+              <div className="w-6 h-6 border-3 border-gray-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-sm text-gray-500">Loading activity...</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* How it Works */}
-      <Card>
-        <CardHeader>
-          <CardTitle>How Referrals Work</CardTitle>
+      {/* How it Works - Improved */}
+      <Card className="shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+          <CardTitle className="text-xl">How Referrals Work</CardTitle>
+          <p className="text-sm text-gray-600 mt-1">Three simple steps to start earning</p>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-full">
-                <Share2 className="w-6 h-6" />
-              </div>
-              <h3 className="font-semibold">1. Share Your Link</h3>
-              <p className="text-sm text-muted-foreground">
-                Share your unique referral link with friends and family
-              </p>
-            </div>
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full">
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="font-semibold">2. Friends Join</h3>
-              <p className="text-sm text-muted-foreground">
-                When someone signs up using your link, they become your referral
-              </p>
-            </div>
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 text-purple-600 rounded-full">
-                <DollarSign className="w-6 h-6" />
-              </div>
-              <h3 className="font-semibold">3. Earn Rewards</h3>
-              <p className="text-sm text-muted-foreground">
-                Both you and your friend earn rewards for activities and purchases
-              </p>
-            </div>
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                step: 1,
+                icon: Share2,
+                title: "Share Your Link",
+                desc: "Share your unique referral link with friends and family via email, social media, or messaging"
+              },
+              {
+                step: 2,
+                icon: Users,
+                title: "Friends Join",
+                desc: "When someone signs up using your link, they become your referral and you both get bonuses"
+              },
+              {
+                step: 3,
+                icon: DollarSign,
+                title: "Earn Rewards",
+                desc: "Both you and your friend earn rewards for activities, purchases, and milestones"
+              }
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.step} className="relative text-center">
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center mb-4 shadow-lg">
+                      <Icon className="w-7 h-7" />
+                    </div>
+                    <Badge className="mb-3 bg-purple-100 text-purple-700">Step {item.step}</Badge>
+                    <h3 className="font-bold text-lg text-gray-900 mb-2">{item.title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                  </div>
+                  {item.step < 3 && (
+                    <div className="hidden md:block absolute top-1/4 -right-6 transform">
+                      <ArrowRight className="w-5 h-5 text-purple-400" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
