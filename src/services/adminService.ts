@@ -37,10 +37,18 @@ export class AdminService {
         return { success: false, error: "Authentication failed" };
       }
 
-      // Check if user has admin permissions
-      const adminUser = await this.getAdminUser(authData.user.id);
+      // Store the auth token immediately after successful authentication
+      if (authData.session?.access_token) {
+        localStorage.setItem('authToken', authData.session.access_token);
+        sessionStorage.setItem('authToken', authData.session.access_token);
+      }
+
+      // Check if user has admin permissions using Supabase directly
+      const adminUser = await this.getAdminUserDirect(authData.user.id);
       if (!adminUser || !adminUser.isActive) {
         await supabase.auth.signOut();
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
         return {
           success: false,
           error: "Access denied. Admin privileges required.",
@@ -61,6 +69,8 @@ export class AdminService {
       return { success: true, user: adminUser, session };
     } catch (error) {
       console.error("Admin login error:", error);
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
       return { success: false, error: "Login failed" };
     }
   }
