@@ -155,152 +155,96 @@ const SafeReferralComponent: React.FC = () => {
             <div className="flex-1">
               <strong className="text-blue-900">🎁 Community Sharing Active</strong>
               <p className="text-sm text-blue-800 mt-1">0.5% of your creator economy earnings are automatically shared with your referrals — keep them motivated!</p>
-            </div>
-            <div className="text-right text-xs">
-              <div className="text-blue-600">This Month</div>
-              <div className="font-semibold">{isLoading ? "..." : formatCurrency(sharingStats?.thisMonthShared || 0)} shared</div>
-              <div className="font-semibold">{isLoading ? "..." : formatCurrency(sharingStats?.thisMonthReceived || 0)} received</div>
+              <div className="flex items-center gap-2 text-sm bg-blue-100 px-3 py-1 rounded-full">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                <span className="font-semibold text-blue-900">{isLoading ? "..." : formatCurrency(sharingStats?.thisMonthShared || 0)} shared this month</span>
+              </div>
             </div>
           </div>
         </AlertDescription>
       </Alert>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-700">Total Referrals</p>
-                <p className="text-2xl font-bold text-blue-900">23</p>
-                <p className="text-xs text-blue-600">18 active</p>
-              </div>
-              <div className="p-3 bg-blue-200 rounded-full">
-                <Users className="w-6 h-6 text-blue-700" />
-              </div>
+      {/* Primary CTA - Share Your Link Section */}
+      <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-50 to-pink-50 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white pb-6">
+          <div className="flex items-center gap-3">
+            <Share2 className="w-6 h-6" />
+            <div>
+              <CardTitle className="text-white text-2xl">Start Sharing Your Link</CardTitle>
+              <p className="text-white/90 text-sm mt-1">One click to share with friends and start earning</p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-700">Total Earnings</p>
-                <p className="text-2xl font-bold text-green-900">
-                  {formatCurrency(340.50)}
-                </p>
-                <p className="text-xs text-green-600">
-                  {formatCurrency(45.2)} this month
-                </p>
-              </div>
-              <div className="p-3 bg-green-200 rounded-full">
-                <DollarSign className="w-6 h-6 text-green-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-pink-50 to-pink-100 border-pink-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-pink-700">Reward Sharing</p>
-                <p className="text-2xl font-bold text-pink-900">
-                  {isLoading ? "..." : formatCurrency(sharingStats?.totalShared || 0)}
-                </p>
-                <p className="text-xs text-pink-600">
-                  0.5% auto-shared with referrals
-                </p>
-              </div>
-              <div className="p-3 bg-pink-200 rounded-full">
-                <Heart className="w-6 h-6 text-pink-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-700">Conversion Rate</p>
-                <p className="text-2xl font-bold text-purple-900">26.7%</p>
-              </div>
-              <div className="p-3 bg-purple-200 rounded-full">
-                <TrendingUp className="w-6 h-6 text-purple-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-yellow-700">Tier Status</p>
-                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">
-                  <Star className="w-4 h-4 mr-1" />
-                  Silver
-                </Badge>
-              </div>
-              <div className="p-3 bg-yellow-200 rounded-full">
-                <Star className="w-6 h-6 text-yellow-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Share */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Share2 className="w-5 h-5" />
-            Your Referral Link
-          </CardTitle>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Share this link</span>
-                <Button size="sm" variant="outline" onClick={copyReferralLink}>
-                  <Copy className="w-4 h-4 mr-1" />
-                  Copy
+        <CardContent className="p-8">
+          <div className="space-y-5">
+            {/* Link Copy Section */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Your Unique Referral Link</label>
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    value={referralLink}
+                    readOnly
+                    className="pr-12 bg-white text-sm font-mono"
+                  />
+                </div>
+                <Button
+                  onClick={copyReferralLink}
+                  className={`transition-all ${
+                    copiedLink
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-purple-600 hover:bg-purple-700'
+                  }`}
+                  size="lg"
+                >
+                  {copiedLink ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy
+                    </>
+                  )}
                 </Button>
               </div>
-              <Input value={referralLink} readOnly className="text-xs" />
+              <p className="text-xs text-gray-500">Share this link with friends to earn rewards</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => shareReferralLink("twitter")}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Twitter
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => shareReferralLink("facebook")}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Facebook
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => shareReferralLink("whatsapp")}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                WhatsApp
-              </Button>
+            {/* Social Share Buttons */}
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-3">Share on Social Media</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => shareReferralLink("twitter")}
+                  className="hover:bg-blue-50 hover:border-blue-300 transition-colors h-12"
+                  size="lg"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Share on Twitter
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => shareReferralLink("facebook")}
+                  className="hover:bg-blue-50 hover:border-blue-400 transition-colors h-12"
+                  size="lg"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Share on Facebook
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => shareReferralLink("whatsapp")}
+                  className="hover:bg-green-50 hover:border-green-300 transition-colors h-12"
+                  size="lg"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Share on WhatsApp
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
