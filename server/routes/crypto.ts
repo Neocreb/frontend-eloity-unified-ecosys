@@ -861,6 +861,38 @@ function getAllowedEscrowActions(escrow: any, userId: string) {
 // ADDITIONAL ENDPOINTS FOR FRONTEND COMPATIBILITY
 // =============================================================================
 
+// Get user portfolio
+router.get('/portfolio', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Return mock portfolio data
+    res.json({
+      totalValue: 0,
+      totalChange24h: 0,
+      totalChangePercent24h: 0,
+      assets: [],
+      allocation: []
+    });
+  } catch (error) {
+    logger.error('Portfolio fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch portfolio' });
+  }
+});
+
+// Get watchlist
+router.get('/watchlist', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Return mock watchlist data
+    res.json([]);
+  } catch (error) {
+    logger.error('Watchlist fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch watchlist' });
+  }
+});
+
 // Get news/blog posts
 router.get('/news', async (req, res) => {
   try {
