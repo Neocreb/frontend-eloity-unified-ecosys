@@ -197,77 +197,89 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
               <div className="text-gray-500 text-sm">No stories yet</div>
             </div>
           )}
-          {stories.map((story, index) => (
-            <div
-              key={`story-${story.id}-${index}`}
-              className="flex-shrink-0 cursor-pointer group"
-              onClick={() => handleStoryClick(story, index)}
-              data-test-id={`story-item-${story.id}`}
-            >
-              <div className="flex flex-col items-center w-24 sm:w-28">
-                {/* Large square story card */}
-                <div className="relative w-24 h-32 sm:w-28 sm:h-36">
-                  {/* Story background */}
-                  <div
-                    className={cn(
-                      "w-full h-full rounded-xl overflow-hidden transition-all duration-200 group-hover:scale-105",
-                      story.user.isUser
-                        ? "bg-gradient-to-b from-blue-400 to-blue-600"
-                        : "bg-gray-200"
-                    )}
-                  >
-                    {story.thumbnail ? (
-                      <img
-                        src={story.thumbnail}
-                        alt={`${story.user.name}'s story`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                        <span className="text-white text-xs font-medium">
-                          {story.user.name.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-                    {story.hasNew && (
-                      <div className="absolute inset-0 border-2 border-blue-500 rounded-xl pointer-events-none"></div>
-                    )}
-                  </div>
+          {stories.map((story, index) => {
+            const isCreateButton = story.id === "create";
+            console.debug(`[EnhancedStoriesSection] Rendering story ${index}:`, {
+              id: story.id,
+              name: story.user.name,
+              isCreate: isCreateButton,
+              hasThumbnail: !!story.thumbnail
+            });
 
-                  {/* User avatar with ring */}
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-10 h-10 sm:w-12 sm:h-12">
+            return (
+              <div
+                key={`story-${story.id}-${index}`}
+                className="flex-shrink-0 cursor-pointer group"
+                onClick={() => handleStoryClick(story, index)}
+                data-test-id={`story-item-${story.id}`}
+              >
+                <div className="flex flex-col items-center w-24 sm:w-28">
+                  {/* Large square story card */}
+                  <div className="relative w-24 h-32 sm:w-28 sm:h-36">
+                    {/* Story background */}
                     <div
                       className={cn(
-                        "w-full h-full rounded-full p-0.5",
-                        story.hasNew
-                          ? "bg-gradient-to-r from-purple-500 to-pink-500"
-                          : "bg-gray-300"
+                        "w-full h-full rounded-xl overflow-hidden transition-all duration-200 group-hover:scale-105",
+                        story.user.isUser
+                          ? "bg-gradient-to-b from-blue-400 to-blue-600"
+                          : "bg-gray-200"
                       )}
                     >
-                      <div className="w-full h-full bg-white rounded-full p-0.5">
-                        <Avatar className="w-full h-full">
-                          <AvatarImage src={story.user.avatar} />
-                          <AvatarFallback className="text-xs">
+                      {story.thumbnail ? (
+                        <img
+                          src={story.thumbnail}
+                          alt={`${story.user.name}'s story`}
+                          className="w-full h-full object-cover"
+                          onLoad={() => console.debug(`[EnhancedStoriesSection] Thumbnail loaded for story ${story.id}`)}
+                          onError={(e) => console.error(`[EnhancedStoriesSection] Thumbnail failed for story ${story.id}:`, e)}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                          <span className="text-white text-xs font-medium">
                             {story.user.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
+                          </span>
+                        </div>
+                      )}
+                      {story.hasNew && (
+                        <div className="absolute inset-0 border-2 border-blue-500 rounded-xl pointer-events-none"></div>
+                      )}
                     </div>
-                    {story.user.isUser && !story.hasStory && (
-                      <div className="absolute bottom-0 right-0 w-4 h-4 sm:w-5 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <Plus className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* User name */}
-                <p className="text-xs text-center mt-4 max-w-[96px] sm:max-w-[112px] truncate">
-                  {story.user.name}
-                </p>
+                    {/* User avatar with ring */}
+                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-10 h-10 sm:w-12 sm:h-12">
+                      <div
+                        className={cn(
+                          "w-full h-full rounded-full p-0.5",
+                          story.hasNew
+                            ? "bg-gradient-to-r from-purple-500 to-pink-500"
+                            : "bg-gray-300"
+                        )}
+                      >
+                        <div className="w-full h-full bg-white rounded-full p-0.5">
+                          <Avatar className="w-full h-full">
+                            <AvatarImage src={story.user.avatar} />
+                            <AvatarFallback className="text-xs">
+                              {story.user.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </div>
+                      {story.user.isUser && !story.hasStory && (
+                        <div className="absolute bottom-0 right-0 w-4 h-4 sm:w-5 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                          <Plus className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* User name */}
+                  <p className="text-xs text-center mt-4 max-w-[96px] sm:max-w-[112px] truncate">
+                    {story.user.name}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Right scroll button */}
