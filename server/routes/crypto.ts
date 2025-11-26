@@ -841,21 +841,169 @@ function calculateDisputePriority(escrow: any, reason: string) {
 // Update the getAllowedEscrowActions function to fix TypeScript error
 function getAllowedEscrowActions(escrow: any, userId: string) {
   const actions: string[] = [];
-  
+
   if (escrow.status === 'pending_payment' && escrow.buyerId === userId) {
     actions.push('confirm_payment');
   }
-  
+
   if (escrow.status === 'payment_confirmed' && escrow.sellerId === userId) {
     actions.push('release_funds');
   }
-  
+
   if (['payment_confirmed', 'pending_release'].includes(escrow.status)) {
     actions.push('initiate_dispute');
   }
-  
+
   return actions;
 }
+
+// =============================================================================
+// ADDITIONAL ENDPOINTS FOR FRONTEND COMPATIBILITY
+// =============================================================================
+
+// Get news/blog posts
+router.get('/news', async (req, res) => {
+  try {
+    const { limit = 20 } = req.query;
+    // Return empty array for now - can be connected to blog service later
+    res.json([]);
+  } catch (error) {
+    logger.error('News fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
+
+// Get education content
+router.get('/education', async (req, res) => {
+  try {
+    // Return empty array for now - can be connected to education service later
+    res.json([]);
+  } catch (error) {
+    logger.error('Education content fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch education content' });
+  }
+});
+
+// Get user transactions
+router.get('/transactions', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { limit = 50 } = req.query;
+
+    // Return empty array for now - can be connected to transaction history later
+    res.json([]);
+  } catch (error) {
+    logger.error('Transactions fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch transactions' });
+  }
+});
+
+// Get user's open orders
+router.get('/orders/open', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Return empty array for now - can be connected to order history later
+    res.json([]);
+  } catch (error) {
+    logger.error('Open orders fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch open orders' });
+  }
+});
+
+// Place a trading order
+router.post('/orders', authenticateToken, async (req, res) => {
+  try {
+    const { symbol, side, type, quantity, price } = req.body;
+    const userId = req.userId;
+
+    if (!symbol || !side || !quantity) {
+      return res.status(400).json({
+        error: 'Symbol, side, and quantity are required'
+      });
+    }
+
+    // Mock order creation
+    const orderId = `order_${Date.now()}_${userId}`;
+    const order = {
+      id: orderId,
+      symbol,
+      side: side.toUpperCase(),
+      type: type || 'MARKET',
+      quantity: parseFloat(quantity),
+      price: price ? parseFloat(price) : undefined,
+      status: 'NEW',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    res.status(201).json(order);
+  } catch (error) {
+    logger.error('Order placement error:', error);
+    res.status(500).json({ error: 'Failed to place order' });
+  }
+});
+
+// Cancel a trading order
+router.delete('/orders/:orderId', authenticateToken, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.userId;
+
+    // Mock order cancellation
+    res.json({
+      success: true,
+      orderId,
+      status: 'CANCELED'
+    });
+  } catch (error) {
+    logger.error('Order cancellation error:', error);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+});
+
+// Add to watchlist
+router.post('/watchlist', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { asset, notes } = req.body;
+
+    if (!asset) {
+      return res.status(400).json({ error: 'Asset is required' });
+    }
+
+    // Mock watchlist item creation
+    const watchlistItem = {
+      id: `watchlist_${Date.now()}`,
+      userId,
+      asset: asset.toUpperCase(),
+      notes: notes || '',
+      createdAt: new Date().toISOString()
+    };
+
+    res.status(201).json(watchlistItem);
+  } catch (error) {
+    logger.error('Watchlist add error:', error);
+    res.status(500).json({ error: 'Failed to add to watchlist' });
+  }
+});
+
+// Remove from watchlist
+router.delete('/watchlist/:itemId', authenticateToken, async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const userId = req.userId;
+
+    // Mock watchlist item deletion
+    res.json({
+      success: true,
+      itemId
+    });
+  } catch (error) {
+    logger.error('Watchlist remove error:', error);
+    res.status(500).json({ error: 'Failed to remove from watchlist' });
+  }
+});
 
 // Mock database functions have been moved to cryptoDbService.ts
 
