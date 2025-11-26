@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle2, Zap } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface Provider {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   description: string;
@@ -17,26 +18,90 @@ interface Provider {
 
 const Electricity = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
   const [step, setStep] = useState<"provider" | "meterNumber" | "amount" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [meterNumber, setMeterNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [operators, setOperators] = useState<any[]>([]);
+  const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [operatorsLoading, setOperatorsLoading] = useState(true);
 
-  const providers: Provider[] = [
-    { id: "eko", name: "Eko Disco", icon: "⚡", description: "Eko Distribution" },
-    { id: "ikeja", name: "Ikeja Electric", icon: "💡", description: "Ikeja Distribution" },
-    { id: "abuja", name: "Abuja Disco", icon: "🔌", description: "Abuja Distribution" },
-    { id: "kaduna", name: "Kaduna Disco", icon: "🔋", description: "Kaduna Distribution" },
-  ];
+  // Fetch operators on component mount
+  useEffect(() => {
+    const fetchOperators = async () => {
+      if (!user || !session) return;
+
+      try {
+        const token = session?.access_token;
+        const countryCode = 'NG'; // Default to Nigeria
+
+        const response = await fetch(`/api/reloadly/operators/${countryCode}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success && result.operators) {
+          // Map operators to provider format, filter for those supporting utility payments
+          const mappedProviders = result.operators
+            .filter((op: any) => op.pin || op.bundle) // Filter for utility-capable operators
+            .map((op: any) => ({
+              id: op.id,
+              name: op.name,
+              icon: '⚡',
+              description: op.name
+            }));
+          setProviders(mappedProviders);
+          if (mappedProviders.length > 0) {
+            setSelectedOperatorId(mappedProviders[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch operators:', error);
+        toast.error('Failed to load utility providers');
+      } finally {
+        setOperatorsLoading(false);
+      }
+    };
+
+    fetchOperators();
+  }, [user, session]);
 
   const handlePay = async () => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
+      const token = session?.access_token;
+
+      const response = await fetch('/api/reloadly/bills/pay', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          operatorId: selectedOperatorId,
+          amount: parseFloat(amount),
+          recipientPhone: meterNumber
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStep("success");
+        toast.success('Electricity bill payment successful!');
+      } else {
+        toast.error(result.error || 'Transaction failed');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Payment failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
