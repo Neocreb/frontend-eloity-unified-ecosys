@@ -598,6 +598,7 @@ const EnhancedFeedWithTabs = () => {
                     onCreateStory={() => setShowCreateStoryModal(true)}
                     userStories={userStories}
                     onViewStory={handleViewStory}
+                    refreshTrigger={storiesRefreshTrigger}
                   />
                   <CreatePostTrigger onOpenCreatePost={() => setShowCreatePostFlow(true)} />
                 </>
