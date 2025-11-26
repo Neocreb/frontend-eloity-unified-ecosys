@@ -62,8 +62,11 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           throw error;
         }
 
+        console.log("Fetched stories from database:", data?.length || 0);
+
         // Fetch profile data for story creators
         const userIds = [...new Set((data || []).map(s => s.user_id))];
+        console.log("User IDs to fetch profiles for:", userIds);
         let profilesMap: Record<string, any> = {};
 
         if (userIds.length > 0) {
@@ -71,6 +74,8 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
             .from('profiles')
             .select('id, username, full_name, avatar_url')
             .in('id', userIds);
+
+          console.log("Fetched profiles:", profilesData?.length || 0, profilesError);
 
           if (!profilesError && profilesData) {
             profilesMap = Object.fromEntries(
@@ -97,6 +102,8 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           };
         });
 
+        console.log("Transformed stories:", fetchedStories.length);
+
         // Add "Create story" option for current user
         const createStoryOption: Story = {
           id: "create",
@@ -111,7 +118,9 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
         };
 
         // Combine create story option with fetched stories
-        setStories([createStoryOption, ...fetchedStories]);
+        const finalStories = [createStoryOption, ...fetchedStories];
+        console.log("Final stories to render:", finalStories.length);
+        setStories(finalStories);
       } catch (error) {
         console.error("Error fetching stories:", error);
         // Only show create story option if database fetch fails
