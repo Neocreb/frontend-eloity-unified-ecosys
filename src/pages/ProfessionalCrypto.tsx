@@ -98,11 +98,17 @@ const ProfessionalCrypto = () => {
       const contentType = pricesRes.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await pricesRes.text();
-        console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
-        throw new Error('Received non-JSON response from API');
+        console.error('Non-JSON response received:', text.substring(0, 500)); // Limit log size
+        throw new Error(`Received non-JSON response from API: ${text.substring(0, 100)}`);
       }
 
-      const pricesPayload = await pricesRes.json();
+      let pricesPayload;
+      try {
+        pricesPayload = await pricesRes.json();
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', pricesRes);
+        throw new Error('Failed to parse API response as JSON');
+      }
       const prices: Record<string, any> = {};
 
       // Process backend data into the format expected by the UI
@@ -170,11 +176,17 @@ const ProfessionalCrypto = () => {
             const contentType = r.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
               const text = await r.text();
-              console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
-              throw new Error('Received non-JSON response from wallet balance API');
+              console.error('Non-JSON response received:', text.substring(0, 500)); // Limit log size
+              throw new Error(`Received non-JSON response from wallet balance API: ${text.substring(0, 100)}`);
             }
-            
-            const j = await r.json();
+
+            let j;
+            try {
+              j = await r.json();
+            } catch (parseError) {
+              console.error('Failed to parse wallet balance response:', r);
+              throw new Error('Failed to parse wallet balance response as JSON');
+            }
             const total = Number(j?.data?.balances?.crypto || 0);
             perCurrency = total > 0 ? [{ currency: "USDT", balance: total }] : [];
           }
