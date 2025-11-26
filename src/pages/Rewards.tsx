@@ -5,14 +5,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import CreatorEconomyHeader from "@/components/rewards/CreatorEconomyHeader";
-import EarningsOverview from "@/components/rewards/EarningsOverview";
+import EnhancedEarningsOverview from "@/components/rewards/EnhancedEarningsOverview";
+import EnhancedRewardsActivitiesTab from "@/components/rewards/EnhancedRewardsActivitiesTab";
+import EnhancedRewardsChallengesTab from "@/components/rewards/EnhancedRewardsChallengesTab";
+import EnhancedRewardsBattleTab from "@/components/rewards/EnhancedRewardsBattleTab";
+import EnhancedGiftsTipsAnalytics from "@/components/rewards/EnhancedGiftsTipsAnalytics";
+import EnhancedSafeReferralComponent from "@/components/rewards/EnhancedSafeReferralComponent";
 import RevenueHistory from "@/components/rewards/RevenueHistory";
 import MonetizedContent from "@/components/rewards/MonetizedContent";
 import BoostManager from "@/components/rewards/BoostManager";
 import Subscribers from "@/components/rewards/Subscribers";
 import WithdrawEarnings from "@/components/rewards/WithdrawEarnings";
 import { PartnershipSystem } from "@/components/rewards/PartnershipSystem";
-import SafeReferralComponent from "@/components/rewards/SafeReferralComponent";
 import ActivityEconomyDashboard from "@/components/activity-economy/ActivityEconomyDashboard";
 
 interface CreatorRevenueData {
