@@ -82,7 +82,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
         },
         hasStory: true,
         hasNew: new Date(story.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000), // New if created in last 24 hours
-        thumbnail: story.media_url,
+        thumbnail: story.media_url || story.background_color,
         timestamp: new Date(story.created_at)
       }));
 
