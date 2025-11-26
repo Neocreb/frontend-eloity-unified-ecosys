@@ -51,7 +51,7 @@ class StoriesService {
 
       // Get active stories from followed users
       const { data, error } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .select('*')
         .in('user_id', followingIds)
         .gt('expires_at', new Date().toISOString())
@@ -69,7 +69,7 @@ class StoriesService {
   async getUserStories(userId: string): Promise<UserStory[]> {
     try {
       const { data, error } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .select('*')
         .eq('user_id', userId)
         .gt('expires_at', new Date().toISOString())
