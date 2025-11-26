@@ -1243,12 +1243,112 @@ export class CryptoService {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     } catch (error) {
       console.error('Error creating P2P offer:', error);
       throw error; // No fallback to mock data
+    }
+  }
+
+  // Additional methods for hook compatibility
+  async getNews(limit: number = 20): Promise<News[]> {
+    try {
+      const response = await fetch(`/api/crypto/news?limit=${limit}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch news:', error);
+      return [];
+    }
+  }
+
+  async getEducationContent(): Promise<EducationContent[]> {
+    try {
+      const response = await fetch('/api/crypto/education');
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch education content:', error);
+      return [];
+    }
+  }
+
+  async getTransactions(limit: number = 50): Promise<Transaction[]> {
+    try {
+      const response = await fetch(`/api/crypto/transactions?limit=${limit}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+      return [];
+    }
+  }
+
+  async getOpenOrders(): Promise<Order[]> {
+    try {
+      const response = await fetch('/api/crypto/orders/open');
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch open orders:', error);
+      return [];
+    }
+  }
+
+  async placeOrder(orderData: Omit<Order, 'id' | 'timestamp' | 'updateTime' | 'fills'>): Promise<Order> {
+    try {
+      const response = await fetch('/api/crypto/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      if (!response.ok) throw new Error('Failed to place order');
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to place order:', error);
+      throw error;
+    }
+  }
+
+  async cancelOrder(orderId: string): Promise<void> {
+    try {
+      const response = await fetch(`/api/crypto/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Failed to cancel order');
+    } catch (error) {
+      console.error('Failed to cancel order:', error);
+      throw error;
+    }
+  }
+
+  async removeFromWatchlist(itemId: string): Promise<void> {
+    try {
+      const response = await fetch(`/api/crypto/watchlist/${itemId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Failed to remove from watchlist');
+    } catch (error) {
+      console.error('Failed to remove from watchlist:', error);
+      throw error;
+    }
+  }
+
+  // Override addToWatchlist to match hook signature
+  async addToWatchlist(asset: string, notes?: string): Promise<any> {
+    try {
+      const response = await fetch('/api/crypto/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ asset, notes })
+      });
+      if (!response.ok) throw new Error('Failed to add to watchlist');
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to add to watchlist:', error);
+      throw error;
     }
   }
 }
