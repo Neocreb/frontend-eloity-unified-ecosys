@@ -148,7 +148,10 @@ const CreateStory = () => {
   };
 
   const handleCreateStory = async () => {
+    console.debug("[CreateStory] handleCreateStory called");
+
     if (!user || !user.id) {
+      console.warn("[CreateStory] User not authenticated");
       toast({
         title: "Authentication required",
         description: "Please sign in to create a story.",
@@ -158,6 +161,7 @@ const CreateStory = () => {
     }
 
     if (storyType === "text" && !textContent.trim()) {
+      console.warn("[CreateStory] Text story is empty");
       toast({
         title: "Empty story",
         description: "Please add some text to your story.",
@@ -167,6 +171,7 @@ const CreateStory = () => {
     }
 
     if ((storyType === "image" || storyType === "video") && !selectedMedia) {
+      console.warn("[CreateStory] No media selected for", storyType);
       toast({
         title: "No media selected",
         description: "Please select an image or video for your story.",
@@ -180,6 +185,7 @@ const CreateStory = () => {
       let mediaUrl = "";
 
       if ((storyType === "image" || storyType === "video") && selectedMedia) {
+        console.debug("[CreateStory] Uploading media, type:", selectedMedia.type);
         const bucket = "stories";
         const path = `${user.id}/${Date.now()}-${selectedMedia.file.name}`;
         const { error: uploadError } = await supabase.storage.from(bucket).upload(path, selectedMedia.file, {
@@ -187,20 +193,21 @@ const CreateStory = () => {
           cacheControl: "3600",
           contentType: selectedMedia.file.type,
         });
-        
+
         if (uploadError) {
-          console.error("Upload error:", uploadError.message);
-          toast({ 
-            title: "Upload failed", 
-            description: uploadError.message, 
-            variant: "destructive" 
+          console.error("[CreateStory] Upload error:", uploadError.message);
+          toast({
+            title: "Upload failed",
+            description: uploadError.message,
+            variant: "destructive"
           });
           setIsSubmitting(false);
           return;
         }
-        
+
         const { data } = supabase.storage.from(bucket).getPublicUrl(path);
         mediaUrl = data.publicUrl;
+        console.debug("[CreateStory] Media uploaded, URL:", mediaUrl);
       }
 
       const storyDataPayload = {
@@ -210,7 +217,9 @@ const CreateStory = () => {
         expires_in_hours: storyData.duration,
       };
 
+      console.debug("[CreateStory] Creating story with payload:", storyDataPayload);
       const newStory = await storiesService.createStory(storyDataPayload, user.id);
+      console.debug("[CreateStory] Story created successfully, ID:", newStory.id);
 
       const userName = user.user_metadata?.name || user.profile?.full_name || user.email || "User";
       const userUsername = user.user_metadata?.username || user.profile?.username || user.email?.split('@')[0] || "user";
@@ -241,9 +250,11 @@ const CreateStory = () => {
         description: "Your story has been shared with your followers.",
       });
 
+      console.debug("[CreateStory] Navigating back to feed");
+      // Navigate back to feed with a flag to trigger refetch
       navigate(-1);
     } catch (error) {
-      console.error("Error creating story:", error);
+      console.error("[CreateStory] Error creating story:", error);
       toast({
         title: "Failed to create story",
         description: error instanceof Error ? error.message : "Please try again.",
