@@ -62,20 +62,40 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           throw error;
         }
 
+        // Fetch profile data for story creators
+        const userIds = [...new Set((data || []).map(s => s.user_id))];
+        let profilesMap: Record<string, any> = {};
+
+        if (userIds.length > 0) {
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url')
+            .in('id', userIds);
+
+          if (!profilesError && profilesData) {
+            profilesMap = Object.fromEntries(
+              profilesData.map(p => [p.id, p])
+            );
+          }
+        }
+
         // Transform the data to match our Story interface
-        const fetchedStories: Story[] = (data || []).map((story: any) => ({
-          id: story.id,
-          user: {
-            id: story.user_id,
-            name: story.profiles?.full_name || story.profiles?.username || "Unknown User",
-            avatar: story.profiles?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-            isUser: story.user_id === user?.id
-          },
-          hasStory: true,
-          hasNew: new Date(story.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000), // New if created in last 24 hours
-          thumbnail: story.media_url,
-          timestamp: new Date(story.created_at)
-        }));
+        const fetchedStories: Story[] = (data || []).map((story: any) => {
+          const profile = profilesMap[story.user_id];
+          return {
+            id: story.id,
+            user: {
+              id: story.user_id,
+              name: profile?.full_name || profile?.username || "Unknown User",
+              avatar: profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+              isUser: story.user_id === user?.id
+            },
+            hasStory: true,
+            hasNew: new Date(story.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000), // New if created in last 24 hours
+            thumbnail: story.media_url,
+            timestamp: new Date(story.created_at)
+          };
+        });
 
         // Add "Create story" option for current user
         const createStoryOption: Story = {
