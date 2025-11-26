@@ -84,18 +84,26 @@ const ProfessionalCrypto = () => {
       // 1) Fetch live prices from CryptoAPIs instead of Bybit
       const pricesRes = await fetch('/api/cryptoapis/assets');
       
-      // Check if response is OK and is actually JSON
+      // Check if response is OK
       if (!pricesRes.ok) {
         const errorText = await pricesRes.text();
         console.error(`HTTP error! status: ${pricesRes.status}`, errorText);
         throw new Error(`HTTP error! status: ${pricesRes.status}`);
       }
       
+      // Check if response is actually JSON
       const contentType = pricesRes.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await pricesRes.text();
         console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
-        throw new Error('Received non-JSON response from CryptoAPIs');
+        // Show error to user instead of falling back to mock data
+        toast({
+          title: "Data Error",
+          description: "Failed to load cryptocurrency data. Please try again later.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
       
       const pricesPayload = await pricesRes.json();
@@ -206,15 +214,25 @@ const ProfessionalCrypto = () => {
     } catch (error) {
       console.error("Error loading crypto data:", error);
       toast({
-        title: "Error",
-        description: "Failed to load cryptocurrency data from CryptoAPIs.",
+        title: "Loading error",
+        description:
+          "Failed to load cryptocurrency data. Please try again later.",
         variant: "destructive",
       });
-      throw error;
     } finally {
       setIsLoading(false);
     }
   };
+
+  const topGainers = useMemo(
+    () => [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5),
+    [cryptos]
+  );
+
+  const topLosers = useMemo(
+    () => [...cryptos].sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 5),
+    [cryptos]
+  );
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000000) {
@@ -290,15 +308,6 @@ const ProfessionalCrypto = () => {
       return { success: false, error: (e as any)?.message || e };
     }
   };
-
-  const topGainers = useMemo(
-    () => cryptos.filter(c => c.price_change_percentage_24h > 0).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5),
-    [cryptos]
-  );
-  const topLosers = useMemo(
-    () => cryptos.filter(c => c.price_change_percentage_24h < 0).sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 5),
-    [cryptos]
-  );
 
   return (
     <>

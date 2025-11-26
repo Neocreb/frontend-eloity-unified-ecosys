@@ -290,6 +290,82 @@ export const fetchSocialPerformance = async (): Promise<PlatformPerformance> => 
   }
 };
 
+export const fetchProductMetrics = async (days: number = 30) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - days);
+
+    // Fetch products with proper error handling
+    const productsResponse = await supabase
+      .from('products')
+      .select('id, name, price, total_sales, total_reviews, average_rating, created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString());
+
+    if (productsResponse.error) {
+      throw new Error(`Failed to fetch products: ${productsResponse.error.message}`);
+    }
+
+    const products = productsResponse.data || [];
+    
+    // Calculate current period metrics
+    const totalProducts = products.length;
+    const totalRevenue = products.reduce((sum: number, product: any) => sum + (product.price * (product.total_sales || 0)), 0);
+    const totalSales = products.reduce((sum: number, product: any) => sum + (product.total_sales || 0), 0);
+    const avgRating = totalProducts > 0 ? 
+      (products.reduce((sum: number, product: any) => sum + (parseFloat(product.average_rating) || 0), 0) / totalProducts) : 0;
+
+    // Calculate previous period for comparison
+    const previousPeriodStart = new Date(thirtyDaysAgo);
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - days);
+    
+    const previousProductsResponse = await supabase
+      .from('products')
+      .select('id, price, total_sales')
+      .gte('created_at', previousPeriodStart.toISOString());
+
+    if (previousProductsResponse.error) {
+      throw new Error(`Failed to fetch previous period products: ${previousProductsResponse.error.message}`);
+    }
+
+    const previousProducts = previousProductsResponse.data || [];
+    const previousRevenue = previousProducts.reduce((sum: number, product: any) => sum + (product.price * (product.total_sales || 0)), 0);
+    const previousSales = previousProducts.reduce((sum: number, product: any) => sum + (product.total_sales || 0), 0);
+
+    // Calculate growth rates
+    const revenueGrowth = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
+    const salesGrowth = previousSales > 0 ? ((totalSales - previousSales) / previousSales) * 100 : 0;
+
+    return {
+      totalProducts,
+      totalRevenue,
+      totalSales,
+      avgRating,
+      revenueGrowth,
+      salesGrowth,
+      topProducts: products
+        .sort((a: any, b: any) => (b.total_sales || 0) - (a.total_sales || 0))
+        .slice(0, 5)
+        .map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          sales: product.total_sales || 0,
+          revenue: product.price * (product.total_sales || 0)
+        }))
+    };
+  } catch (error) {
+    console.error('Error fetching product metrics:', error);
+    return {
+      totalProducts: 0,
+      totalRevenue: 0,
+      totalSales: 0,
+      avgRating: 0,
+      revenueGrowth: 0,
+      salesGrowth: 0,
+      topProducts: []
+    };
+  }
+};
+
 // Fetch marketplace performance metrics
 export const fetchMarketplacePerformance = async (): Promise<PlatformPerformance> => {
   try {
