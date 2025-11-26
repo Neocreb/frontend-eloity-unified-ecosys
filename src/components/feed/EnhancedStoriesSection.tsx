@@ -157,8 +157,15 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
     }
   };
 
+  console.debug("[EnhancedStoriesSection] Rendering carousel with", stories.length, "stories, isLoading:", isLoading);
+
   return (
-    <div className="bg-white border-b border-gray-200 py-3 sm:py-4 mb-4 sm:mb-6">
+    <div
+      className="bg-white border-b border-gray-200 py-3 sm:py-4 mb-4 sm:mb-6"
+      data-test-id="stories-carousel"
+      data-stories-count={stories.length}
+      data-is-loading={isLoading}
+    >
       <div className="relative max-w-full">
         {/* Left scroll button */}
         <Button
@@ -178,12 +185,24 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
             scrollbarWidth: "none",
             msOverflowStyle: "none",
           }}
+          data-test-id="stories-scroll-container"
         >
+          {isLoading && stories.length === 0 && (
+            <div className="w-full flex items-center justify-center py-4">
+              <div className="text-gray-500 text-sm">Loading stories...</div>
+            </div>
+          )}
+          {stories.length === 0 && !isLoading && (
+            <div className="w-full flex items-center justify-center py-4">
+              <div className="text-gray-500 text-sm">No stories yet</div>
+            </div>
+          )}
           {stories.map((story, index) => (
             <div
-              key={story.id}
+              key={`story-${story.id}-${index}`}
               className="flex-shrink-0 cursor-pointer group"
               onClick={() => handleStoryClick(story, index)}
+              data-test-id={`story-item-${story.id}`}
             >
               <div className="flex flex-col items-center w-24 sm:w-28">
                 {/* Large square story card */}
