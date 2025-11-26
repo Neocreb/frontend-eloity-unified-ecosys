@@ -466,12 +466,29 @@ const EnhancedFeedWithTabs = () => {
 
   // Trigger refetch when returning from CreateStory page
   useEffect(() => {
-    // Check if we just returned from the create story page
-    if (location.pathname === "/app/feed") {
-      console.debug("[EnhancedFeedWithTabs] Detected navigation back to feed from:", location.pathname);
-      // Trigger a refetch by updating the refetch trigger
+    // Check if we just returned from the create story page by checking sessionStorage flag
+    const shouldRefetch = sessionStorage.getItem("refetchStoriesOnReturn");
+    if (shouldRefetch === "true") {
+      console.debug("[EnhancedFeedWithTabs] Detected story creation, triggering refetch");
+      sessionStorage.removeItem("refetchStoriesOnReturn");
       setRefetchTrigger(prev => prev + 1);
     }
+  }, [location.pathname]);
+
+  // Also watch for direct path changes (e.g., from /app/feed/create-story back to /app/feed)
+  useEffect(() => {
+    const previousPath = sessionStorage.getItem("previousFeedPath");
+    const currentPath = location.pathname;
+
+    if (previousPath && previousPath !== currentPath && currentPath === "/app/feed") {
+      console.debug("[EnhancedFeedWithTabs] Detected return to feed path, potential story creation");
+      // Small delay to ensure story is persisted
+      setTimeout(() => {
+        setRefetchTrigger(prev => prev + 1);
+      }, 100);
+    }
+
+    sessionStorage.setItem("previousFeedPath", currentPath);
   }, [location.pathname]);
 
   const baseTabs = [
