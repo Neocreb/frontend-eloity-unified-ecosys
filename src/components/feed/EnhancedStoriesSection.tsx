@@ -296,4 +296,9 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
   );
 };
 
+// Log when component is fully rendered
+if (stories.length > 0) {
+  console.debug("[EnhancedStoriesSection] Carousel fully rendered with stories:", stories.map(s => ({ id: s.id, name: s.user.name })));
+}
+
 export default EnhancedStoriesSection;
