@@ -270,6 +270,22 @@ class KYCService {
 
     return Math.min(100, score);
   }
+
+  /**
+   * Get user's KYC status
+   * @param userId The user ID to get KYC status for
+   * @returns User KYC status information
+   */
+  async getKYCStatus(userId: string): Promise<UserKYCStatus> {
+    // This is a simplified implementation that returns mock data
+    // In a real implementation, this would query the database
+    return {
+      userId,
+      currentLevel: 1,
+      status: 'approved',
+      documents: [],
+    };
+  }
 }
 
 export const kycService = new KYCService();
