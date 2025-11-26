@@ -447,6 +447,7 @@ const EnhancedFeedWithTabs = () => {
   const [showCreatePostFlow, setShowCreatePostFlow] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
+  const [storiesRefreshTrigger, setStoriesRefreshTrigger] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
