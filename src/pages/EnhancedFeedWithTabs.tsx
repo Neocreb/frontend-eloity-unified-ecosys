@@ -447,7 +447,10 @@ const EnhancedFeedWithTabs = () => {
   const [showCreatePostFlow, setShowCreatePostFlow] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
   const { toast } = useToast();
+
+  console.debug("[EnhancedFeedWithTabs] Rendered with location:", location.pathname);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -460,6 +463,33 @@ const EnhancedFeedWithTabs = () => {
     params.set("tab", activeTab);
     navigate({ pathname: "/app/feed", search: params.toString() }, { replace: true });
   }, [activeTab]);
+
+  // Trigger refetch when returning from CreateStory page
+  useEffect(() => {
+    // Check if we just returned from the create story page by checking sessionStorage flag
+    const shouldRefetch = sessionStorage.getItem("refetchStoriesOnReturn");
+    if (shouldRefetch === "true") {
+      console.debug("[EnhancedFeedWithTabs] Detected story creation, triggering refetch");
+      sessionStorage.removeItem("refetchStoriesOnReturn");
+      setRefetchTrigger(prev => prev + 1);
+    }
+  }, [location.pathname]);
+
+  // Also watch for direct path changes (e.g., from /app/feed/create-story back to /app/feed)
+  useEffect(() => {
+    const previousPath = sessionStorage.getItem("previousFeedPath");
+    const currentPath = location.pathname;
+
+    if (previousPath && previousPath !== currentPath && currentPath === "/app/feed") {
+      console.debug("[EnhancedFeedWithTabs] Detected return to feed path, potential story creation");
+      // Small delay to ensure story is persisted
+      setTimeout(() => {
+        setRefetchTrigger(prev => prev + 1);
+      }, 100);
+    }
+
+    sessionStorage.setItem("previousFeedPath", currentPath);
+  }, [location.pathname]);
 
   const baseTabs = [
     {
@@ -509,6 +539,7 @@ const EnhancedFeedWithTabs = () => {
   };
 
   const handleCreateStory = async (storyData: any) => {
+    console.debug("[EnhancedFeedWithTabs] handleCreateStory called with data:", storyData);
     try {
       // Add the new story to the userStories state
       const newStory = {
@@ -526,14 +557,19 @@ const EnhancedFeedWithTabs = () => {
         hasNew: true,
       };
 
+      console.debug("[EnhancedFeedWithTabs] Adding new story to state:", newStory);
       setUserStories(prev => [newStory, ...prev]);
+
+      // Trigger refetch to ensure carousel is updated
+      console.debug("[EnhancedFeedWithTabs] Triggering refetch after story creation");
+      setRefetchTrigger(prev => prev + 1);
 
       toast({
         title: "Story created!",
         description: "Your story has been published.",
       });
     } catch (error) {
-      console.error("Error creating story:", error);
+      console.error("[EnhancedFeedWithTabs] Error creating story:", error);
       toast({
         title: "Failed to create story",
         description: "Please try again.",
@@ -595,6 +631,7 @@ const EnhancedFeedWithTabs = () => {
                     onCreateStory={() => setShowCreateStoryModal(true)}
                     userStories={userStories}
                     onViewStory={handleViewStory}
+                    refetchTrigger={refetchTrigger}
                   />
                   <CreatePostTrigger onOpenCreatePost={() => setShowCreatePostFlow(true)} />
                 </>
