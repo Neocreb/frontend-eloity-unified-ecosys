@@ -104,12 +104,7 @@ const CreatorEconomy = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsContent value="overview" className="mt-0">
-          <EarningsOverview
-            revenueData={revenueData}
-            user={user}
-            setActiveTab={setActiveTab}
-            onRefresh={refresh}
-          />
+          <EnhancedEarningsOverview user={user} setActiveTab={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="content" className="mt-0">
@@ -141,11 +136,23 @@ const CreatorEconomy = () => {
         </TabsContent>
 
         <TabsContent value="activity" className="mt-0">
-          <ActivityEconomyDashboard />
+          <EnhancedRewardsActivitiesTab />
         </TabsContent>
 
         <TabsContent value="referrals" className="mt-0">
-          <SafeReferralComponent />
+          <EnhancedSafeReferralComponent />
+        </TabsContent>
+
+        <TabsContent value="challenges" className="mt-0">
+          <EnhancedRewardsChallengesTab />
+        </TabsContent>
+
+        <TabsContent value="battles" className="mt-0">
+          <EnhancedRewardsBattleTab />
+        </TabsContent>
+
+        <TabsContent value="gifts" className="mt-0">
+          <EnhancedGiftsTipsAnalytics />
         </TabsContent>
       </Tabs>
     </div>
