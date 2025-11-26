@@ -25,96 +25,119 @@ interface EnhancedStoriesSectionProps {
   onCreateStory: () => void;
   userStories: any[];
   onViewStory: (index: number) => void;
+  refetchTrigger?: number;
 }
 
 const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
   onCreateStory,
   userStories,
-  onViewStory
+  onViewStory,
+  refetchTrigger = 0
 }) => {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [stories, setStories] = useState<Story[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  console.debug("[EnhancedStoriesSection] Rendered with refetchTrigger:", refetchTrigger, "and userStories count:", userStories.length);
 
   // Fetch real stories data from the database
-  useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        // Fetch recent stories from the database
-        // Using the correct table name and schema based on Supabase setup
-        const { data, error } = await supabase
-          .from('stories')
-          .select(`
-            id,
-            user_id,
-            created_at,
-            media_url,
-            profiles:user_id(
-              username,
-              full_name,
-              avatar_url
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(10);
+  const fetchStories = async () => {
+    console.debug("[EnhancedStoriesSection] fetchStories called");
+    try {
+      setIsLoading(true);
+      // Fetch recent stories from the database
+      // Using the correct table name and schema based on Supabase setup
+      const { data, error } = await supabase
+        .from('stories')
+        .select(`
+          id,
+          user_id,
+          created_at,
+          media_url,
+          profiles:user_id(
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-        if (error) {
-          console.error("Error fetching stories:", error);
-          throw error;
-        }
-
-        // Transform the data to match our Story interface
-        const fetchedStories: Story[] = (data || []).map((story: any) => ({
-          id: story.id,
-          user: {
-            id: story.user_id,
-            name: story.profiles?.full_name || story.profiles?.username || "Unknown User",
-            avatar: story.profiles?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-            isUser: story.user_id === user?.id
-          },
-          hasStory: true,
-          hasNew: new Date(story.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000), // New if created in last 24 hours
-          thumbnail: story.media_url,
-          timestamp: new Date(story.created_at)
-        }));
-
-        // Add "Create story" option for current user
-        const createStoryOption: Story = {
-          id: "create",
-          user: {
-            id: user?.id || "current-user",
-            name: "Create story",
-            avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-            isUser: true,
-          },
-          hasStory: false,
-          hasNew: false,
-        };
-
-        // Combine create story option with fetched stories
-        setStories([createStoryOption, ...fetchedStories]);
-      } catch (error) {
-        console.error("Error fetching stories:", error);
-        // Only show create story option if database fetch fails
-        const createStoryOption: Story = {
-          id: "create",
-          user: {
-            id: user?.id || "current-user",
-            name: "Create story",
-            avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-            isUser: true,
-          },
-          hasStory: false,
-          hasNew: false,
-        };
-        setStories([createStoryOption]);
+      if (error) {
+        console.error("[EnhancedStoriesSection] Error fetching stories:", error);
+        throw error;
       }
-    };
 
+      console.debug("[EnhancedStoriesSection] Fetched stories from database:", data?.length || 0, "stories");
+
+      // Transform the data to match our Story interface
+      const fetchedStories: Story[] = (data || []).map((story: any) => ({
+        id: story.id,
+        user: {
+          id: story.user_id,
+          name: story.profiles?.full_name || story.profiles?.username || "Unknown User",
+          avatar: story.profiles?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          isUser: story.user_id === user?.id
+        },
+        hasStory: true,
+        hasNew: new Date(story.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000), // New if created in last 24 hours
+        thumbnail: story.media_url,
+        timestamp: new Date(story.created_at)
+      }));
+
+      // Add "Create story" option for current user
+      const createStoryOption: Story = {
+        id: "create",
+        user: {
+          id: user?.id || "current-user",
+          name: "Create story",
+          avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          isUser: true,
+        },
+        hasStory: false,
+        hasNew: false,
+      };
+
+      // Combine create story option with fetched stories
+      const finalStories = [createStoryOption, ...fetchedStories];
+      console.debug("[EnhancedStoriesSection] Setting stories with create option, total:", finalStories.length);
+      setStories(finalStories);
+    } catch (error) {
+      console.error("[EnhancedStoriesSection] Error fetching stories:", error);
+      // Only show create story option if database fetch fails
+      const createStoryOption: Story = {
+        id: "create",
+        user: {
+          id: user?.id || "current-user",
+          name: "Create story",
+          avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          isUser: true,
+        },
+        hasStory: false,
+        hasNew: false,
+      };
+      setStories([createStoryOption]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initial fetch on mount
+  useEffect(() => {
+    console.debug("[EnhancedStoriesSection] Initial mount, user:", user?.id);
     if (user) {
       fetchStories();
     }
   }, [user]);
+
+  // Refetch when refetchTrigger changes (from parent component)
+  useEffect(() => {
+    console.debug("[EnhancedStoriesSection] refetchTrigger changed to:", refetchTrigger);
+    if (refetchTrigger > 0 && user) {
+      fetchStories();
+    }
+  }, [refetchTrigger, user]);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
