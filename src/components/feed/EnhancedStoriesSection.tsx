@@ -25,12 +25,14 @@ interface EnhancedStoriesSectionProps {
   onCreateStory: () => void;
   userStories: any[];
   onViewStory: (index: number) => void;
+  refreshTrigger?: number;
 }
 
 const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
   onCreateStory,
   userStories,
-  onViewStory
+  onViewStory,
+  refreshTrigger = 0
 }) => {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -115,7 +117,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
     if (user) {
       fetchStories();
     }
-  }, [user]);
+  }, [user, refreshTrigger]);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
