@@ -528,6 +528,8 @@ const EnhancedFeedWithTabs = () => {
       };
 
       setUserStories(prev => [newStory, ...prev]);
+      // Trigger a refresh of the stories section
+      setStoriesRefreshTrigger(prev => prev + 1);
 
       toast({
         title: "Story created!",
