@@ -462,6 +462,13 @@ const EnhancedFeedWithTabs = () => {
     navigate({ pathname: "/app/feed", search: params.toString() }, { replace: true });
   }, [activeTab]);
 
+  // Trigger stories refresh when returning to the feed from story creation page
+  useEffect(() => {
+    if (location.pathname === "/app/feed") {
+      setStoriesRefreshTrigger(prev => prev + 1);
+    }
+  }, [location.pathname]);
+
   const baseTabs = [
     {
       value: "for-you",
