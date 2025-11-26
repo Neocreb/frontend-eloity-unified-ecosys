@@ -43,22 +43,19 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
     const fetchStories = async () => {
       try {
         // Fetch recent stories from the database
-        // First try without filters to check if table exists and is accessible
         const now = new Date().toISOString();
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from('user_stories')
           .select('id, user_id, created_at, media_url, media_type, caption, expires_at')
           .order('created_at', { ascending: false })
-          .limit(10)
-          .then(result => {
-            // Filter expired stories in JS instead of using PostgreREST operator
-            if (result.data) {
-              result.data = result.data.filter((story: any) =>
-                new Date(story.expires_at) > new Date(now)
-              );
-            }
-            return result;
-          });
+          .limit(10);
+
+        // Filter expired stories in JS instead of using PostgreREST operator
+        if (data) {
+          data = data.filter((story: any) =>
+            new Date(story.expires_at) > new Date(now)
+          );
+        }
 
         if (error) {
           console.error("Error fetching stories:", error);
