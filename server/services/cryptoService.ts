@@ -7,185 +7,102 @@ import { db } from '../utils/db.js';
 
 import axios from 'axios';
 
-export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'usd') {
+interface OrderBookEntry {
+  price: number;
+  quantity: number;
+  total: number;
+}
+
+export async function getCryptoPrices(symbols: string[], vs_currency: string = 'usd') {
   try {
-    const result: any = {};
-    const bybitMap: Record<string, string> = {
-      bitcoin: 'BTCUSDT',
-      ethereum: 'ETHUSDT',
-      tether: 'USDTUSDC',
-      binancecoin: 'BNBUSDT',
-      solana: 'SOLUSDT',
-      cardano: 'ADAUSDT',
-      chainlink: 'LINKUSDT',
-      polygon: 'MATICUSDT',
-      avalanche: 'AVAXUSDT',
-      polkadot: 'DOTUSDT',
-      dogecoin: 'DOGEUSDT'
-    };
-
-    // First, try CoinGecko as primary source since Bybit seems to have connectivity issues
+    logger.info('Fetching crypto prices for symbols:', symbols);
+    const result: Record<string, any> = {};
+    
+    // Use CryptoAPIs service instead of Bybit
     try {
-      logger.info('Attempting to fetch data from CoinGecko as primary source');
-      const cgIdMap: Record<string, string> = { 
-        bitcoin: 'bitcoin', 
-        ethereum: 'ethereum', 
-        tether: 'tether', 
-        binancecoin: 'binancecoin', 
-        solana: 'solana', 
-        cardano: 'cardano', 
-        chainlink: 'chainlink', 
-        polygon: 'matic-network', 
-        avalanche: 'avalanche-2', 
-        polkadot: 'polkadot', 
-        dogecoin: 'dogecoin' 
-      };
-
-      // Build query for all symbols at once
-      const ids = symbols.map(s => cgIdMap[s.toLowerCase()]).filter(id => id);
-      if (ids.length > 0) {
-        const cgUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=${vsCurrency}&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
-        logger.info(`Fetching CoinGecko data from ${cgUrl}`);
-        const r = await axios.get(cgUrl, { timeout: 10000 });
-        
-        // Process CoinGecko response
-        for (const symbol of symbols) {
-          const lower = symbol.toLowerCase();
-          const id = cgIdMap[lower];
-          if (id && r.data[id]) {
-            const payload = r.data[id];
-            result[lower] = {
-              usd: payload[vsCurrency] || null,
-              usd_24h_change: payload[`${vsCurrency}_24h_change`] || 0,
-              usd_market_cap: payload[`${vsCurrency}_market_cap`] || null,
-              usd_24h_vol: payload[`${vsCurrency}_24h_vol`] || null
+      const cryptoapisService = (await import('./cryptoapisService.js')).default;
+      const assetsResponse = await cryptoapisService.getSupportedAssets();
+      
+      if (assetsResponse.success && assetsResponse.data) {
+        // Map the CryptoAPIs data to our expected format
+        assetsResponse.data.forEach((asset: any) => {
+          const symbol = asset.assetId ? asset.assetId.toLowerCase() : 'unknown';
+          if (symbols.includes(symbol)) {
+            result[symbol] = {
+              usd: parseFloat(asset.rate || 0),
+              usd_24h_change: parseFloat(asset.changePercent24h || 0),
+              usd_market_cap: parseFloat(asset.marketCap || 0),
+              usd_24h_vol: parseFloat(asset.volume24h || 0)
             };
-            logger.info(`Successfully fetched CoinGecko data for ${id}: $${payload[vsCurrency]}`);
-          } else {
-            logger.warn(`No CoinGecko data found for ${lower}`);
           }
-        }
+        });
       }
-    } catch (cgErr) {
-      logger.error('CoinGecko primary fetch failed:', cgErr?.message || cgErr);
+    } catch (err: any) {
+      logger.error('CryptoAPIs price fetch failed:', err?.message || err);
     }
 
-    // If we got data from CoinGecko, return it
-    if (Object.keys(result).length > 0) {
-      logger.info('Returning data from CoinGecko');
-      return result;
-    }
-
-    // Fallback to Bybit if CoinGecko didn't work
-    logger.info('Falling back to Bybit API');
-    const fetchPromises = symbols.map(async (symbol) => {
-      const lower = symbol.toLowerCase();
-      try {
-        const pair = bybitMap[lower];
-        if (pair) {
-          // Use the newer Bybit v5 API for better reliability
-          const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${pair}`;
-          logger.info(`Fetching Bybit data for ${pair} from ${url}`);
-          const resp = await axios.get(url, { timeout: 10000 });
-          
-          logger.info(`Bybit response for ${pair}:`, {
-            status: resp.status,
-            data: resp.data
-          });
-          
-          if (resp.data.retCode === 0 && resp.data.result.list.length > 0) {
-            const data = resp.data.result.list[0];
-            const price = data.lastPrice || data.markPrice || null;
-            if (price) {
-              result[lower] = {
-                usd: parseFloat(price),
-                usd_24h_change: parseFloat(data.price24hPcnt || '0') * 100 || 0,
-                usd_market_cap: null,
-                usd_24h_vol: parseFloat(data.turnover24h || data.volume24h || '0')
-              };
-              logger.info(`Successfully fetched Bybit data for ${pair}: ${price}`);
-              return;
-            } else {
-              logger.warn(`Bybit price data missing for ${pair}`, data);
-            }
-          } else {
-            logger.warn('Bybit price fetch returned no data for', pair, resp.data.retMsg);
-          }
-        } else {
-          logger.warn(`No Bybit pair mapping found for ${lower}`);
-        }
-      } catch (err) {
-        logger.error('Bybit price fetch failed for', symbol, err?.message || err);
+    // If we didn't get all the requested symbols, fill in with mock data
+    symbols.forEach(symbol => {
+      if (!result[symbol]) {
+        logger.warn(`Using mock data for ${symbol}`);
+        result[symbol] = { usd: 0, usd_24h_change: 0, usd_market_cap: 0, usd_24h_vol: 0 };
       }
-
-      // Final fallback: mock
-      logger.warn(`Using mock data for ${lower}`);
-      result[lower] = { usd: 0, usd_24h_change: 0, usd_market_cap: 0, usd_24h_vol: 0 };
     });
 
-    await Promise.all(fetchPromises);
     logger.info('Final crypto prices result:', result);
     return result;
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Price fetch error:', error);
     throw error;
   }
 }
 
-export async function getOrderBook(pair: string, depth: number = 20) {
+export async function getOrderBook(pair: string, depth: number = 20): Promise<{ bids: OrderBookEntry[]; asks: OrderBookEntry[]; timestamp: number }> {
   try {
-    // Try Bybit public endpoints first (no auth required for market data)
+    // Use CryptoAPIs service instead of Bybit
     try {
-      // Convert pair to Bybit format (e.g., BTCUSDT)
-      const bybitPair = pair.toUpperCase();
+      const cryptoapisService = (await import('./cryptoapisService.js')).default;
+      const exchangeRatesResponse = await cryptoapisService.getExchangeRates(pair, 'USD');
       
-      // Get order book from Bybit
-      const url = `https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${bybitPair}&limit=${depth}`;
-      const resp = await axios.get(url, { 
-        timeout: 10000, // 10 second timeout
-        headers: {
-          'User-Agent': 'Eloity-Crypto-Client/1.0'
+      if (exchangeRatesResponse.success && exchangeRatesResponse.data) {
+        // Create mock order book data based on the exchange rate
+        const basePrice = parseFloat(exchangeRatesResponse.data.rate || 0);
+        const spread = basePrice * 0.01; // 1% spread
+        
+        const bids: OrderBookEntry[] = [];
+        const asks: OrderBookEntry[] = [];
+        
+        for (let i = 0; i < depth; i++) {
+          const bidPrice = basePrice - spread/2 - (i * (spread/depth));
+          const askPrice = basePrice + spread/2 + (i * (spread/depth));
+          const quantity = Math.random() * 2 + 0.1;
+          
+          bids.push({
+            price: bidPrice,
+            quantity: quantity,
+            total: bidPrice * quantity
+          });
+          
+          asks.push({
+            price: askPrice,
+            quantity: quantity,
+            total: askPrice * quantity
+          });
         }
-      });
-      
-      if (resp.data.retCode === 0) {
-        const data = resp.data.result;
-        
-        // Format bids and asks
-        const bids = data.b.map(([price, quantity]: [string, string]) => ({
-          price: parseFloat(price),
-          quantity: parseFloat(quantity),
-          total: parseFloat(price) * parseFloat(quantity)
-        }));
-        
-        const asks = data.a.map(([price, quantity]: [string, string]) => ({
-          price: parseFloat(price),
-          quantity: parseFloat(quantity),
-          total: parseFloat(price) * parseFloat(quantity)
-        }));
         
         return {
-          bids: bids,
-          asks: asks,
-          timestamp: data.ts
+          bids: bids.sort((a, b) => b.price - a.price),
+          asks: asks.sort((a, b) => a.price - b.price),
+          timestamp: exchangeRatesResponse.data.timestamp || Date.now()
         };
-      } else {
-        logger.warn('Bybit orderbook fetch failed:', resp.data.retMsg);
       }
-    } catch (err) {
-      logger.debug('Bybit orderbook fetch failed:', err?.message || err);
+    } catch (err: any) {
+      logger.debug('CryptoAPIs orderbook fetch failed:', err?.message || err);
     }
 
     // Fallback to mock orderbook for development
     const basePrice = 45000; // Mock BTC price
     const spread = 50; // $50 spread
-    
-    // Define types for bids and asks
-    interface OrderBookEntry {
-      price: number;
-      quantity: number;
-      total: number;
-    }
     
     const bids: OrderBookEntry[] = [];
     const asks: OrderBookEntry[] = [];
@@ -213,7 +130,7 @@ export async function getOrderBook(pair: string, depth: number = 20) {
       asks: asks.sort((a, b) => a.price - b.price),
       timestamp: Date.now()
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Orderbook fetch error:', error);
     // Return empty orderbook as fallback
     return {
@@ -236,7 +153,7 @@ interface WalletCreationData {
 interface WalletResult {
   success: boolean;
   walletId?: string;
-  addresses?: any;
+  addresses?: Record<string, any>;
   wallet?: any;
   error?: string;
 }
@@ -244,7 +161,7 @@ interface WalletResult {
 export async function createWallet(userId: string, currencies: string[]): Promise<WalletResult> {
   try {
     const walletId = `wallet_${userId}_${Date.now()}`;
-    const addresses = {};
+    const addresses: Record<string, any> = {};
     
     // Generate addresses for each currency
     for (const currency of currencies) {
@@ -269,7 +186,7 @@ export async function createWallet(userId: string, currencies: string[]): Promis
       addresses,
       wallet
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Wallet creation error:', error);
     return {
       success: false,
@@ -278,48 +195,43 @@ export async function createWallet(userId: string, currencies: string[]): Promis
   }
 }
 
-interface WalletBalanceResult {
-  success: boolean;
-  balances?: any;
-  totalValueUSD?: number;
-  addresses?: any;
-  lastUpdated?: string;
-  error?: string;
+interface WalletBalances {
+  [currency: string]: number;
 }
 
-export async function getWalletBalance(userId: string): Promise<WalletBalanceResult> {
+export async function getWalletBalances(walletId: string): Promise<{ success: boolean; balances?: WalletBalances; totalValueUSD?: number; error?: string }> {
   try {
     // Get wallet from database
-    const wallet = await getWalletFromDatabase(userId);
-    
+    const wallet = await getWalletFromDatabase(walletId);
     if (!wallet) {
       throw new Error('Wallet not found');
     }
-    
-    const balances = {};
+
+    const balances: WalletBalances = {};
     let totalValueUSD = 0;
-    
-    // Get balance for each currency
+
+    // Get balances for each currency in the wallet
     for (const currency of wallet.currencies) {
-      const balance = await getCurrencyBalance(wallet.addresses[currency], currency);
-      balances[currency] = balance;
-      
-      // Convert to USD for total value calculation
-      if (balance > 0) {
-        const price = await getCurrencyPrice(currency, 'usd');
-        totalValueUSD += balance * price;
+      try {
+        const balance = await getCurrencyBalance(wallet.addresses[currency], currency);
+        balances[currency] = balance;
+        
+        // Get USD value of the balance
+        const usdValue = balance * await getCurrencyPrice(currency, 'usd');
+        totalValueUSD += usdValue;
+      } catch (currencyError: any) {
+        logger.warn(`Failed to get balance for ${currency}:`, currencyError?.message || currencyError);
+        balances[currency] = 0;
       }
     }
-    
+
     return {
       success: true,
       balances,
-      totalValueUSD,
-      addresses: wallet.addresses,
-      lastUpdated: new Date().toISOString()
+      totalValueUSD
     };
-  } catch (error) {
-    logger.error('Wallet balance fetch error:', error);
+  } catch (error: any) {
+    logger.error('Wallet balances error:', error);
     return {
       success: false,
       error: error.message
@@ -383,7 +295,7 @@ export async function processDeposit(userId: string, currency: string, amount: n
       confirmationsRequired: getRequiredConfirmations(currency),
       currentConfirmations: txVerification.confirmations
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Deposit processing error:', error);
     return {
       success: false,
@@ -395,8 +307,19 @@ export async function processDeposit(userId: string, currency: string, amount: n
 export async function processWithdrawal(userId: string, currency: string, amount: number, address: string, memo?: string) {
   try {
     // Verify user has sufficient balance
-    const balance = await getWalletBalance(userId);
-    const currentBalance = balance.balances ? balance.balances[currency.toUpperCase()] || 0 : 0;
+    // First get the user's wallet
+    const wallet = await getWalletFromDatabase(userId);
+    if (!wallet) {
+      throw new Error('Wallet not found');
+    }
+    
+    // Then get the balances for that wallet
+    const balanceResult = await getWalletBalances(wallet.id);
+    if (!balanceResult.success) {
+      throw new Error('Failed to get wallet balances');
+    }
+    
+    const currentBalance = balanceResult.balances ? (balanceResult.balances[currency.toUpperCase()] || 0) : 0;
     
     if (currentBalance < amount) {
       throw new Error('Insufficient balance');
@@ -454,7 +377,7 @@ export async function processWithdrawal(userId: string, currency: string, amount
       netAmount,
       estimatedArrival: getEstimatedArrivalTime(currency)
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Withdrawal processing error:', error);
     return {
       success: false,
@@ -517,7 +440,7 @@ export async function createP2POrder(orderData: P2POrderData) {
       orderId,
       order
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('P2P order creation error:', error);
     return {
       success: false,
@@ -560,7 +483,7 @@ export async function matchP2POrders(newOrder: any) {
       success: true,
       matches: results
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Order matching error:', error);
     return {
       success: false,
@@ -616,7 +539,7 @@ export async function createEscrowTransaction(data: EscrowTransactionData) {
       escrowId,
       escrow
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Escrow creation error:', error);
     return {
       success: false,
@@ -669,7 +592,7 @@ export async function releaseEscrowFunds(escrowId: string, sellerId: string) {
       transactionHash: txHash,
       completedAt: new Date()
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Escrow release error:', error);
     return {
       success: false,
@@ -711,7 +634,7 @@ export async function disputeEscrowTransaction(disputeData: any) {
       disputeId,
       dispute
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Escrow dispute error:', error);
     return {
       success: false,
@@ -756,7 +679,7 @@ export async function calculateTradingFees(userId: string, tradeData: any) {
     const userTier = await getUserTradingTier(userId);
     
     // Base fee percentages by tier
-    const feeStructure = {
+    const feeStructure: Record<string, number> = {
       'bronze': 0.005,   // 0.5%
       'silver': 0.003,   // 0.3%
       'gold': 0.002,     // 0.2%
@@ -780,7 +703,7 @@ export async function calculateTradingFees(userId: string, tradeData: any) {
       feePercentage: baseFeePercentage * 100,
       netAmount
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Fee calculation error:', error);
     throw error;
   }
@@ -822,7 +745,7 @@ export async function getRiskAssessment(userId: string) {
       limits,
       lastAssessed: new Date()
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Risk assessment error:', error);
     throw error;
   }
@@ -834,7 +757,7 @@ export async function getRiskAssessment(userId: string) {
 
 async function generateCryptoAddress(currency: string): Promise<string> {
   // In production, generate real crypto addresses using appropriate libraries
-  const mockAddresses = {
+  const mockAddresses: Record<string, string> = {
     'BTC': '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2',
     'ETH': '0x742c82F23Cfa38a6c69b4Cc85a5C3A5b8Aa8bBBb',
     'USDT': '0x742c82F23Cfa38a6c69b4Cc85a5C3A5b8Aa8bBBb',
@@ -857,7 +780,7 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
         const rows = await db.select('crypto_wallets', (record: any) => record.user_id === address);
         const total = rows.reduce((s: number, r: any) => s + parseFloat(r.balance?.toString() || '0'), 0);
         return total;
-      } catch (dbErr) {
+      } catch (dbErr: any) {
         logger.debug('DB crypto_wallets query failed in getCurrencyBalance:', dbErr?.message || dbErr);
       }
     }
@@ -866,7 +789,7 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
     try {
       const rows = await db.select('crypto_wallets', (record: any) => record.wallet_address === address);
       if (rows && rows.length) return parseFloat(rows[0].balance?.toString() || '0');
-    } catch (dbErr2) {
+    } catch (dbErr2: any) {
       logger.debug('DB wallet_address lookup failed in getCurrencyBalance:', dbErr2?.message || dbErr2);
     }
 
@@ -877,14 +800,14 @@ async function getCurrencyBalance(address: string, currency: string): Promise<nu
         // Bybit private endpoints require signing; here we attempt a public wallet balance via unified account (may require proper auth)
         // For safety, call CoinGecko price as fallback numeric value zero for actual asset amount retrieval
         logger.debug('BYBIT credentials present but private balance fetch not implemented, falling back to 0');
-      } catch (byErr) {
+      } catch (byErr: any) {
         logger.debug('Bybit balance fetch failed:', byErr?.message || byErr);
       }
     }
 
     // Final fallback – return 0 to avoid showing misleading random balances
     return 0;
-  } catch (error) {
+  } catch (error: any) {
     logger.error('getCurrencyBalance error:', error);
     return 0;
   }
@@ -906,7 +829,7 @@ async function verifyBlockchainTransaction(currency: string, txHash: string) {
 }
 
 function getRequiredConfirmations(currency: string): number {
-  const confirmations = {
+  const confirmations: Record<string, number> = {
     'BTC': 6,
     'ETH': 12,
     'USDT': 12,
@@ -917,7 +840,7 @@ function getRequiredConfirmations(currency: string): number {
 }
 
 async function calculateWithdrawalFee(currency: string, amount: number): Promise<number> {
-  const feeStructure = {
+  const feeStructure: Record<string, number> = {
     'BTC': 0.0005,  // Fixed BTC fee
     'ETH': 0.005,   // Fixed ETH fee
     'USDT': 1.0,    // Fixed USDT fee
@@ -929,7 +852,7 @@ async function calculateWithdrawalFee(currency: string, amount: number): Promise
 
 async function validateCryptoAddress(address: string, currency: string): Promise<boolean> {
   // In production, validate address format for specific cryptocurrency
-  const patterns = {
+  const patterns: Record<string, RegExp> = {
     'BTC': /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
     'ETH': /^0x[a-fA-F0-9]{40}$/,
     'USDT': /^0x[a-fA-F0-9]{40}$/,
@@ -941,7 +864,7 @@ async function validateCryptoAddress(address: string, currency: string): Promise
 }
 
 function getEstimatedArrivalTime(currency: string): string {
-  const times = {
+  const times: Record<string, string> = {
     'BTC': '30-60 minutes',
     'ETH': '5-15 minutes',
     'USDT': '5-15 minutes',
@@ -978,7 +901,7 @@ function calculateRiskScore(factors: any): number {
 }
 
 function calculateTradingLimits(riskLevel: string, kycLevel: number) {
-  const baseLimits = {
+  const baseLimits: Record<string, { daily: number; monthly: number }> = {
     low: { daily: 50000, monthly: 500000 },
     medium: { daily: 20000, monthly: 200000 },
     high: { daily: 5000, monthly: 50000 }
@@ -1047,7 +970,7 @@ async function saveWalletToDatabase(wallet: any) {
   }
 }
 
-async function getWalletFromDatabase(userId: string) {
+export async function getWalletFromDatabase(userId: string) {
   try {
     const wallets = await db.select('crypto_wallets', 
       (record) => record.user_id === userId
@@ -1064,7 +987,7 @@ async function getWalletFromDatabase(userId: string) {
         'BTC': wallets[0].wallet_address,
         'ETH': wallets[0].wallet_address,
         'USDT': wallets[0].wallet_address
-      },
+      } as Record<string, any>,
       currencies: ['BTC', 'ETH', 'USDT'],
       createdAt: wallets[0].created_at
     };
@@ -1135,7 +1058,7 @@ async function creditWalletBalance(userId: string, currency: string, amount: num
       await db.update('crypto_wallets',
         (record) => record.user_id === userId,
         { 
-          balance: (parseFloat(wallet[currency] || '0') + amount).toString(),
+          balance: (parseFloat((wallet as Record<string, any>)[currency] || '0') + amount).toString(),
           updated_at: new Date() 
         }
       );
@@ -1156,7 +1079,7 @@ async function debitWalletBalance(userId: string, currency: string, amount: numb
       await db.update('crypto_wallets',
         (record) => record.user_id === userId,
         { 
-          balance: (parseFloat(wallet[currency] || '0') - amount).toString(),
+          balance: (parseFloat((wallet as Record<string, any>)[currency] || '0') - amount).toString(),
           updated_at: new Date() 
         }
       );
@@ -1274,7 +1197,7 @@ async function getUserTradingTier(userId: string): Promise<string> {
 }
 
 async function getNetworkFee(currency: string): Promise<number> {
-  const fees = {
+  const fees: Record<string, number> = {
     'BTC': 0.0001,
     'ETH': 0.002,
     'USDT': 1.0,
@@ -1306,7 +1229,7 @@ function getAccountAgeInDays(createdAt: Date): number {
 
 function getCountryRiskScore(country: string): number {
   // Mock country risk scores
-  const riskScores = {
+  const riskScores: Record<string, number> = {
     'US': 5,
     'GB': 5,
     'DE': 5,
@@ -1434,7 +1357,7 @@ export async function executeTrade(tradeData: any) {
 export async function getDetailedPriceData(symbol: string, vsCurrency: string, timeframe: string) {
   try {
     // In production, fetch from a price API
-    const mockPriceData = {
+    const mockPriceData: Record<string, any> = {
       'bitcoin': {
         current_price: 45000,
         price_change_24h: 1250.50,
@@ -1479,7 +1402,7 @@ export async function getDetailedPriceData(symbol: string, vsCurrency: string, t
       ...data,
       last_updated: new Date().toISOString()
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Detailed price data fetch error:', error);
     throw error;
   }
@@ -1603,7 +1526,7 @@ export async function initiatePeerToPeerTrade(tradeData: any) {
       trade: { id: tradeId, ...tradeData },
       instructions: `Please complete payment of ${tradeData.amount * tradeData.price} ${tradeData.fiatCurrency} within ${tradeData.timeLimit} minutes.`
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('P2P trade initiation error:', error);
     return {
       success: false,
@@ -1637,7 +1560,7 @@ export async function confirmEscrowPayment(escrowId: string, data: any) {
     return {
       success: true
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Escrow payment confirmation error:', error);
     return {
       success: false,

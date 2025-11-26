@@ -1,10 +1,14 @@
-# Bybit API Key Permissions Guide
+# Bybit API Key Permissions Guide (Deprecated)
 
-This document outlines the required permissions for the Bybit API keys used in the Eloity Unified Ecosystem platform.
+⚠️ **DEPRECATED**: This documentation is outdated. The platform now uses CryptoAPIs instead of Bybit. Please see [CRYPTOAPIS_API_PERMISSIONS.md](./CRYPTOAPIS_API_PERMISSIONS.md) for the current API key guide.
 
-## Required API Key Permissions
+## Historical Information
 
-When creating or configuring your Bybit API keys, ensure they have the following permissions enabled:
+This document previously outlined the required permissions for the Bybit API keys used in the Eloity Unified Ecosystem platform.
+
+### Required API Key Permissions (Historical)
+
+When creating or configuring your Bybit API keys, the following permissions were required:
 
 ### 1. Contracts - Orders & Positions
 - Permission to place orders on derivatives contracts
@@ -36,42 +40,29 @@ When creating or configuring your Bybit API keys, ensure they have the following
 - Access to exchange history for reporting and analytics
 - View transaction history and fees
 
-## Environment Variables
+## Environment Variables (Historical)
 
-The following environment variables are used in the application:
+The following environment variables were previously used in the application:
 
 ```
 BYBIT_PUBLIC_API=your_bybit_public_key
 BYBIT_SECRET_API=your_bybit_secret_key
 ```
 
-These keys are securely retrieved from Supabase Edge Functions and should never be hardcoded or committed to version control.
+These keys were securely retrieved from Supabase Edge Functions and should never be hardcoded or committed to version control.
 
-## Security Best Practices
+## Migration to CryptoAPIs
 
-1. **Limited Permissions**: Only grant the minimum required permissions for the application to function
-2. **Regular Rotation**: Rotate API keys periodically (recommended every 90 days)
-3. **IP Whitelisting**: Restrict API key usage to specific IP addresses if possible
-4. **Monitoring**: Regularly monitor API key usage and set up alerts for unusual activity
-5. **Separation of Concerns**: Use separate API keys for different environments (development, staging, production)
+The platform has been migrated from Bybit to CryptoAPIs for the following reasons:
 
-## Setup Instructions
+1. **Better Reliability**: CryptoAPIs provides more stable connections
+2. **Comprehensive Data**: More extensive cryptocurrency data coverage
+3. **Simplified Authentication**: Single API key instead of public/secret key pairs
+4. **Better Documentation**: More comprehensive and up-to-date API documentation
 
-1. Log in to your Bybit account
-2. Navigate to API Management section
-3. Create a new API key with the permissions listed above
-4. Store the API key securely in your Supabase Edge Function environment variables:
-   - `BYBIT_PUBLIC_API` - Your Bybit API Key
-   - `BYBIT_SECRET_API` - Your Bybit Secret Key
-5. Deploy the Edge Function to apply the changes
+## See Also
 
-## Troubleshooting
-
-If you encounter permission errors:
-
-1. Verify all required permissions are enabled for your API key
-2. Check that the API key has not expired
-3. Confirm the IP whitelist settings (if applicable)
-4. Ensure the API key is correctly stored in Supabase Edge Functions
-
-For more information about Bybit API permissions, refer to the official Bybit API documentation.
+For current API key information, please refer to:
+- [CRYPTOAPIS_API_PERMISSIONS.md](./CRYPTOAPIS_API_PERMISSIONS.md)
+- [CRYPTOAPIS_INTEGRATION_SETUP.md](./CRYPTOAPIS_INTEGRATION_SETUP.md)
+- [CRYPTO_SETUP_GUIDE.md](./CRYPTO_SETUP_GUIDE.md)

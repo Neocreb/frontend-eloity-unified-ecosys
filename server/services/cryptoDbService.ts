@@ -171,7 +171,7 @@ export async function initiatePeerToPeerTrade(tradeData: any) {
       trade: { id: tradeId, ...tradeData },
       instructions: `Please complete payment of ${tradeData.amount * tradeData.price} ${tradeData.fiatCurrency} within ${tradeData.timeLimit} minutes.`
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error initiating P2P trade:', error);
     return {
       success: false,
@@ -209,7 +209,7 @@ export async function confirmEscrowPayment(escrowId: string, data: any) {
     logger.info('Escrow payment confirmed', { escrowId, ...data });
     
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error confirming escrow payment:', error);
     return {
       success: false,

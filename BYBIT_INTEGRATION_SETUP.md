@@ -1,19 +1,40 @@
-# Bybit Integration Setup Complete
+# Bybit Integration Setup (Deprecated)
 
-This document confirms that the Bybit integration has been properly configured with your API keys.
+⚠️ **DEPRECATED**: This integration has been replaced with CryptoAPIs. Please see [CRYPTOAPIS_INTEGRATION_SETUP.md](./CRYPTOAPIS_INTEGRATION_SETUP.md) for the current setup instructions.
 
-## API Keys Configuration
+## Previous API Keys Configuration
 
-The following API keys have been added to your `.env.local` file:
+The following API keys were previously used in this `.env.local` file:
 
-### Bybit API Keys
-- **Public API Key**: JcVbtn7dMPaP3VpCa7
-- **Secret API Key**: 8sYpzVombBAIlHS47S16POK3oNGQo3vx9sUz
+### Bybit API Keys (Deprecated)
+- **Public API Key**: your-public-api-key-here
+- **Secret API Key**: your-secret-api-key-here
 
-### Other API Keys Added
-- **Twilio**: Configured with SID and Secret Key
-- **Resend**: Configured with API key
-- **Paystack**: Configured with both Public and Secret API keys
+### Migration Notice
+
+This Bybit integration has been deprecated in favor of CryptoAPIs, which provides better reliability and more comprehensive cryptocurrency data.
+
+## Migration Steps
+
+1. Remove the Bybit API keys from your environment variables
+2. Obtain a CryptoAPIs API key from https://cryptoapis.io
+3. Add the `CRYPTOAPIS_API_KEY` to your environment variables
+4. Update your code to use the new CryptoAPIs endpoints
+5. Test the integration to ensure everything works correctly
+
+## Files That Were Updated
+
+- `.env.local` - Previously contained Bybit API keys
+- `server/services/cryptoService.ts` - Previously used Bybit API
+- `server/routes/bybit.ts` - Previously handled Bybit API calls
+- `server/routes/crypto_user.ts` - Previously had Bybit fallbacks
+
+## See Also
+
+For the current setup instructions, please refer to:
+- [CRYPTOAPIS_INTEGRATION_SETUP.md](./CRYPTOAPIS_INTEGRATION_SETUP.md)
+- [CRYPTOAPIS_API_PERMISSIONS.md](./CRYPTOAPIS_API_PERMISSIONS.md)
+- [CRYPTO_SETUP_GUIDE.md](./CRYPTO_SETUP_GUIDE.md)
 
 ## Implementation Summary
 

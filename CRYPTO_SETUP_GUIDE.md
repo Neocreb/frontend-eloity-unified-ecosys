@@ -13,50 +13,44 @@ The crypto platform is now **fully functional** with the following features work
 - ✅ **Crypto Trading Interface**: Advanced trading tools with charts
 
 ### Features Requiring Configuration
-- ⏳ **Real Address Generation**: Deposit addresses (requires Bybit API keys)
-- ⏳ **Withdrawals**: Real withdrawal processing (requires Bybit API keys)
-- ⏳ **Account Balances**: Real Bybit wallet balances (requires Bybit API keys)
+- ⏳ **Real Address Generation**: Deposit addresses (requires CryptoAPIs API keys)
+- ⏳ **Withdrawals**: Real withdrawal processing (requires CryptoAPIs API keys)
+- ⏳ **Account Balances**: Real wallet balances (requires CryptoAPIs API keys)
 
 ---
 
 ## 🔧 Configuration Options
 
-Choose one of the following approaches to enable authenticated Bybit features:
+Choose one of the following approaches to enable authenticated features:
 
-### Option 1: Direct Bybit API Keys (Recommended for Development)
+### Option 1: Direct CryptoAPIs API Keys (Recommended for Development)
 
 Set these environment variables:
 
 ```bash
-BYBIT_PUBLIC_API=your_bybit_public_api_key
-BYBIT_SECRET_API=your_bybit_secret_api_key
+CRYPTOAPIS_API_KEY=your_cryptoapis_api_key
 ```
 
-**How to get Bybit API Keys:**
-1. Log in to your Bybit account at https://www.bybit.com
-2. Go to Account → API
-3. Create a new API key with these permissions:
-   - **Contracts**: Orders, Positions, Order History
-   - **Spot**: Orders, Account, Trade
-   - **Exchange**: Deposits, Withdrawals, Transfer
-   - **User**: User ID, Account Info
-4. Copy your Public Key and Secret Key
+**How to get CryptoAPIs API Keys:**
+1. Sign up at https://cryptoapis.io
+2. Navigate to Dashboard → API Keys
+3. Create a new API key
+4. Copy your API Key
 
 **System will automatically:**
-- Handle API signing and authentication
-- Call Bybit API v5 endpoints directly
+- Handle API authentication
+- Call CryptoAPIs endpoints directly
 - Support deposit addresses, withdrawals, balances, and trading
 
 ### Option 2: Supabase Edge Functions (Recommended for Production)
 
 1. Create a Supabase project at https://supabase.com
-2. Deploy the Edge Function (it's already in `supabase/functions/bybit/`)
+2. Deploy the Edge Function (it's already in `supabase/functions/cryptoapis/`)
 3. Set these environment variables:
    ```bash
    SUPABASE_EDGE_BASE=https://your-project-id.supabase.co/functions/v1
    SUPABASE_FUNCTIONS_URL=https://your-project-id.supabase.co/functions/v1
-   BYBIT_PUBLIC_API=your_bybit_public_api_key
-   BYBIT_SECRET_API=your_bybit_secret_api_key
+   CRYPTOAPIS_API_KEY=your_cryptoapis_api_key
    ```
 
 **Benefits:**
@@ -82,9 +76,9 @@ BYBIT_SECRET_API=your_bybit_secret_api_key
 - **POST /api/crypto/escrow/:id/release** - Release funds
 
 ### Admin/KYC Required Features
-- **GET /api/crypto/user/balances** - Real wallet balances (requires Bybit API)
-- **GET /api/bybit/deposit-address** - Generate deposit address
-- **POST /api/bybit/withdraw** - Process withdrawal
+- **GET /api/crypto/user/balances** - Real wallet balances (requires CryptoAPIs API)
+- **GET /api/cryptoapis/deposit-address** - Generate deposit address
+- **POST /api/cryptoapis/withdraw** - Process withdrawal
 - **GET /api/crypto/stats** - Trading statistics
 - **GET /api/crypto/risk-assessment** - Risk analysis
 
@@ -94,9 +88,8 @@ BYBIT_SECRET_API=your_bybit_secret_api_key
 
 ### Development (.env file)
 ```bash
-# Bybit API Configuration
-BYBIT_PUBLIC_API=your_public_key
-BYBIT_SECRET_API=your_secret_key
+# CryptoAPIs API Configuration
+CRYPTOAPIS_API_KEY=your_api_key
 
 # Or Supabase Edge Functions
 SUPABASE_EDGE_BASE=https://your-project.supabase.co/functions/v1
@@ -132,9 +125,9 @@ curl "http://localhost:5002/api/crypto/orderbook/BTCUSDT"
 curl "http://localhost:5002/api/crypto/p2p/orders?cryptocurrency=BTC"
 ```
 
-### Test Deposit Address (with Bybit keys configured)
+### Test Deposit Address (with CryptoAPIs keys configured)
 ```bash
-curl "http://localhost:5002/api/bybit/deposit-address?coin=BTC"
+curl "http://localhost:5002/api/cryptoapis/deposit-address?coin=BTC"
 ```
 
 ---
@@ -152,21 +145,21 @@ curl "http://localhost:5002/api/bybit/deposit-address?coin=BTC"
 
 ## 🆘 Troubleshooting
 
-### Issue: "Bybit integration not configured"
-**Solution**: Set BYBIT_PUBLIC_API and BYBIT_SECRET_API environment variables
+### Issue: "CryptoAPIs integration not configured"
+**Solution**: Set CRYPTOAPIS_API_KEY environment variable
 
 ### Issue: Deposit addresses not generating
-**Solution**: Ensure Bybit API keys have the "Deposits" permission enabled
+**Solution**: Ensure CryptoAPIs API key is valid and has proper permissions
 
 ### Issue: Withdrawals failing
 **Solution**: 
-- Check Bybit API key has "Withdrawals" permission
+- Check CryptoAPIs API key validity
 - Verify user has completed KYC
 - Check withdrawal is within configured limits
 
 ### Issue: Prices not loading
 **Solution**: 
-- System defaults to Bybit public APIs and CoinGecko
+- System defaults to CryptoAPIs public APIs and CoinGecko
 - Check internet connection
 - Verify no CORS issues
 
@@ -185,12 +178,12 @@ Key metrics to monitor:
 
 ## 🎯 Next Steps
 
-1. Obtain Bybit API keys
+1. Obtain CryptoAPIs API keys
 2. Configure environment variables
 3. Test deposit address generation
 4. Complete end-to-end transaction testing
 5. Deploy to production with proper security measures
 
 For support or questions, please refer to:
-- Bybit API Documentation: https://bybit-exchange.github.io/docs/
+- CryptoAPIs Documentation: https://docs.cryptoapis.io/
 - Supabase Edge Functions: https://supabase.com/docs/guides/functions

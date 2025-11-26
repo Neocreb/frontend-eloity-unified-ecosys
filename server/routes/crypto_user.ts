@@ -10,43 +10,30 @@ import crypto from 'crypto';
 const router = express.Router();
 
 const SUPABASE_EDGE_BASE = process.env.SUPABASE_EDGE_BASE || process.env.SUPABASE_FUNCTIONS_URL || '';
-const BYBIT_PUBLIC_API = process.env.BYBIT_PUBLIC_API || '';
-const BYBIT_SECRET_API = process.env.BYBIT_SECRET_API || '';
+const CRYPTOAPIS_API_KEY = process.env.CRYPTOAPIS_API_KEY || '';
 const BACKEND_BASE = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5002}`;
 
-if (!SUPABASE_EDGE_BASE && (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API)) {
-  logger.warn('SUPABASE_EDGE_BASE or BYBIT API keys not configured; some crypto user routes will have limited functionality');
+if (!SUPABASE_EDGE_BASE && !CRYPTOAPIS_API_KEY) {
+  logger.warn('SUPABASE_EDGE_BASE or CRYPTOAPIS_API_KEY not configured; some crypto user routes will have limited functionality');
 }
 
-// Helper: HMAC-SHA256 signature for Bybit API
-async function signBybit(secret: string, timestamp: string, method: string, path: string, body: string = '') {
-  const payload = `${timestamp}${method.toUpperCase()}${path}${body}`;
-  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
-}
-
-async function callBybitDirect(method: string, path: string, query: string = '', body: any = null): Promise<any> {
+// Helper: Call CryptoAPIs directly
+async function callCryptoAPIs(path: string, method: string = 'GET', body: any = null): Promise<any> {
   try {
-    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
-      throw new Error('Bybit API keys not configured');
+    if (!CRYPTOAPIS_API_KEY) {
+      throw new Error('CryptoAPIs API key not configured');
     }
 
-    const timestamp = Date.now().toString();
-    const bodyString = body ? JSON.stringify(body) : '';
-    const signature = await signBybit(BYBIT_SECRET_API, timestamp, method, path, bodyString);
-
-    const fullUrl = `https://api.bybit.com${path}${query ? `?${query}` : ''}`;
+    const fullUrl = `https://rest.cryptoapis.io/v2${path}`;
     const headers: any = {
       'Content-Type': 'application/json',
-      'X-BAPI-API-KEY': BYBIT_PUBLIC_API,
-      'X-BAPI-SIGN': signature,
-      'X-BAPI-TIMESTAMP': timestamp,
-      'X-BAPI-RECV-WINDOW': '5000'
+      'X-API-Key': CRYPTOAPIS_API_KEY
     };
 
     const response = await fetch(fullUrl, {
       method,
       headers,
-      body: bodyString || undefined
+      body: body ? JSON.stringify(body) : undefined
     });
 
     const text = await response.text();
@@ -56,7 +43,7 @@ async function callBybitDirect(method: string, path: string, query: string = '',
       return { error: text, status: response.status };
     }
   } catch (error) {
-    logger.error('Direct Bybit API call error:', error);
+    logger.error('Direct CryptoAPIs call error:', error);
     throw error;
   }
 }
@@ -82,7 +69,7 @@ router.get('/deposit-address', authenticateToken, async (req, res) => {
 
     // Try Supabase edge function first if configured
     if (SUPABASE_EDGE_BASE) {
-      const url = new URL(`${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/deposit-address`);
+      const url = new URL(`${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/cryptoapis/deposit-address`);
       url.searchParams.set('coin', String(coin));
       if (chainType) url.searchParams.set('chainType', String(chainType));
 
@@ -98,10 +85,10 @@ router.get('/deposit-address', authenticateToken, async (req, res) => {
       const r = await fetch(url.toString(), { method: 'GET', headers });
       const text = await r.text();
 
-      // If we get 401 and don't have auth key, fall back to direct Bybit API
+      // If we get 401 and don't have auth key, fall back to direct CryptoAPIs
       if (r.status === 401 && !supabaseAnonKey) {
-        logger.info('Supabase Edge Function requires auth; falling back to direct Bybit API for deposit address');
-        // Continue to direct Bybit API fallback below
+        logger.info('Supabase Edge Function requires auth; falling back to direct CryptoAPIs for deposit address');
+        // Continue to direct CryptoAPIs fallback below
       } else {
         try {
           const json = JSON.parse(text);
@@ -112,21 +99,17 @@ router.get('/deposit-address', authenticateToken, async (req, res) => {
       }
     }
 
-    // Fallback to direct Bybit API
-    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
+    // Fallback to direct CryptoAPIs
+    if (!CRYPTOAPIS_API_KEY) {
       return res.status(503).json({
-        error: 'Bybit integration not configured',
-        details: 'Please configure SUPABASE_EDGE_BASE or BYBIT API keys'
+        error: 'CryptoAPIs integration not configured',
+        details: 'Please configure SUPABASE_EDGE_BASE or CRYPTOAPIS_API_KEY'
       });
     }
 
-    // Call Bybit API to generate deposit address
-    const path = '/v5/asset/deposit/query-address';
-    const params = new URLSearchParams();
-    params.append('coin', String(coin));
-    if (chainType) params.append('chainType', String(chainType));
-    
-    const result = await callBybitDirect('GET', path, params.toString());
+    // Call CryptoAPIs to generate deposit address
+    const path = `/blockchain-tools/${coin}/mainnet/addresses`;
+    const result = await callCryptoAPIs(path, 'POST');
     res.status(200).json(result);
   } catch (error) {
     logger.error('Error generating deposit address:', error);
@@ -134,7 +117,7 @@ router.get('/deposit-address', authenticateToken, async (req, res) => {
   }
 });
 
-// Get user-visible balances from Bybit (via edge function or direct API) — requires KYC
+// Get user-visible balances from CryptoAPIs (via edge function or direct API) — requires KYC
 router.get('/balances', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId as string;
@@ -143,11 +126,9 @@ router.get('/balances', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'KYC required to access balances' });
     }
 
-    const ccy = String(req.query.ccy || '');
-
     // Try Supabase edge function first if configured
     if (SUPABASE_EDGE_BASE) {
-      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/balances${ccy ? `?ccy=${encodeURIComponent(ccy)}` : ''}`;
+      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/balances`;
 
       // Get Supabase credentials from environment variables
       const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
@@ -161,10 +142,10 @@ router.get('/balances', authenticateToken, async (req, res) => {
       const r = await fetch(url, { method: 'GET', headers });
       const text = await r.text();
 
-      // If we get 401 and don't have auth key, fall back to direct Bybit API
+      // If we get 401 and don't have auth key, fall back to direct CryptoAPIs
       if (r.status === 401 && !supabaseAnonKey) {
-        logger.info('Supabase Edge Function requires auth; falling back to direct Bybit API for balances');
-        // Continue to direct Bybit API fallback below
+        logger.info('Supabase Edge Function requires auth; falling back to direct CryptoAPIs for balances');
+        // Continue to direct CryptoAPIs fallback below
       } else {
         try {
           const json = JSON.parse(text);
@@ -175,17 +156,17 @@ router.get('/balances', authenticateToken, async (req, res) => {
       }
     }
 
-    // Fallback to direct Bybit API
-    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
+    // Fallback to direct CryptoAPIs
+    if (!CRYPTOAPIS_API_KEY) {
       return res.status(503).json({
-        error: 'Bybit integration not configured',
-        details: 'Please configure SUPABASE_EDGE_BASE or BYBIT API keys'
+        error: 'CryptoAPIs integration not configured',
+        details: 'Please configure SUPABASE_EDGE_BASE or CRYPTOAPIS_API_KEY'
       });
     }
 
-    const path = '/v5/account/wallet-balance';
-    const query = ccy ? `ccy=${encodeURIComponent(ccy)}` : '';
-    const result = await callBybitDirect('GET', path, query);
+    // Call CryptoAPIs to get wallet balances
+    const path = '/wallet/balance';
+    const result = await callCryptoAPIs(path);
     res.status(200).json(result);
   } catch (error) {
     logger.error('Error fetching user balances:', error);
@@ -209,7 +190,7 @@ router.post('/place-order', placeOrderLimiter, authenticateToken, async (req, re
     }
 
     // Forward to Supabase edge function which signs with platform key
-    const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/place-order`;
+    const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/cryptoapis/place-order`;
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const text = await r.text();
     let jsonResp: any = null;
@@ -267,7 +248,7 @@ router.post('/transfer', transferLimiter, authenticateToken, async (req, res) =>
       return res.status(403).json({ error: 'KYC required to perform transfers or withdrawals' });
     }
 
-    const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/transfer`;
+    const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/cryptoapis/transfer`;
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body || {}) });
     const text = await r.text();
     let jsonResp: any = null;
@@ -326,7 +307,7 @@ router.post('/withdraw', transferLimiter, authenticateToken, async (req, res) =>
 
     // Try Supabase edge function first if configured
     if (SUPABASE_EDGE_BASE) {
-      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/bybit/withdraw`;
+      const url = `${SUPABASE_EDGE_BASE.replace(/\/+$/, '')}/cryptoapis/withdraw`;
       const r = await fetch(url, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -367,16 +348,16 @@ router.post('/withdraw', transferLimiter, authenticateToken, async (req, res) =>
       return res.status(r.status).send(text);
     }
 
-    // Fallback to direct Bybit API
-    if (!BYBIT_PUBLIC_API || !BYBIT_SECRET_API) {
+    // Fallback to direct CryptoAPIs
+    if (!CRYPTOAPIS_API_KEY) {
       return res.status(503).json({
-        error: 'Bybit integration not configured',
-        details: 'Please configure SUPABASE_EDGE_BASE or BYBIT API keys'
+        error: 'CryptoAPIs integration not configured',
+        details: 'Please configure SUPABASE_EDGE_BASE or CRYPTOAPIS_API_KEY'
       });
     }
 
-    // Call Bybit API to initiate withdrawal
-    const path = '/v5/asset/withdraw';
+    // Call CryptoAPIs to initiate withdrawal
+    const path = `/wallet/withdrawals`;
     const body = {
       coin,
       chain,
@@ -385,9 +366,9 @@ router.post('/withdraw', transferLimiter, authenticateToken, async (req, res) =>
       tag
     };
     
-    const result = await callBybitDirect('POST', path, '', body);
+    const result = await callCryptoAPIs(path, 'POST', body);
     
-    if (result.retCode === 0) {
+    if (result.success) {
       try {
         // Atomic debit from user's internal wallet
         await adjustWalletBalanceAtomic(userId, coin, -Math.abs(Number(amount || 0)), { type: 'withdrawal', metadata: { address, response: result } });

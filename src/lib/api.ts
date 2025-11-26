@@ -259,65 +259,71 @@ class ApiClient {
     return this.request(`/freelance/jobs?${params.toString()}`);
   }
 
-  // Crypto methods - now using Bybit API
+  // Crypto methods - now using CryptoAPIs instead of Bybit API
   async getCryptoPrices() {
     try {
-      // Use Bybit API directly instead of CoinGecko
-      const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot', {
-        headers: {
-          'X-BAPI-API-KEY': import.meta.env?.VITE_BYBIT_API_KEY || ''
-        }
-      });
+      // Use our backend CryptoAPIs endpoint instead of calling Bybit directly
+      const response = await fetch('/api/cryptoapis/assets');
       
       if (!response.ok) {
-        throw new Error(`Bybit API error: ${response.status}`);
+        throw new Error(`CryptoAPIs error: ${response.status}`);
       }
       
       const data = await response.json();
       const prices: Record<string, any> = {};
       
-      data.result.list.forEach((ticker: any) => {
-        const symbol = ticker.symbol.toLowerCase().replace('usdt', '');
-        prices[symbol] = {
-          usd: parseFloat(ticker.lastPrice),
-          usd_market_cap: 0, // Bybit doesn't provide market cap
-          usd_24h_change: parseFloat(ticker.price24hPcnt) * 100,
-          usd_24h_vol: parseFloat(ticker.volume24h)
-        };
-      });
+      // Process CryptoAPIs data into the format expected by the UI
+      if (data.success && data.data) {
+        // Extract price information from CryptoAPIs response
+        // This is a simplified mapping - you may need to adjust based on actual CryptoAPIs response structure
+        data.data.forEach((asset: any) => {
+          const symbol = asset.assetId.toLowerCase();
+          prices[symbol] = {
+            usd: parseFloat(asset.rate || 0),
+            usd_market_cap: parseFloat(asset.marketCap || 0),
+            usd_24h_change: parseFloat(asset.changePercent24h || 0),
+            usd_24h_vol: parseFloat(asset.volume24h || 0)
+          };
+        });
+      }
       
       return { prices, timestamp: Date.now() };
     } catch (error) {
-      console.error('Error fetching crypto prices from Bybit:', error);
-      throw error; // No fallback to mock data
+      console.error('Error fetching crypto prices from CryptoAPIs:', error);
+      throw error;
     }
   }
 
   async getCryptoTrades() {
     try {
-      // Use Bybit API to get recent trades
-      const response = await fetch('https://api.bybit.com/v5/market/recent-trade?category=spot&symbol=BTCUSDT&limit=50', {
-        headers: {
-          'X-BAPI-API-KEY': import.meta.env?.VITE_BYBIT_API_KEY || ''
-        }
-      });
+      // Use our backend CryptoAPIs endpoint for trades
+      const response = await fetch('/api/cryptoapis/exchange-rates/BTC/USD');
       
       if (!response.ok) {
-        throw new Error(`Bybit API error: ${response.status}`);
+        throw new Error(`CryptoAPIs error: ${response.status}`);
       }
       
       const data = await response.json();
-      return data.result.list.map((trade: any) => ({
-        id: trade.execId,
-        symbol: 'BTCUSDT',
-        price: parseFloat(trade.price),
-        quantity: parseFloat(trade.size),
-        time: trade.time,
-        isBuyerMaker: trade.side === 'Sell'
-      }));
+      const trades: any[] = [];
+      
+      // Process CryptoAPIs data into trades format
+      if (data.success && data.data) {
+        // Extract trade information from CryptoAPIs response
+        // This is a simplified mapping - you may need to adjust based on actual CryptoAPIs response structure
+        trades.push({
+          id: data.data.timestamp,
+          symbol: 'BTCUSDT',
+          price: parseFloat(data.data.rate || 0),
+          quantity: 1, // CryptoAPIs may not provide quantity data
+          time: data.data.timestamp,
+          isBuyerMaker: true // Default value
+        });
+      }
+      
+      return trades;
     } catch (error) {
-      console.error('Error fetching crypto trades from Bybit:', error);
-      throw error; // No fallback to mock data
+      console.error('Error fetching crypto trades from CryptoAPIs:', error);
+      throw error;
     }
   }
 }

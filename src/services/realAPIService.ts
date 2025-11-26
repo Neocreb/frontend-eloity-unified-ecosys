@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 /**
  * Real API Integration Service
  * Integrates with actual APIs for live data (when API keys are available)
@@ -150,31 +149,25 @@ export class RealAPIService {
   private async fetchBybitData(
     symbol: string,
   ): Promise<APIResponse<CryptoPrice>> {
-    // Bybit API with optional key for higher rate limits
-    const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol.toUpperCase()}USDT`;
+    // Use our backend CryptoAPIs endpoint instead of calling Bybit directly
+    const url = `/api/cryptoapis/exchange-rates/${symbol.toUpperCase()}/USD`;
     
-    // Note: In a real frontend application, API keys should be handled on the server-side
-    // This is just for demonstration purposes. In production, this should be proxied through your backend.
-    const apiKey = import.meta.env?.VITE_BYBIT_API_KEY || '';
-    const headers = apiKey ? { 'X-BAPI-API-KEY': apiKey } : {};
-
     try {
-      const response = await fetch(url, { headers });
-      if (!response.ok) throw new Error("API request failed");
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("CryptoAPIs request failed");
 
       const data = await response.json();
-      const tickerData = data.result.list[0];
-
-      if (!tickerData) throw new Error("Coin not found");
+      
+      if (!data.success) throw new Error("CryptoAPIs request failed");
 
       return {
         success: true,
         data: {
           symbol: symbol,
-          price: parseFloat(tickerData.lastPrice),
-          change24h: parseFloat(tickerData.price24hPcnt) * 100 || 0,
-          marketCap: 0, // Bybit doesn't provide market cap directly
-          volume24h: parseFloat(tickerData.volume24h),
+          price: parseFloat(data.data.rate || 0),
+          change24h: parseFloat(data.data.changePercent24h || 0),
+          marketCap: parseFloat(data.data.marketCap || 0),
+          volume24h: parseFloat(data.data.volume24h || 0),
         },
         source: "real_api",
         timestamp: Date.now(),
