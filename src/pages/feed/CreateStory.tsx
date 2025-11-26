@@ -251,7 +251,9 @@ const CreateStory = () => {
       });
 
       console.debug("[CreateStory] Navigating back to feed");
-      // Navigate back to feed with a flag to trigger refetch
+      // Set a flag to trigger refetch in the feed component
+      sessionStorage.setItem("refetchStoriesOnReturn", "true");
+      // Navigate back to feed
       navigate(-1);
     } catch (error) {
       console.error("[CreateStory] Error creating story:", error);
