@@ -38,14 +38,18 @@ export const useStories = () => {
         groupedStories[story.user_id].push(story);
       });
 
-      // Convert to Story format (this would need user data from a user service)
-      const formattedStories: Story[] = Object.entries(groupedStories).map(([userId, userStories]) => ({
-        id: userId,
-        username: 'User', // Would be fetched from user service
-        avatar: '', // Would be fetched from user service
-        stories: userStories,
-        hasNewStory: true
-      }));
+      // Convert to Story format with actual user data
+      const formattedStories: Story[] = Object.entries(groupedStories).map(([userId, userStories]) => {
+        // Get user info from the first story of each user
+        const firstStory = userStories[0];
+        return {
+          id: userId,
+          username: firstStory.username || firstStory.full_name || 'User',
+          avatar: firstStory.avatar_url || '',
+          stories: userStories,
+          hasNewStory: true
+        };
+      });
 
       setStories(formattedStories);
       setError(null);

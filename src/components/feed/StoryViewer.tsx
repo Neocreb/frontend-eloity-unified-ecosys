@@ -5,8 +5,32 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useStories } from '@/hooks/useStories';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Define UserStory interface locally
+interface UserStory {
+  id: string;
+  user_id: string;
+  media_url: string;
+  media_type: 'image' | 'video';
+  caption: string | null;
+  expires_at: string;
+  views_count: number;
+  likes_count: number;
+  created_at: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+}
+
+interface Story {
+  id: string;
+  username: string;
+  avatar: string;
+  hasNewStory?: boolean;
+  stories?: UserStory[];
+}
+
 interface StoryViewerProps {
-  stories: any[];
+  stories: Story[];
   initialIndex?: number;
   onClose: () => void;
   onStoryChange?: (index: number) => void;
@@ -124,11 +148,11 @@ const StoryViewer = ({ stories, initialIndex = 0, onClose, onStoryChange }: Stor
       {/* User info */}
       <div className="absolute top-8 left-4 z-10 flex items-center gap-3">
         <Avatar className="h-8 w-8 border-2 border-white">
-          <AvatarImage src={currentStory.avatar} alt={currentStory.username} />
-          <AvatarFallback>{currentStory.username.substring(0, 2)}</AvatarFallback>
+          <AvatarImage src={currentStory.avatar || "/placeholder.svg"} alt={currentStory.username} />
+          <AvatarFallback>{currentStory.username?.substring(0, 2) || "U"}</AvatarFallback>
         </Avatar>
         <div className="text-white">
-          <div className="font-semibold text-sm">{currentStory.username}</div>
+          <div className="font-semibold text-sm">{currentStory.username || "User"}</div>
           {currentMedia.created_at && (
             <div className="text-xs opacity-75">
               {new Date(currentMedia.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

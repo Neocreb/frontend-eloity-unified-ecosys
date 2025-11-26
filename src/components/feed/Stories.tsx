@@ -12,6 +12,21 @@ import StoryViewer from "./StoryViewer";
 import { supabase } from '@/integrations/supabase/client';
 import { storiesService } from '@/services/storiesService';
 
+// Define UserStory interface locally since we can't import it directly
+interface UserStory {
+  id: string;
+  user_id: string;
+  media_url: string;
+  media_type: 'image' | 'video';
+  caption: string | null;
+  expires_at: string;
+  views_count: number;
+  likes_count: number;
+  created_at: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+}
 
 export type Story = {
   id: string;
@@ -19,6 +34,7 @@ export type Story = {
   avatar: string;
   hasNewStory?: boolean;
   isUser?: boolean;
+  stories?: UserStory[]; // Add stories array
 };
 
 const Stories = () => {
@@ -220,11 +236,11 @@ const Stories = () => {
                   onClick={() => handleViewStory(index - (adSettings.enableAds ? 1 : 0))} // Adjust index for ad
                 >
                   <Avatar className="h-16 w-16 border-2 border-white">
-                    <AvatarImage src={story.avatar} />
-                    <AvatarFallback>{story.username.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={story.avatar || "/placeholder.svg"} />
+                    <AvatarFallback>{story.username?.substring(0, 2).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
                 </div>
-                <span className="text-xs">{story.username}</span>
+                <span className="text-xs">{story.username || "User"}</span>
               </div>
             );
           })}

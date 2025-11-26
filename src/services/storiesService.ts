@@ -11,6 +11,10 @@ export interface UserStory {
   views_count: number;
   likes_count: number;
   created_at: string;
+  // Add user profile fields
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
 }
 
 export interface StoryView {
@@ -49,16 +53,32 @@ class StoriesService {
       // Include the current user's own stories
       followingIds.push(currentUserId);
 
-      // Get active stories from followed users
+      // Get active stories from followed users with user profile information
       const { data, error } = await this.supabase
         .from('user_stories')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
         .in('user_id', followingIds)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Flatten the data to include profile information at the root level
+      const storiesWithProfile = (data || []).map(story => ({
+        ...story,
+        username: story.profiles?.username || null,
+        full_name: story.profiles?.full_name || null,
+        avatar_url: story.profiles?.avatar_url || null
+      }));
+      
+      return storiesWithProfile;
     } catch (error) {
       console.error('Error fetching active stories:', error);
       throw error;
@@ -70,13 +90,29 @@ class StoriesService {
     try {
       const { data, error } = await this.supabase
         .from('user_stories')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('user_id', userId)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Flatten the data to include profile information at the root level
+      const storiesWithProfile = (data || []).map(story => ({
+        ...story,
+        username: story.profiles?.username || null,
+        full_name: story.profiles?.full_name || null,
+        avatar_url: story.profiles?.avatar_url || null
+      }));
+      
+      return storiesWithProfile;
     } catch (error) {
       console.error('Error fetching user stories:', error);
       throw error;
