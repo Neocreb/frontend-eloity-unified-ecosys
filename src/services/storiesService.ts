@@ -92,15 +92,15 @@ class StoriesService {
       const newStory = {
         user_id: userId,
         media_url: storyData.media_url,
-        media_type: storyData.media_type,
-        caption: storyData.caption || null,
+        type: storyData.media_type,
+        content: storyData.caption || null,
         expires_at: expiresAt.toISOString(),
-        views_count: 0,
-        likes_count: 0,
+        view_count: 0,
+        like_count: 0,
       };
 
       const { data, error } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .insert(newStory)
         .select()
         .single();
