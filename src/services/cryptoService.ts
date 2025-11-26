@@ -505,66 +505,6 @@ export class CryptoService {
     }
   }
 
-  async addToWatchlist(userId: string, asset: string): Promise<any> {
-    // Add asset to user's watchlist in database
-    try {
-      // If we're on the server side and have access to the database
-      if (typeof window === 'undefined' && supabase) {
-        // First, get the cryptocurrency data
-        const { data: cryptoData, error: cryptoError } = await supabase
-          .from('crypto_prices')
-          .select('*')
-          .eq('symbol', asset.toUpperCase())
-          .single();
-
-        if (cryptoError) {
-          throw new Error(`Database error fetching crypto data: ${cryptoError.message}`);
-        }
-
-        // Add to user's watchlist
-        const { data, error } = await supabase
-          .from('user_watchlists')
-          .insert({
-            user_id: userId,
-            crypto_id: cryptoData.id,
-            created_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (error) {
-          throw new Error(`Database error adding to watchlist: ${error.message}`);
-        }
-
-        // Return the cryptocurrency data
-        return {
-          id: cryptoData.symbol.toLowerCase(),
-          symbol: cryptoData.symbol,
-          name: cryptoData.name,
-          current_price: parseFloat(cryptoData.price_usd),
-          market_cap: parseFloat(cryptoData.market_cap),
-          total_volume: parseFloat(cryptoData.volume_24h),
-          price_change_percentage_24h: parseFloat(cryptoData.price_change_24h),
-        };
-      } else {
-        // Client-side fallback - make API call to our own backend
-        const response = await fetch('/api/crypto/watchlist/add', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, asset })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-        
-        return await response.json();
-      }
-    } catch (error) {
-      console.error(`Failed to add ${asset} to watchlist:`, error);
-      throw error; // No fallback to mock data
-    }
-  }
 
   async createAlert(alertData: any): Promise<any> {
     // Create alert in database
