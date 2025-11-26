@@ -861,6 +861,107 @@ function getAllowedEscrowActions(escrow: any, userId: string) {
 // ADDITIONAL ENDPOINTS FOR FRONTEND COMPATIBILITY
 // =============================================================================
 
+// Get list of cryptocurrencies
+router.get('/cryptocurrencies', async (req, res) => {
+  try {
+    const { limit = 50 } = req.query;
+
+    const prices = await getCryptoPrices(['bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana']);
+
+    // Convert to cryptocurrency format
+    const cryptos = Object.entries(prices).map(([symbol, data]: [string, any], index) => ({
+      id: symbol,
+      symbol: symbol.toUpperCase(),
+      name: symbol.charAt(0).toUpperCase() + symbol.slice(1),
+      image: '',
+      current_price: data.usd || 0,
+      market_cap: data.usd_market_cap || 0,
+      market_cap_rank: index + 1,
+      total_volume: data.usd_24h_vol || 0,
+      high_24h: 0,
+      low_24h: 0,
+      price_change_24h: 0,
+      price_change_percentage_24h: data.usd_24h_change || 0,
+      last_updated: new Date().toISOString()
+    }));
+
+    res.json(cryptos.slice(0, limit));
+  } catch (error) {
+    logger.error('Cryptocurrencies fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch cryptocurrencies' });
+  }
+});
+
+// Get trading pairs
+router.get('/trading-pairs', async (req, res) => {
+  try {
+    const prices = await getCryptoPrices(['bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana']);
+
+    // Convert to trading pair format
+    const pairs = Object.entries(prices).map(([symbol, data]: [string, any]) => ({
+      symbol: `${symbol.toUpperCase()}USDT`,
+      baseAsset: symbol.toUpperCase(),
+      quoteAsset: 'USDT',
+      price: data.usd || 0,
+      priceChange: 0,
+      priceChangePercent: data.usd_24h_change || 0,
+      volume: data.usd_24h_vol || 0,
+      quoteVolume: 0,
+      openPrice: 0,
+      highPrice: 0,
+      lowPrice: 0,
+      bidPrice: (data.usd || 0) * 0.999,
+      askPrice: (data.usd || 0) * 1.001
+    }));
+
+    res.json(pairs);
+  } catch (error) {
+    logger.error('Trading pairs fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch trading pairs' });
+  }
+});
+
+// Get staking products
+router.get('/staking-products', async (req, res) => {
+  try {
+    // Return mock staking products
+    res.json([]);
+  } catch (error) {
+    logger.error('Staking products fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch staking products' });
+  }
+});
+
+// Stake crypto asset
+router.post('/stake', authenticateToken, async (req, res) => {
+  try {
+    const { productId, amount } = req.body;
+    const userId = req.userId;
+
+    if (!productId || !amount) {
+      return res.status(400).json({ error: 'Product ID and amount are required' });
+    }
+
+    // Mock staking position creation
+    const stakingPosition = {
+      id: `stake_${Date.now()}`,
+      userId,
+      productId,
+      amount: parseFloat(amount),
+      startDate: new Date().toISOString(),
+      expectedEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      apy: 5.0,
+      earned: 0,
+      status: 'active'
+    };
+
+    res.status(201).json(stakingPosition);
+  } catch (error) {
+    logger.error('Staking error:', error);
+    res.status(500).json({ error: 'Failed to stake asset' });
+  }
+});
+
 // Get user portfolio
 router.get('/portfolio', authenticateToken, async (req, res) => {
   try {
