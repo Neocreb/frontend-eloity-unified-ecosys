@@ -522,6 +522,7 @@ const EnhancedFeedWithTabs = () => {
   };
 
   const handleCreateStory = async (storyData: any) => {
+    console.debug("[EnhancedFeedWithTabs] handleCreateStory called with data:", storyData);
     try {
       // Add the new story to the userStories state
       const newStory = {
@@ -539,14 +540,19 @@ const EnhancedFeedWithTabs = () => {
         hasNew: true,
       };
 
+      console.debug("[EnhancedFeedWithTabs] Adding new story to state:", newStory);
       setUserStories(prev => [newStory, ...prev]);
+
+      // Trigger refetch to ensure carousel is updated
+      console.debug("[EnhancedFeedWithTabs] Triggering refetch after story creation");
+      setRefetchTrigger(prev => prev + 1);
 
       toast({
         title: "Story created!",
         description: "Your story has been published.",
       });
     } catch (error) {
-      console.error("Error creating story:", error);
+      console.error("[EnhancedFeedWithTabs] Error creating story:", error);
       toast({
         title: "Failed to create story",
         description: "Please try again.",
