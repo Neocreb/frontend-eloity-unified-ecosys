@@ -43,9 +43,24 @@ router.get('/prices', async (req, res) => {
   try {
     const { symbols, vs_currency = 'usd' } = req.query;
     const symbolList = symbols ? symbols.split(',') : ['bitcoin', 'ethereum', 'tether', 'binancecoin'];
-    
+
+    // Ensure response is JSON
+    res.setHeader('Content-Type', 'application/json');
+
     const prices = await getCryptoPrices(symbolList, vs_currency);
-    
+
+    // Validate we got some data
+    if (!prices || Object.keys(prices).length === 0) {
+      logger.warn('No cryptocurrency prices available from any source');
+      // Return empty prices object but still valid JSON
+      return res.json({
+        prices: {},
+        timestamp: new Date().toISOString(),
+        vs_currency,
+        warning: 'No price data available - check API configuration'
+      });
+    }
+
     res.json({
       prices,
       timestamp: new Date().toISOString(),
@@ -53,7 +68,11 @@ router.get('/prices', async (req, res) => {
     });
   } catch (error) {
     logger.error('Crypto prices fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch cryptocurrency prices' });
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({
+      error: 'Failed to fetch cryptocurrency prices',
+      message: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
@@ -822,21 +841,302 @@ function calculateDisputePriority(escrow: any, reason: string) {
 // Update the getAllowedEscrowActions function to fix TypeScript error
 function getAllowedEscrowActions(escrow: any, userId: string) {
   const actions: string[] = [];
-  
+
   if (escrow.status === 'pending_payment' && escrow.buyerId === userId) {
     actions.push('confirm_payment');
   }
-  
+
   if (escrow.status === 'payment_confirmed' && escrow.sellerId === userId) {
     actions.push('release_funds');
   }
-  
+
   if (['payment_confirmed', 'pending_release'].includes(escrow.status)) {
     actions.push('initiate_dispute');
   }
-  
+
   return actions;
 }
+
+// =============================================================================
+// ADDITIONAL ENDPOINTS FOR FRONTEND COMPATIBILITY
+// =============================================================================
+
+// Get list of cryptocurrencies
+router.get('/cryptocurrencies', async (req, res) => {
+  try {
+    const { limit = 50 } = req.query;
+
+    const prices = await getCryptoPrices(['bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana']);
+
+    // Convert to cryptocurrency format
+    const cryptos = Object.entries(prices).map(([symbol, data]: [string, any], index) => ({
+      id: symbol,
+      symbol: symbol.toUpperCase(),
+      name: symbol.charAt(0).toUpperCase() + symbol.slice(1),
+      image: '',
+      current_price: data.usd || 0,
+      market_cap: data.usd_market_cap || 0,
+      market_cap_rank: index + 1,
+      total_volume: data.usd_24h_vol || 0,
+      high_24h: 0,
+      low_24h: 0,
+      price_change_24h: 0,
+      price_change_percentage_24h: data.usd_24h_change || 0,
+      last_updated: new Date().toISOString()
+    }));
+
+    res.json(cryptos.slice(0, limit));
+  } catch (error) {
+    logger.error('Cryptocurrencies fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch cryptocurrencies' });
+  }
+});
+
+// Get trading pairs
+router.get('/trading-pairs', async (req, res) => {
+  try {
+    const prices = await getCryptoPrices(['bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana']);
+
+    // Convert to trading pair format
+    const pairs = Object.entries(prices).map(([symbol, data]: [string, any]) => ({
+      symbol: `${symbol.toUpperCase()}USDT`,
+      baseAsset: symbol.toUpperCase(),
+      quoteAsset: 'USDT',
+      price: data.usd || 0,
+      priceChange: 0,
+      priceChangePercent: data.usd_24h_change || 0,
+      volume: data.usd_24h_vol || 0,
+      quoteVolume: 0,
+      openPrice: 0,
+      highPrice: 0,
+      lowPrice: 0,
+      bidPrice: (data.usd || 0) * 0.999,
+      askPrice: (data.usd || 0) * 1.001
+    }));
+
+    res.json(pairs);
+  } catch (error) {
+    logger.error('Trading pairs fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch trading pairs' });
+  }
+});
+
+// Get staking products
+router.get('/staking-products', async (req, res) => {
+  try {
+    // Return mock staking products
+    res.json([]);
+  } catch (error) {
+    logger.error('Staking products fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch staking products' });
+  }
+});
+
+// Stake crypto asset
+router.post('/stake', authenticateToken, async (req, res) => {
+  try {
+    const { productId, amount } = req.body;
+    const userId = req.userId;
+
+    if (!productId || !amount) {
+      return res.status(400).json({ error: 'Product ID and amount are required' });
+    }
+
+    // Mock staking position creation
+    const stakingPosition = {
+      id: `stake_${Date.now()}`,
+      userId,
+      productId,
+      amount: parseFloat(amount),
+      startDate: new Date().toISOString(),
+      expectedEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      apy: 5.0,
+      earned: 0,
+      status: 'active'
+    };
+
+    res.status(201).json(stakingPosition);
+  } catch (error) {
+    logger.error('Staking error:', error);
+    res.status(500).json({ error: 'Failed to stake asset' });
+  }
+});
+
+// Get user portfolio
+router.get('/portfolio', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Return mock portfolio data
+    res.json({
+      totalValue: 0,
+      totalChange24h: 0,
+      totalChangePercent24h: 0,
+      assets: [],
+      allocation: []
+    });
+  } catch (error) {
+    logger.error('Portfolio fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch portfolio' });
+  }
+});
+
+// Get watchlist
+router.get('/watchlist', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Return mock watchlist data
+    res.json([]);
+  } catch (error) {
+    logger.error('Watchlist fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch watchlist' });
+  }
+});
+
+// Get news/blog posts
+router.get('/news', async (req, res) => {
+  try {
+    const { limit = 20 } = req.query;
+    // Return empty array for now - can be connected to blog service later
+    res.json([]);
+  } catch (error) {
+    logger.error('News fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
+
+// Get education content
+router.get('/education', async (req, res) => {
+  try {
+    // Return empty array for now - can be connected to education service later
+    res.json([]);
+  } catch (error) {
+    logger.error('Education content fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch education content' });
+  }
+});
+
+// Get user transactions
+router.get('/transactions', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { limit = 50 } = req.query;
+
+    // Return empty array for now - can be connected to transaction history later
+    res.json([]);
+  } catch (error) {
+    logger.error('Transactions fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch transactions' });
+  }
+});
+
+// Get user's open orders
+router.get('/orders/open', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Return empty array for now - can be connected to order history later
+    res.json([]);
+  } catch (error) {
+    logger.error('Open orders fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch open orders' });
+  }
+});
+
+// Place a trading order
+router.post('/orders', authenticateToken, async (req, res) => {
+  try {
+    const { symbol, side, type, quantity, price } = req.body;
+    const userId = req.userId;
+
+    if (!symbol || !side || !quantity) {
+      return res.status(400).json({
+        error: 'Symbol, side, and quantity are required'
+      });
+    }
+
+    // Mock order creation
+    const orderId = `order_${Date.now()}_${userId}`;
+    const order = {
+      id: orderId,
+      symbol,
+      side: side.toUpperCase(),
+      type: type || 'MARKET',
+      quantity: parseFloat(quantity),
+      price: price ? parseFloat(price) : undefined,
+      status: 'NEW',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    res.status(201).json(order);
+  } catch (error) {
+    logger.error('Order placement error:', error);
+    res.status(500).json({ error: 'Failed to place order' });
+  }
+});
+
+// Cancel a trading order
+router.delete('/orders/:orderId', authenticateToken, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.userId;
+
+    // Mock order cancellation
+    res.json({
+      success: true,
+      orderId,
+      status: 'CANCELED'
+    });
+  } catch (error) {
+    logger.error('Order cancellation error:', error);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+});
+
+// Add to watchlist
+router.post('/watchlist', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { asset, notes } = req.body;
+
+    if (!asset) {
+      return res.status(400).json({ error: 'Asset is required' });
+    }
+
+    // Mock watchlist item creation
+    const watchlistItem = {
+      id: `watchlist_${Date.now()}`,
+      userId,
+      asset: asset.toUpperCase(),
+      notes: notes || '',
+      createdAt: new Date().toISOString()
+    };
+
+    res.status(201).json(watchlistItem);
+  } catch (error) {
+    logger.error('Watchlist add error:', error);
+    res.status(500).json({ error: 'Failed to add to watchlist' });
+  }
+});
+
+// Remove from watchlist
+router.delete('/watchlist/:itemId', authenticateToken, async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const userId = req.userId;
+
+    // Mock watchlist item deletion
+    res.json({
+      success: true,
+      itemId
+    });
+  } catch (error) {
+    logger.error('Watchlist remove error:', error);
+    res.status(500).json({ error: 'Failed to remove from watchlist' });
+  }
+});
 
 // Mock database functions have been moved to cryptoDbService.ts
 

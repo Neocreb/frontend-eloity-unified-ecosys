@@ -104,13 +104,20 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
         logger.info(`Fetching CryptoAPIs data for ${lower} from ${url}`);
         const resp = await axios.get(url, {
           timeout: 10000,
+          validateStatus: () => true, // Handle all status codes
           headers: {
             'X-API-Key': cryptoapisKey,
             'Content-Type': 'application/json'
           }
         });
 
-        if (resp.data.data) {
+        // Check if response is successful
+        if (resp.status !== 200) {
+          logger.error(`CryptoAPIs returned status ${resp.status} for ${lower}: ${JSON.stringify(resp.data).substring(0, 200)}`);
+          throw new Error(`CryptoAPIs HTTP ${resp.status}`);
+        }
+
+        if (resp.data && resp.data.data) {
           const rate = parseFloat(resp.data.data.rate || '0');
           if (rate > 0) {
             result[lower] = {
