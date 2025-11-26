@@ -2,7 +2,7 @@ import express from 'express';
 import fetch from 'node-fetch';
 import { logger } from '../utils/logger.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { getKYCStatus } from '../services/kycService.js';
+import { kycService } from '../services/kycService.js';
 import rateLimit from 'express-rate-limit';
 import { adjustWalletBalanceAtomic } from '../services/walletLedgerService.js';
 import crypto from 'crypto';
@@ -121,7 +121,7 @@ router.get('/deposit-address', authenticateToken, async (req, res) => {
 router.get('/balances', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId as string;
-    const kyc = await getKYCStatus(userId);
+    const kyc = await kycService.getKYCStatus(userId);
     if (!userHasKyc(kyc)) {
       return res.status(403).json({ error: 'KYC required to access balances' });
     }
@@ -184,7 +184,7 @@ router.post('/place-order', placeOrderLimiter, authenticateToken, async (req, re
     const userId = req.userId as string;
     const body = req.body || {};
 
-    const kyc = await getKYCStatus(userId);
+    const kyc = await kycService.getKYCStatus(userId);
     if (!userHasKyc(kyc)) {
       return res.status(403).json({ error: 'KYC required to place orders' });
     }
@@ -243,7 +243,7 @@ router.post('/transfer', transferLimiter, authenticateToken, async (req, res) =>
     const userId = req.userId as string;
     const { type, amount, currency, destination } = req.body || {};
 
-    const kyc = await getKYCStatus(userId);
+    const kyc = await kycService.getKYCStatus(userId);
     if (!userHasKyc(kyc)) {
       return res.status(403).json({ error: 'KYC required to perform transfers or withdrawals' });
     }
@@ -300,7 +300,7 @@ router.post('/withdraw', transferLimiter, authenticateToken, async (req, res) =>
       return res.status(400).json({ error: 'Coin, address, and amount are required' });
     }
 
-    const kyc = await getKYCStatus(userId);
+    const kyc = await kycService.getKYCStatus(userId);
     if (!userHasKyc(kyc)) {
       return res.status(403).json({ error: 'KYC required to perform withdrawals' });
     }
