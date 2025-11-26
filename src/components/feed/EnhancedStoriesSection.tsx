@@ -43,7 +43,6 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
     const fetchStories = async () => {
       try {
         // Fetch recent stories from the database
-        // Using the correct table name and schema based on Supabase setup
         const { data, error } = await supabase
           .from('user_stories')
           .select(`
@@ -51,11 +50,8 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
             user_id,
             created_at,
             media_url,
-            profiles:user_id(
-              username,
-              full_name,
-              avatar_url
-            )
+            media_type,
+            caption
           `)
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false })
