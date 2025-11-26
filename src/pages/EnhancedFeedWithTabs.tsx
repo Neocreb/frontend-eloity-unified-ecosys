@@ -465,9 +465,16 @@ const EnhancedFeedWithTabs = () => {
   // Trigger stories refresh when returning to the feed from story creation page
   useEffect(() => {
     if (location.pathname === "/app/feed") {
+      console.log("User returned to feed, triggering story refresh");
       setStoriesRefreshTrigger(prev => prev + 1);
     }
   }, [location.pathname]);
+
+  // Also refresh stories every time the feed component mounts
+  useEffect(() => {
+    console.log("Feed component mounted, refreshing stories");
+    setStoriesRefreshTrigger(prev => prev + 1);
+  }, []);
 
   const baseTabs = [
     {
