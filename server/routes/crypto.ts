@@ -1,22 +1,22 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import { requireTier2, triggerKYCIfNeeded } from '../middleware/tierAccessControl.js';
-import {
+import { 
+  getCryptoPrices,
+  getOrderBook,
+  executeTrade,
+  createWallet,
+  getWalletBalances,
+  processDeposit,
+  processWithdrawal,
+  verifyKYCLevel,
+  calculateTradingFees,
+  getRiskAssessment,
   createP2POrder,
   matchP2POrders,
   createEscrowTransaction,
   releaseEscrowFunds,
   disputeEscrowTransaction,
-  getCryptoPrices,
-  getOrderBook,
-  executeTrade,
-  createWallet,
-  getWalletBalance,
-  processDeposit,
-  processWithdrawal,
-  verifyKYCLevel,
-  calculateTradingFees,
-  getRiskAssessment
+  getWalletFromDatabase
 } from '../services/cryptoService.js';
 import { logger } from '../utils/logger.js';
 import {
@@ -42,25 +42,24 @@ const router = express.Router();
 router.get('/prices', async (req, res) => {
   try {
     const { symbols, vs_currency = 'usd' } = req.query;
-    const symbolList = symbols ? symbols.split(',') : ['bitcoin', 'ethereum', 'tether', 'binancecoin'];
-
-    // Ensure response is JSON
-    res.setHeader('Content-Type', 'application/json');
-
-    const prices = await getCryptoPrices(symbolList, vs_currency);
-
-    // Validate we got some data
-    if (!prices || Object.keys(prices).length === 0) {
-      logger.warn('No cryptocurrency prices available from any source');
-      // Return empty prices object but still valid JSON
-      return res.json({
-        prices: {},
-        timestamp: new Date().toISOString(),
-        vs_currency,
-        warning: 'No price data available - check API configuration'
-      });
+    // Handle array or string query parameters
+    // Handle array or string query parameters
+    const symbolList: string[] = [];
+    
+    if (typeof symbols === 'string') {
+      symbolList.push(...symbols.split(','));
+    } else if (Array.isArray(symbols)) {
+      // Convert array elements to strings
+      symbolList.push(...symbols.map(s => String(s)));
     }
-
+    
+    // Default symbols if none provided
+    if (symbolList.length === 0) {
+      symbolList.push('bitcoin', 'ethereum', 'tether', 'binancecoin');
+    }
+    
+    const prices = await getCryptoPrices(symbolList, vs_currency as string);
+    
     res.json({
       prices,
       timestamp: new Date().toISOString(),
@@ -68,11 +67,7 @@ router.get('/prices', async (req, res) => {
     });
   } catch (error) {
     logger.error('Crypto prices fetch error:', error);
-    res.setHeader('Content-Type', 'application/json');
-    res.status(500).json({
-      error: 'Failed to fetch cryptocurrency prices',
-      message: error instanceof Error ? error.message : String(error)
-    });
+    res.status(500).json({ error: 'Failed to fetch cryptocurrency prices' });
   }
 });
 
@@ -82,7 +77,7 @@ router.get('/prices/:symbol', async (req, res) => {
     const { symbol } = req.params;
     const { vs_currency = 'usd', timeframe = '24h' } = req.query;
     
-    const priceData = await getDetailedPriceData(symbol, vs_currency, timeframe);
+    const priceData = await getDetailedPriceData(symbol, vs_currency as string, timeframe as string);
     
     if (!priceData) {
       return res.status(404).json({ error: 'Cryptocurrency not found' });
@@ -104,9 +99,9 @@ router.get('/prices/:symbol', async (req, res) => {
 router.get('/orderbook/:pair', async (req, res) => {
   try {
     const { pair } = req.params;
-    const { depth = 20 } = req.query;
+    const { depth = '20' } = req.query;
     
-    const orderbook = await getOrderBook(pair, parseInt(depth));
+    const orderbook = await getOrderBook(pair, parseInt(depth as string));
     
     res.json({
       pair,
@@ -129,7 +124,7 @@ router.post('/wallet/create', authenticateToken, async (req, res) => {
     const { currencies = ['BTC', 'ETH', 'USDT'] } = req.body;
     const userId = req.userId;
     
-    const wallet = await createWallet(userId, currencies);
+    const wallet = await createWallet(userId as string, currencies);
     
     if (wallet.success) {
       logger.info('Crypto wallet created', { userId, currencies });
@@ -156,15 +151,22 @@ router.get('/wallet/balance', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     
-    const balance = await getWalletBalance(userId);
+    // First get the user's wallet
+    const wallet = await getWalletFromDatabase(userId as string);
+    if (!wallet) {
+      return res.status(404).json({ error: 'Wallet not found' });
+    }
+    
+    // Then get the balances for that wallet
+    const balance = await getWalletBalances(wallet.id);
     
     if (balance.success) {
       res.json({
         userId,
         balances: balance.balances,
         totalValueUSD: balance.totalValueUSD,
-        addresses: balance.addresses,
-        lastUpdated: balance.lastUpdated
+        addresses: wallet.addresses,
+        lastUpdated: new Date().toISOString()
       });
     } else {
       res.status(400).json({ 
@@ -190,7 +192,7 @@ router.post('/wallet/deposit', authenticateToken, async (req, res) => {
       });
     }
     
-    const deposit = await processDeposit(userId, currency, amount, txHash);
+    const deposit = await processDeposit(userId as string, currency, parseFloat(amount), txHash);
     
     if (deposit.success) {
       logger.info('Crypto deposit processed', { userId, currency, amount, txHash });
@@ -214,8 +216,7 @@ router.post('/wallet/deposit', authenticateToken, async (req, res) => {
 });
 
 // Process cryptocurrency withdrawal
-// Requires Tier 2 verification
-router.post('/wallet/withdraw', requireTier2(), async (req, res) => {
+router.post('/wallet/withdraw', authenticateToken, async (req, res) => {
   try {
     const { currency, amount, address, memo } = req.body;
     const userId = req.userId;
@@ -226,20 +227,7 @@ router.post('/wallet/withdraw', requireTier2(), async (req, res) => {
       });
     }
     
-    // Verify KYC level for large withdrawals
-    const kycLevel = await verifyKYCLevel(userId);
-    const withdrawalLimits = getWithdrawalLimits(kycLevel);
-    
-    if (amount > withdrawalLimits.daily) {
-      return res.status(403).json({ 
-        error: 'Withdrawal amount exceeds daily limit',
-        limit: withdrawalLimits.daily,
-        kycLevel,
-        upgradeRequired: true
-      });
-    }
-    
-    const withdrawal = await processWithdrawal(userId, currency, amount, address, memo);
+    const withdrawal = await processWithdrawal(userId as string, currency, parseFloat(amount), address, memo);
     
     if (withdrawal.success) {
       logger.info('Crypto withdrawal processed', { userId, currency, amount, address });
@@ -264,73 +252,71 @@ router.post('/wallet/withdraw', requireTier2(), async (req, res) => {
 });
 
 // =============================================================================
-// P2P TRADING SYSTEM
+// KYC & RISK ASSESSMENT
+// =============================================================================
+
+// Get user's KYC level and trading limits
+router.get('/user/kyc-level', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    const kycLevel = await verifyKYCLevel(userId as string);
+    const withdrawalLimits = getWithdrawalLimits(kycLevel);
+    const tradingLimits = getTradingLimits(kycLevel);
+    
+    res.json({
+      userId,
+      kycLevel,
+      withdrawalLimits,
+      tradingLimits
+    });
+  } catch (error) {
+    logger.error('KYC level fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch KYC level' });
+  }
+});
+
+// Get user's risk assessment
+router.get('/user/risk-assessment', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    const riskAssessment = await getRiskAssessment(userId as string);
+    
+    res.json({
+      userId,
+      riskAssessment
+    });
+  } catch (error) {
+    logger.error('Risk assessment fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch risk assessment' });
+  }
+});
+
+// =============================================================================
+// P2P TRADING
 // =============================================================================
 
 // Create P2P trading order
-// Requires Tier 2 verification
-router.post('/p2p/orders', requireTier2(), async (req, res) => {
+router.post('/p2p/orders', authenticateToken, async (req, res) => {
   try {
-    const { 
-      type, 
-      cryptocurrency, 
-      fiatCurrency, 
-      amount, 
-      price, 
-      paymentMethods, 
-      timeLimit, 
-      minOrderAmount,
-      maxOrderAmount,
-      autoReply,
-      terms 
-    } = req.body;
+    const orderData = req.body;
     const userId = req.userId;
     
-    if (!type || !cryptocurrency || !fiatCurrency || !amount || !price) {
-      return res.status(400).json({ 
-        error: 'Type, cryptocurrency, fiat currency, amount, and price are required' 
-      });
-    }
-    
-    // Verify user has sufficient balance for sell orders
-    if (type === 'sell') {
-      const balance = await getWalletBalance(userId);
-      const cryptoBalance = balance.balances[cryptocurrency.toUpperCase()] || 0;
-      
-      if (cryptoBalance < amount) {
-        return res.status(400).json({ 
-          error: 'Insufficient cryptocurrency balance',
-          required: amount,
-          available: cryptoBalance
-        });
-      }
-    }
-    
-    const orderData = {
-      userId,
-      type, // 'buy' or 'sell'
-      cryptocurrency: cryptocurrency.toUpperCase(),
-      fiatCurrency: fiatCurrency.toUpperCase(),
-      amount: parseFloat(amount),
-      price: parseFloat(price),
-      paymentMethods: paymentMethods || [],
-      timeLimit: timeLimit || 30, // minutes
-      minOrderAmount: minOrderAmount || amount * 0.1,
-      maxOrderAmount: maxOrderAmount || amount,
-      autoReply: autoReply || '',
-      terms: terms || '',
-      status: 'active'
+    // Add user ID to order data
+    const fullOrderData = {
+      ...orderData,
+      userId: userId as string
     };
     
-    const order = await createP2POrder(orderData);
+    const order = await createP2POrder(fullOrderData);
     
     if (order.success) {
-      logger.info('P2P order created', { userId, orderId: order.orderId, type, amount });
+      logger.info('P2P order created', { orderId: order.orderId, userId });
       res.status(201).json({
         success: true,
         orderId: order.orderId,
-        order: order.order,
-        estimatedMatches: await getEstimatedMatches(orderData)
+        order: order.order
       });
     } else {
       res.status(400).json({ 
@@ -344,41 +330,37 @@ router.post('/p2p/orders', requireTier2(), async (req, res) => {
   }
 });
 
-// Get P2P orders (marketplace)
+// Get P2P orders with filtering
 router.get('/p2p/orders', async (req, res) => {
   try {
     const { 
-      type, 
       cryptocurrency, 
       fiatCurrency, 
-      paymentMethod,
-      minAmount,
-      maxAmount,
-      page = 1,
-      limit = 20
+      type, 
+      minAmount, 
+      maxAmount, 
+      page = '1', 
+      limit = '20' 
     } = req.query;
     
     const filters = {
-      type,
-      cryptocurrency: cryptocurrency?.toUpperCase(),
-      fiatCurrency: fiatCurrency?.toUpperCase(),
-      paymentMethod,
-      minAmount: minAmount ? parseFloat(minAmount) : undefined,
-      maxAmount: maxAmount ? parseFloat(maxAmount) : undefined,
-      status: 'active'
+      cryptocurrency: cryptocurrency ? (cryptocurrency as string).toUpperCase() : undefined,
+      fiatCurrency: fiatCurrency ? (fiatCurrency as string).toUpperCase() : undefined,
+      type: type as string,
+      minAmount: minAmount ? parseFloat(minAmount as string) : undefined,
+      maxAmount: maxAmount ? parseFloat(maxAmount as string) : undefined
     };
     
-    const orders = await getP2POrders(filters, parseInt(page), parseInt(limit));
+    const orders = await getP2POrders(filters, parseInt(page as string), parseInt(limit as string));
     
     res.json({
       orders: orders.orders,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
         total: orders.total,
-        pages: Math.ceil(orders.total / parseInt(limit))
-      },
-      filters
+        pages: Math.ceil(orders.total / parseInt(limit as string))
+      }
     });
   } catch (error) {
     logger.error('P2P orders fetch error:', error);
@@ -390,88 +372,46 @@ router.get('/p2p/orders', async (req, res) => {
 router.get('/p2p/orders/my', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
-    const { status, type, page = 1, limit = 20 } = req.query;
+    const { status, page = '1', limit = '20' } = req.query;
     
-    const orders = await getUserP2POrders(userId, {
-      status,
-      type,
-      page: parseInt(page),
-      limit: parseInt(limit)
+    const orders = await getUserP2POrders(userId as string, {
+      status: status as string
     });
     
     res.json({
       orders: orders.orders,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
         total: orders.total
       }
     });
   } catch (error) {
     logger.error('User P2P orders fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch user orders' });
+    res.status(500).json({ error: 'Failed to fetch user P2P orders' });
   }
 });
 
-// Initiate P2P trade (respond to order)
-// Requires Tier 2 verification
-router.post('/p2p/orders/:orderId/trade', requireTier2(), async (req, res) => {
+// Initiate P2P trade
+router.post('/p2p/orders/:id/trade', authenticateToken, async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const { amount, message } = req.body;
-    const buyerId = req.userId;
-    
-    if (!amount) {
-      return res.status(400).json({ error: 'Trade amount is required' });
-    }
-    
-    // Get order details
-    const order = await getP2POrderById(orderId);
-    if (!order || order.status !== 'active') {
-      return res.status(404).json({ error: 'Order not found or inactive' });
-    }
-    
-    if (order.userId === buyerId) {
-      return res.status(400).json({ error: 'Cannot trade with your own order' });
-    }
-    
-    // Verify trade amount is within order limits
-    if (amount < order.minOrderAmount || amount > order.maxOrderAmount) {
-      return res.status(400).json({ 
-        error: 'Trade amount outside order limits',
-        minAmount: order.minOrderAmount,
-        maxAmount: order.maxOrderAmount
-      });
-    }
+    const { id: orderId } = req.params;
+    const { amount } = req.body;
+    const userId = req.userId;
     
     const tradeData = {
       orderId,
-      buyerId,
-      sellerId: order.userId,
-      amount: parseFloat(amount),
-      price: order.price,
-      cryptocurrency: order.cryptocurrency,
-      fiatCurrency: order.fiatCurrency,
-      paymentMethods: order.paymentMethods,
-      timeLimit: order.timeLimit,
-      message: message || ''
+      userId: userId as string,
+      amount: parseFloat(amount)
     };
     
     const trade = await initiatePeerToPeerTrade(tradeData);
     
     if (trade.success) {
-      logger.info('P2P trade initiated', { 
-        orderId, 
-        tradeId: trade.tradeId, 
-        buyerId, 
-        amount 
-      });
-      
-      res.status(201).json({
+      res.json({
         success: true,
         tradeId: trade.tradeId,
         escrowId: trade.escrowId,
-        trade: trade.trade,
         instructions: trade.instructions
       });
     } else {
@@ -482,7 +422,7 @@ router.post('/p2p/orders/:orderId/trade', requireTier2(), async (req, res) => {
     }
   } catch (error) {
     logger.error('P2P trade initiation error:', error);
-    res.status(500).json({ error: 'Failed to initiate trade' });
+    res.status(500).json({ error: 'Failed to initiate P2P trade' });
   }
 });
 
@@ -491,226 +431,93 @@ router.post('/p2p/orders/:orderId/trade', requireTier2(), async (req, res) => {
 // =============================================================================
 
 // Get escrow transaction details
-router.get('/escrow/:escrowId', authenticateToken, async (req, res) => {
+router.get('/escrow/:id', authenticateToken, async (req, res) => {
   try {
-    const { escrowId } = req.params;
-    const userId = req.userId;
+    const { id: escrowId } = req.params;
     
     const escrow = await getEscrowTransaction(escrowId);
     
-    if (!escrow) {
-      return res.status(404).json({ error: 'Escrow transaction not found' });
+    if (escrow) {
+      res.json({
+        escrow
+      });
+    } else {
+      res.status(404).json({ error: 'Escrow transaction not found' });
     }
-    
-    // Check if user is involved in this escrow
-    if (escrow.buyerId !== userId && escrow.sellerId !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    
-    res.json({
-      escrowId,
-      escrow,
-      userRole: escrow.buyerId === userId ? 'buyer' : 'seller',
-      allowedActions: getAllowedEscrowActions(escrow, userId)
-    });
   } catch (error) {
-    logger.error('Escrow fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch escrow details' });
+    logger.error('Escrow transaction fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch escrow transaction' });
   }
 });
 
-// Confirm payment (buyer action)
-// Requires Tier 2 verification
-router.post('/escrow/:escrowId/confirm-payment', requireTier2(), async (req, res) => {
+// Confirm escrow payment
+router.post('/escrow/:id/confirm-payment', authenticateToken, async (req, res) => {
   try {
-    const { escrowId } = req.params;
-    const { paymentProof, transactionId } = req.body;
-    const userId = req.userId;
+    const { id: escrowId } = req.params;
+    const paymentData = req.body;
     
-    const escrow = await getEscrowTransaction(escrowId);
+    const result = await confirmEscrowPayment(escrowId, paymentData);
     
-    if (!escrow || escrow.buyerId !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    
-    if (escrow.status !== 'pending_payment') {
-      return res.status(400).json({ 
-        error: 'Invalid escrow status for payment confirmation',
-        currentStatus: escrow.status
-      });
-    }
-    
-    const confirmation = await confirmEscrowPayment(escrowId, {
-      paymentProof,
-      transactionId,
-      confirmedBy: userId,
-      confirmedAt: new Date()
-    });
-    
-    if (confirmation.success) {
-      logger.info('Escrow payment confirmed', { escrowId, userId });
+    if (result.success) {
       res.json({
         success: true,
-        message: 'Payment confirmed, waiting for seller to release funds',
-        status: 'payment_confirmed'
+        message: 'Payment confirmed successfully'
       });
     } else {
       res.status(400).json({ 
         error: 'Payment confirmation failed', 
-        details: confirmation.error 
+        details: result.error 
       });
     }
   } catch (error) {
     logger.error('Escrow payment confirmation error:', error);
-    res.status(500).json({ error: 'Failed to confirm payment' });
+    res.status(500).json({ error: 'Failed to confirm escrow payment' });
   }
 });
 
-// Release funds (seller action)
-// Requires Tier 2 verification
-router.post('/escrow/:escrowId/release', requireTier2(), async (req, res) => {
+// Release escrow funds
+router.post('/escrow/:id/release', authenticateToken, async (req, res) => {
   try {
-    const { escrowId } = req.params;
-    const userId = req.userId;
+    const { id: escrowId } = req.params;
+    const { sellerId } = req.body;
     
-    const escrow = await getEscrowTransaction(escrowId);
+    const result = await releaseEscrowFunds(escrowId, sellerId);
     
-    if (!escrow || escrow.sellerId !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    
-    if (escrow.status !== 'payment_confirmed') {
-      return res.status(400).json({ 
-        error: 'Invalid escrow status for fund release',
-        currentStatus: escrow.status
-      });
-    }
-    
-    const release = await releaseEscrowFunds(escrowId, userId);
-    
-    if (release.success) {
-      logger.info('Escrow funds released', { escrowId, userId });
+    if (result.success) {
       res.json({
         success: true,
-        message: 'Funds released successfully',
-        transactionHash: release.transactionHash,
-        completedAt: release.completedAt
+        message: 'Funds released successfully'
       });
     } else {
       res.status(400).json({ 
         error: 'Fund release failed', 
-        details: release.error 
+        details: result.error 
       });
     }
   } catch (error) {
     logger.error('Escrow fund release error:', error);
-    res.status(500).json({ error: 'Failed to release funds' });
-  }
-});
-
-// Initiate dispute
-// Requires Tier 2 verification
-router.post('/escrow/:escrowId/dispute', requireTier2(), async (req, res) => {
-  try {
-    const { escrowId } = req.params;
-    const { reason, description, evidence } = req.body;
-    const userId = req.userId;
-    
-    if (!reason || !description) {
-      return res.status(400).json({ 
-        error: 'Dispute reason and description are required' 
-      });
-    }
-    
-    const escrow = await getEscrowTransaction(escrowId);
-    
-    if (!escrow) {
-      return res.status(404).json({ error: 'Escrow transaction not found' });
-    }
-    
-    if (escrow.buyerId !== userId && escrow.sellerId !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    
-    if (!['payment_confirmed', 'pending_release'].includes(escrow.status)) {
-      return res.status(400).json({ 
-        error: 'Dispute cannot be initiated at this stage',
-        currentStatus: escrow.status
-      });
-    }
-    
-    const disputeData = {
-      escrowId,
-      raisedBy: userId,
-      againstUserId: escrow.buyerId === userId ? escrow.sellerId : escrow.buyerId,
-      reason,
-      description,
-      evidence: evidence || [],
-      priority: calculateDisputePriority(escrow, reason)
-    };
-    
-    const dispute = await disputeEscrowTransaction(disputeData);
-    
-    if (dispute.success) {
-      logger.info('Escrow dispute initiated', { 
-        escrowId, 
-        disputeId: dispute.disputeId, 
-        raisedBy: userId 
-      });
-      
-      res.status(201).json({
-        success: true,
-        disputeId: dispute.disputeId,
-        status: 'dispute_pending',
-        message: 'Dispute initiated, waiting for admin review',
-        estimatedResolutionTime: '24-48 hours'
-      });
-    } else {
-      res.status(400).json({ 
-        error: 'Dispute initiation failed', 
-        details: dispute.error 
-      });
-    }
-  } catch (error) {
-    logger.error('Escrow dispute error:', error);
-    res.status(500).json({ error: 'Failed to initiate dispute' });
+    res.status(500).json({ error: 'Failed to release escrow funds' });
   }
 });
 
 // =============================================================================
-// TRADING ANALYTICS AND HISTORY
+// TRADING HISTORY & STATISTICS
 // =============================================================================
 
 // Get user's trading history
-router.get('/trades/history', authenticateToken, async (req, res) => {
+router.get('/user/trading-history', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
-    const { 
-      type, 
-      cryptocurrency, 
-      status, 
-      startDate, 
-      endDate, 
-      page = 1, 
-      limit = 20 
-    } = req.query;
+    const { page = '1', limit = '20' } = req.query;
     
-    const filters = {
-      type,
-      cryptocurrency: cryptocurrency?.toUpperCase(),
-      status,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined
-    };
-    
-    const history = await getUserTradingHistory(userId, filters, parseInt(page), parseInt(limit));
+    const history = await getUserTradingHistory(userId as string, {}, parseInt(page as string), parseInt(limit as string));
     
     res.json({
       trades: history.trades,
       summary: history.summary,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
         total: history.total
       }
     });
@@ -720,424 +527,46 @@ router.get('/trades/history', authenticateToken, async (req, res) => {
   }
 });
 
-// Get trading statistics
-router.get('/stats', authenticateToken, async (req, res) => {
+// Get user's trading statistics
+router.get('/user/trading-stats', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const { timeframe = '30d' } = req.query;
     
-    const stats = await getTradingStatistics(userId, timeframe);
+    const stats = await getTradingStatistics(userId as string, timeframe as string);
     
     res.json({
       userId,
-      timeframe,
-      statistics: {
-        totalTrades: stats.totalTrades,
-        successfulTrades: stats.successfulTrades,
-        successRate: stats.successRate,
-        totalVolume: stats.totalVolume,
-        averageTradeSize: stats.averageTradeSize,
-        tradingPairs: stats.tradingPairs,
-        profitLoss: stats.profitLoss,
-        reputation: stats.reputation,
-        responseTime: stats.averageResponseTime,
-        completionTime: stats.averageCompletionTime
-      }
+      stats,
+      timeframe
     });
   } catch (error) {
-    logger.error('Trading statistics error:', error);
+    logger.error('Trading statistics fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch trading statistics' });
   }
 });
 
-// =============================================================================
-// RISK MANAGEMENT
-// =============================================================================
-
-// Get risk assessment for user
-router.get('/risk-assessment', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    const assessment = await getRiskAssessment(userId);
-    
-    res.json({
-      userId,
-      riskLevel: assessment.riskLevel,
-      riskScore: assessment.riskScore,
-      factors: assessment.factors,
-      recommendations: assessment.recommendations,
-      limits: assessment.limits,
-      lastAssessed: assessment.lastAssessed
-    });
-  } catch (error) {
-    logger.error('Risk assessment error:', error);
-    res.status(500).json({ error: 'Failed to fetch risk assessment' });
-  }
-});
-
-// Calculate trading fees
-router.post('/fees/calculate', authenticateToken, async (req, res) => {
-  try {
-    const { tradeType, amount, cryptocurrency, fiatCurrency } = req.body;
-    const userId = req.userId;
-    
-    if (!tradeType || !amount || !cryptocurrency) {
-      return res.status(400).json({ 
-        error: 'Trade type, amount, and cryptocurrency are required' 
-      });
-    }
-    
-    const fees = await calculateTradingFees(userId, {
-      tradeType,
-      amount: parseFloat(amount),
-      cryptocurrency: cryptocurrency.toUpperCase(),
-      fiatCurrency: fiatCurrency?.toUpperCase()
-    });
-    
-    res.json({
-      tradeType,
-      amount: parseFloat(amount),
-      cryptocurrency: cryptocurrency.toUpperCase(),
-      fees: {
-        tradingFee: fees.tradingFee,
-        networkFee: fees.networkFee,
-        totalFee: fees.totalFee,
-        feePercentage: fees.feePercentage
-      },
-      netAmount: fees.netAmount
-    });
-  } catch (error) {
-    logger.error('Fee calculation error:', error);
-    res.status(500).json({ error: 'Failed to calculate fees' });
-  }
-});
-
-// =============================================================================
-// HELPER FUNCTIONS
-// =============================================================================
-
+// Helper functions for KYC limits
 function getWithdrawalLimits(kycLevel: number) {
-  const limits = {
-    0: { daily: 100, monthly: 1000 },      // No KYC
-    1: { daily: 1000, monthly: 10000 },    // Basic KYC
-    2: { daily: 10000, monthly: 100000 },  // Enhanced KYC
-    3: { daily: 50000, monthly: 500000 }   // Premium KYC
+  const limits: Record<number, { daily: number; monthly: number }> = {
+    0: { daily: 100, monthly: 500 },
+    1: { daily: 1000, monthly: 5000 },
+    2: { daily: 10000, monthly: 50000 },
+    3: { daily: 50000, monthly: 250000 }
   };
-  
   return limits[kycLevel] || limits[0];
 }
 
-function calculateDisputePriority(escrow: any, reason: string) {
-  // High priority for large amounts or serious violations
-  if (escrow.amount > 10000 || reason.includes('fraud')) {
-    return 'high';
-  } else if (escrow.amount > 1000 || reason.includes('scam')) {
-    return 'medium';
-  }
-  return 'low';
+function getTradingLimits(kycLevel: number) {
+  const limits: Record<number, { maxOrder: number; daily: number }> = {
+    0: { maxOrder: 100, daily: 500 },
+    1: { maxOrder: 1000, daily: 5000 },
+    2: { maxOrder: 10000, daily: 50000 },
+    3: { maxOrder: 50000, daily: 250000 }
+  };
+  return limits[kycLevel] || limits[0];
 }
 
-// Update the getAllowedEscrowActions function to fix TypeScript error
-function getAllowedEscrowActions(escrow: any, userId: string) {
-  const actions: string[] = [];
 
-  if (escrow.status === 'pending_payment' && escrow.buyerId === userId) {
-    actions.push('confirm_payment');
-  }
-
-  if (escrow.status === 'payment_confirmed' && escrow.sellerId === userId) {
-    actions.push('release_funds');
-  }
-
-  if (['payment_confirmed', 'pending_release'].includes(escrow.status)) {
-    actions.push('initiate_dispute');
-  }
-
-  return actions;
-}
-
-// =============================================================================
-// ADDITIONAL ENDPOINTS FOR FRONTEND COMPATIBILITY
-// =============================================================================
-
-// Get list of cryptocurrencies
-router.get('/cryptocurrencies', async (req, res) => {
-  try {
-    const { limit = 50 } = req.query;
-
-    const prices = await getCryptoPrices(['bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana']);
-
-    // Convert to cryptocurrency format
-    const cryptos = Object.entries(prices).map(([symbol, data]: [string, any], index) => ({
-      id: symbol,
-      symbol: symbol.toUpperCase(),
-      name: symbol.charAt(0).toUpperCase() + symbol.slice(1),
-      image: '',
-      current_price: data.usd || 0,
-      market_cap: data.usd_market_cap || 0,
-      market_cap_rank: index + 1,
-      total_volume: data.usd_24h_vol || 0,
-      high_24h: 0,
-      low_24h: 0,
-      price_change_24h: 0,
-      price_change_percentage_24h: data.usd_24h_change || 0,
-      last_updated: new Date().toISOString()
-    }));
-
-    res.json(cryptos.slice(0, limit));
-  } catch (error) {
-    logger.error('Cryptocurrencies fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch cryptocurrencies' });
-  }
-});
-
-// Get trading pairs
-router.get('/trading-pairs', async (req, res) => {
-  try {
-    const prices = await getCryptoPrices(['bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana']);
-
-    // Convert to trading pair format
-    const pairs = Object.entries(prices).map(([symbol, data]: [string, any]) => ({
-      symbol: `${symbol.toUpperCase()}USDT`,
-      baseAsset: symbol.toUpperCase(),
-      quoteAsset: 'USDT',
-      price: data.usd || 0,
-      priceChange: 0,
-      priceChangePercent: data.usd_24h_change || 0,
-      volume: data.usd_24h_vol || 0,
-      quoteVolume: 0,
-      openPrice: 0,
-      highPrice: 0,
-      lowPrice: 0,
-      bidPrice: (data.usd || 0) * 0.999,
-      askPrice: (data.usd || 0) * 1.001
-    }));
-
-    res.json(pairs);
-  } catch (error) {
-    logger.error('Trading pairs fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch trading pairs' });
-  }
-});
-
-// Get staking products
-router.get('/staking-products', async (req, res) => {
-  try {
-    // Return mock staking products
-    res.json([]);
-  } catch (error) {
-    logger.error('Staking products fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch staking products' });
-  }
-});
-
-// Stake crypto asset
-router.post('/stake', authenticateToken, async (req, res) => {
-  try {
-    const { productId, amount } = req.body;
-    const userId = req.userId;
-
-    if (!productId || !amount) {
-      return res.status(400).json({ error: 'Product ID and amount are required' });
-    }
-
-    // Mock staking position creation
-    const stakingPosition = {
-      id: `stake_${Date.now()}`,
-      userId,
-      productId,
-      amount: parseFloat(amount),
-      startDate: new Date().toISOString(),
-      expectedEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      apy: 5.0,
-      earned: 0,
-      status: 'active'
-    };
-
-    res.status(201).json(stakingPosition);
-  } catch (error) {
-    logger.error('Staking error:', error);
-    res.status(500).json({ error: 'Failed to stake asset' });
-  }
-});
-
-// Get user portfolio
-router.get('/portfolio', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    // Return mock portfolio data
-    res.json({
-      totalValue: 0,
-      totalChange24h: 0,
-      totalChangePercent24h: 0,
-      assets: [],
-      allocation: []
-    });
-  } catch (error) {
-    logger.error('Portfolio fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch portfolio' });
-  }
-});
-
-// Get watchlist
-router.get('/watchlist', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    // Return mock watchlist data
-    res.json([]);
-  } catch (error) {
-    logger.error('Watchlist fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch watchlist' });
-  }
-});
-
-// Get news/blog posts
-router.get('/news', async (req, res) => {
-  try {
-    const { limit = 20 } = req.query;
-    // Return empty array for now - can be connected to blog service later
-    res.json([]);
-  } catch (error) {
-    logger.error('News fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch news' });
-  }
-});
-
-// Get education content
-router.get('/education', async (req, res) => {
-  try {
-    // Return empty array for now - can be connected to education service later
-    res.json([]);
-  } catch (error) {
-    logger.error('Education content fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch education content' });
-  }
-});
-
-// Get user transactions
-router.get('/transactions', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { limit = 50 } = req.query;
-
-    // Return empty array for now - can be connected to transaction history later
-    res.json([]);
-  } catch (error) {
-    logger.error('Transactions fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch transactions' });
-  }
-});
-
-// Get user's open orders
-router.get('/orders/open', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    // Return empty array for now - can be connected to order history later
-    res.json([]);
-  } catch (error) {
-    logger.error('Open orders fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch open orders' });
-  }
-});
-
-// Place a trading order
-router.post('/orders', authenticateToken, async (req, res) => {
-  try {
-    const { symbol, side, type, quantity, price } = req.body;
-    const userId = req.userId;
-
-    if (!symbol || !side || !quantity) {
-      return res.status(400).json({
-        error: 'Symbol, side, and quantity are required'
-      });
-    }
-
-    // Mock order creation
-    const orderId = `order_${Date.now()}_${userId}`;
-    const order = {
-      id: orderId,
-      symbol,
-      side: side.toUpperCase(),
-      type: type || 'MARKET',
-      quantity: parseFloat(quantity),
-      price: price ? parseFloat(price) : undefined,
-      status: 'NEW',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    res.status(201).json(order);
-  } catch (error) {
-    logger.error('Order placement error:', error);
-    res.status(500).json({ error: 'Failed to place order' });
-  }
-});
-
-// Cancel a trading order
-router.delete('/orders/:orderId', authenticateToken, async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const userId = req.userId;
-
-    // Mock order cancellation
-    res.json({
-      success: true,
-      orderId,
-      status: 'CANCELED'
-    });
-  } catch (error) {
-    logger.error('Order cancellation error:', error);
-    res.status(500).json({ error: 'Failed to cancel order' });
-  }
-});
-
-// Add to watchlist
-router.post('/watchlist', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { asset, notes } = req.body;
-
-    if (!asset) {
-      return res.status(400).json({ error: 'Asset is required' });
-    }
-
-    // Mock watchlist item creation
-    const watchlistItem = {
-      id: `watchlist_${Date.now()}`,
-      userId,
-      asset: asset.toUpperCase(),
-      notes: notes || '',
-      createdAt: new Date().toISOString()
-    };
-
-    res.status(201).json(watchlistItem);
-  } catch (error) {
-    logger.error('Watchlist add error:', error);
-    res.status(500).json({ error: 'Failed to add to watchlist' });
-  }
-});
-
-// Remove from watchlist
-router.delete('/watchlist/:itemId', authenticateToken, async (req, res) => {
-  try {
-    const { itemId } = req.params;
-    const userId = req.userId;
-
-    // Mock watchlist item deletion
-    res.json({
-      success: true,
-      itemId
-    });
-  } catch (error) {
-    logger.error('Watchlist remove error:', error);
-    res.status(500).json({ error: 'Failed to remove from watchlist' });
-  }
-});
-
-// Mock database functions have been moved to cryptoDbService.ts
 
 export default router;

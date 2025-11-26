@@ -1,6 +1,5 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import { requireTier2, triggerKYCIfNeeded } from '../middleware/tierAccessControl.js';
 import { logger } from '../utils/logger.js';
 import { db } from '../../server/enhanced-index.js';
 import { profiles, products } from '../../shared/enhanced-schema.js';
@@ -247,8 +246,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new product
-// Requires Tier 2 verification for selling
-router.post('/', requireTier2(), triggerKYCIfNeeded('marketplace_sell'), async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       title,
@@ -319,8 +317,7 @@ router.post('/', requireTier2(), triggerKYCIfNeeded('marketplace_sell'), async (
 });
 
 // Update product
-// Requires Tier 2 verification
-router.put('/:id', requireTier2(), async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId as string;
@@ -398,8 +395,7 @@ router.put('/:id', requireTier2(), async (req, res) => {
 });
 
 // Delete product
-// Requires Tier 2 verification
-router.delete('/:id', requireTier2(), async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId as string;

@@ -101,24 +101,20 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
   const [chartTimeframe, setChartTimeframe] = useState("1h");
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [kycModalOpen, setKycModalOpen] = useState(false);
-  const [isVerified, setIsVerified] = useState(true); // Mock verified status
+  const [isVerified, setIsVerified] = useState(false); // Start with unverified status
   const navigate = useNavigate();
   const chartRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
+  const [userBalances, setUserBalances] = useState<Record<string, number>>({});
 
   const [orderBookData, setOrderBookData] = useState([
-    { price: 43200, amount: 0.5, type: "buy" },
-    { price: 43250, amount: 0.3, type: "sell" },
-    { price: 43180, amount: 0.7, type: "buy" },
-    { price: 43270, amount: 0.4, type: "sell" },
   ]);
 
   useEffect(() => {
     initializeChart();
 
     const fetchAll = async () => {
-      await Promise.all([fetchMarketPrice(), fetchOrderBook()]);
+      await Promise.all([fetchMarketPrice(), fetchOrderBook(), fetchRecentTrades(), fetchUserBalance(), fetchKYCStatus()]);
     };
 
     fetchAll();
@@ -148,29 +144,124 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
     }
   };
 
-  const fetchOrderBook = async () => {
+  const fetchRecentTrades = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const [baseAsset, quoteAsset] = selectedPair.split('/');
-      const url = `/api/cryptoapis/orderbook/${baseAsset}/${quoteAsset}?limit=25`;
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      const symbol = selectedPair.split('/')[0];
+      // Use our backend CryptoAPIs endpoint for recent trades
+      const response = await fetch(`/api/crypto/trades/${symbol}USDT`);
+      
+      if (!response.ok) {
+        throw new Error(`CryptoAPIs error: ${response.status}`);
       }
-
-      const response = await fetch(url, { headers });
+      
       const data = await response.json();
-
-      if (data.success && data.data) {
-        setOrderBook({
-          asks: data.data.asks || [],
-          bids: data.data.bids || []
+      const trades: Trade[] = [];
+      
+      // Process real trade data from CryptoAPIs
+      if (Array.isArray(data) && data.length > 0) {
+        data.slice(0, 10).forEach((trade: any, index: number) => {
+          trades.push({
+            id: trade.id || `trade-${index}`,
+            price: parseFloat(trade.price || 0),
+            amount: parseFloat(trade.quantity || trade.amount || 0),
+            time: trade.time ? new Date(trade.time).toLocaleTimeString() : new Date().toLocaleTimeString(),
+            type: trade.isBuyerMaker ? "sell" : "buy"
+          });
         });
       }
-    } catch (error) {
-      console.error('Failed to fetch orderbook:', error);
+      
+      setRecentTrades(trades);
+    } catch (e) {
+      console.error('Error fetching recent trades:', e);
+      // Clear trades on error
+      setRecentTrades([]);
+    }
+  };
+
+  const fetchUserBalance = async () => {
+    try {
+      // Use the unified wallet API to get user's actual balance
+      const response = await fetch('/api/wallet/balance');
+      
+      if (!response.ok) {
+        throw new Error(`Wallet API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Update user balances state
+      if (data.data?.balances) {
+        setUserBalances(data.data.balances);
+      }
+      
+      return data.data?.balances || {};
+    } catch (e) {
+      console.error('Error fetching user balance:', e);
+      return {};
+    }
+  };
+
+  const fetchKYCStatus = async () => {
+    try {
+      // Fetch the user's KYC status
+      const response = await fetch('/api/kyc/status');
+      
+      if (!response.ok) {
+        throw new Error(`KYC API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Update KYC verification status
+      if (data.status !== undefined) {
+        setIsVerified(data.status === 'approved');
+      }
+      
+      return data;
+    } catch (e) {
+      console.error('Error fetching KYC status:', e);
+      return {};
+    }
+  };
+
+  const fetchOrderBook = async () => {
+    try {
+      const symbol = selectedPair.split('/')[0];
+      // Use our backend CryptoAPIs endpoint for order book data
+      const response = await fetch(`/api/crypto/orderbook/${symbol}USDT`);
+      
+      if (!response.ok) {
+        throw new Error(`CryptoAPIs error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const asks: OrderBookEntry[] = [];
+      const bids: OrderBookEntry[] = [];
+      
+      // Process real order book data from CryptoAPIs
+      if (data.asks && data.bids) {
+        // Process asks (sell orders)
+        data.asks.slice(0, 10).forEach(([price, amount]: [string, string]) => {
+          const priceNum = parseFloat(price);
+          const amountNum = parseFloat(amount);
+          const total = priceNum * amountNum;
+          asks.push({ price: priceNum, amount: amountNum, total });
+        });
+        
+        // Process bids (buy orders)
+        data.bids.slice(0, 10).forEach(([price, amount]: [string, string]) => {
+          const priceNum = parseFloat(price);
+          const amountNum = parseFloat(amount);
+          const total = priceNum * amountNum;
+          bids.push({ price: priceNum, amount: amountNum, total });
+        });
+      }
+      
+      setOrderBook({ asks, bids });
+    } catch (e) {
+      console.error('Error fetching order book:', e);
+      // Clear order book on error
+      setOrderBook({ asks: [], bids: [] });
     }
   };
 
@@ -620,9 +711,17 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
                       className="text-xs text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-900"
                       onClick={() => {
                         // Calculate amount based on percentage of available balance
-                        const mockBalance = 1.5; // Mock balance
-                        setAmount(((mockBalance * percent) / 100).toFixed(4));
+                        // Use the actual user's crypto balance
+                        const cryptoBalance = userBalances.crypto || 0;
+                        const selectedCurrency = selectedPair.split("/")[0].toLowerCase();
+                        
+                        // Use the actual user's crypto balance
+                        const balance = cryptoBalance;
+                        if (balance > 0) {
+                          setAmount(((balance * percent) / 100).toFixed(4));
+                        }
                       }}
+                      disabled={userBalances.crypto <= 0}
                     >
                       {percent}%
                     </Button>

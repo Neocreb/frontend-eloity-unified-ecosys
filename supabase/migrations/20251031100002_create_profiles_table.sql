@@ -59,5 +59,36 @@ CREATE TRIGGER update_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+-- Add RLS policies for products table
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read access to products
+CREATE POLICY "Allow public read access to products"
+ON public.products
+FOR SELECT
+USING (true);
+
+-- Allow authenticated users to insert their own products
+CREATE POLICY "Allow users to insert their own products"
+ON public.products
+FOR INSERT
+WITH CHECK (auth.uid() = seller_id);
+
+-- Allow users to update their own products
+CREATE POLICY "Allow users to update their own products"
+ON public.products
+FOR UPDATE
+USING (auth.uid() = seller_id);
+
+-- Allow users to delete their own products
+CREATE POLICY "Allow users to delete their own products"
+ON public.products
+FOR DELETE
+USING (auth.uid() = seller_id);
+
+-- Grant necessary permissions for products table
+GRANT SELECT ON public.products TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.products TO authenticated;
+
 -- Refresh the PostgREST schema cache
 NOTIFY pgrst, 'reload schema';

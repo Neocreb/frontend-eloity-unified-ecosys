@@ -580,12 +580,13 @@ const fetchVideoAnalytics = async () => {
 const fetchProductAnalytics = async () => {
   try {
     // Get product data
-    const { data: products, error: productsError } = await supabase
+    const response = await supabase
       .from('products')
       .select('id, name, price, total_sales, total_reviews, average_rating');
     
-    if (productsError) throw productsError;
+    if (response.error) throw response.error;
     
+    const products = response.data || [];
     const totalProducts = products.length;
     const totalRevenue = products.reduce((sum: number, product: any) => sum + (product.price * (product.total_sales || 0)), 0);
     const totalSales = products.reduce((sum: number, product: any) => sum + (product.total_sales || 0), 0);
@@ -1068,15 +1069,16 @@ const fetchVideoDetails = async (): Promise<DetailedCategory[]> => {
 // Fetch detailed analytics for Marketplace
 const fetchMarketplaceDetails = async (): Promise<DetailedCategory[]> => {
   try {
-    const { data: products, error: productsError } = await supabase
+    const response = await supabase
       .from('products')
       .select('id, name, price, total_sales, total_reviews, average_rating');
     
-    if (productsError) {
-      console.error('Error fetching products for Marketplace details:', productsError);
+    if (response.error) {
+      console.error('Error fetching products for Marketplace details:', response.error);
       return [];
     }
     
+    const products = response.data || [];
     const totalProducts = products.length;
     const totalRevenue = products.reduce((sum: number, product: any) => sum + (product.price * (product.total_sales || 0)), 0);
     const totalSales = products.reduce((sum: number, product: any) => sum + (product.total_sales || 0), 0);

@@ -11,6 +11,9 @@ export interface UserStory {
   views_count: number;
   likes_count: number;
   created_at: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
 }
 
 export interface StoryView {
@@ -24,7 +27,7 @@ export interface CreateStoryData {
   media_url: string;
   media_type: 'image' | 'video';
   caption?: string;
-  expires_in_hours?: number; // Default: 24 hours
+  expires_in_hours?: number;
 }
 
 class StoriesService {
@@ -34,10 +37,8 @@ class StoriesService {
     this.supabase = supabase;
   }
 
-  // Get all active stories for users that the current user follows
   async getActiveStories(currentUserId: string): Promise<UserStory[]> {
     try {
-      // First get the users that the current user follows
       const { data: following, error: followingError } = await this.supabase
         .from('user_follows')
         .select('following_id')
@@ -45,45 +46,66 @@ class StoriesService {
 
       if (followingError) throw followingError;
 
-      const followingIds = following?.map(f => f.following_id) || [];
-      // Include the current user's own stories
-      followingIds.push(currentUserId);
+      const followingIds = (following?.map(f => f.following_id) || []).concat(currentUserId);
 
-      // Get active stories from followed users
       const { data, error } = await this.supabase
-        .from('stories')
-        .select('*')
+        .from('user_stories')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
         .in('user_id', followingIds)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+
+      return (data || []).map(story => ({
+        ...story,
+        username: story.profiles?.username,
+        full_name: story.profiles?.full_name,
+        avatar_url: story.profiles?.avatar_url
+      }));
     } catch (error) {
       console.error('Error fetching active stories:', error);
       throw error;
     }
   }
 
-  // Get stories for a specific user
   async getUserStories(userId: string): Promise<UserStory[]> {
     try {
       const { data, error } = await this.supabase
-        .from('stories')
-        .select('*')
+        .from('user_stories')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('user_id', userId)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+
+      return (data || []).map(story => ({
+        ...story,
+        username: story.profiles?.username,
+        full_name: story.profiles?.full_name,
+        avatar_url: story.profiles?.avatar_url
+      }));
     } catch (error) {
       console.error('Error fetching user stories:', error);
       throw error;
     }
   }
 
-  // Create a new story
   async createStory(storyData: CreateStoryData, userId: string): Promise<UserStory> {
     try {
       const expiresAt = new Date();
@@ -92,11 +114,11 @@ class StoriesService {
       const newStory = {
         user_id: userId,
         media_url: storyData.media_url,
-        type: storyData.media_type,
-        content: storyData.caption || null,
+        media_type: storyData.media_type,
+        caption: storyData.caption || null,
         expires_at: expiresAt.toISOString(),
-        view_count: 0,
-        like_count: 0,
+        views_count: 0,
+        likes_count: 0
       };
 
       const { data, error } = await this.supabase
@@ -113,10 +135,8 @@ class StoriesService {
     }
   }
 
-  // Delete a story
   async deleteStory(storyId: string, userId: string): Promise<void> {
     try {
-      // Check if user is the owner
       const { data: story, error: fetchError } = await this.supabase
         .from('stories')
         .select('user_id')
@@ -140,11 +160,9 @@ class StoriesService {
     }
   }
 
-  // Mark a story as viewed
   async viewStory(storyId: string, userId: string): Promise<StoryView> {
     try {
-      // Check if already viewed
-      const { data: existingView, error: viewError } = await this.supabase
+      const { data: existingView } = await this.supabase
         .from('story_views')
         .select('id')
         .eq('story_id', storyId)
@@ -152,7 +170,6 @@ class StoriesService {
         .single();
 
       if (existingView) {
-        // Already viewed, return existing view
         return {
           id: existingView.id,
           story_id: storyId,
@@ -161,7 +178,6 @@ class StoriesService {
         };
       }
 
-      // Insert new view
       const { data, error } = await this.supabase
         .from('story_views')
         .insert({
@@ -174,19 +190,7 @@ class StoriesService {
 
       if (error) throw error;
 
-      // Update view count using read-modify-write
-      const { data: story } = await this.supabase
-        .from('stories')
-        .select('view_count')
-        .eq('id', storyId)
-        .single();
-
-      if (story) {
-        await this.supabase
-          .from('stories')
-          .update({ view_count: story.view_count + 1 })
-          .eq('id', storyId);
-      }
+      await this.supabase.rpc('increment_story_view', { story_id: storyId });
 
       return data;
     } catch (error) {
@@ -195,7 +199,6 @@ class StoriesService {
     }
   }
 
-  // Get viewers for a story
   async getStoryViewers(storyId: string): Promise<StoryView[]> {
     try {
       const { data, error } = await this.supabase
@@ -212,48 +215,18 @@ class StoriesService {
     }
   }
 
-  // Like a story
   async likeStory(storyId: string, userId: string): Promise<void> {
     try {
-      // Get current likes count
-      const { data: story } = await this.supabase
-        .from('stories')
-        .select('like_count')
-        .eq('id', storyId)
-        .single();
-
-      if (story) {
-        const { error } = await this.supabase
-          .from('stories')
-          .update({ like_count: story.like_count + 1 })
-          .eq('id', storyId);
-
-        if (error) throw error;
-      }
+      await this.supabase.rpc('increment_story_like', { story_id: storyId });
     } catch (error) {
       console.error('Error liking story:', error);
       throw error;
     }
   }
 
-  // Unlike a story
   async unlikeStory(storyId: string, userId: string): Promise<void> {
     try {
-      // Get current likes count
-      const { data: story } = await this.supabase
-        .from('stories')
-        .select('like_count')
-        .eq('id', storyId)
-        .single();
-
-      if (story && story.like_count > 0) {
-        const { error } = await this.supabase
-          .from('stories')
-          .update({ like_count: story.like_count - 1 })
-          .eq('id', storyId);
-
-        if (error) throw error;
-      }
+      await this.supabase.rpc('decrement_story_like', { story_id: storyId });
     } catch (error) {
       console.error('Error unliking story:', error);
       throw error;

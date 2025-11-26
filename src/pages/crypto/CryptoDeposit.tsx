@@ -63,49 +63,24 @@ export default function CryptoDeposit() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const generateAddress = async () => {
+    const fetchAddress = async () => {
       if (!selectedCrypto) return;
       try {
         setIsLoading(true);
-        // Generate a mock address based on the selected crypto and timestamp
-        // In production, this would call a CryptoAPIs endpoint or HD wallet service
-        const timestamp = Date.now().toString().slice(-8);
-        const randomHex = Math.random().toString(16).slice(2, 8);
-
-        let address = '';
-        let memo = '';
-
-        switch(selectedCrypto.symbol) {
-          case 'BTC':
-            address = `1A${randomHex}${timestamp}`;
-            break;
-          case 'ETH':
-          case 'USDT':
-          case 'USDC':
-          case 'MATIC':
-            address = `0x${randomHex}${timestamp}`;
-            break;
-          case 'SOL':
-            address = `${randomHex}${timestamp}`;
-            break;
-          case 'ADA':
-            address = `addr1${randomHex}${timestamp}`;
-            break;
-          case 'LTC':
-            address = `L${randomHex}${timestamp}`;
-            break;
-          default:
-            address = `${randomHex}${timestamp}`;
-        }
-
-        setSelectedCrypto((prev) => prev ? { ...prev, address, memo } : prev);
+        const params = new URLSearchParams({ coin: selectedCrypto.symbol });
+        if (selectedCrypto.chainType) params.set('chainType', selectedCrypto.chainType);
+        const r = await fetch(`/api/bybit/deposit-address?${params.toString()}`);
+        const j = await r.json();
+        const addr = j?.result?.address || j?.result?.chains?.[0]?.address || j?.address;
+        const memo = j?.result?.tag || j?.result?.memo || j?.memo;
+        setSelectedCrypto((prev) => prev ? { ...prev, address: addr || prev.address, memo: memo || prev.memo } : prev);
       } catch (e) {
-        console.error('Error generating address:', e);
+        // keep existing
       } finally {
         setIsLoading(false);
       }
     };
-    generateAddress();
+    fetchAddress();
   }, [selectedCrypto?.symbol]);
 
   const handleCopyAddress = async () => {

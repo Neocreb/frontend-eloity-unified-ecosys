@@ -51,11 +51,7 @@ class CryptoapisClient {
     this.baseUrl = baseUrl;
   }
 
-  private async request<T>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: string,
-    data?: any
-  ): Promise<T> {
+  private async request<T>(method: string, endpoint: string, data?: any): Promise<T> {
     try {
       const url = `${this.baseUrl}${endpoint}`;
       const options: RequestInit = {
@@ -71,8 +67,19 @@ class CryptoapisClient {
 
       const response = await fetch(url, options);
 
+      // Check if response is OK
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`CryptoAPIs HTTP error! status: ${response.status}`, errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received from CryptoAPIs:', text.substring(0, 200));
+        throw new Error('Received non-JSON response from CryptoAPIs');
       }
 
       return await response.json();

@@ -48,66 +48,66 @@ type P2POffer = Database["public"]["Tables"]["p2p_offers"]["Row"];
 // Simplified service class with real database connections
 export class CryptoService {
   // Enhanced method to get cryptocurrencies with real data from CRYPTO APIs and database
-  async getCryptocurrencies(): Promise<Cryptocurrency[]> {
+  async getCryptocurrencies(): Promise<Crypto[]> {
     try {
-      // Fetch cryptocurrency data from database
-      
-      // If we're on the server side and have access to the database
-      if (typeof window === 'undefined' && supabase) {
-        const { data, error } = await supabase
-          .from('crypto_prices')
-          .select('*')
-          .order('market_cap_rank', { ascending: true })
-          .limit(100);
-
-        if (error) {
-          throw new Error(`Database error: ${error.message}`);
+      // Try to get data from CoinGecko API first (server-side)
+      if (typeof window === 'undefined') {
+        // Server-side implementation
+        const coinIds = ['bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana', 'ripple', 'usd-coin', 'cardano', 'dogecoin', 'polygon'];
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds.join(',')}&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h`
+        );
+        
+        // Check if response is OK and is actually JSON
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`CoinGecko API error! status: ${response.status}`, errorText);
+          throw new Error(`CoinGecko API error! status: ${response.status}`);
         }
-
-        // Convert database data to Cryptocurrency format
-        return data.map((item: any) => ({
-          id: item.symbol.toLowerCase(),
-          symbol: item.symbol,
-          name: item.name,
-          image: `https://assets.coingecko.com/coins/images/${item.symbol.toLowerCase()}/large/${item.symbol}.png`,
-          current_price: parseFloat(item.price_usd),
-          market_cap: parseFloat(item.market_cap),
-          market_cap_rank: item.market_cap_rank,
-          fully_diluted_valuation: 0,
-          total_volume: parseFloat(item.volume_24h),
-          high_24h: parseFloat(item.high_24h),
-          low_24h: parseFloat(item.low_24h),
-          price_change_24h: parseFloat(item.price_change_24h),
-          price_change_percentage_24h: (parseFloat(item.price_change_24h) / (parseFloat(item.price_usd) - parseFloat(item.price_change_24h))) * 100,
-          price_change_percentage_7d: 0,
-          price_change_percentage_30d: 0,
-          market_cap_change_24h: 0,
-          market_cap_change_percentage_24h: 0,
-          circulating_supply: parseFloat(item.circulating_supply),
-          total_supply: parseFloat(item.total_supply),
-          max_supply: parseFloat(item.max_supply),
-          ath: 0,
-          ath_change_percentage: 0,
-          ath_date: "",
-          atl: 0,
-          atl_change_percentage: 0,
-          atl_date: "",
-          last_updated: item.last_updated,
-          sparkline_in_7d: []
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response received from CoinGecko:', text.substring(0, 200));
+          throw new Error('Received non-JSON response from CoinGecko API');
+        }
+        
+        const data = await response.json();
+        
+        return data.map((crypto: any) => ({
+          id: crypto.id,
+          name: crypto.name,
+          symbol: crypto.symbol,
+          current_price: crypto.current_price,
+          market_cap: crypto.market_cap,
+          total_volume: crypto.total_volume,
+          price_change_percentage_24h: crypto.price_change_percentage_24h,
+          image: crypto.image,
+          sparkline_in_7d: crypto.sparkline_in_7d?.price || []
         }));
       } else {
         // Client-side fallback - make API call to our own backend
         const response = await fetch('/api/crypto/cryptocurrencies');
         
+        // Check if response is OK and is actually JSON
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          const errorText = await response.text();
+          console.error(`Crypto API error! status: ${response.status}`, errorText);
+          throw new Error(`Crypto API error! status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response received from crypto API:', text.substring(0, 200));
+          throw new Error('Received non-JSON response from crypto API');
         }
         
         return await response.json();
       }
     } catch (error) {
       console.error("Error fetching cryptocurrency data:", error);
-      throw error; // No fallback to mock data
+      throw error; // Re-throw the error instead of falling back to mock data
     }
   }
 
@@ -443,14 +443,12 @@ export class CryptoService {
   }
 
   async getDeFiProtocols(): Promise<any[]> {
-    // Return supported DeFi protocols
-    // Integration with CryptoAPIs or other DeFi data sources can be implemented here
+    // Bybit doesn't have DeFi protocols, but we can return an empty array
     return [];
   }
 
   async getDeFiPositions(userId: string): Promise<DeFiPosition[]> {
-    // Return user's DeFi positions
-    // Integration with CryptoAPIs or blockchain data sources can be implemented here
+    // Bybit doesn't have DeFi positions, but we can return an empty array
     return [];
   }
 
@@ -505,6 +503,66 @@ export class CryptoService {
     }
   }
 
+  async addToWatchlist(userId: string, asset: string): Promise<any> {
+    // Add asset to user's watchlist in database
+    try {
+      // If we're on the server side and have access to the database
+      if (typeof window === 'undefined' && supabase) {
+        // First, get the cryptocurrency data
+        const { data: cryptoData, error: cryptoError } = await supabase
+          .from('crypto_prices')
+          .select('*')
+          .eq('symbol', asset.toUpperCase())
+          .single();
+
+        if (cryptoError) {
+          throw new Error(`Database error fetching crypto data: ${cryptoError.message}`);
+        }
+
+        // Add to user's watchlist
+        const { data, error } = await supabase
+          .from('user_watchlists')
+          .insert({
+            user_id: userId,
+            crypto_id: cryptoData.id,
+            created_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) {
+          throw new Error(`Database error adding to watchlist: ${error.message}`);
+        }
+
+        // Return the cryptocurrency data
+        return {
+          id: cryptoData.symbol.toLowerCase(),
+          symbol: cryptoData.symbol,
+          name: cryptoData.name,
+          current_price: parseFloat(cryptoData.price_usd),
+          market_cap: parseFloat(cryptoData.market_cap),
+          total_volume: parseFloat(cryptoData.volume_24h),
+          price_change_percentage_24h: parseFloat(cryptoData.price_change_24h),
+        };
+      } else {
+        // Client-side fallback - make API call to our own backend
+        const response = await fetch('/api/crypto/watchlist/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, asset })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        return await response.json();
+      }
+    } catch (error) {
+      console.error(`Failed to add ${asset} to watchlist:`, error);
+      throw error; // No fallback to mock data
+    }
+  }
 
   async createAlert(alertData: any): Promise<any> {
     // Create alert in database
@@ -1183,112 +1241,12 @@ export class CryptoService {
         })
         .select()
         .single();
-
+      
       if (error) throw error;
       return data;
     } catch (error) {
       console.error('Error creating P2P offer:', error);
       throw error; // No fallback to mock data
-    }
-  }
-
-  // Additional methods for hook compatibility
-  async getNews(limit: number = 20): Promise<News[]> {
-    try {
-      const response = await fetch(`/api/crypto/news?limit=${limit}`);
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to fetch news:', error);
-      return [];
-    }
-  }
-
-  async getEducationContent(): Promise<EducationContent[]> {
-    try {
-      const response = await fetch('/api/crypto/education');
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to fetch education content:', error);
-      return [];
-    }
-  }
-
-  async getTransactions(limit: number = 50): Promise<Transaction[]> {
-    try {
-      const response = await fetch(`/api/crypto/transactions?limit=${limit}`);
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to fetch transactions:', error);
-      return [];
-    }
-  }
-
-  async getOpenOrders(): Promise<Order[]> {
-    try {
-      const response = await fetch('/api/crypto/orders/open');
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to fetch open orders:', error);
-      return [];
-    }
-  }
-
-  async placeOrder(orderData: Omit<Order, 'id' | 'timestamp' | 'updateTime' | 'fills'>): Promise<Order> {
-    try {
-      const response = await fetch('/api/crypto/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      });
-      if (!response.ok) throw new Error('Failed to place order');
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to place order:', error);
-      throw error;
-    }
-  }
-
-  async cancelOrder(orderId: string): Promise<void> {
-    try {
-      const response = await fetch(`/api/crypto/orders/${orderId}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to cancel order');
-    } catch (error) {
-      console.error('Failed to cancel order:', error);
-      throw error;
-    }
-  }
-
-  async removeFromWatchlist(itemId: string): Promise<void> {
-    try {
-      const response = await fetch(`/api/crypto/watchlist/${itemId}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to remove from watchlist');
-    } catch (error) {
-      console.error('Failed to remove from watchlist:', error);
-      throw error;
-    }
-  }
-
-  // Override addToWatchlist to match hook signature
-  async addToWatchlist(asset: string, notes?: string): Promise<any> {
-    try {
-      const response = await fetch('/api/crypto/watchlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ asset, notes })
-      });
-      if (!response.ok) throw new Error('Failed to add to watchlist');
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to add to watchlist:', error);
-      throw error;
     }
   }
 }

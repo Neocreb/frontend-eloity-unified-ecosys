@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode, type FC } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode, type FC } from 'react';
 import { currencyService, type ConversionOptions, type ConversionResult } from '@/services/currencyService';
 import { 
   type Currency, 
@@ -40,24 +40,18 @@ interface CurrencyProviderProps {
   defaultCurrency?: string;
 }
 
-export const CurrencyProvider: FC<CurrencyProviderProps> = ({
-  children,
-  defaultCurrency = DEFAULT_CURRENCY
+export const CurrencyProvider: FC<CurrencyProviderProps> = ({ 
+  children, 
+  defaultCurrency = DEFAULT_CURRENCY 
 }) => {
   const [userCurrency, setUserCurrencyState] = useState<Currency>(() => {
-    try {
-      // Try to get from localStorage first, but only in browser
-      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-        const saved = localStorage.getItem('preferred-currency');
-        if (saved) {
-          const currency = getCurrencyByCode(saved);
-          if (currency) return currency;
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to access localStorage for currency:', error);
+    // Try to get from localStorage first
+    const saved = localStorage.getItem('preferred-currency');
+    if (saved) {
+      const currency = getCurrencyByCode(saved);
+      if (currency) return currency;
     }
-
+    
     // Fallback to default
     return getCurrencyByCode(defaultCurrency) || getDefaultCurrency();
   });

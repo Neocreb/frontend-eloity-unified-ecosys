@@ -5,9 +5,6 @@ import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ServiceBadges from "@/components/wallet/ServiceBadges";
-import { useServiceFavorites } from "@/hooks/useServiceFavorites";
 import {
   HelpCircle,
   Phone,
@@ -30,8 +27,6 @@ import {
   Clock,
   ArrowLeft,
   MoreHorizontal,
-  Heart as HeartIcon,
-  Sparkles,
 } from "lucide-react";
 
 interface Service {
@@ -51,9 +46,6 @@ const MoreServices = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showComingSoon, setShowComingSoon] = useState(false);
-  const [showTravelComingSoon, setShowTravelComingSoon] = useState(false);
-  const { isFavorited, toggleFavorite } = useServiceFavorites();
 
   // All available services
   const allServices: Service[] = [
@@ -198,7 +190,7 @@ const MoreServices = () => {
       id: "creator-rewards",
       label: "Creator Rewards",
       icon: <Star className="h-6 w-6" />,
-      action: () => navigate("/app/rewards"),
+      action: () => navigate("/app/creator-studio"),
       gradient: "bg-gradient-to-br from-yellow-400 to-yellow-600",
       category: "Creator Features",
       description: "Earn from content creation",
@@ -208,7 +200,7 @@ const MoreServices = () => {
       id: "referral",
       label: "Referral Program",
       icon: <Trophy className="h-6 w-6" />,
-      action: () => navigate("/app/rewards?tab=referrals"),
+      action: () => navigate("/app/referral"),
       gradient: "bg-gradient-to-br from-green-400 to-green-600",
       category: "Creator Features",
       description: "Earn from referrals",
@@ -219,7 +211,7 @@ const MoreServices = () => {
       id: "savings",
       label: "Savings Goals",
       icon: <Wallet className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/savings-goals"),
+      action: () => navigate("/app/wallet"),
       gradient: "bg-gradient-to-br from-emerald-400 to-teal-600",
       category: "Finance & Investment",
       description: "Create savings goals",
@@ -229,7 +221,7 @@ const MoreServices = () => {
       id: "safebox",
       label: "SafeBox",
       icon: <Lock className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/safebox"),
+      action: () => navigate("/app/safebox"),
       gradient: "bg-gradient-to-br from-slate-400 to-gray-600",
       category: "Finance & Investment",
       description: "Secure your money",
@@ -239,7 +231,7 @@ const MoreServices = () => {
       id: "investments",
       label: "Invest",
       icon: <TrendingUp className="h-6 w-6" />,
-      action: () => setShowComingSoon(true),
+      action: () => navigate("/app/wallet"),
       gradient: "bg-gradient-to-br from-blue-500 to-purple-600",
       category: "Finance & Investment",
       description: "Investment opportunities",
@@ -250,7 +242,7 @@ const MoreServices = () => {
       id: "virtual-card",
       label: "Virtual Card",
       icon: <CreditCard className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/cards?type=virtual"),
+      action: () => navigate("/app/wallet"),
       gradient: "bg-gradient-to-br from-cyan-400 to-blue-600",
       category: "Cards & Virtual",
       description: "Create virtual cards",
@@ -260,7 +252,7 @@ const MoreServices = () => {
       id: "physical-card",
       label: "Physical Card",
       icon: <CreditCard className="h-6 w-6" />,
-      action: () => navigate("/app/wallet/cards?type=physical"),
+      action: () => navigate("/app/wallet"),
       gradient: "bg-gradient-to-br from-indigo-400 to-purple-600",
       category: "Cards & Virtual",
       description: "Order physical card",
@@ -292,7 +284,7 @@ const MoreServices = () => {
       id: "travel",
       label: "Travel & Hotel",
       icon: <Plane className="h-6 w-6" />,
-      action: () => setShowTravelComingSoon(true),
+      action: () => navigate("/app/wallet"),
       gradient: "bg-gradient-to-br from-sky-400 to-cyan-600",
       category: "Lifestyle",
       description: "Book travel & hotels",
@@ -338,33 +330,19 @@ const MoreServices = () => {
 
   const categories = Array.from(new Set(allServices.map((s) => s.category)));
 
-  const ServiceCard = ({ service }: { service: Service }) => {
-    const isFav = isFavorited(service.id);
-
-    return (
+  const ServiceCard = ({ service }: { service: Service }) => (
     <button
       onClick={service.action}
       className="relative group flex flex-col items-center gap-2 p-3 sm:p-4 w-full transition-all duration-300 hover:scale-105"
     >
       {/* Badges */}
-      <div className="absolute top-0 right-0 flex gap-1 z-10">
+      <div className="absolute top-0 right-0 flex gap-1">
         {service.isHot && (
           <Badge className="bg-red-500 text-white text-xs h-5">HOT</Badge>
         )}
         {service.isNew && (
           <Badge className="bg-blue-500 text-white text-xs h-5">NEW</Badge>
         )}
-        {/* Favorite Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(service.id);
-          }}
-          className="bg-white text-red-500 text-xs h-5 px-1.5 rounded-full hover:bg-red-50 transition-colors flex items-center justify-center"
-          title={isFav ? "Remove from favorites" : "Add to favorites"}
-        >
-          <Heart className={`h-3 w-3 ${isFav ? 'fill-red-500' : ''}`} />
-        </button>
       </div>
 
       {/* Icon Container */}
@@ -384,21 +362,9 @@ const MoreServices = () => {
             {service.description}
           </p>
         )}
-
-        {/* Integration Badges */}
-        <div className="mt-2 flex justify-center">
-          <ServiceBadges
-            serviceId={service.id}
-            size="sm"
-            showLabel={false}
-            maxBadges={2}
-            className="justify-center"
-          />
-        </div>
       </div>
     </button>
-    );
-  };
+  );
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -498,112 +464,6 @@ const MoreServices = () => {
           </div>
         </div>
       </div>
-
-      {/* Coming Soon Modal */}
-      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-blue-500" />
-              Investment Platform Coming Soon
-            </DialogTitle>
-            <DialogDescription className="text-center pt-4">
-              We're building a comprehensive investment platform to help you grow your wealth
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-              <h4 className="font-semibold text-blue-900">What's Coming:</h4>
-              <ul className="space-y-2 text-sm text-blue-900">
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500 mt-1">✓</span>
-                  <span>Stock market investments</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500 mt-1">✓</span>
-                  <span>Mutual funds & ETFs</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500 mt-1">✓</span>
-                  <span>Crypto portfolio management</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500 mt-1">✓</span>
-                  <span>Real-time market data</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500 mt-1">✓</span>
-                  <span>Investment education & insights</span>
-                </li>
-              </ul>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Be the first to know when it launches! Follow our blog for updates.
-              </p>
-            </div>
-          </div>
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            onClick={() => setShowComingSoon(false)}
-          >
-            Got it, notify me
-          </Button>
-        </DialogContent>
-      </Dialog>
-
-      {/* Travel & Hotel Coming Soon Modal */}
-      <Dialog open={showTravelComingSoon} onOpenChange={setShowTravelComingSoon}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-cyan-500" />
-              Travel & Hotel Coming Soon
-            </DialogTitle>
-            <DialogDescription className="text-center pt-4">
-              We're building a seamless travel and hotel booking platform for you
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 space-y-3">
-              <h4 className="font-semibold text-cyan-900">What's Coming:</h4>
-              <ul className="space-y-2 text-sm text-cyan-900">
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-500 mt-1">✓</span>
-                  <span>Flight bookings worldwide</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-500 mt-1">✓</span>
-                  <span>Hotel reservations & deals</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-500 mt-1">✓</span>
-                  <span>Car rentals & ground transport</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-500 mt-1">✓</span>
-                  <span>Travel insurance options</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-500 mt-1">✓</span>
-                  <span>Earn rewards on every trip</span>
-                </li>
-              </ul>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Be the first to know when it launches! Follow our blog for updates.
-              </p>
-            </div>
-          </div>
-          <Button
-            className="w-full bg-cyan-600 hover:bg-cyan-700"
-            onClick={() => setShowTravelComingSoon(false)}
-          >
-            Got it, notify me
-          </Button>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

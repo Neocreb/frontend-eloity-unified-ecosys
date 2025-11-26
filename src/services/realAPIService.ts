@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 /**
  * Real API Integration Service
  * Integrates with actual APIs for live data (when API keys are available)
@@ -61,8 +60,8 @@ export class RealAPIService {
     if (cached) return cached;
 
     try {
-      // Fetch from backend CryptoAPIs integration
-      const response = await this.fetchCryptoData(symbol);
+      // Try Bybit API (requires API key)
+      const response = await this.fetchBybitData(symbol);
       if (response.success) {
         this.setCache(cacheKey, response);
         return response;
@@ -147,48 +146,28 @@ export class RealAPIService {
 
   // Real API Integration Methods (when API keys are available)
 
-  private async fetchCryptoData(
+  private async fetchBybitData(
     symbol: string,
   ): Promise<APIResponse<CryptoPrice>> {
-    // Use backend endpoint that uses CryptoAPIs integration
-    const symbolMap: Record<string, string> = {
-      'bitcoin': 'bitcoin',
-      'ethereum': 'ethereum',
-      'tether': 'tether',
-      'binancecoin': 'binancecoin',
-      'solana': 'solana',
-      'cardano': 'cardano',
-      'polkadot': 'polkadot',
-      'avalanche': 'avalanche',
-      'chainlink': 'chainlink',
-      'polygon': 'polygon',
-      'dogecoin': 'dogecoin'
-    };
-
-    const coinId = Object.keys(symbolMap).find(key => key.includes(symbol.toLowerCase())) || symbol.toLowerCase();
-
+    // Use our backend CryptoAPIs endpoint instead of calling Bybit directly
+    const url = `/api/cryptoapis/exchange-rates/${symbol.toUpperCase()}/USD`;
+    
     try {
-      const response = await fetch(`/api/crypto/prices?symbols=${coinId}`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error("API request failed");
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("CryptoAPIs request failed");
 
       const data = await response.json();
-      const priceData = data.prices?.[coinId];
-
-      if (!priceData) throw new Error("Coin not found");
+      
+      if (!data.success) throw new Error("CryptoAPIs request failed");
 
       return {
         success: true,
         data: {
-          symbol: symbol.toUpperCase(),
-          price: parseFloat(priceData.usd || '0'),
-          change24h: parseFloat(priceData.usd_24h_change || '0'),
-          marketCap: parseFloat(priceData.usd_market_cap || '0'),
-          volume24h: parseFloat(priceData.usd_24h_vol || '0'),
+          symbol: symbol,
+          price: parseFloat(data.data.rate || 0),
+          change24h: parseFloat(data.data.changePercent24h || 0),
+          marketCap: parseFloat(data.data.marketCap || 0),
+          volume24h: parseFloat(data.data.volume24h || 0),
         },
         source: "real_api",
         timestamp: Date.now(),

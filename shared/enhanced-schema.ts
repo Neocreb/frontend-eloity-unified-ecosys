@@ -38,10 +38,6 @@ export const profiles = pgTable('profiles', {
   allow_notifications: boolean('allow_notifications').default(true),
   preferred_currency: text('preferred_currency').default('USD'),
   timezone: text('timezone'),
-  // Tier system fields
-  tier_level: text('tier_level').default('tier_1'),
-  kyc_trigger_reason: text('kyc_trigger_reason'),
-  tier_upgraded_at: timestamp('tier_upgraded_at'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });
@@ -327,15 +323,12 @@ export const reward_sharing_transactions = pgTable('reward_sharing_transactions'
 export const pioneer_badges = pgTable('pioneer_badges', {
   id: uuid('id').primaryKey().defaultRandom(),
   user_id: uuid('user_id').notNull(),
-  badge_number: integer('badge_number').notNull(), // 1-100 (updated from 500)
+  badge_number: integer('badge_number').notNull(), // 1-500
   earned_at: timestamp('earned_at').defaultNow(),
   eligibility_score: numeric('eligibility_score', { precision: 8, scale: 2 }).notNull(),
   activity_metrics: jsonb('activity_metrics'),
   verification_data: jsonb('verification_data'),
   is_verified: boolean('is_verified').default(true),
-  // Premium fields for first 100 users
-  premium_granted: boolean('premium_granted').default(true),
-  premium_expiry: timestamp('premium_expiry'),
   created_at: timestamp('created_at').defaultNow(),
 });
 
@@ -350,30 +343,6 @@ export const user_activity_sessions = pgTable('user_activity_sessions', {
   quality_interactions: integer('quality_interactions').default(0),
   device_info: jsonb('device_info'),
   engagement_score: numeric('engagement_score', { precision: 5, scale: 2 }).default('0'),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
-// Feature gates table for tier-based access control
-export const feature_gates = pgTable('feature_gates', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  feature_name: text('feature_name').notNull().unique(),
-  feature_description: text('feature_description'),
-  tier_1_access: boolean('tier_1_access').default(false),
-  tier_2_access: boolean('tier_2_access').default(true),
-  requires_kyc: boolean('requires_kyc').default(false),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-});
-
-// Tier access history table for audit trail
-export const tier_access_history = pgTable('tier_access_history', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').notNull(),
-  from_tier: text('from_tier'),
-  to_tier: text('to_tier').notNull(),
-  kyc_verified_at: timestamp('kyc_verified_at'),
-  action_type: text('action_type').notNull(), // 'upgrade', 'downgrade', 'reactivate'
-  reason: text('reason'),
   created_at: timestamp('created_at').defaultNow(),
 });
 
@@ -578,17 +547,6 @@ export const userActivitySessionsRelations = relations(user_activity_sessions, (
 export const userRewardsRelations = relations(user_rewards, ({ one }) => ({
   user: one(users, {
     fields: [user_rewards.user_id],
-    references: [users.id],
-  }),
-}));
-
-// Relations for feature gates
-export const featureGatesRelations = relations(feature_gates, () => ({}));
-
-// Relations for tier access history
-export const tierAccessHistoryRelations = relations(tier_access_history, ({ one }) => ({
-  user: one(users, {
-    fields: [tier_access_history.user_id],
     references: [users.id],
   }),
 }));

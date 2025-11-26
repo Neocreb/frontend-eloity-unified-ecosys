@@ -103,54 +103,6 @@ export const crypto_prices = pgTable('crypto_prices', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
-// Crypto exchange rates table (for caching real-time rates from CryptoAPIs)
-export const crypto_exchange_rates = pgTable('crypto_exchange_rates', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  base_asset: text('base_asset').notNull(),
-  quote_asset: text('quote_asset').notNull(),
-  blockchain: text('blockchain'),
-  network: text('network'),
-  rate: numeric('rate', { precision: 20, scale: 8 }).notNull(),
-  source: text('source').notNull().default('cryptoapis'),
-  timestamp: timestamp('timestamp').notNull(),
-  expires_at: timestamp('expires_at'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-});
-
-// Crypto balances cache table (for caching user wallet balances)
-export const crypto_balances_cache = pgTable('crypto_balances_cache', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').notNull(),
-  wallet_id: uuid('wallet_id').notNull(),
-  address: text('address').notNull(),
-  blockchain: text('blockchain').notNull(),
-  network: text('network').notNull(),
-  asset_symbol: text('asset_symbol').notNull(),
-  balance: numeric('balance', { precision: 25, scale: 8 }).notNull(),
-  balance_usd: numeric('balance_usd', { precision: 20, scale: 2 }),
-  cache_expires_at: timestamp('cache_expires_at'),
-  last_synced_at: timestamp('last_synced_at'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-});
-
-// Crypto wallet addresses table (for tracking user wallet addresses across blockchains)
-export const crypto_wallet_addresses = pgTable('crypto_wallet_addresses', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id').notNull(),
-  blockchain: text('blockchain').notNull(),
-  network: text('network').notNull(),
-  address: text('address').notNull(),
-  label: text('label'),
-  is_primary: boolean('is_primary').default(false),
-  balance: numeric('balance', { precision: 25, scale: 8 }),
-  balance_usd: numeric('balance_usd', { precision: 20, scale: 2 }),
-  last_synced_at: timestamp('last_synced_at'),
-  created_at: timestamp('created_at').defaultNow(),
-  updated_at: timestamp('updated_at').defaultNow(),
-});
-
 // Relations
 export const cryptoProfilesRelations = relations(crypto_profiles, ({ one }) => ({
   user: one(users, {
@@ -190,26 +142,4 @@ export const cryptoTradesRelations = relations(crypto_trades, ({ one }) => ({
 
 export const cryptoPricesRelations = relations(crypto_prices, ({ one }) => ({
   // No relations for prices as it's a standalone table
-}));
-
-export const cryptoExchangeRatesRelations = relations(crypto_exchange_rates, ({ one }) => ({
-  // No relations for exchange rates as it's a standalone table
-}));
-
-export const cryptoBalancesCacheRelations = relations(crypto_balances_cache, ({ one }) => ({
-  user: one(users, {
-    fields: [crypto_balances_cache.user_id],
-    references: [users.id],
-  }),
-  wallet: one(crypto_wallets, {
-    fields: [crypto_balances_cache.wallet_id],
-    references: [crypto_wallets.id],
-  }),
-}));
-
-export const cryptoWalletAddressesRelations = relations(crypto_wallet_addresses, ({ one }) => ({
-  user: one(users, {
-    fields: [crypto_wallet_addresses.user_id],
-    references: [users.id],
-  }),
 }));

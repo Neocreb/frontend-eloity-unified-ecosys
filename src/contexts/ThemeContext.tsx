@@ -30,11 +30,11 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
+export const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
   // Initialize theme state with immediate localStorage check to avoid hydration issues
   const [theme, setTheme] = useState<Theme>(() => {
     try {
-      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      if (typeof window !== "undefined" && window.localStorage) {
         const savedTheme = localStorage.getItem("theme") as Theme;
         if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) {
           return savedTheme;
@@ -140,5 +140,4 @@ const ThemeProvider: FC<ThemeProviderProps> = ({ children }) => {
   );
 };
 
-export { ThemeProvider };
 export default ThemeProvider;

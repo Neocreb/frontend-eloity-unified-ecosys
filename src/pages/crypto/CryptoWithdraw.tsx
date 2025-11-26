@@ -184,13 +184,12 @@ export default function CryptoWithdraw() {
 
     try {
       const body: any = {
-        asset: selectedCrypto.symbol,
-        network: selectedCrypto.network,
+        coin: selectedCrypto.symbol,
+        chain: selectedCrypto.network,
         address,
         amount: withdrawAmount,
-        memo: memo || undefined,
       };
-      const r = await fetch('/api/crypto/user/withdraw', {
+      const r = await fetch('/api/bybit/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

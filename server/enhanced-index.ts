@@ -39,7 +39,7 @@ import {
   user_preferences 
 } from '../shared/schema.js';
 
-import {
+import { 
   profiles,
   marketplace_profiles,
   freelance_profiles,
@@ -57,9 +57,7 @@ import {
   reward_sharing_transactions,
   pioneer_badges,
   user_activity_sessions,
-  freelance_jobs,
-  feature_gates,
-  tier_access_history
+  freelance_jobs
 } from '../shared/enhanced-schema.js';
 
 import { 
@@ -84,16 +82,12 @@ import adminRouter from './routes/admin.js';
 import exploreRouter from './routes/explore.js';
 import walletRouter from './routes/wallet.js';
 import ledgerRouter from './routes/ledger.js';
+import bybitRouter from './routes/bybit.js';
 import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
-import tierAccessRouter from './routes/tierAccess.js';
-import subscriptionsRouter from './routes/subscriptions.js';
-import referralBonusRouter from './routes/referralBonus.js';
-import creatorFundBoostRouter from './routes/creatorFundBoost.js';
 import startMetricsSync from './tasks/metricsSync.js';
-import startCryptoDataSync from './tasks/syncCryptoData.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -168,18 +162,6 @@ try {
   });
 } catch (e) {
   console.error('Failed to start reconciliation job:', e);
-}
-
-// Start CryptoAPIs data sync if API key is configured
-try {
-  if (process.env.CRYPTOAPIS_API_KEY) {
-    startCryptoDataSync(5 * 60 * 1000); // Sync every 5 minutes
-    console.log('✅ CryptoAPIs data sync started');
-  } else {
-    console.warn('⚠️  CRYPTOAPIS_API_KEY not set, crypto data sync disabled');
-  }
-} catch (e) {
-  console.error('Failed to start crypto data sync:', e);
 }
 
 // Optional: start BullMQ-based queue if REDIS_URL is provided for more robust scheduling
@@ -522,13 +504,10 @@ app.use('/api/admin', adminRouter);
 app.use('/api/explore', exploreRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/ledger', ledgerRouter);
+app.use('/api/bybit', bybitRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 app.use('/api/reloadly', reloadlyRouter);
 app.use('/api/cryptoapis', cryptoapisRouter);
-app.use('/api/tier', tierAccessRouter);
-app.use('/api/subscriptions', subscriptionsRouter);
-app.use('/api/referral', referralBonusRouter);
-app.use('/api/creator-boost', creatorFundBoostRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 

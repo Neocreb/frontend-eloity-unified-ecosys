@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRewards } from "@/hooks/use-rewards";
 import { useToast } from "@/hooks/use-toast";
@@ -33,7 +33,6 @@ import RewardsActivitiesTab from "@/components/rewards/RewardsActivitiesTab";
 import RewardsChallengesTab from "@/components/rewards/RewardsChallengesTab";
 import RewardsBattleTab from "@/components/rewards/RewardsBattleTab";
 import SafeReferralManager from "@/components/rewards/SafeReferralManager";
-import ReferralBonusWidget from "@/components/referral/ReferralBonusWidget";
 import AchievementSystem from "@/components/rewards/AchievementSystem";
 import GoalTracking from "@/components/rewards/GoalTracking";
 import AdvancedAnalytics from "@/components/rewards/AdvancedAnalytics";
@@ -87,12 +86,10 @@ interface RewardData {
 
 export default function EnhancedRewards() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { data: rewardsData, isLoading, error, refresh } = useRewards();
   const { toast } = useToast();
-  const tabParam = searchParams.get("tab") || "dashboard";
-  const [activeTab, setActiveTab] = useState(tabParam);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Transform rewards data to match the expected format
   const rewardData: RewardData | null = rewardsData?.calculatedUserRewards ? {
@@ -385,9 +382,29 @@ export default function EnhancedRewards() {
         </TabsContent>
 
         <TabsContent value="referrals" className="mt-6">
-          <RewardsErrorBoundary>
-            <ReferralBonusWidget userTier={rewardData?.trustScore?.level === 'Gold' || rewardData?.trustScore?.level === 'Platinum' ? 'tier_2' : 'tier_1'} />
-          </RewardsErrorBoundary>
+          <div className="space-y-6">
+            {/* Reward Sharing Notice */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-3">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-purple-100 rounded-full">
+                  <Gift className="w-4 h-4 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-purple-900">
+                    Community Sharing Active
+                  </h3>
+                  <p className="text-sm text-purple-700">
+                    0.5% of creator earnings automatically shared with referrals.
+                    <a href="/terms" className="underline hover:text-purple-800 ml-1">Terms</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <RewardsErrorBoundary>
+              <SafeReferralManager />
+            </RewardsErrorBoundary>
+          </div>
         </TabsContent>
       </Tabs>
 

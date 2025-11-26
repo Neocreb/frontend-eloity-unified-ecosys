@@ -20,7 +20,7 @@ import { WalletProvider } from "./contexts/WalletContext";
 import { LiveContentProvider } from "./contexts/LiveContentContext";
 import SafeThemeProvider from "./contexts/SafeThemeProvider";
 import SafeI18nProvider from "./contexts/SafeI18nProvider";
-import SafeCurrencyProvider from "./contexts/SafeCurrencyProvider";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { UnifiedNotificationProvider } from "./contexts/UnifiedNotificationContext";
 import { FeedProvider } from "./contexts/FeedContext";
 import { UserCollectionsProvider } from "./contexts/UserCollectionsContext";
@@ -91,7 +91,6 @@ import Airtime from "./pages/wallet/Airtime";
 import Data from "./pages/wallet/Data";
 import TV from "./pages/wallet/TV";
 import Safebox from "./pages/wallet/Safebox";
-import SavingsGoals from "./pages/wallet/SavingsGoals";
 import Electricity from "./pages/wallet/Electricity";
 import MoneyRequest from "./pages/wallet/MoneyRequest";
 import MoreServices from "./pages/wallet/MoreServices";
@@ -589,7 +588,6 @@ const AppRoutes = () => {
           <Route path="wallet/data" element={<Data />} />
           <Route path="wallet/tv" element={<TV />} />
           <Route path="wallet/safebox" element={<Safebox />} />
-          <Route path="wallet/savings-goals" element={<SavingsGoals />} />
           <Route path="wallet/electricity" element={<Electricity />} />
           <Route path="wallet/money-request" element={<MoneyRequest />} />
           <Route path="wallet/more-services" element={<MoreServices />} />
@@ -959,7 +957,7 @@ const App = () => {
             }
           >
             <SafeI18nProvider>
-              <SafeCurrencyProvider>
+              <CurrencyProvider>
                 <AuthProvider>
                   <UserCollectionsProvider>
                     <UnifiedNotificationProvider>
@@ -989,7 +987,7 @@ const App = () => {
                     </UnifiedNotificationProvider>
                   </UserCollectionsProvider>
                 </AuthProvider>
-              </SafeCurrencyProvider>
+              </CurrencyProvider>
             </SafeI18nProvider>
           </ErrorBoundary>
         </SafeThemeProvider>

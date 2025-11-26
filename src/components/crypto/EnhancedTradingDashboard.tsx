@@ -146,7 +146,7 @@ export default function EnhancedTradingDashboard({
 
   const handleAddToWatchlist = async (asset: string) => {
     try {
-      const newItem = await cryptoService.addToWatchlist(asset);
+      const newItem = await cryptoService.addToWatchlist('user-id', asset);
       setWatchlist((prev) => [...prev, newItem]);
       toast({
         title: "Added to Watchlist",

@@ -81,44 +81,43 @@ const ProfessionalCrypto = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // 1) Fetch live prices from backend (using CryptoAPIs)
-      const pricesRes = await fetch(`/api/crypto/prices?symbols=bitcoin,ethereum,tether,binancecoin,solana,cardano,polkadot,avalanche`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      // Check if response is OK and is actually JSON
+      // 1) Fetch live prices from CryptoAPIs instead of Bybit
+      const pricesRes = await fetch('/api/cryptoapis/assets');
+      
+      // Check if response is OK
       if (!pricesRes.ok) {
         const errorText = await pricesRes.text();
         console.error(`HTTP error! status: ${pricesRes.status}`, errorText);
         throw new Error(`HTTP error! status: ${pricesRes.status}`);
       }
-
+      
+      // Check if response is actually JSON
       const contentType = pricesRes.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await pricesRes.text();
-        console.error('Non-JSON response received:', text.substring(0, 500)); // Limit log size
-        throw new Error(`Received non-JSON response from API: ${text.substring(0, 100)}`);
+        console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
+        // Show error to user instead of falling back to mock data
+        toast({
+          title: "Data Error",
+          description: "Failed to load cryptocurrency data. Please try again later.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
-
-      let pricesPayload;
-      try {
-        pricesPayload = await pricesRes.json();
-      } catch (parseError) {
-        console.error('Failed to parse JSON response:', pricesRes);
-        throw new Error('Failed to parse API response as JSON');
-      }
+      
+      const pricesPayload = await pricesRes.json();
       const prices: Record<string, any> = {};
-
-      // Process backend data into the format expected by the UI
-      if (pricesPayload.prices) {
-        Object.entries(pricesPayload.prices).forEach(([symbol, data]: [string, any]) => {
+      
+      // Process CryptoAPIs data into the format expected by the UI
+      if (pricesPayload.success && pricesPayload.data) {
+        pricesPayload.data.forEach((asset: any) => {
+          const symbol = asset.assetId ? asset.assetId.toLowerCase() : 'unknown';
           prices[symbol] = {
-            usd: parseFloat(data.usd || '0'),
-            usd_market_cap: parseFloat(data.usd_market_cap || '0'),
-            usd_24h_change: parseFloat(data.usd_24h_change || '0'),
-            usd_24h_vol: parseFloat(data.usd_24h_vol || '0')
+            usd: parseFloat(asset.rate || 0),
+            usd_market_cap: parseFloat(asset.marketCap || 0),
+            usd_24h_change: parseFloat(asset.changePercent24h || 0),
+            usd_24h_vol: parseFloat(asset.volume24h || 0)
           };
         });
       }
@@ -176,17 +175,11 @@ const ProfessionalCrypto = () => {
             const contentType = r.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
               const text = await r.text();
-              console.error('Non-JSON response received:', text.substring(0, 500)); // Limit log size
-              throw new Error(`Received non-JSON response from wallet balance API: ${text.substring(0, 100)}`);
+              console.error('Non-JSON response received:', text.substring(0, 200)); // Limit log size
+              throw new Error('Received non-JSON response from wallet balance API');
             }
-
-            let j;
-            try {
-              j = await r.json();
-            } catch (parseError) {
-              console.error('Failed to parse wallet balance response:', r);
-              throw new Error('Failed to parse wallet balance response as JSON');
-            }
+            
+            const j = await r.json();
             const total = Number(j?.data?.balances?.crypto || 0);
             perCurrency = total > 0 ? [{ currency: "USDT", balance: total }] : [];
           }
@@ -221,15 +214,25 @@ const ProfessionalCrypto = () => {
     } catch (error) {
       console.error("Error loading crypto data:", error);
       toast({
-        title: "Error",
-        description: "Failed to load cryptocurrency data.",
+        title: "Loading error",
+        description:
+          "Failed to load cryptocurrency data. Please try again later.",
         variant: "destructive",
       });
-      throw error; // No fallback to mock data
     } finally {
       setIsLoading(false);
     }
   };
+
+  const topGainers = useMemo(
+    () => [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5),
+    [cryptos]
+  );
+
+  const topLosers = useMemo(
+    () => [...cryptos].sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 5),
+    [cryptos]
+  );
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000000) {
@@ -305,15 +308,6 @@ const ProfessionalCrypto = () => {
       return { success: false, error: (e as any)?.message || e };
     }
   };
-
-  const topGainers = useMemo(
-    () => cryptos.filter(c => c.price_change_percentage_24h > 0).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 5),
-    [cryptos]
-  );
-  const topLosers = useMemo(
-    () => cryptos.filter(c => c.price_change_percentage_24h < 0).sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 5),
-    [cryptos]
-  );
 
   return (
     <>

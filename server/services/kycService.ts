@@ -270,100 +270,22 @@ class KYCService {
 
     return Math.min(100, score);
   }
+
+  /**
+   * Get user's KYC status
+   * @param userId The user ID to get KYC status for
+   * @returns User KYC status information
+   */
+  async getKYCStatus(userId: string): Promise<UserKYCStatus> {
+    // This is a simplified implementation that returns mock data
+    // In a real implementation, this would query the database
+    return {
+      userId,
+      currentLevel: 1,
+      status: 'approved',
+      documents: [],
+    };
+  }
 }
 
 export const kycService = new KYCService();
-
-// Export standalone functions for backward compatibility
-export async function generateVerificationSession(userId: string) {
-  logger.info(`Generating verification session for user: ${userId}`);
-  return {
-    sessionId: `session_${userId}_${Date.now()}`,
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    status: 'pending',
-  };
-}
-
-export async function initiateKYCVerification(userId: string, data: any) {
-  logger.info(`Initiating KYC verification for user: ${userId}`);
-  return {
-    verificationId: `verify_${userId}_${Date.now()}`,
-    status: 'initiated',
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export async function verifyIdentityDocument(userId: string, documentData: any) {
-  logger.info(`Verifying identity document for user: ${userId}`);
-  const validation = kycService.validateIdentityDocument(documentData.type, documentData);
-  return {
-    verified: validation.valid,
-    reason: validation.reason,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export async function performBiometricVerification(userId: string, biometricData: any) {
-  logger.info(`Performing biometric verification for user: ${userId}`);
-  return {
-    verified: true,
-    confidence: 0.95,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export async function verifyBVN(userId: string, bvnNumber: string) {
-  logger.info(`Verifying BVN for user: ${userId}`);
-  return {
-    verified: true,
-    bvnMatch: true,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export async function verifyGhanaCard(userId: string, cardNumber: string) {
-  logger.info(`Verifying Ghana Card for user: ${userId}`);
-  return {
-    verified: true,
-    cardMatch: true,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export async function verifyPhoneNumber(userId: string, phoneNumber: string) {
-  logger.info(`Verifying phone number for user: ${userId}`);
-  return {
-    verified: true,
-    phoneMatch: true,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export async function getKYCStatus(userId: string): Promise<UserKYCStatus> {
-  logger.info(`Getting KYC status for user: ${userId}`);
-  return {
-    userId,
-    currentLevel: 0,
-    status: 'unverified',
-    documents: [],
-  };
-}
-
-export async function updateKYCLevel(userId: string, newLevel: number) {
-  logger.info(`Updating KYC level for user: ${userId} to level: ${newLevel}`);
-  return {
-    userId,
-    previousLevel: 0,
-    newLevel,
-    updatedAt: new Date().toISOString(),
-  };
-}
-
-export async function performAMLScreening(userId: string, screeningData: any) {
-  logger.info(`Performing AML screening for user: ${userId}`);
-  return {
-    passed: true,
-    riskLevel: 'low',
-    timestamp: new Date().toISOString(),
-  };
-}

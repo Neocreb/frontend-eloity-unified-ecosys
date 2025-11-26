@@ -259,55 +259,70 @@ class ApiClient {
     return this.request(`/freelance/jobs?${params.toString()}`);
   }
 
-  // Crypto methods - now using CryptoAPIs through backend
+  // Crypto methods - now using CryptoAPIs instead of Bybit API
   async getCryptoPrices() {
     try {
-      // Use backend endpoint that uses CryptoAPIs
-      const response = await fetch('/api/crypto/prices?symbols=bitcoin,ethereum,tether', {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
+      // Use our backend CryptoAPIs endpoint instead of calling Bybit directly
+      const response = await fetch('/api/cryptoapis/assets');
+      
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(`CryptoAPIs error: ${response.status}`);
       }
-
+      
       const data = await response.json();
-      const prices = data.prices || {};
-
+      const prices: Record<string, any> = {};
+      
+      // Process CryptoAPIs data into the format expected by the UI
+      if (data.success && data.data) {
+        // Extract price information from CryptoAPIs response
+        // This is a simplified mapping - you may need to adjust based on actual CryptoAPIs response structure
+        data.data.forEach((asset: any) => {
+          const symbol = asset.assetId.toLowerCase();
+          prices[symbol] = {
+            usd: parseFloat(asset.rate || 0),
+            usd_market_cap: parseFloat(asset.marketCap || 0),
+            usd_24h_change: parseFloat(asset.changePercent24h || 0),
+            usd_24h_vol: parseFloat(asset.volume24h || 0)
+          };
+        });
+      }
+      
       return { prices, timestamp: Date.now() };
     } catch (error) {
-      console.error('Error fetching crypto prices:', error);
+      console.error('Error fetching crypto prices from CryptoAPIs:', error);
       throw error;
     }
   }
 
   async getCryptoTrades() {
     try {
-      // Use backend endpoint for transaction history
-      const response = await fetch('/api/cryptoapis/address/history/ethereum/mainnet/0x0000000000000000000000000000000000000000?limit=50', {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      // Use our backend CryptoAPIs endpoint for trades
+      const response = await fetch('/api/cryptoapis/exchange-rates/BTC/USD');
       
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(`CryptoAPIs error: ${response.status}`);
       }
-
+      
       const data = await response.json();
-      const transactions = data.data || [];
-      return transactions.slice(0, 50).map((tx: any, index: number) => ({
-        id: tx.transactionId || `tx_${index}`,
-        symbol: 'BTC',
-        price: parseFloat(tx.gasPrice) || 0,
-        quantity: parseFloat(tx.amount) || 0,
-        time: tx.transactionTimestamp || new Date().toISOString(),
-        isBuyerMaker: tx.senderAddress ? false : true
-      }));
+      const trades: any[] = [];
+      
+      // Process CryptoAPIs data into trades format
+      if (data.success && data.data) {
+        // Extract trade information from CryptoAPIs response
+        // This is a simplified mapping - you may need to adjust based on actual CryptoAPIs response structure
+        trades.push({
+          id: data.data.timestamp,
+          symbol: 'BTCUSDT',
+          price: parseFloat(data.data.rate || 0),
+          quantity: 1, // CryptoAPIs may not provide quantity data
+          time: data.data.timestamp,
+          isBuyerMaker: true // Default value
+        });
+      }
+      
+      return trades;
     } catch (error) {
-      console.error('Error fetching crypto trades:', error);
+      console.error('Error fetching crypto trades from CryptoAPIs:', error);
       throw error;
     }
   }
@@ -351,30 +366,6 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   }
 
   return data;
-}
-
-// Wrapper for fetch with automatic auth header
-export async function fetchWithAuth(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<Response> {
-  const url = endpoint.startsWith("/api")
-    ? endpoint
-    : endpoint.startsWith("/")
-      ? `/api${endpoint}`
-      : `/api/${endpoint}`;
-
-  const token = getAuthToken();
-  const config: RequestInit = {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { "Authorization": `Bearer ${token}` }),
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  return fetch(url, config);
 }
 
 // Export token helper for other modules

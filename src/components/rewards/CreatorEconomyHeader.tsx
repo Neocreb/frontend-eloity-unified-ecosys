@@ -13,9 +13,6 @@ import {
   Activity,
   UserPlus,
   Star,
-  Trophy,
-  Gift,
-  Target,
 } from "lucide-react";
 
 interface CreatorEconomyHeaderProps {
@@ -47,28 +44,10 @@ const CreatorEconomyHeader = ({
     { id: "history", label: "History", icon: History, category: "creator" },
     {
       id: "activity",
-      label: "Activity Feed",
+      label: "Activity Economy",
       icon: Activity,
       category: "activity",
       highlight: true,
-    },
-    {
-      id: "challenges",
-      label: "Challenges",
-      icon: Target,
-      category: "activity",
-    },
-    {
-      id: "battles",
-      label: "Battles",
-      icon: Trophy,
-      category: "activity",
-    },
-    {
-      id: "gifts",
-      label: "Gifts & Tips",
-      icon: Gift,
-      category: "activity",
     },
     {
       id: "referrals",

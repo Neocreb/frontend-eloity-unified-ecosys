@@ -1,7 +1,6 @@
 import express from 'express';
 import { eq, and, desc, sql, count, asc } from 'drizzle-orm';
 import { authenticateToken } from '../middleware/auth.js';
-import { upgradeTierAfterKYC } from '../middleware/tierAccessControl.js';
 import { logger } from '../utils/logger.js';
 import { 
   pioneer_badges, 
@@ -13,9 +12,8 @@ import { db } from '../../server/enhanced-index.js'; // Use shared database conn
 const router = express.Router();
 
 // Constants
-const MAX_PIONEER_BADGES = 100; // Updated: First 100 users get pioneer badge with 1-year premium
+const MAX_PIONEER_BADGES = 500;
 const MIN_ELIGIBILITY_SCORE = 75; // Minimum score to be eligible for pioneer badge
-const PIONEER_PREMIUM_DURATION_MS = 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
 
 // Track user activity session
 router.post('/track-session', authenticateToken, async (req, res) => {
@@ -230,8 +228,8 @@ router.post('/claim', authenticateToken, async (req, res) => {
     const remainingSlots = MAX_PIONEER_BADGES - (awardedBadges[0]?.count || 0);
 
     if (remainingSlots <= 0) {
-      return res.status(400).json({
-        error: 'All 100 Pioneer Badges have been awarded'
+      return res.status(400).json({ 
+        error: 'All 500 Pioneer Badges have been awarded'
       });
     }
 
@@ -258,19 +256,14 @@ router.post('/claim', authenticateToken, async (req, res) => {
     // Determine badge number (next available)
     const nextBadgeNumber = (awardedBadges[0]?.count || 0) + 1;
 
-    // Calculate premium expiry (1 year from now)
-    const premiumExpiryDate = new Date(Date.now() + PIONEER_PREMIUM_DURATION_MS);
-
-    // Create pioneer badge with auto-granted premium
+    // Create pioneer badge
     const newBadge = await db.insert(pioneer_badges).values({
       user_id: userId,
       badge_number: nextBadgeNumber,
       eligibility_score: eligibilityData.score,
       activity_metrics: eligibilityData.activityMetrics,
       verification_data: eligibilityData.verificationData,
-      is_verified: true,
-      premium_granted: true,
-      premium_expiry: premiumExpiryDate
+      is_verified: true
     }).returning();
 
     logger.info('Pioneer badge awarded', {
@@ -291,18 +284,10 @@ router.post('/claim', authenticateToken, async (req, res) => {
         activity_metrics: newBadge[0].activity_metrics,
         verification_data: newBadge[0].verification_data,
         is_verified: newBadge[0].is_verified,
-        premium_granted: newBadge[0].premium_granted,
-        premium_expiry: newBadge[0].premium_expiry,
         created_at: newBadge[0].created_at
       },
       badgeNumber: nextBadgeNumber,
-      premium: {
-        granted: true,
-        expiryDate: premiumExpiryDate.toISOString(),
-        durationDays: 365,
-        message: 'Congratulations! You\'ve earned 1 year of premium access!'
-      },
-      message: `Congratulations! You've earned Pioneer Badge #${nextBadgeNumber} with 1-year premium access!`
+      message: `Congratulations! You've earned Pioneer Badge #${nextBadgeNumber}!`
     });
 
   } catch (error) {
@@ -373,7 +358,6 @@ router.get('/slots', async (req, res) => {
 
     const awardedCount = awardedBadges[0]?.count || 0;
     const remainingSlots = MAX_PIONEER_BADGES - awardedCount;
-    const percentageAwarded = (awardedCount / MAX_PIONEER_BADGES) * 100;
 
     res.json({
       success: true,
@@ -381,14 +365,7 @@ router.get('/slots', async (req, res) => {
         totalSlots: MAX_PIONEER_BADGES,
         awardedSlots: awardedCount,
         remainingSlots: Math.max(0, remainingSlots),
-        nextBadgeNumber: awardedCount + 1,
-        percentageAwarded: Math.round(percentageAwarded),
-        isSoldOut: remainingSlots <= 0,
-        premiumBenefit: {
-          duration: '1 year',
-          expiresAt: new Date(Date.now() + PIONEER_PREMIUM_DURATION_MS).toISOString(),
-          features: ['Ad-free experience', 'Premium badges', 'Priority support', 'Exclusive content']
-        }
+        nextBadgeNumber: awardedCount + 1
       }
     });
 
