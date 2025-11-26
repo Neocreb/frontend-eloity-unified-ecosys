@@ -447,7 +447,10 @@ const EnhancedFeedWithTabs = () => {
   const [showCreatePostFlow, setShowCreatePostFlow] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
   const { toast } = useToast();
+
+  console.debug("[EnhancedFeedWithTabs] Rendered with location:", location.pathname);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -460,6 +463,16 @@ const EnhancedFeedWithTabs = () => {
     params.set("tab", activeTab);
     navigate({ pathname: "/app/feed", search: params.toString() }, { replace: true });
   }, [activeTab]);
+
+  // Trigger refetch when returning from CreateStory page
+  useEffect(() => {
+    // Check if we just returned from the create story page
+    if (location.pathname === "/app/feed") {
+      console.debug("[EnhancedFeedWithTabs] Detected navigation back to feed from:", location.pathname);
+      // Trigger a refetch by updating the refetch trigger
+      setRefetchTrigger(prev => prev + 1);
+    }
+  }, [location.pathname]);
 
   const baseTabs = [
     {
