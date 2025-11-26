@@ -614,6 +614,7 @@ const EnhancedFeedWithTabs = () => {
                     onCreateStory={() => setShowCreateStoryModal(true)}
                     userStories={userStories}
                     onViewStory={handleViewStory}
+                    refetchTrigger={refetchTrigger}
                   />
                   <CreatePostTrigger onOpenCreatePost={() => setShowCreatePostFlow(true)} />
                 </>
