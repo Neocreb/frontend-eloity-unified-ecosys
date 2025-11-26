@@ -43,9 +43,24 @@ router.get('/prices', async (req, res) => {
   try {
     const { symbols, vs_currency = 'usd' } = req.query;
     const symbolList = symbols ? symbols.split(',') : ['bitcoin', 'ethereum', 'tether', 'binancecoin'];
-    
+
+    // Ensure response is JSON
+    res.setHeader('Content-Type', 'application/json');
+
     const prices = await getCryptoPrices(symbolList, vs_currency);
-    
+
+    // Validate we got some data
+    if (!prices || Object.keys(prices).length === 0) {
+      logger.warn('No cryptocurrency prices available from any source');
+      // Return empty prices object but still valid JSON
+      return res.json({
+        prices: {},
+        timestamp: new Date().toISOString(),
+        vs_currency,
+        warning: 'No price data available - check API configuration'
+      });
+    }
+
     res.json({
       prices,
       timestamp: new Date().toISOString(),
@@ -53,7 +68,11 @@ router.get('/prices', async (req, res) => {
     });
   } catch (error) {
     logger.error('Crypto prices fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch cryptocurrency prices' });
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({
+      error: 'Failed to fetch cryptocurrency prices',
+      message: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
