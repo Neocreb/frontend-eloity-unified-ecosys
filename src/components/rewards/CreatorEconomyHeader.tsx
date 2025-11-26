@@ -47,10 +47,28 @@ const CreatorEconomyHeader = ({
     { id: "history", label: "History", icon: History, category: "creator" },
     {
       id: "activity",
-      label: "Activity Economy",
+      label: "Activity Feed",
       icon: Activity,
       category: "activity",
       highlight: true,
+    },
+    {
+      id: "challenges",
+      label: "Challenges",
+      icon: Target,
+      category: "activity",
+    },
+    {
+      id: "battles",
+      label: "Battles",
+      icon: Trophy,
+      category: "activity",
+    },
+    {
+      id: "gifts",
+      label: "Gifts & Tips",
+      icon: Gift,
+      category: "activity",
     },
     {
       id: "referrals",
