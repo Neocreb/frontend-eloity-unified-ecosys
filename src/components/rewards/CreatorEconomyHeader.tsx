@@ -13,6 +13,9 @@ import {
   Activity,
   UserPlus,
   Star,
+  Trophy,
+  Gift,
+  Target,
 } from "lucide-react";
 
 interface CreatorEconomyHeaderProps {
