@@ -1,6 +1,5 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
-import { tierAccessControl } from '../middleware/tierAccessControl.js';
 import adminReloadlyService from '../services/adminReloadlyService.js';
 import { logger } from '../utils/logger.js';
 
@@ -55,12 +54,10 @@ router.get('/transactions', async (req, res) => {
 // Get transaction statistics
 router.get('/statistics', async (req, res) => {
   try {
-    const { userId, startDate, endDate } = req.query;
+    const { userId } = req.query;
 
     const stats = await adminReloadlyService.getTransactionStatistics(
-      userId as string,
-      startDate as string,
-      endDate as string,
+      userId as string
     );
 
     res.json({ success: true, statistics: stats });
@@ -107,7 +104,7 @@ router.patch('/operators/:operatorId', async (req, res) => {
     );
 
     await adminReloadlyService.logAuditAction(
-      req.user.id,
+      req.userId,
       'UPDATE_OPERATOR',
       'bill_payment_operators',
       operatorId,
@@ -130,7 +127,7 @@ router.post('/operators/sync', async (req, res) => {
     const operators = await adminReloadlyService.syncOperatorsFromReloadly(countryCode);
 
     await adminReloadlyService.logAuditAction(
-      req.user.id,
+      req.userId,
       'SYNC_OPERATORS',
       'bill_payment_operators',
       countryCode || 'all',
@@ -176,7 +173,7 @@ router.post('/settings', async (req, res) => {
     const setting = await adminReloadlyService.updateSetting(
       settingKey,
       settingValue,
-      req.user.id,
+      req.userId,
       description,
     );
 

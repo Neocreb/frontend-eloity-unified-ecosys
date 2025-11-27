@@ -141,7 +141,6 @@ const QuickSendTab = ({ onGiftSent }: QuickSendTabProps) => {
             <SuggestedUsers
               maxUsers={4}
               showGiftButton={false}
-              onUserSelect={setSelectedUser}
               variant="grid"
             />
           </div>

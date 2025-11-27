@@ -94,8 +94,8 @@ const SendGifts = () => {
       // Calculate stats
       const totalGiftsSent = giftsTxData?.length || 0;
       const totalTipsSent = tipsTxData?.length || 0;
-      const totalGiftsSpent = giftsTxData?.reduce((sum, tx) => sum + (tx.price * tx.quantity), 0) || 0;
-      const totalTipsSpent = tipsTxData?.reduce((sum, tx) => sum + tx.amount, 0) || 0;
+      const totalGiftsSpent = giftsTxData?.reduce((sum: number, tx: GiftTransaction) => sum + tx.total_amount, 0) || 0;
+      const totalTipsSpent = tipsTxData?.reduce((sum: number, tx: TipTransaction) => sum + tx.amount, 0) || 0;
       
       setStats({
         totalGiftsSent,
@@ -126,11 +126,11 @@ const SendGifts = () => {
       const { data, error } = await supabase
         .from('gift_transactions')
         .insert({
-          sender_id: 'current-user-id', // Replace with actual user ID
-          receiver_id: userId,
+          from_user_id: 'current-user-id', // Replace with actual user ID
+          to_user_id: userId,
           gift_id: gift.id,
           quantity: quantity,
-          price: gift.price,
+          total_amount: gift.price * quantity,
           message: '',
           status: 'completed',
         })

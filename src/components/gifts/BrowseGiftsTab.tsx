@@ -44,8 +44,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'flowers',
       rarity: 'common',
       description: 'A classic symbol of love and appreciation',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 95
-    },
+    } as VirtualGift,
     {
       id: '2',
       name: 'Chocolate Box',
@@ -54,8 +63,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'food',
       rarity: 'common',
       description: 'Delicious chocolates to sweeten the moment',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 88
-    },
+    } as VirtualGift,
     {
       id: '3',
       name: 'Diamond Ring',
@@ -64,8 +82,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'jewelry',
       rarity: 'rare',
       description: 'A precious token of your admiration',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 75
-    },
+    } as VirtualGift,
     {
       id: '4',
       name: 'Golden Crown',
@@ -74,8 +101,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'royal',
       rarity: 'epic',
       description: 'Bestow royalty upon your favorite creator',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 60
-    },
+    } as VirtualGift,
     {
       id: '5',
       name: 'Magic Wand',
@@ -84,8 +120,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'fantasy',
       rarity: 'uncommon',
       description: 'Grant magical powers to creators',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 70
-    },
+    } as VirtualGift,
     {
       id: '6',
       name: 'Coffee Cup',
@@ -94,8 +139,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'food',
       rarity: 'common',
       description: 'Fuel the creative process',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 82
-    },
+    } as VirtualGift,
     {
       id: '7',
       name: 'Gaming Controller',
@@ -104,8 +158,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'gaming',
       rarity: 'rare',
       description: 'Level up your favorite streamer',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 68
-    },
+    } as VirtualGift,
     {
       id: '8',
       name: 'Musical Note',
@@ -114,8 +177,17 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       category: 'music',
       rarity: 'uncommon',
       description: 'Create harmony with your favorite artist',
+      currency: 'USD',
+      animation: null,
+      sound: null,
+      effects: null,
+      available: true,
+      seasonal_start: null,
+      seasonal_end: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       popularity: 72
-    }
+    } as VirtualGift
   ];
 
   // Category icons mapping
@@ -134,7 +206,7 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
   // Filter gifts based on search and filters
   const filteredGifts = virtualGifts.filter(gift => {
     const matchesSearch = gift.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          gift.description.toLowerCase().includes(searchTerm.toLowerCase());
+                          (gift.description && gift.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesCategory = categoryFilter === 'all' || gift.category === categoryFilter;
     const matchesRarity = rarityFilter === 'all' || gift.rarity === rarityFilter;
@@ -150,7 +222,10 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
       case 'price-high':
         return b.price - a.price;
       case 'popular':
-        return b.popularity - a.popularity;
+        // Handle possibly undefined popularity values
+        const popularityA = a.popularity || 0;
+        const popularityB = b.popularity || 0;
+        return popularityB - popularityA;
       default:
         return 0;
     }
@@ -246,7 +321,7 @@ const BrowseGiftsTab = ({ onSelectGift }: BrowseGiftsTabProps) => {
                       {gift.emoji}
                     </div>
                     <h3 className="font-medium text-sm sm:text-base mb-1">{gift.name}</h3>
-                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{gift.description}</p>
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{gift.description || ''}</p>
                     <div className="flex items-center justify-between w-full mt-2">
                       <Badge 
                         variant="secondary" 
