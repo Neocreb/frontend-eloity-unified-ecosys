@@ -26,7 +26,7 @@ dotenv.config({ path: '.env.local' });
 console.log("✅ Environment variables loaded");
 console.log("🔍 DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
 console.log("🔍 VITE_SUPABASE_URL:", process.env.VITE_SUPABASE_URL ? "SET" : "NOT SET");
-console.log("🔍 SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "NOT SET");
+console.log("��� SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "NOT SET");
 
 // Import schemas
 import { 
@@ -88,6 +88,7 @@ import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this lin
 import reloadlyRouter from './routes/reloadly.js';
 import adminReloadlyRouter from './routes/adminReloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
+import commissionRouter from './routes/commission.js';
 import startMetricsSync from './tasks/metricsSync.js';
 
 
