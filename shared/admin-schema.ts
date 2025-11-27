@@ -265,3 +265,17 @@ export const announcementsRelations = relations(announcements, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const commissionSettingsRelations = relations(commission_settings, ({ one }) => ({
+  appliedBy: one(users, {
+    fields: [commission_settings.applied_by],
+    references: [users.id],
+  }),
+}));
+
+export const commissionTransactionsRelations = relations(commission_transactions, ({ one }) => ({
+  user: one(users, {
+    fields: [commission_transactions.user_id],
+    references: [users.id],
+  }),
+}));
