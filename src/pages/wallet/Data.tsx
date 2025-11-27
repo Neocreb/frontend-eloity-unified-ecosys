@@ -355,16 +355,22 @@ const Data = () => {
                     <span className="font-semibold">{selectedOperator?.name}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Amount</span>
+                    <span className="text-gray-600">Base Amount</span>
                     <span className="font-semibold">{selectedOperator?.destinationCurrencySymbol}{parseFloat(customAmount).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Phone</span>
-                    <span className="font-semibold">{phoneNumber}</span>
-                  </div>
+                  {commissionData && commissionData.commission_amount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Commission ({commissionData.commission_type === 'percentage' ? `${commissionData.percentage_value}%` : 'Fixed'})</span>
+                      <span className="font-semibold text-orange-600">{selectedOperator?.destinationCurrencySymbol}{commissionData.commission_amount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="border-t pt-4 flex justify-between items-center">
-                    <span className="text-gray-600">Commission</span>
-                    <span className="font-semibold">{(selectedOperator?.commission || 0).toFixed(2)}%</span>
+                    <span className="text-gray-600 font-semibold">Total Amount</span>
+                    <span className="font-bold text-lg">{selectedOperator?.destinationCurrencySymbol}{commissionData ? commissionData.total_charged.toFixed(2) : parseFloat(customAmount).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-600">
+                    <span>Phone</span>
+                    <span className="font-semibold">{phoneNumber}</span>
                   </div>
                 </CardContent>
               </Card>
