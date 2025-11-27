@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
@@ -6,58 +6,125 @@ import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle2, AlertCircle, Phone } from "lucide-react";
+import { toast } from "react-hot-toast";
 
-interface Provider {
-  id: string;
+interface Operator {
+  id: number;
   name: string;
-  icon: string;
-  description: string;
-}
-
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
+  bundle: boolean;
+  data: boolean;
+  pin: boolean;
+  supportsLocalAmounts: boolean;
+  denominationType: string;
+  senderCurrencyCode: string;
+  senderCurrencySymbol: string;
+  destinationCurrencyCode: string;
+  destinationCurrencySymbol: string;
+  commission: number;
+  fxRate: number;
+  logoUrls: string[];
 }
 
 const Airtime = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
   const [step, setStep] = useState<"provider" | "amount" | "phone" | "review" | "success">("provider");
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [operators, setOperators] = useState<Operator[]>([]);
+  const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
+  const [customAmount, setCustomAmount] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
+  const [error, setError] = useState("");
 
-  const providers: Provider[] = [
-    { id: "mtn", name: "MTN", icon: "🟡", description: "Nigeria, Ghana, Cameroon" },
-    { id: "airtel", name: "Airtel", icon: "🔴", description: "Fast & reliable" },
-    { id: "glo", name: "Globacom", icon: "🟢", description: "Nigeria's largest network" },
-    { id: "9mobile", name: "9Mobile", icon: "🔵", description: "Best rates" },
-  ];
+  // Fetch operators on component mount
+  useEffect(() => {
+    fetchOperators();
+  }, []);
 
-  const amounts: Plan[] = [
-    { id: "500", name: "₦500", price: 500 },
-    { id: "1000", name: "₦1,000", price: 1000 },
-    { id: "2000", name: "₦2,000", price: 2000 },
-    { id: "5000", name: "₦5,000", price: 5000 },
-    { id: "10000", name: "₦10,000", price: 10000 },
-  ];
+  const fetchOperators = async () => {
+    try {
+      setError("");
+      const token = session?.access_token;
+      const response = await fetch('/api/reloadly/operators/NG', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch operators');
+      }
+
+      const data = await response.json();
+      if (data.success && data.operators) {
+        setOperators(data.operators);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load providers';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error('Fetch operators error:', err);
+    }
+  };
 
   const handlePurchase = async () => {
+    if (!selectedOperator || !customAmount || !phoneNumber) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    const amount = parseFloat(customAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
+      setError("");
+      const token = session?.access_token;
+      
+      const response = await fetch('/api/reloadly/airtime/topup', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          operatorId: selectedOperator.id,
+          amount: amount,
+          recipientPhone: phoneNumber
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTransactionId(result.transactionId);
+        setStep("success");
+        toast.success('Airtime purchased successfully!');
+      } else {
+        const errorMsg = result.error || 'Purchase failed';
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Purchase failed. Please try again.';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error('Purchase error:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const canProceed = selectedProvider && selectedAmount && phoneNumber.length >= 10;
+  const canProceed = selectedOperator && customAmount && phoneNumber.length >= 10;
 
   if (step === "success") {
     return (
@@ -70,8 +137,13 @@ const Airtime = () => {
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Purchase Successful!</h2>
             <p className="text-gray-600">
-              {selectedAmount} sent to {selectedProvider?.name} {phoneNumber}
+              ₦{parseFloat(customAmount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} sent to {selectedOperator?.name} {phoneNumber}
             </p>
+            {transactionId && (
+              <p className="text-sm text-gray-500">
+                Transaction ID: {transactionId}
+              </p>
+            )}
             <Button onClick={() => navigate("/app/wallet")} className="w-full mt-6">
               Back to Wallet
             </Button>
@@ -95,25 +167,52 @@ const Airtime = () => {
             </CardContent>
           </Card>
 
+          {error && (
+            <Card className="border-2 border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <div className="flex gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {step === "provider" && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900">Select Network</h3>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {providers.map((provider) => (
-                  <button
-                    key={provider.id}
-                    onClick={() => {
-                      setSelectedProvider(provider);
-                      setStep("amount");
-                    }}
-                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition text-center"
-                  >
-                    <div className="text-3xl mb-2">{provider.icon}</div>
-                    <p className="font-semibold text-gray-900">{provider.name}</p>
-                    <p className="text-xs text-gray-600 mt-1">{provider.description}</p>
-                  </button>
-                ))}
-              </div>
+              <h3 className="text-sm font-semibold text-gray-900">Select Network Provider</h3>
+              {operators.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="pt-6">
+                    <p className="text-center text-gray-600">Loading providers...</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 max-h-96 overflow-y-auto">
+                  {operators.map((operator) => (
+                    <button
+                      key={operator.id}
+                      onClick={() => {
+                        setSelectedOperator(operator);
+                        setStep("amount");
+                      }}
+                      className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition text-center"
+                    >
+                      {operator.logoUrls && operator.logoUrls.length > 0 ? (
+                        <img 
+                          src={operator.logoUrls[0]} 
+                          alt={operator.name}
+                          className="h-12 w-12 mx-auto mb-2 object-contain"
+                        />
+                      ) : (
+                        <div className="text-3xl mb-2">📱</div>
+                      )}
+                      <p className="font-semibold text-gray-900 text-sm">{operator.name}</p>
+                      <p className="text-xs text-gray-600 mt-1">{operator.destinationCurrencySymbol}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -121,30 +220,44 @@ const Airtime = () => {
             <div className="space-y-4">
               <Button
                 variant="ghost"
-                onClick={() => setStep("provider")}
+                onClick={() => {
+                  setStep("provider");
+                  setSelectedOperator(null);
+                }}
                 className="text-blue-600"
               >
                 ← Change Network
               </Button>
-              <h3 className="text-sm font-semibold text-gray-900">Select Amount</h3>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {amounts.map((amount) => (
-                  <button
-                    key={amount.id}
-                    onClick={() => {
-                      setSelectedAmount(amount.price);
-                      setStep("phone");
-                    }}
-                    className={`p-4 rounded-lg border-2 transition ${
-                      selectedAmount === amount.price
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-500 hover:bg-blue-50"
-                    }`}
-                  >
-                    <p className="font-semibold text-gray-900">{amount.name}</p>
-                  </button>
-                ))}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Enter Amount
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-gray-600">
+                    {selectedOperator?.destinationCurrencySymbol || '₦'}
+                  </span>
+                  <Input
+                    type="number"
+                    placeholder="Enter amount"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    className="pl-10 text-lg h-12"
+                    min="1"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 mt-2">
+                  Enter the amount you want to send
+                </p>
               </div>
+              {customAmount && (
+                <Button
+                  onClick={() => setStep("phone")}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                >
+                  Continue
+                </Button>
+              )}
             </div>
           )}
 
@@ -159,15 +272,18 @@ const Airtime = () => {
               </Button>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
+                  Recipient Phone Number
                 </label>
                 <Input
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder="Enter phone number (e.g., 2348012345678)"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="text-lg"
                 />
+                <p className="text-xs text-gray-600 mt-2">
+                  Include country code (e.g., 234 for Nigeria)
+                </p>
               </div>
               {canProceed && (
                 <Button
@@ -194,19 +310,19 @@ const Airtime = () => {
                 <CardContent className="pt-6 space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Network</span>
-                    <span className="font-semibold">{selectedProvider?.name}</span>
+                    <span className="font-semibold">{selectedOperator?.name}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Amount</span>
-                    <span className="font-semibold">₦{selectedAmount?.toLocaleString()}</span>
+                    <span className="font-semibold">{selectedOperator?.destinationCurrencySymbol}{parseFloat(customAmount).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Phone</span>
                     <span className="font-semibold">{phoneNumber}</span>
                   </div>
                   <div className="border-t pt-4 flex justify-between items-center">
-                    <span className="text-gray-600">Fee</span>
-                    <span className="font-semibold">₦0</span>
+                    <span className="text-gray-600">Commission</span>
+                    <span className="font-semibold">{(selectedOperator?.commission || 0).toFixed(2)}%</span>
                   </div>
                 </CardContent>
               </Card>
