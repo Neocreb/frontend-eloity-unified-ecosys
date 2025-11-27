@@ -1,77 +1,143 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { toast } from "react-hot-toast";
 
-interface GiftCard {
-  id: string;
-  retailer: string;
-  logo: string;
+interface GiftCardProduct {
+  id: number;
+  name: string;
+  brandName: string;
+  logoUrls: string[];
+  denominationType: string;
   minAmount: number;
   maxAmount: number;
-  fee: number;
+  currencyCode: string;
+  fixedAmounts: number[];
 }
 
 const BuyGiftCards = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const { walletBalance } = useWalletContext();
 
   const [step, setStep] = useState<"retailer" | "amount" | "review" | "success">("retailer");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCard, setSelectedCard] = useState<GiftCard | null>(null);
+  const [products, setProducts] = useState<GiftCardProduct[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<GiftCardProduct | null>(null);
   const [amount, setAmount] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [transactionId, setTransactionId] = useState("");
 
-  const giftCards: GiftCard[] = [
-    { id: "1", retailer: "Amazon", logo: "🛒", minAmount: 10, maxAmount: 500, fee: 0 },
-    { id: "2", retailer: "Google Play", logo: "🎮", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "3", retailer: "Apple iTunes", logo: "🎵", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "4", retailer: "Spotify", logo: "🎧", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "5", retailer: "Netflix", logo: "🎬", minAmount: 10, maxAmount: 500, fee: 2 },
-    { id: "6", retailer: "Steam", logo: "🕹️", minAmount: 5, maxAmount: 500, fee: 3 },
-  ];
+  // Fetch gift card products on mount
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-  const filteredCards = giftCards.filter((card) =>
-    card.retailer.toLowerCase().includes(searchQuery.toLowerCase())
+  const fetchProducts = async () => {
+    try {
+      setError("");
+      const token = session?.access_token;
+      
+      const response = await fetch('/api/reloadly/gift-cards/products', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const result = await response.json();
+      if (result.success && result.products) {
+        setProducts(result.products);
+      } else {
+        throw new Error('Failed to load gift card products');
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load gift card products';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error('Fetch products error:', err);
+    }
+  };
+
+  const filteredProducts = products.filter((product) =>
+    product.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectCard = (card: GiftCard) => {
-    setSelectedCard(card);
+  const handleSelectCard = (product: GiftCardProduct) => {
+    setSelectedProduct(product);
     setAmount("");
     setStep("amount");
   };
 
   const handleContinueAmount = () => {
     if (!amount || parseFloat(amount) <= 0) {
-      alert("Please enter a valid amount");
+      toast.error("Please enter a valid amount");
       return;
     }
-    if (parseFloat(amount) < (selectedCard?.minAmount || 10)) {
-      alert(`Minimum amount is $${selectedCard?.minAmount}`);
+    if (parseFloat(amount) < (selectedProduct?.minAmount || 0)) {
+      toast.error(`Minimum amount is ${selectedProduct?.currencyCode || "$"}${selectedProduct?.minAmount}`);
       return;
     }
-    if (parseFloat(amount) > (selectedCard?.maxAmount || 500)) {
-      alert(`Maximum amount is $${selectedCard?.maxAmount}`);
+    if (parseFloat(amount) > (selectedProduct?.maxAmount || 0)) {
+      toast.error(`Maximum amount is ${selectedProduct?.currencyCode || "$"}${selectedProduct?.maxAmount}`);
       return;
     }
-    if (parseFloat(amount) + (selectedCard?.fee || 0) > (walletBalance?.total || 0)) {
-      alert("Insufficient balance");
+    if (parseFloat(amount) > (walletBalance?.total || 0)) {
+      toast.error("Insufficient balance");
       return;
     }
     setStep("review");
   };
 
   const handleBuy = async () => {
+    if (!selectedProduct || !amount || !email) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStep("success");
-    } catch (error) {
-      alert("Error purchasing gift card");
+      setError("");
+      const token = session?.access_token;
+      
+      const response = await fetch('/api/reloadly/gift-cards/purchase', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: selectedProduct.id,
+          amount: parseFloat(amount),
+          email: email
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setTransactionId(result.transactionId);
+        setStep("success");
+        toast.success('Gift card purchased successfully!');
+      } else {
+        const errorMsg = result.error || 'Purchase failed';
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Purchase failed. Please try again.';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error('Purchase error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +146,7 @@ const BuyGiftCards = () => {
   if (step === "retailer") {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <WalletActionHeader title="Buy Gift Cards" />
+        <WalletActionHeader title="Buy Gift Cards" subtitle="Purchase digital gift cards" />
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
@@ -101,15 +167,26 @@ const BuyGiftCards = () => {
               </CardContent>
             </Card>
 
+            {error && (
+              <Card className="border-2 border-red-200 bg-red-50">
+                <CardContent className="pt-6">
+                  <div className="flex gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Search */}
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-3">
-                Find Retailer
+                Find Gift Card
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
-                  placeholder="Amazon, Spotify, Netflix..."
+                  placeholder="Amazon, Netflix, Spotify..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 h-12 border-gray-300"
@@ -118,27 +195,48 @@ const BuyGiftCards = () => {
             </div>
 
             {/* Gift Cards Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {filteredCards.length > 0 ? (
-                filteredCards.map((card) => (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-900">Available Gift Cards</h3>
+              {products.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="pt-6">
+                    <p className="text-center text-gray-600">Loading gift cards...</p>
+                  </CardContent>
+                </Card>
+              ) : filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
                   <button
-                    key={card.id}
-                    onClick={() => handleSelectCard(card)}
-                    className="w-full"
+                    key={product.id}
+                    onClick={() => handleSelectCard(product)}
+                    className="w-full text-left"
                   >
-                    <Card className="border hover:border-pink-300 hover:shadow-md transition-all h-full">
-                      <CardContent className="p-4 flex flex-col items-center justify-center gap-2 text-center">
-                        <span className="text-4xl">{card.logo}</span>
-                        <p className="font-semibold text-gray-900 text-sm">{card.retailer}</p>
-                        <p className="text-xs text-gray-600">
-                          ${card.minAmount}-${card.maxAmount}
-                        </p>
+                    <Card className="border-2 border-gray-200 hover:border-pink-400 hover:shadow-md transition-all">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        {product.logoUrls && product.logoUrls.length > 0 ? (
+                          <img 
+                            src={product.logoUrls[0]} 
+                            alt={product.brandName} 
+                            className="w-12 h-12 object-contain"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span className="text-xl">🎁</span>
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{product.brandName}</p>
+                          <p className="text-sm text-gray-600">{product.name}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {product.currencyCode} {product.minAmount}-{product.maxAmount}
+                          </p>
+                        </div>
+                        <span className="text-gray-400">→</span>
                       </CardContent>
                     </Card>
                   </button>
                 ))
               ) : (
-                <div className="col-span-2 text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500">
                   No gift cards found
                 </div>
               )}
@@ -150,93 +248,103 @@ const BuyGiftCards = () => {
   }
 
   if (step === "amount") {
-    const fee = selectedCard ? parseFloat(amount || "0") * (selectedCard.fee / 100) : 0;
-    const total = parseFloat(amount || "0") + fee;
-
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <WalletActionHeader title={selectedCard?.retailer || "Amount"} />
+        <WalletActionHeader title={selectedProduct?.brandName || "Gift Card"} />
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Selected Card */}
-            <div className="text-center py-6">
-              <span className="text-6xl">{selectedCard?.logo}</span>
-              <p className="text-xl font-semibold text-gray-900 mt-2">
-                {selectedCard?.retailer}
-              </p>
-            </div>
+            <Card className="border-0 shadow-sm text-center py-6">
+              {selectedProduct?.logoUrls && selectedProduct.logoUrls.length > 0 ? (
+                <img 
+                  src={selectedProduct.logoUrls[0]} 
+                  alt={selectedProduct.brandName} 
+                  className="w-24 h-24 mx-auto object-contain"
+                />
+              ) : (
+                <span className="text-6xl">🎁</span>
+              )}
+              <p className="text-lg font-semibold text-gray-900 mt-3">{selectedProduct?.brandName}</p>
+              <p className="text-gray-600 text-sm">{selectedProduct?.name}</p>
+            </Card>
 
-            {/* Amount Input */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-3">
-                Amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-600">
-                  $
-                </span>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Select Amount
+                </label>
+                {selectedProduct?.fixedAmounts && selectedProduct.fixedAmounts.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedProduct.fixedAmounts.slice(0, 9).map((fixedAmount) => (
+                        <button
+                          key={fixedAmount}
+                          onClick={() => setAmount(fixedAmount.toString())}
+                          className={`p-3 rounded-lg border-2 font-semibold ${
+                            parseFloat(amount) === fixedAmount
+                              ? "border-purple-500 bg-purple-50 text-purple-600"
+                              : "border-gray-200 hover:border-purple-300 text-gray-900"
+                          }`}
+                        >
+                          {fixedAmount}
+                        </button>
+                      ))}
+                    </div>
+                    {selectedProduct.fixedAmounts.length > 9 && (
+                      <p className="text-xs text-gray-500">
+                        + {selectedProduct.fixedAmounts.length - 9} more fixed amounts available
+                      </p>
+                    )}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="px-2 bg-gray-50 text-gray-600">Or enter custom amount</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
                 <Input
                   type="number"
-                  placeholder="0.00"
+                  placeholder="Enter custom amount"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="pl-10 h-16 text-3xl font-bold border-gray-300"
+                  className="h-12 text-lg"
+                  min={selectedProduct?.minAmount}
+                  max={selectedProduct?.maxAmount}
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  {selectedProduct?.minAmount && selectedProduct?.maxAmount
+                    ? `Min: ${selectedProduct.currencyCode} ${selectedProduct.minAmount} | Max: ${selectedProduct.currencyCode} ${selectedProduct.maxAmount}`
+                    : ""}
+                </p>
               </div>
-              <div className="mt-3 flex justify-between text-xs text-gray-600">
-                <span>Min: ${selectedCard?.minAmount}</span>
-                <span>Max: ${selectedCard?.maxAmount}</span>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Email Address
+                </label>
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 text-lg"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Gift card will be sent to this email
+                </p>
               </div>
             </div>
-
-            {/* Quick Amounts */}
-            <div>
-              <p className="text-xs font-semibold text-gray-600 mb-2 uppercase">
-                Quick Amount
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {[25, 50, 100].map((quickAmount) => (
-                  <Button
-                    key={quickAmount}
-                    variant="outline"
-                    onClick={() => setAmount(quickAmount.toString())}
-                    className="h-10 text-sm font-semibold"
-                  >
-                    ${quickAmount}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Fee Info */}
-            {amount && selectedCard && (
-              <div className="p-4 bg-pink-50 border border-pink-200 rounded-lg">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Amount</span>
-                  <span className="font-semibold text-gray-900">${parseFloat(amount).toFixed(2)}</span>
-                </div>
-                {fee > 0 && (
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Fee ({selectedCard.fee}%)</span>
-                    <span className="font-semibold text-gray-900">${fee.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm border-t border-pink-300 pt-2">
-                  <span className="font-semibold text-gray-900">Total</span>
-                  <span className="font-bold text-lg text-pink-600">${total.toFixed(2)}</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 space-y-3">
+        <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
           <Button
             onClick={handleContinueAmount}
-            disabled={!amount || parseFloat(amount) <= 0}
-            className="w-full h-12 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold rounded-lg"
+            disabled={!amount || !email || isLoading}
+            className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
           >
             Continue
           </Button>
@@ -245,6 +353,7 @@ const BuyGiftCards = () => {
             onClick={() => {
               setStep("retailer");
               setAmount("");
+              setEmail("");
             }}
             className="w-full h-12"
           >
@@ -256,76 +365,62 @@ const BuyGiftCards = () => {
   }
 
   if (step === "review") {
-    const fee = selectedCard ? parseFloat(amount) * (selectedCard.fee / 100) : 0;
-    const total = parseFloat(amount) + fee;
-
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Review Purchase" />
-
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-6">
-            {/* Purchase Details */}
             <Card className="border-0 shadow-sm">
-              <CardContent className="p-6 space-y-6">
-                <div className="text-center py-4">
-                  <span className="text-5xl">{selectedCard?.logo}</span>
-                  <p className="text-xl font-semibold text-gray-900 mt-2">
-                    {selectedCard?.retailer} Gift Card
-                  </p>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-gray-200" />
-
-                {/* Amount Section */}
+              <CardContent className="p-6 space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Amount to Purchase</p>
-                  <p className="text-4xl font-bold text-gray-900">
-                    ${parseFloat(amount).toFixed(2)}
-                  </p>
+                  <p className="text-sm text-gray-600">Gift Card</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    {selectedProduct?.logoUrls && selectedProduct.logoUrls.length > 0 ? (
+                      <img 
+                        src={selectedProduct.logoUrls[0]} 
+                        alt={selectedProduct.brandName} 
+                        className="w-10 h-10 object-contain"
+                      />
+                    ) : (
+                      <span className="text-2xl">🎁</span>
+                    )}
+                    <p className="font-semibold text-gray-900">{selectedProduct?.brandName}</p>
+                  </div>
                 </div>
 
-                {/* Divider */}
-                <div className="border-t border-gray-200" />
+                <div className="border-t border-gray-200 pt-4">
+                  <p className="text-sm text-gray-600">Recipient Email</p>
+                  <p className="font-semibold text-gray-900 mt-2">{email}</p>
+                </div>
 
-                {/* Fees */}
-                <div className="space-y-3">
-                  {fee > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Fee ({selectedCard?.fee}%)</span>
-                      <span className="font-semibold text-gray-900">${fee.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm border-t border-gray-200 pt-3">
-                    <span className="font-semibold text-gray-900">Total to Pay</span>
-                    <span className="font-bold text-lg text-pink-600">
-                      ${total.toFixed(2)}
-                    </span>
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-600">Amount</span>
+                    <span className="font-bold">{selectedProduct?.currencyCode} {parseFloat(amount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-gray-200">
+                    <span className="font-semibold">Total</span>
+                    <span className="text-2xl font-bold text-purple-600">{selectedProduct?.currencyCode} {parseFloat(amount).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900">Digital delivery</p>
+                    <p className="text-xs text-blue-700 mt-0.5">Gift card will be emailed immediately</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Info Alert */}
-            <div className="flex gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-blue-900">Instant Delivery</p>
-                <p className="text-xs text-blue-700 mt-0.5">
-                  Gift card code will be delivered instantly
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 space-y-3">
+        <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
           <Button
             onClick={handleBuy}
             disabled={isLoading}
-            className="w-full h-12 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold rounded-lg"
+            className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
           >
             {isLoading ? (
               <>
@@ -333,7 +428,7 @@ const BuyGiftCards = () => {
                 Processing...
               </>
             ) : (
-              "Buy Gift Card"
+              `Purchase ${selectedProduct?.currencyCode} ${parseFloat(amount).toFixed(2)} Gift Card`
             )}
           </Button>
           <Button
@@ -350,64 +445,63 @@ const BuyGiftCards = () => {
   }
 
   if (step === "success") {
-    const fee = selectedCard ? parseFloat(amount) * (selectedCard.fee / 100) : 0;
-    const total = parseFloat(amount) + fee;
-
     return (
-      <div className="flex flex-col h-screen bg-gradient-to-br from-pink-50 to-rose-50">
-        <WalletActionHeader title="Purchase Complete" />
-
+      <div className="flex flex-col h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+        <WalletActionHeader title="Purchase Successful" />
         <div className="flex-1 flex items-center justify-center overflow-y-auto">
           <div className="px-4 sm:px-6 py-8 text-center max-w-md mx-auto">
-            {/* Success Icon */}
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-rose-600 flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-10 w-10 text-white" />
             </div>
 
-            {/* Success Message */}
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Gift Card Purchased!
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Success!</h2>
             <p className="text-gray-600 mb-8">
-              Your {selectedCard?.retailer} gift card has been delivered
+              Your {selectedProduct?.brandName} gift card has been purchased and sent to {email}
             </p>
 
-            {/* Details */}
             <Card className="border-0 shadow-sm mb-6">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-6 space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Card Value</span>
-                  <span className="font-semibold text-gray-900">
-                    ${parseFloat(amount).toFixed(2)}
-                  </span>
+                  <span className="text-gray-600">Product</span>
+                  <span className="font-semibold">{selectedProduct?.brandName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Code</span>
-                  <span className="font-mono text-sm text-gray-900">GC****1234</span>
+                  <span className="text-gray-600">Amount</span>
+                  <span className="font-bold">{selectedProduct?.currencyCode} {parseFloat(amount).toFixed(2)}</span>
                 </div>
+                {transactionId && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Transaction ID</span>
+                    <span className="font-mono text-xs">{transactionId}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status</span>
-                  <span className="text-green-600 font-semibold">Activated</span>
+                  <span className="text-green-600 font-semibold">Purchased</span>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 sm:p-6 space-y-3">
+        <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
           <Button
             onClick={() => navigate("/app/wallet")}
-            className="w-full h-12 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold rounded-lg"
+            className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
           >
             Back to Wallet
           </Button>
           <Button
             variant="outline"
-            onClick={() => navigate("/app/wallet/gift-cards")}
+            onClick={() => {
+              setStep("retailer");
+              setSelectedProduct(null);
+              setAmount("");
+              setEmail("");
+            }}
             className="w-full h-12"
           >
-            View All Gift Cards
+            Buy Another Gift Card
           </Button>
         </div>
       </div>
