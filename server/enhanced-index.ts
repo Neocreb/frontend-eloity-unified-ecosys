@@ -508,6 +508,7 @@ app.use('/api/ledger', ledgerRouter);
 app.use('/api/bybit', bybitRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 app.use('/api/reloadly', reloadlyRouter);
+app.use('/api/admin/reloadly', adminReloadlyRouter);
 app.use('/api/cryptoapis', cryptoapisRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
