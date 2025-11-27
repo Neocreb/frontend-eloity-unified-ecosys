@@ -32,6 +32,13 @@ const cryptoapisClient = axios.create({
  * @param address - Wallet address
  */
 export async function getAddressLatestActivity(blockchain: string, network: string, address: string) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/blockchain-data/${blockchain}/${network}/addresses/${address}`);
     return {
@@ -39,10 +46,10 @@ export async function getAddressLatestActivity(blockchain: string, network: stri
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get address latest activity error:', error);
+    logger.error('CRYPTO APIs - Get address latest activity error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to fetch address activity'
     };
   }
 }
