@@ -38,6 +38,7 @@ const Airtime = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [transactionId, setTransactionId] = useState("");
   const [error, setError] = useState("");
+  const [commissionData, setCommissionData] = useState<any>(null);
 
   // Fetch operators on component mount
   useEffect(() => {
