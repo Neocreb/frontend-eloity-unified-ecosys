@@ -506,16 +506,20 @@ router.get('/exchange-rates/:baseAssetId/:quoteAssetId', authenticateToken, asyn
 router.get('/assets', authenticateToken, async (req, res) => {
   try {
     const result = await cryptoapisService.getSupportedAssets();
-    
+
     if (result.success) {
       res.json({
         success: true,
         data: result.data
       });
     } else {
-      res.status(400).json({
+      const statusCode = result.error?.includes('not configured') ? 503 : 400;
+      res.status(statusCode).json({
         success: false,
-        error: result.error
+        error: result.error,
+        message: result.error?.includes('not configured')
+          ? 'CryptoAPIs integration is not configured. Please contact support.'
+          : 'Failed to fetch cryptocurrency data'
       });
     }
   } catch (error: unknown) {
@@ -523,7 +527,8 @@ router.get('/assets', authenticateToken, async (req, res) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     res.status(500).json({
       success: false,
-      error: errorMessage
+      error: errorMessage,
+      message: 'Internal server error while fetching cryptocurrency data'
     });
   }
 });

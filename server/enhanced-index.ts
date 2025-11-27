@@ -86,6 +86,7 @@ import bybitRouter from './routes/bybit.js';
 import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
+import adminReloadlyRouter from './routes/adminReloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
 import startMetricsSync from './tasks/metricsSync.js';
 
@@ -507,6 +508,7 @@ app.use('/api/ledger', ledgerRouter);
 app.use('/api/bybit', bybitRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 app.use('/api/reloadly', reloadlyRouter);
+app.use('/api/admin/reloadly', adminReloadlyRouter);
 app.use('/api/cryptoapis', cryptoapisRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
