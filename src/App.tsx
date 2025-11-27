@@ -839,6 +839,7 @@ const AppRoutes = () => {
         <Route path="boosts" element={<AdminBoosts />} />
         <Route path="system" element={<AdminSystem />} />
         <Route path="ads" element={<AdminAdsManager />} />
+        <Route path="commission" element={<AdminCommissionSettings />} />
       </Route>
 
       {/* Legacy route redirects */}
