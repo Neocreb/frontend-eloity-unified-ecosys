@@ -90,7 +90,24 @@ const Electricity = () => {
     try {
       setError("");
       const token = session?.access_token;
-      
+
+      // First, calculate commission
+      const commissionResponse = await fetch('/api/commission/calculate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          serviceType: 'utilities',
+          baseAmount: numAmount,
+          operatorId: selectedOperator.id
+        })
+      });
+
+      const commissionCalcData = await commissionResponse.json();
+      const totalAmount = commissionCalcData.total_charged || numAmount;
+
       const response = await fetch('/api/reloadly/bills/pay', {
         method: 'POST',
         headers: {
@@ -99,7 +116,7 @@ const Electricity = () => {
         },
         body: JSON.stringify({
           operatorId: selectedOperator.id,
-          amount: numAmount,
+          amount: totalAmount,
           recipientPhone: meterNumber
         })
       });
