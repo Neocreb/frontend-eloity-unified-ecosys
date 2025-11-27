@@ -25,178 +25,163 @@ interface EnhancedStoriesSectionProps {
   onCreateStory: () => void;
   userStories: any[];
   onViewStory: (index: number) => void;
-  refreshTrigger?: number;
+  refetchTrigger?: number;
 }
 
 const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
   onCreateStory,
   userStories,
   onViewStory,
-  refreshTrigger = 0
+  refetchTrigger = 0,
 }) => {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [stories, setStories] = useState<Story[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch real stories data from the database
-  useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        // Fetch recent stories from the database
-        const now = new Date().toISOString();
-        let { data, error } = await supabase
-          .from('user_stories')
-          .select('id, user_id, created_at, media_url, media_type, caption, expires_at')
-          .order('created_at', { ascending: false })
-          .limit(10);
+  const fetchStories = async () => {
+    try {
+      setIsLoading(true);
 
-        // Filter expired stories in JS instead of using PostgreREST operator
-        if (data) {
-          data = data.filter((story: any) =>
-            new Date(story.expires_at) > new Date(now)
-          );
-        }
+      const { data, error } = await supabase
+        .from("stories")
+        .select(
+          `
+          id,
+          user_id,
+          created_at,
+          media_url,
+          profiles:user_id(
+            username,
+            full_name,
+            avatar_url
+          )
+        `
+        )
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-        if (error) {
-          console.error("Error fetching stories:", error);
-          throw error;
-        }
+      if (error) throw error;
 
-        console.log("Fetched stories from database:", data?.length || 0);
+      const fetchedStories: Story[] = (data || []).map((story: any) => ({
+        id: story.id,
+        user: {
+          id: story.user_id,
+          name:
+            story.profiles?.full_name ||
+            story.profiles?.username ||
+            "Unknown User",
+          avatar:
+            story.profiles?.avatar_url ||
+            "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          isUser: story.user_id === user?.id,
+        },
+        hasStory: true,
+        hasNew:
+          new Date(story.created_at) >
+          new Date(Date.now() - 24 * 60 * 60 * 1000),
+        thumbnail: story.media_url,
+        timestamp: new Date(story.created_at),
+      }));
 
-        // Fetch profile data for story creators
-        const userIds = [...new Set((data || []).map(s => s.user_id))];
-        console.log("User IDs to fetch profiles for:", userIds);
-        let profilesMap: Record<string, any> = {};
+      const createStoryOption: Story = {
+        id: "create",
+        user: {
+          id: user?.id || "current-user",
+          name: "Create story",
+          avatar:
+            user?.user_metadata?.avatar ||
+            "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          isUser: true,
+        },
+        hasStory: false,
+        hasNew: false,
+      };
 
-        if (userIds.length > 0) {
-          const { data: profilesData, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, username, full_name, avatar_url')
-            .in('id', userIds);
-
-          console.log("Fetched profiles:", profilesData?.length || 0, profilesError);
-
-          if (!profilesError && profilesData) {
-            profilesMap = Object.fromEntries(
-              profilesData.map(p => [p.id, p])
-            );
-          }
-        }
-
-        // Transform the data to match our Story interface
-        const fetchedStories: Story[] = (data || []).map((story: any) => {
-          const profile = profilesMap[story.user_id];
-          return {
-            id: story.id,
-            user: {
-              id: story.user_id,
-              name: profile?.full_name || profile?.username || "Unknown User",
-              avatar: profile?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-              isUser: story.user_id === user?.id
-            },
-            hasStory: true,
-            hasNew: new Date(story.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000), // New if created in last 24 hours
-            thumbnail: story.media_url,
-            timestamp: new Date(story.created_at)
-          };
-        });
-
-        console.log("Transformed stories:", fetchedStories.length);
-
-        // Add "Create story" option for current user
-        const createStoryOption: Story = {
-          id: "create",
-          user: {
-            id: user?.id || "current-user",
-            name: "Create story",
-            avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-            isUser: true,
-          },
-          hasStory: false,
-          hasNew: false,
-        };
-
-        // Combine create story option with fetched stories
-        const finalStories = [createStoryOption, ...fetchedStories];
-        console.log("Final stories to render:", finalStories.length);
-        setStories(finalStories);
-      } catch (error) {
-        console.error("Error fetching stories:", error);
-        // Only show create story option if database fetch fails
-        const createStoryOption: Story = {
-          id: "create",
-          user: {
-            id: user?.id || "current-user",
-            name: "Create story",
-            avatar: user?.user_metadata?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-            isUser: true,
-          },
-          hasStory: false,
-          hasNew: false,
-        };
-        setStories([createStoryOption]);
-      }
-    };
-
-    if (user) {
-      fetchStories();
+      setStories([createStoryOption, ...fetchedStories]);
+    } catch {
+      const createStoryOption: Story = {
+        id: "create",
+        user: {
+          id: user?.id || "current-user",
+          name: "Create story",
+          avatar:
+            user?.user_metadata?.avatar ||
+            "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          isUser: true,
+        },
+        hasStory: false,
+        hasNew: false,
+      };
+      setStories([createStoryOption]);
+    } finally {
+      setIsLoading(false);
     }
-  }, [user, refreshTrigger]);
+  };
+
+  // First fetch
+  useEffect(() => {
+    if (user) fetchStories();
+  }, [user]);
+
+  // Refetch when parent triggers
+  useEffect(() => {
+    if (user && refetchTrigger > 0) fetchStories();
+  }, [refetchTrigger, user]);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
-      const scrollAmount = 280; // Increased for larger cards
       scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
+        left: direction === "left" ? -260 : 260,
         behavior: "smooth",
       });
     }
   };
 
   const handleStoryClick = (story: Story, index: number) => {
-    if (story.user.isUser && !story.hasStory) {
-      onCreateStory();
-    } else {
-      onViewStory(index);
-    }
+    if (story.user.isUser && !story.hasStory) onCreateStory();
+    else onViewStory(index);
   };
 
   return (
     <div className="bg-white border-b border-gray-200 py-3 sm:py-4 mb-4 sm:mb-6">
       <div className="relative max-w-full">
-        {/* Left scroll button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg border hidden sm:flex h-8 w-8 hover:bg-gray-50"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border hidden sm:flex h-8 w-8"
           onClick={() => scroll("left")}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        {/* Stories container */}
         <div
           ref={scrollRef}
           className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-12"
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
         >
+          {isLoading && stories.length === 0 && (
+            <div className="w-full text-gray-500 text-sm text-center">
+              Loading stories...
+            </div>
+          )}
+
+          {!isLoading && stories.length === 0 && (
+            <div className="w-full text-gray-500 text-sm text-center">
+              No stories yet
+            </div>
+          )}
+
           {stories.map((story, index) => (
             <div
-              key={story.id}
+              key={`story-${story.id}-${index}`}
               className="flex-shrink-0 cursor-pointer group"
               onClick={() => handleStoryClick(story, index)}
             >
               <div className="flex flex-col items-center w-24 sm:w-28">
-                {/* Large square story card */}
                 <div className="relative w-24 h-32 sm:w-28 sm:h-36">
-                  {/* Story background */}
                   <div
                     className={cn(
-                      "w-full h-full rounded-xl overflow-hidden transition-all duration-200 group-hover:scale-105",
+                      "w-full h-full rounded-xl overflow-hidden transition-all group-hover:scale-105",
                       story.user.isUser
                         ? "bg-gradient-to-b from-blue-400 to-blue-600"
                         : "bg-gray-200"
@@ -205,23 +190,17 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
                     {story.thumbnail ? (
                       <img
                         src={story.thumbnail}
-                        alt={`${story.user.name}'s story`}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                        <span className="text-white text-xs font-medium">
-                          {story.user.name.charAt(0)}
-                        </span>
-                      </div>
+                      <div className="w-full h-full bg-gray-300" />
                     )}
                     {story.hasNew && (
-                      <div className="absolute inset-0 border-2 border-blue-500 rounded-xl pointer-events-none"></div>
+                      <div className="absolute inset-0 border-2 border-blue-500 rounded-xl" />
                     )}
                   </div>
 
-                  {/* User avatar with ring */}
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-10 h-10 sm:w-12 sm:h-12">
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-10 h-10 sm:w-12 sm:h-12">
                     <div
                       className={cn(
                         "w-full h-full rounded-full p-0.5",
@@ -233,7 +212,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
                       <div className="w-full h-full bg-white rounded-full p-0.5">
                         <Avatar className="w-full h-full">
                           <AvatarImage src={story.user.avatar} />
-                          <AvatarFallback className="text-xs">
+                          <AvatarFallback>
                             {story.user.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
@@ -246,9 +225,7 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
                     )}
                   </div>
                 </div>
-
-                {/* User name */}
-                <p className="text-xs text-center mt-4 max-w-[96px] sm:max-w-[112px] truncate">
+                <p className="text-xs text-center mt-4 truncate w-full max-w-[96px] sm:max-w-[112px]">
                   {story.user.name}
                 </p>
               </div>
@@ -256,11 +233,10 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
           ))}
         </div>
 
-        {/* Right scroll button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-white shadow-lg border hidden sm:flex h-8 w-8 hover:bg-gray-50"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border hidden sm:flex h-8 w-8"
           onClick={() => scroll("right")}
         >
           <ChevronRight className="h-4 w-4" />

@@ -51,7 +51,7 @@ class StoriesService {
 
       // Get active stories from followed users
       const { data, error } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .select('*')
         .in('user_id', followingIds)
         .gt('expires_at', new Date().toISOString())
@@ -69,7 +69,7 @@ class StoriesService {
   async getUserStories(userId: string): Promise<UserStory[]> {
     try {
       const { data, error } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .select('*')
         .eq('user_id', userId)
         .gt('expires_at', new Date().toISOString())
@@ -92,15 +92,15 @@ class StoriesService {
       const newStory = {
         user_id: userId,
         media_url: storyData.media_url,
-        media_type: storyData.media_type,
-        caption: storyData.caption || null,
+        type: storyData.media_type,
+        content: storyData.caption || null,
         expires_at: expiresAt.toISOString(),
-        views_count: 0,
-        likes_count: 0,
+        view_count: 0,
+        like_count: 0,
       };
 
       const { data, error } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .insert(newStory)
         .select()
         .single();
@@ -118,7 +118,7 @@ class StoriesService {
     try {
       // Check if user is the owner
       const { data: story, error: fetchError } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .select('user_id')
         .eq('id', storyId)
         .single();
@@ -129,7 +129,7 @@ class StoriesService {
       }
 
       const { error } = await this.supabase
-        .from('user_stories')
+        .from('stories')
         .delete()
         .eq('id', storyId);
 
@@ -176,15 +176,15 @@ class StoriesService {
 
       // Update view count using read-modify-write
       const { data: story } = await this.supabase
-        .from('user_stories')
-        .select('views_count')
+        .from('stories')
+        .select('view_count')
         .eq('id', storyId)
         .single();
 
       if (story) {
         await this.supabase
-          .from('user_stories')
-          .update({ views_count: story.views_count + 1 })
+          .from('stories')
+          .update({ view_count: story.view_count + 1 })
           .eq('id', storyId);
       }
 
@@ -217,15 +217,15 @@ class StoriesService {
     try {
       // Get current likes count
       const { data: story } = await this.supabase
-        .from('user_stories')
-        .select('likes_count')
+        .from('stories')
+        .select('like_count')
         .eq('id', storyId)
         .single();
 
       if (story) {
         const { error } = await this.supabase
-          .from('user_stories')
-          .update({ likes_count: story.likes_count + 1 })
+          .from('stories')
+          .update({ like_count: story.like_count + 1 })
           .eq('id', storyId);
 
         if (error) throw error;
@@ -241,15 +241,15 @@ class StoriesService {
     try {
       // Get current likes count
       const { data: story } = await this.supabase
-        .from('user_stories')
-        .select('likes_count')
+        .from('stories')
+        .select('like_count')
         .eq('id', storyId)
         .single();
 
-      if (story && story.likes_count > 0) {
+      if (story && story.like_count > 0) {
         const { error } = await this.supabase
-          .from('user_stories')
-          .update({ likes_count: story.likes_count - 1 })
+          .from('stories')
+          .update({ like_count: story.like_count - 1 })
           .eq('id', storyId);
 
         if (error) throw error;
