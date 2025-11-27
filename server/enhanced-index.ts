@@ -86,6 +86,7 @@ import bybitRouter from './routes/bybit.js';
 import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
+import adminReloadlyRouter from './routes/adminReloadly.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
 import startMetricsSync from './tasks/metricsSync.js';
 
