@@ -26,7 +26,7 @@ dotenv.config({ path: '.env.local' });
 console.log("✅ Environment variables loaded");
 console.log("🔍 DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
 console.log("🔍 VITE_SUPABASE_URL:", process.env.VITE_SUPABASE_URL ? "SET" : "NOT SET");
-console.log("��� SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "NOT SET");
+console.log("🔍 SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "NOT SET");
 
 // Import schemas
 import { 
@@ -510,6 +510,7 @@ app.use('/api/bybit', bybitRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 app.use('/api/reloadly', reloadlyRouter);
 app.use('/api/admin/reloadly', adminReloadlyRouter);
+app.use('/api/commission', commissionRouter);
 app.use('/api/cryptoapis', cryptoapisRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
