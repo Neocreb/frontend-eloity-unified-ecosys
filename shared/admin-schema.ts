@@ -141,6 +141,37 @@ export const announcements = pgTable('announcements', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// Commission settings table
+export const commission_settings = pgTable('commission_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  service_type: text('service_type').notNull(), // 'airtime', 'data', 'utilities', 'gift_cards', 'all'
+  operator_id: integer('operator_id'), // optional: specific operator commission override
+  commission_type: text('commission_type').notNull(), // 'percentage', 'fixed_amount', 'none'
+  percentage_value: text('percentage_value'), // for percentage-based commission
+  fixed_amount: text('fixed_amount'), // for fixed amount commission
+  currency_code: text('currency_code').default('USD'), // currency for fixed amounts
+  is_active: boolean('is_active').default(true),
+  applied_by: uuid('applied_by').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Commission transactions table for tracking
+export const commission_transactions = pgTable('commission_transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  transaction_id: text('transaction_id').notNull().unique(),
+  user_id: uuid('user_id').notNull(),
+  service_type: text('service_type').notNull(), // 'airtime', 'data', 'utilities', 'gift_cards'
+  operator_id: integer('operator_id'),
+  base_amount: text('base_amount').notNull(), // base amount from RELOADLY
+  commission_type: text('commission_type').notNull(), // commission strategy applied
+  commission_amount: text('commission_amount').notNull(), // actual commission earned
+  total_charged: text('total_charged').notNull(), // base_amount + commission_amount
+  currency_code: text('currency_code').notNull(),
+  status: text('status').default('completed'), // 'completed', 'pending', 'failed'
+  created_at: timestamp('created_at').defaultNow(),
+});
+
 // Relations
 export const adminPermissionsRelations = relations(admin_permissions, ({ one }) => ({
   user: one(users, {
@@ -234,4 +265,3 @@ export const announcementsRelations = relations(announcements, ({ one }) => ({
     references: [users.id],
   }),
 }));
-
