@@ -5,13 +5,20 @@ import { logger } from '../utils/logger.js';
 const CRYPTOAPIS_BASE_URL = 'https://rest.cryptoapis.io/v2';
 const API_KEY = process.env.CRYPTOAPIS_API_KEY;
 
+// Validate API key on startup
+if (!API_KEY) {
+  logger.warn('⚠️  CRYPTOAPIS_API_KEY is not set. Crypto features will not work.');
+  logger.warn('Please set CRYPTOAPIS_API_KEY environment variable to enable crypto functionality.');
+}
+
 // Create axios instance with default headers
 const cryptoapisClient = axios.create({
   baseURL: CRYPTOAPIS_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'X-API-Key': API_KEY
-  }
+    'X-API-Key': API_KEY || ''
+  },
+  timeout: 10000
 });
 
 // =============================================================================
