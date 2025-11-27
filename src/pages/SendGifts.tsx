@@ -262,7 +262,7 @@ const SendGifts = () => {
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 max-w-5xl mx-auto w-full">
+          <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 w-full">
             {/* Subtitle */}
             <p className="text-sm sm:text-base text-muted-foreground">
               Show appreciation, celebrate achievements, and spread joy with virtual gifts and tips
