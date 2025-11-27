@@ -345,6 +345,14 @@ export async function getExchangeRates(baseAssetId: string, quoteAssetId: string
  * Get supported assets
  */
 export async function getSupportedAssets() {
+  if (!API_KEY) {
+    logger.error('CRYPTOAPIS_API_KEY is not configured');
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured. Please set CRYPTOAPIS_API_KEY environment variable.'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get('/market-data/assets');
     return {
@@ -352,10 +360,10 @@ export async function getSupportedAssets() {
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get supported assets error:', error);
+    logger.error('CRYPTO APIs - Get supported assets error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to fetch assets from CryptoAPIs'
     };
   }
 }
