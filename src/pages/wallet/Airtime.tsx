@@ -89,7 +89,24 @@ const Airtime = () => {
     try {
       setError("");
       const token = session?.access_token;
-      
+
+      // First, calculate commission
+      const commissionResponse = await fetch('/api/commission/calculate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          serviceType: 'airtime',
+          baseAmount: amount,
+          operatorId: selectedOperator.id
+        })
+      });
+
+      const commissionData = await commissionResponse.json();
+      const totalAmount = commissionData.total_charged || amount;
+
       const response = await fetch('/api/reloadly/airtime/topup', {
         method: 'POST',
         headers: {
@@ -98,7 +115,7 @@ const Airtime = () => {
         },
         body: JSON.stringify({
           operatorId: selectedOperator.id,
-          amount: amount,
+          amount: totalAmount,
           recipientPhone: phoneNumber
         })
       });
