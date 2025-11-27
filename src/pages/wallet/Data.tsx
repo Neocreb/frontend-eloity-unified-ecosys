@@ -92,7 +92,24 @@ const Data = () => {
     try {
       setError("");
       const token = session?.access_token;
-      
+
+      // First, calculate commission
+      const commissionResponse = await fetch('/api/commission/calculate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          serviceType: 'data',
+          baseAmount: amount,
+          operatorId: selectedOperator.id
+        })
+      });
+
+      const commissionCalcData = await commissionResponse.json();
+      const totalAmount = commissionCalcData.total_charged || amount;
+
       const response = await fetch('/api/reloadly/data/bundle', {
         method: 'POST',
         headers: {
@@ -101,7 +118,7 @@ const Data = () => {
         },
         body: JSON.stringify({
           operatorId: selectedOperator.id,
-          amount: amount,
+          amount: totalAmount,
           recipientPhone: phoneNumber
         })
       });
