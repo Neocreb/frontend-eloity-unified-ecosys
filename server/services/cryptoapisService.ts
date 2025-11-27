@@ -5,13 +5,20 @@ import { logger } from '../utils/logger.js';
 const CRYPTOAPIS_BASE_URL = 'https://rest.cryptoapis.io/v2';
 const API_KEY = process.env.CRYPTOAPIS_API_KEY;
 
+// Validate API key on startup
+if (!API_KEY) {
+  logger.warn('⚠️  CRYPTOAPIS_API_KEY is not set. Crypto features will not work.');
+  logger.warn('Please set CRYPTOAPIS_API_KEY environment variable to enable crypto functionality.');
+}
+
 // Create axios instance with default headers
 const cryptoapisClient = axios.create({
   baseURL: CRYPTOAPIS_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'X-API-Key': API_KEY
-  }
+    'X-API-Key': API_KEY || ''
+  },
+  timeout: 10000
 });
 
 // =============================================================================
@@ -25,6 +32,13 @@ const cryptoapisClient = axios.create({
  * @param address - Wallet address
  */
 export async function getAddressLatestActivity(blockchain: string, network: string, address: string) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/blockchain-data/${blockchain}/${network}/addresses/${address}`);
     return {
@@ -32,10 +46,10 @@ export async function getAddressLatestActivity(blockchain: string, network: stri
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get address latest activity error:', error);
+    logger.error('CRYPTO APIs - Get address latest activity error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to fetch address activity'
     };
   }
 }
@@ -47,6 +61,13 @@ export async function getAddressLatestActivity(blockchain: string, network: stri
  * @param address - Wallet address
  */
 export async function getAddressHistory(blockchain: string, network: string, address: string) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/blockchain-data/${blockchain}/${network}/addresses/${address}/transactions`);
     return {
@@ -54,10 +75,10 @@ export async function getAddressHistory(blockchain: string, network: string, add
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get address history error:', error);
+    logger.error('CRYPTO APIs - Get address history error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to fetch address history'
     };
   }
 }
@@ -69,6 +90,13 @@ export async function getAddressHistory(blockchain: string, network: string, add
  * @param blockId - Block height or hash
  */
 export async function getBlockData(blockchain: string, network: string, blockId: string | number) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/blockchain-data/${blockchain}/${network}/blocks/${blockId}`);
     return {
@@ -76,10 +104,10 @@ export async function getBlockData(blockchain: string, network: string, blockId:
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get block data error:', error);
+    logger.error('CRYPTO APIs - Get block data error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to fetch block data'
     };
   }
 }
@@ -91,6 +119,13 @@ export async function getBlockData(blockchain: string, network: string, blockId:
  * @param transactionId - Transaction hash
  */
 export async function getTransactionData(blockchain: string, network: string, transactionId: string) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/blockchain-data/${blockchain}/${network}/transactions/${transactionId}`);
     return {
@@ -98,10 +133,10 @@ export async function getTransactionData(blockchain: string, network: string, tr
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get transaction data error:', error);
+    logger.error('CRYPTO APIs - Get transaction data error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to fetch transaction data'
     };
   }
 }
@@ -117,6 +152,13 @@ export async function getTransactionData(blockchain: string, network: string, tr
  * @param transactionData - Transaction data to simulate
  */
 export async function simulateTransaction(blockchain: string, network: string, transactionData: any) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.post(`/blockchain-tools/${blockchain}/${network}/transactions/simulate`, {
       transaction: transactionData
@@ -126,10 +168,10 @@ export async function simulateTransaction(blockchain: string, network: string, t
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Simulate transaction error:', error);
+    logger.error('CRYPTO APIs - Simulate transaction error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to simulate transaction'
     };
   }
 }
@@ -140,6 +182,13 @@ export async function simulateTransaction(blockchain: string, network: string, t
  * @param data - Data to process
  */
 export async function blockchainUtils(utility: string, data: any) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.post(`/blockchain-tools/utilities/${utility}`, data);
     return {
@@ -147,10 +196,10 @@ export async function blockchainUtils(utility: string, data: any) {
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Blockchain utilities error:', error);
+    logger.error('CRYPTO APIs - Blockchain utilities error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to process blockchain utility'
     };
   }
 }
@@ -166,6 +215,13 @@ export async function blockchainUtils(utility: string, data: any) {
  * @param signedTransaction - Signed transaction hex
  */
 export async function broadcastTransaction(blockchain: string, network: string, signedTransaction: string) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.post(`/blockchain-tools/${blockchain}/${network}/transactions/broadcast`, {
       transaction: signedTransaction
@@ -175,10 +231,10 @@ export async function broadcastTransaction(blockchain: string, network: string, 
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Broadcast transaction error:', error);
+    logger.error('CRYPTO APIs - Broadcast transaction error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to broadcast transaction'
     };
   }
 }
@@ -194,6 +250,13 @@ export async function broadcastTransaction(blockchain: string, network: string, 
  * @param walletData - Wallet configuration data
  */
 export async function manageHDWallet(blockchain: string, network: string, walletData: any) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.post(`/blockchain-tools/${blockchain}/${network}/hd-wallets`, walletData);
     return {
@@ -201,10 +264,10 @@ export async function manageHDWallet(blockchain: string, network: string, wallet
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - HD Wallet management error:', error);
+    logger.error('CRYPTO APIs - HD Wallet management error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to manage HD wallet'
     };
   }
 }
@@ -217,6 +280,13 @@ export async function manageHDWallet(blockchain: string, network: string, wallet
  * @param count - Number of addresses to generate
  */
 export async function getWalletAddresses(blockchain: string, network: string, walletId: string, count: number = 10) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/blockchain-tools/${blockchain}/${network}/hd-wallets/${walletId}/addresses?count=${count}`);
     return {
@@ -224,10 +294,10 @@ export async function getWalletAddresses(blockchain: string, network: string, wa
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get wallet addresses error:', error);
+    logger.error('CRYPTO APIs - Get wallet addresses error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to get wallet addresses'
     };
   }
 }
@@ -243,6 +313,13 @@ export async function getWalletAddresses(blockchain: string, network: string, wa
  * @param contractAddress - Token contract address
  */
 export async function getTokenContractMetadata(blockchain: string, network: string, contractAddress: string) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/tokenized-api/${blockchain}/${network}/tokens/${contractAddress}`);
     return {
@@ -250,10 +327,10 @@ export async function getTokenContractMetadata(blockchain: string, network: stri
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get token contract metadata error:', error);
+    logger.error('CRYPTO APIs - Get token contract metadata error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to get token contract metadata'
     };
   }
 }
@@ -269,6 +346,13 @@ export async function getTokenContractMetadata(blockchain: string, network: stri
  * @param options - Fee estimation options
  */
 export async function estimateTransactionFees(blockchain: string, network: string, options: any = {}) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/blockchain-data/${blockchain}/${network}/fees`, { params: options });
     return {
@@ -276,10 +360,10 @@ export async function estimateTransactionFees(blockchain: string, network: strin
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Estimate transaction fees error:', error);
+    logger.error('CRYPTO APIs - Estimate transaction fees error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to estimate transaction fees'
     };
   }
 }
@@ -293,6 +377,13 @@ export async function estimateTransactionFees(blockchain: string, network: strin
  * @param webhookData - Webhook configuration
  */
 export async function createWebhook(webhookData: any) {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.post('/webhooks', webhookData);
     return {
@@ -300,10 +391,10 @@ export async function createWebhook(webhookData: any) {
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Create webhook error:', error);
+    logger.error('CRYPTO APIs - Create webhook error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to create webhook'
     };
   }
 }
@@ -319,6 +410,13 @@ export async function createWebhook(webhookData: any) {
  * @param context - Context (e.g., 'historical', 'realtime')
  */
 export async function getExchangeRates(baseAssetId: string, quoteAssetId: string, context: string = 'realtime') {
+  if (!API_KEY) {
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get(`/market-data/exchange-rates/${context}/${baseAssetId}/${quoteAssetId}`);
     return {
@@ -326,10 +424,10 @@ export async function getExchangeRates(baseAssetId: string, quoteAssetId: string
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get exchange rates error:', error);
+    logger.error('CRYPTO APIs - Get exchange rates error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to get exchange rates'
     };
   }
 }
@@ -338,6 +436,14 @@ export async function getExchangeRates(baseAssetId: string, quoteAssetId: string
  * Get supported assets
  */
 export async function getSupportedAssets() {
+  if (!API_KEY) {
+    logger.error('CRYPTOAPIS_API_KEY is not configured');
+    return {
+      success: false,
+      error: 'CryptoAPIs API key is not configured. Please set CRYPTOAPIS_API_KEY environment variable.'
+    };
+  }
+
   try {
     const response = await cryptoapisClient.get('/market-data/assets');
     return {
@@ -345,10 +451,10 @@ export async function getSupportedAssets() {
       data: response.data.data
     };
   } catch (error: any) {
-    logger.error('CRYPTO APIs - Get supported assets error:', error);
+    logger.error('CRYPTO APIs - Get supported assets error:', error.message);
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.error?.message || error.message || 'Failed to fetch assets from CryptoAPIs'
     };
   }
 }
