@@ -305,7 +305,29 @@ const Airtime = () => {
               </div>
               {canProceed && (
                 <Button
-                  onClick={() => setStep("review")}
+                  onClick={async () => {
+                    // Fetch commission data before moving to review
+                    try {
+                      const token = session?.access_token;
+                      const response = await fetch('/api/commission/calculate', {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          serviceType: 'airtime',
+                          baseAmount: parseFloat(customAmount),
+                          operatorId: selectedOperator?.id
+                        })
+                      });
+                      const data = await response.json();
+                      setCommissionData(data);
+                    } catch (err) {
+                      console.error('Error fetching commission:', err);
+                    }
+                    setStep("review");
+                  }}
                   className="w-full bg-blue-600 hover:bg-blue-700"
                   size="lg"
                 >
