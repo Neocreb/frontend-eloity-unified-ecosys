@@ -308,9 +308,22 @@ const Electricity = () => {
                     <span className="text-gray-600">Meter Number</span>
                     <span className="font-semibold font-mono">{meterNumber}</span>
                   </div>
-                  <div className="border-t pt-4 flex justify-between items-center">
-                    <span className="text-gray-600">Amount to Pay</span>
-                    <span className="font-semibold">₦{numAmount.toLocaleString()}</span>
+
+                  <div className="border-t pt-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Service Amount</span>
+                      <span className="font-semibold">₦{commissionData?.original_amount.toLocaleString()}</span>
+                    </div>
+                    {commissionData?.commission_value > 0 && (
+                      <div className="flex justify-between items-center text-yellow-600">
+                        <span className="text-sm">Commission ({commissionData?.commission_type === 'fixed_amount' ? 'Fixed' : commissionData?.commission_rate + '%'})</span>
+                        <span className="font-semibold">₦{commissionData?.commission_value.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="border-t pt-3 flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Total You Pay</span>
+                      <span className="text-xl font-bold text-yellow-600">₦{commissionData?.final_amount.toLocaleString()}</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
