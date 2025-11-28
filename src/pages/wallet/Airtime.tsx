@@ -249,7 +249,34 @@ const Airtime = () => {
               </div>
               {canProceed && (
                 <Button
-                  onClick={() => setStep("review")}
+                  onClick={async () => {
+                    try {
+                      const token = session?.access_token;
+                      const response = await fetch('/api/commission/calculate', {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          service_type: 'airtime',
+                          amount: selectedAmount,
+                          operator_id: selectedOperatorId
+                        })
+                      });
+
+                      const result = await response.json();
+                      if (result.success) {
+                        setCommissionData(result.data);
+                        setStep("review");
+                      } else {
+                        toast.error('Failed to calculate price');
+                      }
+                    } catch (error) {
+                      console.error('Error calculating commission:', error);
+                      toast.error('Failed to calculate price');
+                    }
+                  }}
                   className="w-full bg-blue-600 hover:bg-blue-700"
                   size="lg"
                 >
