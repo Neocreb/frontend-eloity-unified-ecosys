@@ -357,7 +357,7 @@ const GiftCards = () => {
                 Processing...
               </>
             ) : (
-              `Purchase $${amount} Gift Card`
+              `Purchase $${(commissionData?.final_amount || amount).toFixed(2)} Gift Card`
             )}
           </Button>
           <Button
