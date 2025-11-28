@@ -84,7 +84,7 @@ const BuyGiftCards = () => {
     setStep("amount");
   };
 
-  const handleContinueAmount = () => {
+  const handleContinueAmount = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
@@ -101,7 +101,33 @@ const BuyGiftCards = () => {
       toast.error("Insufficient balance");
       return;
     }
-    setStep("review");
+
+    try {
+      const token = session?.access_token;
+      const response = await fetch('/api/commission/calculate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          service_type: 'gift_cards',
+          amount: parseFloat(amount),
+          operator_id: selectedCard?.id
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setCommissionData(result.data);
+        setStep("review");
+      } else {
+        toast.error('Failed to calculate price');
+      }
+    } catch (error) {
+      console.error('Error calculating commission:', error);
+      toast.error('Failed to calculate price');
+    }
   };
 
   const handleBuy = async () => {
