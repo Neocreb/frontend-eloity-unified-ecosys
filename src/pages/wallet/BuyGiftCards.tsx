@@ -18,6 +18,15 @@ interface GiftCard {
   currencyCode: string;
 }
 
+interface CommissionData {
+  original_amount: number;
+  commission_value: number;
+  commission_type: string;
+  commission_rate: number;
+  final_amount: number;
+  reloadly_amount: number;
+}
+
 const BuyGiftCards = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
