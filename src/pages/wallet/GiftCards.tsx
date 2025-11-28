@@ -318,12 +318,18 @@ const GiftCards = () => {
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Amount</span>
-                    <span className="font-bold">${amount}</span>
+                    <span className="text-gray-600">Service Amount</span>
+                    <span className="font-bold">${commissionData?.original_amount.toFixed(2) || amount.toFixed(2)}</span>
                   </div>
+                  {commissionData?.commission_value > 0 && (
+                    <div className="flex justify-between mb-2 text-purple-600">
+                      <span className="text-sm">Commission ({commissionData?.commission_rate}%)</span>
+                      <span className="font-semibold">${commissionData?.commission_value.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Total</span>
-                    <span className="text-2xl font-bold text-purple-600">${amount}</span>
+                    <span className="font-semibold">Total You Pay</span>
+                    <span className="text-2xl font-bold text-purple-600">${commissionData?.final_amount.toFixed(2) || amount.toFixed(2)}</span>
                   </div>
                 </div>
 
