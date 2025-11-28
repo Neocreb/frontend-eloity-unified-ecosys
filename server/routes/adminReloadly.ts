@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { authenticateToken } from '../middleware/auth.js';
 import { tierAccessControl } from '../middleware/tierAccessControl.js';
 import adminReloadlyService from '../services/adminReloadlyService.js';
@@ -27,12 +28,37 @@ const requireAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
+// Rate limiters for admin endpoints
+const readLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { error: 'Too many read requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Limit each IP to 30 write requests per windowMs
+  message: { error: 'Too many write requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const syncLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Limit sync operations to 5 per hour
+  message: { error: 'Too many sync requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Apply middleware
 router.use(authenticateToken);
 router.use(requireAdmin);
 
 // Get all bill payment transactions
-router.get('/transactions', async (req, res) => {
+router.get('/transactions', readLimiter, async (req, res) => {
   try {
     const { type, status, startDate, endDate, userId, limit = 100, offset = 0 } = req.query;
 
@@ -58,7 +84,7 @@ router.get('/transactions', async (req, res) => {
 });
 
 // Get transaction statistics
-router.get('/transactions/statistics', async (req, res) => {
+router.get('/transactions/statistics', readLimiter, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -76,7 +102,7 @@ router.get('/transactions/statistics', async (req, res) => {
 });
 
 // Get bill payment operators
-router.get('/operators', async (req, res) => {
+router.get('/operators', readLimiter, async (req, res) => {
   try {
     const { serviceType, countryCode, isActive } = req.query;
 
@@ -96,7 +122,7 @@ router.get('/operators', async (req, res) => {
 });
 
 // Update operator status
-router.patch('/operators/:operatorId', async (req, res) => {
+router.patch('/operators/:operatorId', writeLimiter, async (req, res) => {
   try {
     const { operatorId } = req.params;
     const { isActive } = req.body;
@@ -127,7 +153,7 @@ router.patch('/operators/:operatorId', async (req, res) => {
 });
 
 // Sync operators from RELOADLY
-router.post('/operators/sync', async (req, res) => {
+router.post('/operators/sync', syncLimiter, async (req, res) => {
   try {
     const { countryCode } = req.body;
 
@@ -150,7 +176,7 @@ router.post('/operators/sync', async (req, res) => {
 });
 
 // Get settings
-router.get('/settings/:settingKey', async (req, res) => {
+router.get('/settings/:settingKey', readLimiter, async (req, res) => {
   try {
     const { settingKey } = req.params;
 
@@ -169,7 +195,7 @@ router.get('/settings/:settingKey', async (req, res) => {
 });
 
 // Update settings
-router.post('/settings', async (req, res) => {
+router.post('/settings', writeLimiter, async (req, res) => {
   try {
     const { settingKey, settingValue, description } = req.body;
 
@@ -193,7 +219,7 @@ router.post('/settings', async (req, res) => {
 });
 
 // Get audit logs
-router.get('/audit-logs', async (req, res) => {
+router.get('/audit-logs', readLimiter, async (req, res) => {
   try {
     const { limit = 100, offset = 0 } = req.query;
 
