@@ -888,6 +888,17 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // =============================================================================
+// INITIALIZE SERVICES
+// =============================================================================
+
+try {
+  await initializeCurrencyService();
+  console.log('✅ Currency service initialized with daily rate updates');
+} catch (e) {
+  console.error('❌ Failed to initialize currency service:', e);
+}
+
+// =============================================================================
 // SERVER STARTUP
 // =============================================================================
 
