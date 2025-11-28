@@ -258,7 +258,34 @@ const Data = () => {
               </div>
               {canProceed && (
                 <Button
-                  onClick={() => setStep("review")}
+                  onClick={async () => {
+                    try {
+                      const token = session?.access_token;
+                      const response = await fetch('/api/commission/calculate', {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          service_type: 'data',
+                          amount: selectedPlan?.price,
+                          operator_id: selectedOperatorId
+                        })
+                      });
+
+                      const result = await response.json();
+                      if (result.success) {
+                        setCommissionData(result.data);
+                        setStep("review");
+                      } else {
+                        toast.error('Failed to calculate price');
+                      }
+                    } catch (error) {
+                      console.error('Error calculating commission:', error);
+                      toast.error('Failed to calculate price');
+                    }
+                  }}
                   className="w-full bg-cyan-600 hover:bg-cyan-700"
                   size="lg"
                 >
