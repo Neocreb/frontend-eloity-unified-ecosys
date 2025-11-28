@@ -87,6 +87,7 @@ import ledgerRouter from './routes/ledger.js';
 import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
+import commissionRouter from './routes/commission.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
 import tierAccessRouter from './routes/tierAccess.js';
 import subscriptionsRouter from './routes/subscriptions.js';
