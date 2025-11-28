@@ -456,9 +456,6 @@ const BuyGiftCards = () => {
   }
 
   if (step === "success") {
-    const fee = selectedCard ? parseFloat(amount) * (selectedCard.fee / 100) : 0;
-    const total = parseFloat(amount) + fee;
-
     return (
       <div className="flex flex-col h-screen bg-gradient-to-br from-pink-50 to-rose-50">
         <WalletActionHeader title="Purchase Complete" />
