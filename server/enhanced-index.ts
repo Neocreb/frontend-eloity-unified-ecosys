@@ -93,6 +93,8 @@ import tierAccessRouter from './routes/tierAccess.js';
 import subscriptionsRouter from './routes/subscriptions.js';
 import referralBonusRouter from './routes/referralBonus.js';
 import creatorFundBoostRouter from './routes/creatorFundBoost.js';
+import currencyRouter from './routes/currency.js';
+import { initializeCurrencyService } from './services/currencyService.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
