@@ -62,9 +62,15 @@ router.get('/deposit-address', authenticateToken, async (req, res) => {
     const userId = req.userId as string;
     const { coin, chainType } = req.query;
 
+    // Allow-list of supported coins for deposit address generation
+    const allowedCoins = ['btc', 'eth', 'usdt', 'ltc', 'bch', 'xrp']; // Extend based on supported coins
+
     // Validate required parameters
     if (!coin) {
       return res.status(400).json({ error: 'Coin parameter is required' });
+    }
+    if (typeof coin !== 'string' || !allowedCoins.includes(coin.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid coin parameter' });
     }
 
     // Try Supabase edge function first if configured
@@ -107,7 +113,7 @@ router.get('/deposit-address', authenticateToken, async (req, res) => {
       });
     }
 
-    // Call CryptoAPIs to generate deposit address
+    // Call CryptoAPIs to generate deposit address (safe since coin validated above)
     const path = `/blockchain-tools/${coin}/mainnet/addresses`;
     const result = await callCryptoAPIs(path, 'POST');
     res.status(200).json(result);

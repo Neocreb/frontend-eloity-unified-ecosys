@@ -24,7 +24,7 @@ async function testBybitKeys() {
 
     console.log('✅ Bybit API keys found');
     console.log('   Public Key:', BYBIT_PUBLIC_API);
-    console.log('   Secret Key Length:', BYBIT_SECRET_API.length, 'characters');
+    console.log('   Secret Key: [HIDDEN]');
     
     // Test basic connectivity with a simple public endpoint
     console.log('\n📡 Testing basic connectivity...');

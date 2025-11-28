@@ -107,6 +107,6 @@ serve(async (req) => {
     return new Response(text, { status: resp.status, headers: outHeaders });
   } catch (err) {
     console.error('Bybit edge function error:', err);
-    return new Response(JSON.stringify({ error: 'Internal error', details: err?.message || String(err) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: 'Internal error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 });
