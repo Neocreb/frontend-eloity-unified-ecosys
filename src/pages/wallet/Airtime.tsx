@@ -23,6 +23,15 @@ interface Plan {
   price: number;
 }
 
+interface CommissionData {
+  original_amount: number;
+  commission_value: number;
+  commission_type: string;
+  commission_rate: number;
+  final_amount: number;
+  reloadly_amount: number;
+}
+
 const Airtime = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
@@ -35,6 +44,7 @@ const Airtime = () => {
   const [operators, setOperators] = useState<any[]>([]);
   const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(null);
 
   // Fetch operators on component mount
   useEffect(() => {
