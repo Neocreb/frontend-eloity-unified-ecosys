@@ -40,6 +40,7 @@ const BuyGiftCards = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(null);
 
   // Fetch gift card products from Reloadly API
   useEffect(() => {
