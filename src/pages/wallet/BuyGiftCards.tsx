@@ -361,8 +361,6 @@ const BuyGiftCards = () => {
   }
 
   if (step === "review") {
-    const total = parseFloat(amount);
-
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Review Purchase" />
@@ -384,8 +382,8 @@ const BuyGiftCards = () => {
 
                 {/* Amount Section */}
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Amount to Purchase</p>
-                  <p className="text-4xl font-bold text-gray-900">
+                  <p className="text-sm text-gray-600 mb-2">Amount</p>
+                  <p className="text-2xl font-bold text-gray-900">
                     {selectedCard?.currencyCode} {parseFloat(amount).toFixed(2)}
                   </p>
                 </div>
@@ -406,7 +404,7 @@ const BuyGiftCards = () => {
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold text-gray-900">Total to Pay</span>
                   <span className="font-bold text-lg text-pink-600">
-                    {selectedCard?.currencyCode} {total.toFixed(2)}
+                    {selectedCard?.currencyCode} {(commissionData?.final_amount || parseFloat(amount)).toFixed(2)}
                   </span>
                 </div>
               </CardContent>
@@ -443,7 +441,10 @@ const BuyGiftCards = () => {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setStep("amount")}
+            onClick={() => {
+              setStep("amount");
+              setCommissionData(null);
+            }}
             disabled={isLoading}
             className="w-full h-12"
           >
