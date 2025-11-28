@@ -35,6 +35,7 @@ const BuyGiftCards = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [transactionId, setTransactionId] = useState("");
+  const [commissionData, setCommissionData] = useState<any>(null);
 
   // Fetch gift card products on mount
   useEffect(() => {
@@ -78,7 +79,7 @@ const BuyGiftCards = () => {
     setStep("amount");
   };
 
-  const handleContinueAmount = () => {
+  const handleContinueAmount = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
@@ -91,11 +92,46 @@ const BuyGiftCards = () => {
       toast.error(`Maximum amount is ${selectedProduct?.currencyCode || "$"}${selectedProduct?.maxAmount}`);
       return;
     }
-    if (parseFloat(amount) > (walletBalance?.total || 0)) {
-      toast.error("Insufficient balance");
-      return;
+
+    setIsLoading(true);
+    try {
+      const token = session?.access_token;
+
+      // Calculate commission
+      const commissionResponse = await fetch('/api/commission/calculate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          serviceType: 'gift_cards',
+          baseAmount: parseFloat(amount),
+          operatorId: selectedProduct?.id
+        })
+      });
+
+      const commissionCalcData = await commissionResponse.json();
+      if (!commissionResponse.ok || !commissionCalcData.success) {
+        throw new Error(commissionCalcData.error || 'Failed to calculate commission');
+      }
+
+      setCommissionData(commissionCalcData);
+
+      if (commissionCalcData.total_charged > (walletBalance?.total || 0)) {
+        toast.error("Insufficient balance for this purchase");
+        return;
+      }
+
+      setStep("review");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to calculate commission';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error('Commission calculation error:', err);
+    } finally {
+      setIsLoading(false);
     }
-    setStep("review");
   };
 
   const handleBuy = async () => {
@@ -108,7 +144,9 @@ const BuyGiftCards = () => {
     try {
       setError("");
       const token = session?.access_token;
-      
+
+      const totalAmount = commissionData?.total_charged || parseFloat(amount);
+
       const response = await fetch('/api/reloadly/gift-cards/purchase', {
         method: 'POST',
         headers: {
@@ -117,13 +155,13 @@ const BuyGiftCards = () => {
         },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          amount: parseFloat(amount),
+          amount: totalAmount,
           email: email
         })
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setTransactionId(result.transactionId);
         setStep("success");
@@ -395,12 +433,18 @@ const BuyGiftCards = () => {
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Amount</span>
+                    <span className="text-gray-600">Gift Card Amount</span>
                     <span className="font-bold">{selectedProduct?.currencyCode} {parseFloat(amount).toFixed(2)}</span>
                   </div>
+                  {commissionData && commissionData.commission_amount > 0 && (
+                    <div className="flex justify-between mb-2 text-orange-600">
+                      <span className="text-gray-600">Commission ({commissionData.commission_type === 'percentage' ? commissionData.percentage_value + '%' : 'Fixed'})</span>
+                      <span className="font-semibold">{selectedProduct?.currencyCode} {commissionData.commission_amount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Total</span>
-                    <span className="text-2xl font-bold text-purple-600">{selectedProduct?.currencyCode} {parseFloat(amount).toFixed(2)}</span>
+                    <span className="font-semibold">Total Charged</span>
+                    <span className="text-2xl font-bold text-purple-600">{selectedProduct?.currencyCode} {(commissionData?.total_charged || parseFloat(amount)).toFixed(2)}</span>
                   </div>
                 </div>
 
