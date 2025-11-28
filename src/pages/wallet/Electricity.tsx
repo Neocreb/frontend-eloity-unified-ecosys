@@ -16,6 +16,15 @@ interface Provider {
   description: string;
 }
 
+interface CommissionData {
+  original_amount: number;
+  commission_value: number;
+  commission_type: string;
+  commission_rate: number;
+  final_amount: number;
+  reloadly_amount: number;
+}
+
 const Electricity = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
@@ -29,6 +38,7 @@ const Electricity = () => {
   const [selectedOperatorId, setSelectedOperatorId] = useState<number | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [operatorsLoading, setOperatorsLoading] = useState(true);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(null);
 
   // Fetch operators on component mount
   useEffect(() => {
