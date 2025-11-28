@@ -239,7 +239,34 @@ const GiftCards = () => {
 
         <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
           <Button
-            onClick={() => setStep("review")}
+            onClick={async () => {
+              try {
+                const token = session?.access_token;
+                const response = await fetch('/api/commission/calculate', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    service_type: 'gift_cards',
+                    amount: amount,
+                    operator_id: selectedProduct?.id
+                  })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                  setCommissionData(result.data);
+                  setStep("review");
+                } else {
+                  toast.error('Failed to calculate price');
+                }
+              } catch (error) {
+                console.error('Error calculating commission:', error);
+                toast.error('Failed to calculate price');
+              }
+            }}
             disabled={!amount || !email || isLoading}
             className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
           >
