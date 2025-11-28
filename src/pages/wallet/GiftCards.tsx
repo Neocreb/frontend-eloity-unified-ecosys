@@ -22,6 +22,15 @@ interface GiftCardProduct {
   fixedAmounts: number[];
 }
 
+interface CommissionData {
+  original_amount: number;
+  commission_value: number;
+  commission_type: string;
+  commission_rate: number;
+  final_amount: number;
+  reloadly_amount: number;
+}
+
 const GiftCards = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
@@ -32,6 +41,7 @@ const GiftCards = () => {
   const [amount, setAmount] = useState<number>(0);
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(null);
 
   // Fetch gift card products
   useEffect(() => {
@@ -229,7 +239,34 @@ const GiftCards = () => {
 
         <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
           <Button
-            onClick={() => setStep("review")}
+            onClick={async () => {
+              try {
+                const token = session?.access_token;
+                const response = await fetch('/api/commission/calculate', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    service_type: 'gift_cards',
+                    amount: amount,
+                    operator_id: selectedProduct?.id
+                  })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                  setCommissionData(result.data);
+                  setStep("review");
+                } else {
+                  toast.error('Failed to calculate price');
+                }
+              } catch (error) {
+                console.error('Error calculating commission:', error);
+                toast.error('Failed to calculate price');
+              }
+            }}
             disabled={!amount || !email || isLoading}
             className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
           >
@@ -281,12 +318,18 @@ const GiftCards = () => {
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Amount</span>
-                    <span className="font-bold">${amount}</span>
+                    <span className="text-gray-600">Service Amount</span>
+                    <span className="font-bold">${commissionData?.original_amount.toFixed(2) || amount.toFixed(2)}</span>
                   </div>
+                  {commissionData?.commission_value > 0 && (
+                    <div className="flex justify-between mb-2 text-purple-600">
+                      <span className="text-sm">Commission ({commissionData?.commission_rate}%)</span>
+                      <span className="font-semibold">${commissionData?.commission_value.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Total</span>
-                    <span className="text-2xl font-bold text-purple-600">${amount}</span>
+                    <span className="font-semibold">Total You Pay</span>
+                    <span className="text-2xl font-bold text-purple-600">${commissionData?.final_amount.toFixed(2) || amount.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -314,7 +357,7 @@ const GiftCards = () => {
                 Processing...
               </>
             ) : (
-              `Purchase $${amount} Gift Card`
+              `Purchase $${(commissionData?.final_amount || amount).toFixed(2)} Gift Card`
             )}
           </Button>
           <Button
