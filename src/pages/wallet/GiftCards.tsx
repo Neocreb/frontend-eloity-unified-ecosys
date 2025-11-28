@@ -22,6 +22,15 @@ interface GiftCardProduct {
   fixedAmounts: number[];
 }
 
+interface CommissionData {
+  original_amount: number;
+  commission_value: number;
+  commission_type: string;
+  commission_rate: number;
+  final_amount: number;
+  reloadly_amount: number;
+}
+
 const GiftCards = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
@@ -32,6 +41,7 @@ const GiftCards = () => {
   const [amount, setAmount] = useState<number>(0);
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(null);
 
   // Fetch gift card products
   useEffect(() => {
