@@ -19,7 +19,7 @@ export const useRewardNotifications = (options: NotificationOptions = {}) => {
 
   const previousBalanceRef = useRef<number>(0);
   const previousLevelRef = useRef<number>(1);
-  const previousStreak Ref = useRef<number>(0);
+  const previousStreakRef = useRef<number>(0);
 
   const showConfetti = options.showConfetti !== false;
   const showToast_enabled = options.showToast !== false;
@@ -182,7 +182,7 @@ export const useRewardNotifications = (options: NotificationOptions = {}) => {
 
     if (
       summary.current_streak > 0 &&
-      summary.current_streak > previousStreak Ref.current
+      summary.current_streak > previousStreakRef.current
     ) {
       const streakMilestones = [1, 7, 14, 30, 60, 100];
 
@@ -204,7 +204,7 @@ export const useRewardNotifications = (options: NotificationOptions = {}) => {
       }
     }
 
-    previousStreak Ref.current = summary.current_streak;
+    previousStreakRef.current = summary.current_streak;
   }, [summary, summaryLoading, showToast_enabled, showConfetti, playSound, toast]);
 
   return {
