@@ -341,6 +341,75 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
     await fetchExchangeRates();
   }, []);
 
+  const refreshRates = refreshExchangeRates;
+
+  const setUserCurrency = useCallback(async (currency: Currency | string) => {
+    const currencyCode = typeof currency === 'string' ? currency : currency.code;
+    await setCurrency(currencyCode);
+  }, [setCurrency]);
+
+  const getSupportedCurrencies = useCallback((): Currency[] => {
+    return SUPPORTED_CURRENCIES;
+  }, []);
+
+  const convert = useCallback((
+    amount: number,
+    fromCode: string,
+    toCode: string,
+    options?: ConversionOptions
+  ) => {
+    const {
+      decimals = 2,
+      showSymbol = false,
+      showCode = false,
+      locale = 'en-US'
+    } = options || {};
+
+    if (fromCode === toCode) {
+      return {
+        amount,
+        rate: 1,
+        timestamp: new Date(),
+        formattedAmount: amount.toString()
+      };
+    }
+
+    const rate = exchangeRates.get(`${fromCode}_${toCode}`) || 1;
+    const convertedAmount = parseFloat((amount * rate).toFixed(decimals));
+
+    const targetCurrency = getCurrencyByCode(toCode);
+    let formattedAmount = convertedAmount.toString();
+
+    if (targetCurrency) {
+      const formattedNumber = new Intl.NumberFormat(locale, {
+        style: 'decimal',
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }).format(convertedAmount);
+
+      formattedAmount = formattedNumber;
+
+      if (showSymbol) {
+        if ((targetCurrency as any).isCrypto) {
+          formattedAmount = `${formattedAmount} ${targetCurrency.symbol}`;
+        } else {
+          formattedAmount = `${targetCurrency.symbol}${formattedAmount}`;
+        }
+      }
+
+      if (showCode) {
+        formattedAmount = `${formattedAmount} ${targetCurrency.code}`;
+      }
+    }
+
+    return {
+      amount: convertedAmount,
+      rate,
+      timestamp: new Date(),
+      formattedAmount
+    };
+  }, [exchangeRates]);
+
   const value = useMemo<CurrencyContextType>(
     () => ({
       selectedCurrency,
