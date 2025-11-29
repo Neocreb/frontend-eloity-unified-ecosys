@@ -1114,14 +1114,24 @@ class AIPersonalAssistantService {
       if (contentError) throw contentError;
 
       // Fetch trading activity data
-      const { data: tradingData, error: tradingError } = await supabase
+      let tradingData = [];
+      const { data: tradingQueryData, error: tradingError } = await supabase
         .from('user_trades')
         .select('*')
         .eq('user_id', userId)
         .order('timestamp', { ascending: false })
         .limit(20);
 
-      if (tradingError) throw tradingError;
+      // Handle missing table gracefully
+      if (tradingError) {
+        if (!tradingError.message.includes('does not exist')) {
+          throw tradingError;
+        }
+        // Table doesn't exist, just use empty data
+        tradingData = [];
+      } else {
+        tradingData = tradingQueryData || [];
+      }
 
       // Fetch platform engagement data
       const { data: engagementData, error: engagementError } = await supabase
