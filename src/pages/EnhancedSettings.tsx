@@ -182,6 +182,38 @@ const EnhancedSettings = () => {
     user?.profile?.freelance_profile?.availability || "available",
   );
 
+  // Load profile settings from database on mount
+  useEffect(() => {
+    const loadProfileSettings = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('font_size, ui_language, auto_play_videos, reduced_motion, high_contrast')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading profile settings:', error);
+          return;
+        }
+
+        if (data) {
+          if (data.font_size) setFontSize(data.font_size);
+          if (data.ui_language) setLanguage(data.ui_language);
+          if (typeof data.auto_play_videos === 'boolean') setAutoPlayVideos(data.auto_play_videos);
+          if (typeof data.reduced_motion === 'boolean') setReducedMotion(data.reduced_motion);
+          if (typeof data.high_contrast === 'boolean') setHighContrast(data.high_contrast);
+        }
+      } catch (error) {
+        console.error('Failed to load profile settings:', error);
+      }
+    };
+
+    loadProfileSettings();
+  }, [user]);
+
   // If opened with a hash (e.g. #accessibility), scroll that section into view for better UX
   useEffect(() => {
     try {
