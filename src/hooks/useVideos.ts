@@ -90,8 +90,7 @@ export const useVideos = () => {
 
       setVideos(transformedVideos);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-      console.error('Error fetching videos:', errorMessage);
+      console.error('Error fetching videos:', getErrorMessage(error));
     } finally {
       setLoading(false);
     }
