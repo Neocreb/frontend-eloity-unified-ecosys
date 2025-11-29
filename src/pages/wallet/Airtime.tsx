@@ -310,12 +310,12 @@ const Airtime = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Amount</span>
-                    <span className="font-semibold">₦{selectedAmount?.toLocaleString()}</span>
+                    <span className="font-semibold">{formatCurrency(selectedAmount || 0)}</span>
                   </div>
 
                   <div className="border-t pt-4 flex justify-between items-center">
                     <span className="font-semibold text-gray-900">Total to Pay</span>
-                    <span className="text-xl font-bold text-blue-600">₦{commissionData?.final_amount.toLocaleString()}</span>
+                    <span className="text-xl font-bold text-blue-600">{formatCurrency(commissionData?.final_amount || 0)}</span>
                   </div>
                 </CardContent>
               </Card>
