@@ -515,6 +515,11 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
                 <span>Edit Post</span>
               </DropdownMenuItem>
 
+              <DropdownMenuItem onClick={handleViewEditHistory}>
+                <Clock className="h-4 w-4 mr-2" />
+                <span>View Edit History</span>
+              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
                 <Trash2 className="h-4 w-4 mr-2 text-red-500" />
                 <span className="text-red-500">Delete Post</span>
@@ -527,9 +532,17 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
                 <span>Add to Favorites</span>
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={handleSnooze}>
-                <Bell className="h-4 w-4 mr-2" />
-                <span>Snooze {postAuthorName}</span>
+              <DropdownMenuItem onClick={() => {
+                // Copy post link to clipboard
+                navigator.clipboard.writeText(`${window.location.origin}/app/post/${postId}`);
+                toast({
+                  title: "Link Copied",
+                  description: "Post link copied to clipboard.",
+                });
+                setOpen(false);
+              }}>
+                <Share2 className="h-4 w-4 mr-2" />
+                <span>Copy Link</span>
               </DropdownMenuItem>
             </>
           ) : (
