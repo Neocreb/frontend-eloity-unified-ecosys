@@ -538,19 +538,73 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       // Load group chats
       if (user?.id) {
         try {
-          // Load all public groups, not just user groups
+          // First, get the group IDs the user is a member of
+          const { data: membershipData, error: membershipError } = await supabase
+            .from('group_participants')
+            .select('group_id')
+            .eq('user_id', user.id);
+
+          if (!membershipError && membershipData && membershipData.length > 0) {
+            const groupIds = membershipData.map((m: any) => m.group_id);
+
+            // Load user's group chat threads
+            const { data: userGroups, error: userGroupsError } = await supabase
+              .from('group_chat_threads')
+              .select('*')
+              .in('id', groupIds);
+
+            console.log("User groups query result:", { userGroups, userGroupsError });
+
+            if (!userGroupsError && userGroups) {
+              console.log("Found user groups:", userGroups);
+
+              // Convert user groups to unified chat threads
+              const unifiedUserGroups: UnifiedChatThread[] = userGroups.map((group: any) => ({
+                id: group.id,
+                type: "social" as UnifiedChatType,
+                referenceId: null,
+                participants: [],
+                lastMessage: group.description || "Welcome to the group!",
+                lastMessageAt: group.last_activity || new Date().toISOString(),
+                updatedAt: group.updated_at || new Date().toISOString(),
+                isGroup: true,
+                groupName: group.name,
+                groupAvatar: group.avatar,
+                createdAt: group.created_at || new Date().toISOString(),
+                unreadCount: 0,
+                contextData: {},
+              }));
+
+              console.log("Unified user groups:", unifiedUserGroups);
+
+              // Merge user groups with regular threads, avoiding duplicates
+              unifiedUserGroups.forEach(userGroup => {
+                if (!unifiedThreads.some(thread => thread.id === userGroup.id)) {
+                  unifiedThreads.push(userGroup);
+                }
+              });
+
+              console.log("Unified threads after adding user groups:", unifiedThreads);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading user groups:", error);
+        }
+
+        try {
+          // Load all public groups not already loaded
           const { data: publicGroups, error: publicGroupsError } = await supabase
             .from('group_chat_threads')
             .select('*')
             .eq('privacy', 'public');
-            
+
           console.log("Public groups query result:", { publicGroups, publicGroupsError });
-            
+
           if (publicGroupsError) {
             console.error("Error loading public groups:", publicGroupsError);
           } else if (publicGroups) {
             console.log("Found public groups:", publicGroups);
-            
+
             // Convert public groups to unified chat threads
             const unifiedPublicGroups: UnifiedChatThread[] = publicGroups.map((group: any) => ({
               id: group.id,
@@ -567,16 +621,16 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
               unreadCount: 0,
               contextData: {},
             }));
-            
+
             console.log("Unified public groups:", unifiedPublicGroups);
-            
+
             // Merge public groups with regular threads, avoiding duplicates
             unifiedPublicGroups.forEach(publicGroup => {
               if (!unifiedThreads.some(thread => thread.id === publicGroup.id)) {
                 unifiedThreads.push(publicGroup);
               }
             });
-            
+
             console.log("Unified threads after adding public groups:", unifiedThreads);
           }
         } catch (error) {

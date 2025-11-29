@@ -138,26 +138,26 @@ export const SuggestedUsers: React.FC<SuggestedUsersProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
       {suggestedUsers.map((user) => (
-        <Card key={user.id} className="p-4 text-center">
+        <Card key={user.id} className="p-3 sm:p-4 text-center hover:shadow-md transition-shadow">
           <div className="relative inline-block mb-2">
-            <Avatar className="h-16 w-16 mx-auto">
+            <Avatar className="h-14 sm:h-16 w-14 sm:w-16 mx-auto">
               <AvatarImage src={user.avatar_url || ''} alt={user.username} />
               <AvatarFallback>
-                <User className="h-8 w-8" />
+                <User className="h-6 w-6 sm:h-8 sm:w-8" />
               </AvatarFallback>
             </Avatar>
           </div>
-          <h3 className="font-medium text-sm truncate">{user.display_name || user.username}</h3>
+          <h3 className="font-medium text-xs sm:text-sm truncate">{user.display_name || user.username}</h3>
           <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-1">
             <Users className="h-3 w-3" />
-            <span>{user.followers_count || 0} followers</span>
+            <span className="text-xs">{user.followers_count || 0}</span>
           </div>
           {showGiftButton && (
-            <Button 
-              size="sm" 
-              className="w-full mt-3" 
+            <Button
+              size="sm"
+              className="w-full mt-3 text-xs"
               onClick={() => handleSendGift(user.id)}
             >
               Send Gift

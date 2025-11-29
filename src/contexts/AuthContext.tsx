@@ -546,15 +546,57 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           throw new Error("No user logged in");
         }
 
-        const { error } = await supabase.auth.updateUser({
+        // First update user metadata in Supabase Auth
+        const { error: authError } = await supabase.auth.updateUser({
           data: {
             ...user.user_metadata,
             ...data,
           },
         });
 
-        if (error) {
-          throw error;
+        if (authError) {
+          throw authError;
+        }
+
+        // Also update the profiles table in the database for proper persistence
+        // Map the settings to the correct column names for the profiles table
+        const profileData: Record<string, any> = {};
+
+        // Map appearance settings
+        if (data.settings?.font_size) profileData.font_size = data.settings.font_size;
+        if (data.settings?.language) profileData.ui_language = data.settings.language;
+        if (typeof data.settings?.auto_play_videos === 'boolean') {
+          profileData.auto_play_videos = data.settings.auto_play_videos;
+        }
+        if (typeof data.settings?.reduced_motion === 'boolean') {
+          profileData.reduced_motion = data.settings.reduced_motion;
+        }
+        if (typeof data.settings?.high_contrast === 'boolean') {
+          profileData.high_contrast = data.settings.high_contrast;
+        }
+
+        // Map basic profile fields
+        if (data.full_name) profileData.full_name = data.full_name;
+        if (data.bio) profileData.bio = data.bio;
+        if (data.location) profileData.location = data.location;
+        if (data.website) profileData.website = data.website;
+        if (data.phone) profileData.phone = data.phone;
+        if (data.date_of_birth) profileData.date_of_birth = data.date_of_birth;
+        if (data.timezone) profileData.timezone = data.timezone;
+        if (data.preferred_currency) profileData.preferred_currency = data.preferred_currency;
+
+        // Update profiles table if there's data to update
+        if (Object.keys(profileData).length > 0) {
+          const { error: dbError } = await supabase
+            .from('profiles')
+            .update(profileData)
+            .eq('user_id', user.id);
+
+          if (dbError) {
+            console.error('Database profile update error:', dbError);
+            // Don't throw here as auth update succeeded; log warning instead
+            console.warn('Settings may not persist to database after refresh');
+          }
         }
 
         // Update local user state with proper typing

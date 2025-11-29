@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface GiftCardProduct {
   id: number;
@@ -22,16 +23,27 @@ interface GiftCardProduct {
   fixedAmounts: number[];
 }
 
+interface CommissionData {
+  original_amount: number;
+  commission_value: number;
+  commission_type: string;
+  commission_rate: number;
+  final_amount: number;
+  reloadly_amount: number;
+}
+
 const GiftCards = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { walletBalance } = useWalletContext();
+  const { selectedCurrency, formatCurrency } = useCurrency();
   const [step, setStep] = useState<"products" | "select" | "review" | "success">("products");
   const [products, setProducts] = useState<GiftCardProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<GiftCardProduct | null>(null);
   const [amount, setAmount] = useState<number>(0);
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(null);
 
   // Fetch gift card products
   useEffect(() => {
@@ -229,7 +241,34 @@ const GiftCards = () => {
 
         <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 space-y-3">
           <Button
-            onClick={() => setStep("review")}
+            onClick={async () => {
+              try {
+                const token = session?.access_token;
+                const response = await fetch('/api/commission/calculate', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    service_type: 'gift_cards',
+                    amount: amount,
+                    operator_id: selectedProduct?.id
+                  })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                  setCommissionData(result.data);
+                  setStep("review");
+                } else {
+                  toast.error('Failed to calculate price');
+                }
+              } catch (error) {
+                console.error('Error calculating commission:', error);
+                toast.error('Failed to calculate price');
+              }
+            }}
             disabled={!amount || !email || isLoading}
             className="w-full h-12 bg-purple-500 hover:bg-purple-600 text-white font-semibold"
           >
@@ -262,9 +301,9 @@ const GiftCards = () => {
                   <p className="text-sm text-gray-600">Gift Card</p>
                   <div className="flex items-center gap-2 mt-2">
                     {selectedProduct?.logoUrls && selectedProduct.logoUrls.length > 0 ? (
-                      <img 
-                        src={selectedProduct.logoUrls[0]} 
-                        alt={selectedProduct.brandName} 
+                      <img
+                        src={selectedProduct.logoUrls[0]}
+                        alt={selectedProduct.brandName}
                         className="w-10 h-10 object-contain"
                       />
                     ) : (
@@ -280,13 +319,13 @@ const GiftCards = () => {
                 </div>
 
                 <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between mb-2">
+                  <div className="flex justify-between mb-4">
                     <span className="text-gray-600">Amount</span>
-                    <span className="font-bold">${amount}</span>
+                    <span className="font-bold">{formatCurrency(amount)}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Total</span>
-                    <span className="text-2xl font-bold text-purple-600">${amount}</span>
+                    <span className="font-semibold">Total to Pay</span>
+                    <span className="text-2xl font-bold text-purple-600">{formatCurrency(commissionData?.final_amount || amount)}</span>
                   </div>
                 </div>
 
@@ -314,7 +353,7 @@ const GiftCards = () => {
                 Processing...
               </>
             ) : (
-              `Purchase $${amount} Gift Card`
+              `Purchase $${(commissionData?.final_amount || amount).toFixed(2)} Gift Card`
             )}
           </Button>
           <Button

@@ -87,11 +87,14 @@ import ledgerRouter from './routes/ledger.js';
 import cryptoUserRouter from './routes/crypto_user.js';
 import enhancedRewardsRouter from './routes/enhancedRewards.js'; // Add this line
 import reloadlyRouter from './routes/reloadly.js';
+import commissionRouter from './routes/commission.js';
 import cryptoapisRouter from './routes/cryptoapis.js';
 import tierAccessRouter from './routes/tierAccess.js';
 import subscriptionsRouter from './routes/subscriptions.js';
 import referralBonusRouter from './routes/referralBonus.js';
 import creatorFundBoostRouter from './routes/creatorFundBoost.js';
+import currencyRouter from './routes/currency.js';
+import { initializeCurrencyService } from './services/currencyService.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
@@ -524,11 +527,13 @@ app.use('/api/wallet', walletRouter);
 app.use('/api/ledger', ledgerRouter);
 app.use('/api/enhanced-rewards', enhancedRewardsRouter); // Add this line
 app.use('/api/reloadly', reloadlyRouter);
+app.use('/api/commission', commissionRouter);
 app.use('/api/cryptoapis', cryptoapisRouter);
 app.use('/api/tier', tierAccessRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/referral', referralBonusRouter);
 app.use('/api/creator-boost', creatorFundBoostRouter);
+app.use('/api/currency', currencyRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 
@@ -880,6 +885,17 @@ if (process.env.NODE_ENV === 'production') {
       }
     });
   });
+}
+
+// =============================================================================
+// INITIALIZE SERVICES
+// =============================================================================
+
+try {
+  await initializeCurrencyService();
+  console.log('✅ Currency service initialized with daily rate updates');
+} catch (e) {
+  console.error('❌ Failed to initialize currency service:', e);
 }
 
 // =============================================================================

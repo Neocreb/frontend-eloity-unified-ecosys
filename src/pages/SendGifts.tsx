@@ -166,19 +166,20 @@ const SendGifts = () => {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           {/* Header */}
           <div className="mb-6 sm:mb-8">
-            <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               <Button
                 variant="ghost"
                 size="sm"
+                className="w-fit"
                 onClick={() => navigate(-1)}
               >
                 ← Back
               </Button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <div className="flex-1">
+                <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
                   <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
                   Send Gifts & Tips
                 </h1>
@@ -244,7 +245,7 @@ const SendGifts = () => {
 
           {/* Tab Navigation */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 dark:border-gray-800 scrollbar-hide">
+            <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-800 scrollbar-hide">
               <TabsList className="inline-flex h-auto p-0 bg-transparent gap-0 border-none w-min rounded-none">
                 <TabsTrigger value="quick-send" className="px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base">
                   Quick Send

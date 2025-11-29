@@ -25,12 +25,14 @@ interface EditProfileModalProps {
     company: string;
     education: string;
   };
+  onBannerChange?: (file: File) => void;
 }
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   isOpen,
   onClose,
-  profile
+  profile,
+  onBannerChange
 }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
@@ -44,6 +46,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>(profile.avatar);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string>(profile.banner);
   const [saving, setSaving] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
@@ -60,6 +64,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       const reader = new FileReader();
       reader.onload = () => setAvatarPreview(reader.result as string);
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBannerSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setBannerFile(file);
+      const reader = new FileReader();
+      reader.onload = () => setBannerPreview(reader.result as string);
+      reader.readAsDataURL(file);
+      onBannerChange?.(file);
     }
   };
 
@@ -81,12 +96,27 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         avatar_url = data.publicUrl;
       }
 
+      let banner_url: string | null = null;
+      if (bannerFile) {
+        const bucket = 'avatars';
+        const path = `${user.id}/banner-${Date.now()}-${bannerFile.name}`;
+        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, bannerFile, {
+          upsert: false,
+          cacheControl: '3600',
+          contentType: bannerFile.type,
+        });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        banner_url = data.publicUrl;
+      }
+
       const updates: any = {
         full_name: formData.displayName,
         username: formData.username,
         bio: formData.bio,
       };
       if (avatar_url) updates.avatar_url = avatar_url;
+      if (banner_url) updates.banner_url = banner_url;
 
       const { error } = await supabase
         .from('profiles')
@@ -110,6 +140,33 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Banner Section */}
+          <div className="space-y-2">
+            <Label>Cover Photo</Label>
+            <div className="relative h-40 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg overflow-hidden">
+              {bannerPreview && (
+                <img
+                  src={bannerPreview}
+                  alt="Banner preview"
+                  className="w-full h-full object-cover"
+                />
+              )}
+              <input type="file" accept="image/*" className="hidden" id="banner-input" onChange={handleBannerSelect} />
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute bottom-2 right-2"
+                onClick={() => document.getElementById('banner-input')?.click()}
+              >
+                <Camera className="h-4 w-4" />
+                <span className="sr-only">Change banner</span>
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Click the camera icon to change your cover photo
+            </p>
+          </div>
+
           {/* Profile Picture Section */}
           <div className="flex items-center gap-4">
             <div className="relative">

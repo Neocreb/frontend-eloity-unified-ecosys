@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-// import { useI18n } from "@/contexts/I18nContext"; // Temporarily disabled
+import { useI18n } from "@/contexts/I18nContext";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   Card,
@@ -133,6 +133,7 @@ const EnhancedSettings = () => {
   const { user, updateProfile, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { currentLanguage, currentCurrency, currentRegion, setLanguage, setCurrency, setRegion, supportedLanguages, supportedCurrencies, regions } = useI18n();
 
   // Profile states
   const [skills, setSkills] = useState<string[]>(user?.profile?.skills || []);
@@ -181,6 +182,38 @@ const EnhancedSettings = () => {
   const [availability, setAvailability] = useState(
     user?.profile?.freelance_profile?.availability || "available",
   );
+
+  // Load profile settings from database on mount
+  useEffect(() => {
+    const loadProfileSettings = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('font_size, ui_language, auto_play_videos, reduced_motion, high_contrast')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading profile settings:', error);
+          return;
+        }
+
+        if (data) {
+          if (data.font_size) setFontSize(data.font_size);
+          if (data.ui_language) setLanguage(data.ui_language);
+          if (typeof data.auto_play_videos === 'boolean') setAutoPlayVideos(data.auto_play_videos);
+          if (typeof data.reduced_motion === 'boolean') setReducedMotion(data.reduced_motion);
+          if (typeof data.high_contrast === 'boolean') setHighContrast(data.high_contrast);
+        }
+      } catch (error) {
+        console.error('Failed to load profile settings:', error);
+      }
+    };
+
+    loadProfileSettings();
+  }, [user]);
 
   // If opened with a hash (e.g. #accessibility), scroll that section into view for better UX
   useEffect(() => {
@@ -330,7 +363,11 @@ const EnhancedSettings = () => {
   const [fontSize, setFontSize] = useState(
     user?.settings?.font_size || "medium",
   );
-  const [language, setLanguage] = useState(user?.settings?.language || "en");
+  const [appearanceLanguage, setAppearanceLanguage] = useState(user?.settings?.language || "en");
+
+  // Regional and internationalization settings
+  const [selectedRegion, setSelectedRegion] = useState(currentRegion?.code || "US");
+  const [selectedCurrency, setSelectedCurrency] = useState(currentCurrency?.code || "USD");
 
   // Data & Storage
   const [dataUsage, setDataUsage] = useState("unlimited");
@@ -628,21 +665,52 @@ const EnhancedSettings = () => {
   const saveAppearanceSettings = async () => {
     setIsLoading(true);
     try {
+      // Update all appearance settings in the database
       await updateProfile({
         settings: {
           auto_play_videos: autoPlayVideos,
           reduced_motion: reducedMotion,
           high_contrast: highContrast,
           font_size: fontSize,
-          language: language,
+          language: appearanceLanguage,
         },
       });
 
-      toast({
-        title: "Appearance settings updated",
-        description: "Your appearance preferences have been saved successfully.",
-      });
+      // Also update the profiles table directly to ensure persistence
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            font_size: fontSize,
+            ui_language: appearanceLanguage,
+            auto_play_videos: autoPlayVideos,
+            reduced_motion: reducedMotion,
+            high_contrast: highContrast,
+          })
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error saving appearance settings to profiles:', error);
+          toast({
+            title: "Warning",
+            description: "Settings saved locally but database update failed. Changes may not persist after refresh.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Appearance settings updated",
+            description: "Your appearance preferences have been saved successfully.",
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "User not authenticated. Please log in again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
+      console.error('Error updating appearance settings:', error);
       toast({
         title: "Error",
         description: "Failed to update appearance settings. Please try again.",
@@ -1382,7 +1450,7 @@ const EnhancedSettings = () => {
                     <p className="text-sm text-muted-foreground mb-3">
                       Select your preferred language
                     </p>
-                    <Select value={language} onValueChange={setLanguage}>
+                    <Select value={appearanceLanguage} onValueChange={setAppearanceLanguage}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -1989,9 +2057,9 @@ const EnhancedSettings = () => {
             {/* Enhanced Premium Features Promotion */}
             <Card className="mb-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-200">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 rounded-xl">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
+                  <div className="flex items-start md:items-center gap-4">
+                    <div className="p-3 bg-blue-100 rounded-xl flex-shrink-0">
                       <Star className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
@@ -2002,7 +2070,7 @@ const EnhancedSettings = () => {
                         Get the blue checkmark, unlock premium features, and
                         show everyone you're authentic and trusted
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-blue-600">
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-blue-600">
                         <span>✓ Verified badge</span>
                         <span>✓ Priority support</span>
                         <span>✓ Advanced tools</span>
@@ -2011,7 +2079,7 @@ const EnhancedSettings = () => {
                   </div>
                   <Button
                     onClick={() => window.open("/app/premium", "_blank")}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 w-full md:w-auto flex-shrink-0"
                   >
                     <Crown className="w-4 h-4 mr-2" />
                     Upgrade to Premium
@@ -2023,9 +2091,9 @@ const EnhancedSettings = () => {
             {/* Enhanced KYC Verification Promotion */}
             <Card className="mb-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-200">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-100 rounded-xl">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
+                  <div className="flex items-start md:items-center gap-4">
+                    <div className="p-3 bg-green-100 rounded-xl flex-shrink-0">
                       <ShieldCheck className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
@@ -2036,7 +2104,7 @@ const EnhancedSettings = () => {
                         Verify your identity to unlock higher trading limits,
                         enhanced security, and access to premium features
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-green-600">
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-green-600">
                         <span>✓ Higher trading limits</span>
                         <span>✓ Enhanced security</span>
                         <span>✓ Faster withdrawals</span>
@@ -2046,7 +2114,7 @@ const EnhancedSettings = () => {
                   <Button
                     onClick={() => navigate('/app/kyc')}
                     variant="outline"
-                    className="border-green-600 text-green-600 hover:bg-green-50 px-6 py-3"
+                    className="border-green-600 text-green-600 hover:bg-green-50 px-6 py-3 w-full md:w-auto flex-shrink-0"
                   >
                     <Shield className="w-4 h-4 mr-2" />
                     Start Verification
@@ -2165,9 +2233,9 @@ const EnhancedSettings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
@@ -2181,7 +2249,7 @@ const EnhancedSettings = () => {
                   </div>
                   <Button
                     variant="outline"
-                    className="border-green-600 text-green-600 hover:bg-green-50"
+                    className="border-green-600 text-green-600 hover:bg-green-50 w-full sm:w-auto flex-shrink-0"
                     onClick={() => window.open("/app/kyc", "_blank")}
                   >
                     Start Verification
@@ -2965,7 +3033,7 @@ const EnhancedSettings = () => {
             </div>
           </TabsContent>
 
-          {/* Internationalization Tab - Temporarily disabled */}
+          {/* Internationalization Tab */}
           <TabsContent value="i18n" className="space-y-6">
             <Card>
               <CardHeader>
@@ -2973,36 +3041,99 @@ const EnhancedSettings = () => {
                   <Languages className="w-5 h-5" />
                   Language & Regional Settings
                 </CardTitle>
+                <CardDescription>
+                  Customize your language, region, and currency preferences
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    Language settings temporarily unavailable. Please check back
-                    later.
-                  </p>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label>Language</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select your preferred language for the interface
+                    </p>
+                    <Select value={currentLanguage?.code || "en"} onValueChange={(value) => {
+                      setLanguage(value);
+                      setAppearanceLanguage(value);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supportedLanguages.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                            {lang.flag} {lang.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <Label>Region</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select your geographic region
+                    </p>
+                    <Select value={selectedRegion} onValueChange={(value) => {
+                      setSelectedRegion(value);
+                      setRegion(value);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((region) => (
+                          <SelectItem key={region.code} value={region.code}>
+                            {region.flag} {region.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <Label>Currency</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select your preferred currency for prices and transactions
+                    </p>
+                    <Select value={selectedCurrency} onValueChange={(value) => {
+                      setSelectedCurrency(value);
+                      setCurrency(value);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supportedCurrencies.map((currency) => (
+                          <SelectItem key={currency.code} value={currency.code}>
+                            {currency.symbol} {currency.name} ({currency.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                    <div className="flex items-start gap-2">
+                      <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">Localization Preview</p>
+                        <p>Your preferences affect how prices, dates, and content are displayed throughout the app.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                {/* <I18nSettingsModal
-                  trigger={
-                    <Button variant="outline" className="w-full">
-                      <Globe2 className="w-4 h-4 mr-2" />
-                      Configure Language & Region
-                    </Button>
-                  }
-                /> */}
+
+                <Button onClick={saveAppearanceSettings} disabled={isLoading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Regional Preferences
+                </Button>
               </CardContent>
             </Card>
-
-            {/* <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Regional Payment Methods
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RegionalPaymentMethods />
-              </CardContent>
-            </Card> */}
           </TabsContent>
         </Tabs>
 
