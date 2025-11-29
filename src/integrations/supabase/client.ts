@@ -35,9 +35,6 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
-      global: {
-        fetch: debugFetch,
-      },
     }
   );
 }
