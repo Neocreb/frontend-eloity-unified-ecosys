@@ -672,7 +672,7 @@ const EnhancedSettings = () => {
           reduced_motion: reducedMotion,
           high_contrast: highContrast,
           font_size: fontSize,
-          language: language,
+          language: appearanceLanguage,
         },
       });
 
@@ -682,7 +682,7 @@ const EnhancedSettings = () => {
           .from('profiles')
           .update({
             font_size: fontSize,
-            ui_language: language,
+            ui_language: appearanceLanguage,
             auto_play_videos: autoPlayVideos,
             reduced_motion: reducedMotion,
             high_contrast: highContrast,
@@ -1346,7 +1346,7 @@ const EnhancedSettings = () => {
                         className="flex items-center gap-1"
                       >
                         <Languages className="w-3 h-3" />
-                        {language}
+                        {lang}
                         {languages.length > 1 && (
                           <button onClick={() => removeLanguage(language)}>
                             <X className="w-3 h-3" />
@@ -1450,7 +1450,7 @@ const EnhancedSettings = () => {
                     <p className="text-sm text-muted-foreground mb-3">
                       Select your preferred language
                     </p>
-                    <Select value={language} onValueChange={setLanguage}>
+                    <Select value={appearanceLanguage} onValueChange={setAppearanceLanguage}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
