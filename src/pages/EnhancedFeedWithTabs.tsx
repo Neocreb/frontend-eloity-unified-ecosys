@@ -41,6 +41,172 @@ const EnhancedStoriesSection: React.FC<EnhancedStoriesSectionProps> = ({
 
   const fetchStories = async () => {
     try {
+      const current = !!following[id];
+      setFollowing((prev) => ({ ...prev, [id]: !current }));
+      const { toggleFollow } = await import("@/services/profileService");
+      if (user?.id && id) {
+        await toggleFollow(user.id, id, current);
+      }
+    } catch (e) {
+      console.warn("Follow action failed", e);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Suggested Users */}
+      <Card>
+        <CardContent className="p-4">
+          <h3 className="font-semibold mb-3">People You May Know</h3>
+          <div className="space-y-3">
+            {(suggestedUsers || []).map((u: any) => {
+              const name = u.name || u.profile?.full_name || u.username;
+              const id = u.id || u.profile?.id || (u.username || u.profile?.username || "user");
+              const username = u.username || u.profile?.username || "user";
+              const avatar = u.avatar || u.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+              const verified = Boolean(u.verified || u.profile?.is_verified);
+              const mutualConnections = u.mutualFriends ?? Math.floor((u.followers || u.profile?.followers_count || 0) % 16);
+              const isFollowing = !!following[id];
+              return (
+                <div key={id} className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={avatar} />
+                    <AvatarFallback>{String(name || "U").charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <p className="font-medium text-sm truncate">{name}</p>
+                      {verified && (
+                        <Badge variant="secondary" className="h-3 w-3 p-0 rounded-full bg-blue-500">
+                          <span className="text-white text-xs">✓</span>
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{mutualConnections} mutual connections</p>
+                  </div>
+                  <Button size="sm" variant={isFollowing ? "secondary" : "outline"} className="text-xs px-2 py-1 h-auto" onClick={() => toggleFollowUser(id)}>
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Live Streams */}
+      <Card>
+        <CardContent className="p-4">
+          <h3 className="font-semibold mb-3">Live Now</h3>
+          <div className="space-y-3">
+            {(liveStreams || []).map((content: any) => (
+              <div key={content.id} className="relative cursor-pointer group">
+                <div className="relative">
+                  <img
+                    src={content.user.avatar}
+                    alt={content.title}
+                    className="w-full h-24 object-cover rounded-lg"
+                  />
+                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge variant="destructive" className="absolute top-2 right-2 text-xs animate-pulse">LIVE</Badge>
+                  <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-white text-xs flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    {content.viewerCount}
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <p className="font-medium text-sm truncate">{content.title}</p>
+                  <p className="text-xs text-gray-500">{content.user.displayName}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Main enhanced feed component
+const EnhancedFeedWithTabs = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("for-you");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
+  const [showStoryViewer, setShowStoryViewer] = useState(false);
+  const [showCreatePostFlow, setShowCreatePostFlow] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [userStories, setUserStories] = useState<any[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    params.set("tab", activeTab);
+    navigate({ pathname: "/app/feed", search: params.toString() }, { replace: true });
+  }, [activeTab]);
+
+  const baseTabs = [
+    {
+      value: "for-you",
+      label: "All",
+      icon: TrendingUp,
+      description: "Personalized content based on your interests",
+    },
+    {
+      value: "following",
+      label: "Friends",
+      icon: Users,
+      description: "Posts from people you follow",
+    },
+    {
+      value: "groups",
+      label: "Groups",
+      icon: Users,
+      description: "Posts from your groups and communities",
+    },
+    {
+      value: "pages",
+      label: "Pages",
+      icon: Building,
+      description: "Content from pages and businesses you follow",
+    },
+    {
+      value: "saved",
+      label: "Saved",
+      icon: Bookmark,
+      description: "Your saved posts and viewing history",
+    },
+  ];
+
+  const tabs = baseTabs;
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Simulate refresh
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast({
+        title: "Feed refreshed",
+        description: "Your feed has been updated with the latest content.",
+      });
+    }, 1000);
+  };
+
+  const handleCreateStory = async (storyData: any) => {
+    try {
+      // Add the new story to the userStories state
+      const newStory = {
+        id: `story-${Date.now()}`,
       setIsLoading(true);
 
       const { data, error } = await supabase

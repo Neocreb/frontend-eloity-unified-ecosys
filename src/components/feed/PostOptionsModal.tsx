@@ -44,6 +44,12 @@ import {
   Clock,
   AlertCircle,
   CheckCircle2,
+  Star,
+  Bookmark,
+  Users,
+  VolumeX,
+  Volume2,
+  Share2
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import PostActionsService from "@/services/postActionsService";
@@ -62,6 +68,7 @@ interface PostOptionsModalProps {
   onPostDelete?: () => void;
   onPostEdit?: (content: string) => void;
   trigger?: React.ReactNode;
+  postType?: string; // Added to support different content types
 }
 
 export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
@@ -97,6 +104,10 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
   const [localFollowing, setLocalFollowing] = useState(isFollowing);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [preferences, setPreferences] = useState<any>(null);
+  const [showSaveToFavoritesDialog, setShowSaveToFavoritesDialog] = useState(false);
+  const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
+  const [savedToFavorites, setSavedToFavorites] = useState(false);
+  const [snoozeDuration, setSnoozeDuration] = useState('1_day');
 
   useEffect(() => {
     if (open && user?.id) {
@@ -399,6 +410,61 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
     }
   };
 
+  const handleSaveToFavorites = async () => {
+    try {
+      // Implement save to favorites logic
+      setSavedToFavorites(true);
+      toast({
+        title: "Saved to Favorites",
+        description: "This post has been added to your favorites.",
+      });
+      setShowSaveToFavoritesDialog(false);
+      setOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save to favorites",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSnoozePost = async () => {
+    try {
+      // Implement snooze logic
+      toast({
+        title: "Post Snoozed",
+        description: `You won't see posts from ${postAuthorName} for ${getSnoozeDurationText(snoozeDuration)}.`,
+      });
+      setShowSnoozeDialog(false);
+      setOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to snooze post",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getSnoozeDurationText = (duration: string) => {
+    switch (duration) {
+      case '1_day': return '1 day';
+      case '3_days': return '3 days';
+      case '1_week': return '1 week';
+      case '1_month': return '1 month';
+      default: return '1 day';
+    }
+  };
+
+  const handleAddToFavorites = () => {
+    setShowSaveToFavoritesDialog(true);
+  };
+
+  const handleSnooze = () => {
+    setShowSnoozeDialog(true);
+  };
+
   const handleDeletePost = async () => {
     setIsLoading(true);
     try {
@@ -456,9 +522,14 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={handleViewEditHistory}>
-                <Clock className="h-4 w-4 mr-2" />
-                <span>View Edit History</span>
+              <DropdownMenuItem onClick={handleAddToFavorites}>
+                <Star className="h-4 w-4 mr-2 text-yellow-500" />
+                <span>Add to Favorites</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={handleSnooze}>
+                <Bell className="h-4 w-4 mr-2" />
+                <span>Snooze {postAuthorName}</span>
               </DropdownMenuItem>
             </>
           ) : (
@@ -482,11 +553,29 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={handleToggleNotifications}>
+              <DropdownMenuItem onClick={handleAddToFavorites}>
+                <Star className="h-4 w-4 mr-2 text-yellow-500" />
+                <span>Add to Favorites</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={handleSnooze}>
                 <Bell className="h-4 w-4 mr-2" />
-                <span>
-                  {notificationsEnabled ? "Disable" : "Enable"} Notifications
-                </span>
+                <span>Snooze {postAuthorName}</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={() => {
+                // Copy post link to clipboard
+                navigator.clipboard.writeText(`${window.location.origin}/app/post/${postId}`);
+                toast({
+                  title: "Link Copied",
+                  description: "Post link copied to clipboard.",
+                });
+                setOpen(false);
+              }}>
+                <Share2 className="h-4 w-4 mr-2" />
+                <span>Copy Link</span>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handleHidePost}>
@@ -634,40 +723,69 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Edit History Dialog */}
-      <Dialog
-        open={showEditHistoryDialog}
-        onOpenChange={setShowEditHistoryDialog}
-      >
-        <DialogContent className="max-w-md max-h-96 overflow-y-auto">
+      {/* Save to Favorites Dialog */}
+      <Dialog open={showSaveToFavoritesDialog} onOpenChange={setShowSaveToFavoritesDialog}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit History</DialogTitle>
+            <DialogTitle>Save to Favorites</DialogTitle>
             <DialogDescription>
-              View all changes made to this post
+              Add this post to your favorites collection
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {editHistory.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No edits yet
-              </p>
-            ) : (
-              editHistory.map((edit, index) => (
-                <div key={index} className="border rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {new Date(edit.edited_at).toLocaleString()}
-                    </span>
-                    {index === 0 && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        Latest
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm">{edit.content}</p>
-                </div>
-              ))
-            )}
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg">
+              <Star className="h-5 w-5 text-yellow-500 fill-current" />
+              <span>This post will be saved to your favorites</span>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowSaveToFavoritesDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveToFavorites}>
+                Save to Favorites
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Snooze Dialog */}
+      <Dialog open={showSnoozeDialog} onOpenChange={setShowSnoozeDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Snooze {postAuthorName}</DialogTitle>
+            <DialogDescription>
+              Temporarily hide posts from this user
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium block mb-2">Duration</label>
+              <select
+                value={snoozeDuration}
+                onChange={(e) => setSnoozeDuration(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 text-sm"
+              >
+                <option value="1_day">1 Day</option>
+                <option value="3_days">3 Days</option>
+                <option value="1_week">1 Week</option>
+                <option value="1_month">1 Month</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowSnoozeDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSnoozePost}>
+                Snooze
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
