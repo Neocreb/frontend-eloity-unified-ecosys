@@ -323,7 +323,6 @@ const Feed = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
   const [showStoryViewer, setShowStoryViewer] = useState(false);
-  const [showCreatePostFlow, setShowCreatePostFlow] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
   const [feedWithAds, setFeedWithAds] = useState<(Post | { id: string; type: 'native_ad' | 'sponsored_post' })[]>([]);
@@ -540,7 +539,7 @@ const Feed = () => {
                     userStories={userStories}
                     onViewStory={handleViewStory}
                   />
-                  <CreatePostTrigger onOpenCreatePost={() => setShowCreatePostFlow(true)} />
+                  <CreatePostTrigger onOpenCreatePost={() => navigate('/app/create-post')} />
                 </>
               )}
 
@@ -568,7 +567,6 @@ const Feed = () => {
                     </ErrorBoundary>
                   ) : (
                     <>
-                      {tab.value === "for-you" && <EnhancedCreatePostCard />}
                       {feedWithAds.length > 0 ? (
                         <>
                           {feedWithAds.map((item) => renderFeedItem(item))}
@@ -608,11 +606,6 @@ const Feed = () => {
         isOpen={showCreateStoryModal}
         onClose={() => setShowCreateStoryModal(false)}
         onSubmit={handleCreateStory}
-      />
-
-      <CreatePostFlow
-        isOpen={showCreatePostFlow}
-        onClose={() => setShowCreatePostFlow(false)}
       />
 
       {showStoryViewer && (
