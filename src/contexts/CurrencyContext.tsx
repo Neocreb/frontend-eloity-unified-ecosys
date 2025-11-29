@@ -193,7 +193,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
     try {
       const response = await fetch('/api/currency/rates');
       if (!response.ok) throw new Error('Failed to fetch exchange rates');
-      
+
       const data = await response.json();
       if (data.success && data.rates) {
         const ratesMap = new Map<string, number>();
@@ -201,6 +201,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
           ratesMap.set(`${rate.from}_${rate.to}`, rate.rate);
         });
         setExchangeRates(ratesMap);
+        setLastUpdated(new Date());
       }
     } catch (err) {
       console.error('Failed to fetch exchange rates:', err);
