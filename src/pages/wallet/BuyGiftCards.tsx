@@ -386,7 +386,7 @@ const BuyGiftCards = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Amount</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {selectedCard?.currencyCode} {parseFloat(amount).toFixed(2)}
+                    {formatCurrency(parseFloat(amount))}
                   </p>
                 </div>
 
@@ -406,7 +406,7 @@ const BuyGiftCards = () => {
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold text-gray-900">Total to Pay</span>
                   <span className="font-bold text-lg text-pink-600">
-                    {selectedCard?.currencyCode} {(commissionData?.final_amount || parseFloat(amount)).toFixed(2)}
+                    {formatCurrency(commissionData?.final_amount || parseFloat(amount))}
                   </span>
                 </div>
               </CardContent>
