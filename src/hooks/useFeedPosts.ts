@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/utils';
 
 export interface FeedPost {
   id: string;

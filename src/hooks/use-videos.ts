@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { videoService, Video } from "@/services/videoService";
 import { ContentItem, VideoItem, AdItem } from "@/types/video";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/utils/utils";
 
 // Ad data - fetch real ads from the database
 const fetchRealAdData = async () => {
