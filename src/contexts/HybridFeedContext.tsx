@@ -313,6 +313,9 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
     toggleBookmark,
     toggleGift,
     incrementShares,
+    createReplyPost,
+    createQuotePost,
+    getPostReplies,
   };
 
   return (
