@@ -326,12 +326,12 @@ const Data = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Amount</span>
-                    <span className="font-semibold">₦{selectedPlan?.price.toLocaleString()}</span>
+                    <span className="font-semibold">{formatCurrency(selectedPlan?.price || 0)}</span>
                   </div>
 
                   <div className="border-t pt-4 flex justify-between items-center">
                     <span className="font-semibold text-gray-900">Total to Pay</span>
-                    <span className="text-xl font-bold text-cyan-600">₦{commissionData?.final_amount.toLocaleString()}</span>
+                    <span className="text-xl font-bold text-cyan-600">{formatCurrency(commissionData?.final_amount || 0)}</span>
                   </div>
                 </CardContent>
               </Card>
