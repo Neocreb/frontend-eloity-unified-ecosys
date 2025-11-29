@@ -38,6 +38,7 @@ const Airtime = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
+  const { selectedCurrency, formatCurrency } = useCurrency();
   const [step, setStep] = useState<"provider" | "amount" | "phone" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
