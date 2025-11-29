@@ -499,7 +499,7 @@ const AppRoutes = () => {
           }
         >
           <Route index element={<Navigate to="feed" replace />} />
-          <Route path="feed" element={<EnhancedFeedWithTabs />} />
+          <Route path="feed" element={<Feed />} />
           {/* <Route path="feed-demo" element={<FeedWithFollowDemo />} */}
           <Route path="create" element={<EnhancedFreelance />} />
           <Route path="freelance" element={<FreelanceJobs />} />
