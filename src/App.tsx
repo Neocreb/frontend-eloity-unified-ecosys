@@ -220,6 +220,7 @@ import StickerCreation from "./pages/chat/StickerCreation";
 import ShareMeme from "./pages/chat/ShareMeme";
 import UserSearch from "./pages/search/UserSearch";
 import DeleteAccount from "./pages/settings/DeleteAccount";
+import CurrencySettings from "./pages/settings/CurrencySettings";
 // Phase 3 - User List Modal Conversions
 import UserFollowers from "./pages/profile/UserFollowers";
 import UserFollowing from "./pages/profile/UserFollowing";
