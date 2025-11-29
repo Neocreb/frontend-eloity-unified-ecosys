@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface GiftCard {
   id: number;
