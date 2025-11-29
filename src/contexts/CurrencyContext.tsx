@@ -37,6 +37,24 @@ export const useCurrency = () => {
   return context;
 };
 
+export const useCurrencyConversion = () => {
+  const context = useContext(CurrencyContext);
+  if (!context) {
+    throw new Error('useCurrencyConversion must be used within a CurrencyProvider');
+  }
+
+  return {
+    convertToUserCurrency: (amount: number, fromCurrency: string) => ({
+      amount: context.convertAmount(amount, fromCurrency, context.selectedCurrency?.code || DEFAULT_CURRENCY),
+      rate: context.getExchangeRate(fromCurrency, context.selectedCurrency?.code || DEFAULT_CURRENCY) || 1,
+    }),
+    userCurrency: context.selectedCurrency,
+    formatAmount: (amount: number, currency?: string, options?: any) => {
+      return context.formatCurrency(amount, currency);
+    },
+  };
+};
+
 interface CurrencyProviderProps {
   children: React.ReactNode;
 }
