@@ -4,6 +4,7 @@ interface Post {
   id: string;
   content: string;
   author: {
+    id?: string;
     name: string;
     username: string;
     avatar: string;
@@ -19,12 +20,17 @@ interface Post {
   gifted?: boolean;
   image?: string;
   location?: string;
-  type: 'post';
+  type: 'post' | 'reply' | 'quote';
   originalPost?: Post;
   media?: any[];
   privacy?: string;
   feeling?: { emoji: string; text: string };
+  parentId?: string;
+  depth?: number;
+  isReply?: boolean;
 }
+
+export type HybridPost = Post;
 
 interface HybridFeedContextType {
   // Post management
