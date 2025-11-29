@@ -170,16 +170,16 @@ const QuickSendTab = ({ onGiftSent }: QuickSendTabProps) => {
               <Gift className="h-4 w-4" />
               Step 2: Choose Gift
             </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
               {popularGifts.map((gift) => (
                 <Button
                   key={gift.id}
                   variant={selectedGift?.id === gift.id ? "default" : "outline"}
-                  className="flex flex-col items-center justify-center h-20 sm:h-24 p-2"
+                  className="flex flex-col items-center justify-center h-20 sm:h-24 p-2 text-center"
                   onClick={() => setSelectedGift(gift)}
                 >
                   <span className="text-lg sm:text-xl mb-1">{gift.emoji}</span>
-                  <span className="text-xs font-medium">{gift.name}</span>
+                  <span className="text-xs font-medium truncate w-full">{gift.name}</span>
                   <span className="text-xs text-muted-foreground">${gift.price}</span>
                 </Button>
               ))}
