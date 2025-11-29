@@ -133,6 +133,7 @@ const EnhancedSettings = () => {
   const { user, updateProfile, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { currentLanguage, currentCurrency, currentRegion, setLanguage, setCurrency, setRegion, supportedLanguages, supportedCurrencies, regions } = useI18n();
 
   // Profile states
   const [skills, setSkills] = useState<string[]>(user?.profile?.skills || []);
