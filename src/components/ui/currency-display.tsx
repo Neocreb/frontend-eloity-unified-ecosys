@@ -55,10 +55,9 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   onClick,
   isEditable = false
 }) => {
-  const { userCurrency, formatAmount } = useCurrency();
-  const { convertToUserCurrency } = useCurrencyConversion();
+  const { userCurrency, formatAmount, convertToUserCurrency } = useCurrencyConversion();
 
-  const displayCurrency = currency || userCurrency.code;
+  const displayCurrency = currency || userCurrency?.code;
   const needsConversion = originalCurrency && originalCurrency !== displayCurrency;
   
   // Convert if needed

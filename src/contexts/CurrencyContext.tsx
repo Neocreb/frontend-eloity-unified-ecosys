@@ -37,6 +37,65 @@ export const useCurrency = () => {
   return context;
 };
 
+interface ConversionOptions {
+  decimals?: number;
+  showSymbol?: boolean;
+  showCode?: boolean;
+  locale?: string;
+}
+
+export const useCurrencyConversion = () => {
+  const context = useContext(CurrencyContext);
+  if (!context) {
+    throw new Error('useCurrencyConversion must be used within a CurrencyProvider');
+  }
+
+  const formatAmountWithOptions = (amount: number, currencyCode?: string, options?: ConversionOptions): string => {
+    const code = currencyCode || context.selectedCurrency?.code || DEFAULT_CURRENCY;
+    const currency = getCurrencyByCode(code);
+
+    if (!currency) return `${amount.toFixed(2)}`;
+
+    const {
+      decimals = currency.decimals,
+      showSymbol = true,
+      showCode = false,
+      locale = 'en-US'
+    } = options || {};
+
+    const formattedNumber = new Intl.NumberFormat(locale, {
+      style: 'decimal',
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(amount);
+
+    let result = formattedNumber;
+
+    if (showSymbol) {
+      if ((currency as any).isCrypto) {
+        result = `${result} ${currency.symbol}`;
+      } else {
+        result = `${currency.symbol}${result}`;
+      }
+    }
+
+    if (showCode) {
+      result = `${result} ${currency.code}`;
+    }
+
+    return result;
+  };
+
+  return {
+    convertToUserCurrency: (amount: number, fromCurrency: string) => ({
+      amount: context.convertAmount(amount, fromCurrency, context.selectedCurrency?.code || DEFAULT_CURRENCY),
+      rate: context.getExchangeRate(fromCurrency, context.selectedCurrency?.code || DEFAULT_CURRENCY) || 1,
+    }),
+    userCurrency: context.selectedCurrency,
+    formatAmount: formatAmountWithOptions,
+  };
+};
+
 interface CurrencyProviderProps {
   children: React.ReactNode;
 }
@@ -150,14 +209,37 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       setSelectedCurrency(currency);
 
       if (user?.id && session) {
-        const { error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from('profiles')
           .update({ preferred_currency: currencyCode })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Currency update failed:', {
+            code: updateError.code,
+            message: updateError.message,
+            details: updateError.details,
+            userId: user.id,
+            currencyCode: currencyCode
+          });
+          throw new Error(`Failed to save currency preference: ${updateError.message}`);
+        }
+
+        if (!data) {
+          console.warn('No data returned from currency update. RLS policy may be blocking update.');
+          throw new Error('Currency update was rejected by server (RLS policy issue)');
+        }
+
+        console.log('Currency preference saved successfully:', {
+          currencyCode,
+          userId: user.id,
+          timestamp: new Date().toISOString()
+        });
       } else {
         localStorage.setItem('preferred_currency', currencyCode);
+        console.log('Currency preference saved to localStorage (unauthenticated):', currencyCode);
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to set currency'));
@@ -177,12 +259,34 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       }
 
       if (user?.id && session) {
-        const { error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from('profiles')
           .update({ auto_detect_currency: enabled })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Auto-detect currency update failed:', {
+            code: updateError.code,
+            message: updateError.message,
+            details: updateError.details,
+            userId: user.id,
+            enabled: enabled
+          });
+          throw new Error(`Failed to save auto-detect setting: ${updateError.message}`);
+        }
+
+        if (!data) {
+          console.warn('No data returned from auto-detect update. RLS policy may be blocking update.');
+          throw new Error('Auto-detect setting update was rejected by server (RLS policy issue)');
+        }
+
+        console.log('Auto-detect currency preference saved successfully:', {
+          enabled,
+          userId: user.id,
+          timestamp: new Date().toISOString()
+        });
       } else {
         localStorage.setItem('auto_detect_currency', String(enabled));
       }
