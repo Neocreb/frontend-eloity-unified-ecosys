@@ -1,81 +1,80 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Award, Users, Gift, Star, Plus } from "lucide-react";
+import { TrendingUp, Award, Users, Gift, Star, Plus, Loader2 } from "lucide-react";
+import { useQuickLinksStats, useTrendingTopicsData } from "@/hooks/use-sidebar-widgets";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface TrendingTopic {
+  id: string;
+  topic: string;
+  category?: string;
+  posts?: number;
+  trend_score?: number;
+}
 
 const FeedSidebar = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const quickLinks = useQuickLinksStats();
+  const { data: trendingTopics = [], isLoading: trendsLoading } = useTrendingTopicsData();
+
+  const getUserRewards = () => {
+    // This would be fetched from user context or API
+    // For now, return mock data structure
+    return {
+      level: "Bronze",
+      points: 2450,
+      nextLevel: 5000,
+      progress: 2450 / 5000,
+    };
+  };
+
+  const handleTrendingClick = (topic: string) => {
+    // Navigate to search results for this topic
+    navigate(`/app/search?q=${encodeURIComponent(topic)}&type=trending`);
+  };
+
+  const handleQuickLinkClick = (route: string) => {
+    navigate(route);
+  };
+
+  const rewards = getUserRewards();
+
   return (
     <div className="space-y-6">
+      {/* Quick Links Card */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Who to Follow
+            Quick Links
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 pt-0">
-          {[
-            {
-              name: "Sarah Johnson",
-              username: "sarahj",
-              avatar: "/placeholder.svg",
-              verified: true,
-            },
-            {
-              name: "Alex Rivera",
-              username: "alexr",
-              avatar: "/placeholder.svg",
-              verified: false,
-            },
-            {
-              name: "Maya Patel",
-              username: "mayap",
-              avatar: "/placeholder.svg",
-              verified: true,
-            },
-          ].map((profile, index) => (
-            <div key={index} className="flex items-center justify-between">
+        <CardContent className="space-y-2 pt-0">
+          {quickLinks.map((link, index) => (
+            <button
+              key={index}
+              onClick={() => handleQuickLinkClick(link.route)}
+              className="w-full flex items-center justify-between p-2 hover:bg-muted rounded-lg transition-colors text-left"
+            >
               <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile.avatar} alt={profile.name} />
-                  <AvatarFallback>{profile.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium">{profile.name}</span>
-                    {profile.verified && (
-                      <Badge variant="default" className="ml-1 px-1 py-0 h-4 bg-eloity-primary hover:bg-eloity-primary/90">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="h-2 w-2"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </Badge>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground">@{profile.username}</span>
-                </div>
+                <link.icon className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{link.name}</span>
               </div>
-              <Button variant="outline" size="sm" className="h-7 text-xs">
-                Follow
-              </Button>
-            </div>
+              {link.count !== null && link.count !== undefined && link.count > 0 && (
+                <Badge variant="secondary" className="text-xs px-2">
+                  {link.count}
+                </Badge>
+              )}
+            </button>
           ))}
-          <Button variant="ghost" size="sm" className="w-full text-xs">
-            Show more
-          </Button>
         </CardContent>
       </Card>
 
+      {/* Trending Topics Card */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -84,40 +83,49 @@ const FeedSidebar = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
-          {[
-            {
-              topic: "Bitcoin hits new high",
-              category: "Crypto",
-              posts: 1432
-            },
-            {
-              topic: "New smartphone release",
-              category: "Technology",
-              posts: 984
-            },
-            {
-              topic: "Fashion week highlights",
-              category: "Fashion",
-              posts: 754
-            },
-          ].map((trend, index) => (
-            <div key={index}>
-              <Link to="#" className="block space-y-1">
-                <div className="text-sm font-medium hover:underline">#{trend.topic}</div>
-                <div className="flex text-xs text-muted-foreground gap-1">
-                  <span>{trend.category}</span>
-                  <span>•</span>
-                  <span>{trend.posts} posts</span>
-                </div>
-              </Link>
+          {trendsLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
-          ))}
-          <Button variant="ghost" size="sm" className="w-full text-xs">
+          ) : trendingTopics && trendingTopics.length > 0 ? (
+            trendingTopics.map((trend: TrendingTopic, index: number) => (
+              <button
+                key={trend.id || index}
+                onClick={() => handleTrendingClick(trend.topic)}
+                className="block w-full text-left space-y-1 p-2 hover:bg-muted rounded-lg transition-colors"
+              >
+                <div className="text-sm font-medium hover:underline">
+                  #{trend.topic}
+                </div>
+                <div className="flex text-xs text-muted-foreground gap-1 flex-wrap">
+                  {trend.category && (
+                    <>
+                      <span>{trend.category}</span>
+                      <span>•</span>
+                    </>
+                  )}
+                  {trend.posts && <span>{trend.posts.toLocaleString()} posts</span>}
+                  {trend.trend_score && (
+                    <>
+                      <span>•</span>
+                      <span className="text-green-600">+{Math.round(trend.trend_score)}%</span>
+                    </>
+                  )}
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="text-center py-4 text-muted-foreground">
+              <p className="text-sm">No trending topics available</p>
+            </div>
+          )}
+          <Button variant="ghost" size="sm" className="w-full text-xs mt-2">
             Show more
           </Button>
         </CardContent>
       </Card>
 
+      {/* Rewards Card */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -128,15 +136,20 @@ const FeedSidebar = () => {
         <CardContent className="pt-0">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-eloity-primary to-eloity-accent flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-eloity-primary to-eloity-accent flex items-center justify-center flex-shrink-0">
                 <Star className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <div className="text-sm font-medium">Bronze Level</div>
-                <div className="text-xs text-muted-foreground">2,450 points</div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium">{rewards.level} Level</div>
+                <div className="text-xs text-muted-foreground">{rewards.points.toLocaleString()} points</div>
               </div>
             </div>
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1 flex-shrink-0"
+              onClick={() => navigate("/app/rewards")}
+            >
               <Gift className="h-3 w-3" />
               Redeem
             </Button>
@@ -145,31 +158,33 @@ const FeedSidebar = () => {
           <div className="space-y-4">
             <div>
               <div className="mb-1 flex items-center justify-between text-xs">
-                <span>Progress to Silver</span>
-                <span className="font-medium">2,450 / 5,000</span>
+                <span>Progress to Next Level</span>
+                <span className="font-medium">
+                  {rewards.points.toLocaleString()} / {Math.round(rewards.nextLevel).toLocaleString()}
+                </span>
               </div>
-              <div className="h-2 rounded-full bg-muted">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-eloity-primary to-eloity-accent"
-                  style={{ width: "49%" }}
-                ></div>
+                  className="h-full rounded-full bg-gradient-to-r from-eloity-primary to-eloity-accent transition-all duration-500"
+                  style={{ width: `${rewards.progress * 100}%` }}
+                />
               </div>
             </div>
 
-            <div className="rounded-md border p-3 text-xs">
-              <div className="mb-2 font-medium">Earn more points!</div>
+            <div className="rounded-md border p-3 text-xs space-y-2">
+              <div className="font-medium">Earn more points!</div>
               <ul className="space-y-2">
                 <li className="flex items-center gap-2">
-                  <Plus className="h-3 w-3 text-eloity-accent" />
-                  Create a post (+10 points)
+                  <Plus className="h-3 w-3 text-eloity-accent flex-shrink-0" />
+                  <span>Create a post (+10 points)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Plus className="h-3 w-3 text-eloity-accent" />
-                  Make a purchase (+50 points)
+                  <Plus className="h-3 w-3 text-eloity-accent flex-shrink-0" />
+                  <span>Make a purchase (+50 points)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Plus className="h-3 w-3 text-eloity-accent" />
-                  Refer a friend (+200 points)
+                  <Plus className="h-3 w-3 text-eloity-accent flex-shrink-0" />
+                  <span>Refer a friend (+200 points)</span>
                 </li>
               </ul>
             </div>
