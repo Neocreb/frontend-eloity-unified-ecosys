@@ -184,7 +184,7 @@ const Feed = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 p-2 sm:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6 p-2 sm:p-4">
           {/* Left Sidebar */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-4">
