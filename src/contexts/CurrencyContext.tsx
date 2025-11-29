@@ -13,18 +13,24 @@ interface ExchangeRate {
 
 interface CurrencyContextType {
   selectedCurrency: Currency | null;
+  userCurrency: Currency | null;
   isLoading: boolean;
   error: Error | null;
   exchangeRates: Map<string, number>;
   autoDetectEnabled: boolean;
   detectedCountry: string | null;
   detectedCurrency: Currency | null;
+  lastUpdated: Date | null;
   setCurrency: (currencyCode: string) => Promise<void>;
+  setUserCurrency: (currency: Currency | string) => Promise<void>;
   toggleAutoDetect: (enabled: boolean) => Promise<void>;
   convertAmount: (amount: number, fromCode: string, toCode: string) => number;
+  convert: (amount: number, fromCode: string, toCode: string, options?: ConversionOptions) => { amount: number; rate: number; timestamp: Date; formattedAmount: string };
   formatCurrency: (amount: number, currencyCode?: string) => string;
   getExchangeRate: (fromCode: string, toCode: string) => number | null;
+  getSupportedCurrencies: () => Currency[];
   refreshExchangeRates: () => Promise<void>;
+  refreshRates: () => Promise<void>;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
