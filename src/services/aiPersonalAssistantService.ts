@@ -1134,17 +1134,27 @@ class AIPersonalAssistantService {
       }
 
       // Fetch platform engagement data
-      const { data: engagementData, error: engagementError } = await supabase
+      let engagementData = [];
+      const { data: engagementQueryData, error: engagementError } = await supabase
         .from('user_engagement')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(15);
 
-      if (engagementError) throw engagementError;
+      // Handle missing table gracefully
+      if (engagementError) {
+        if (!engagementError.message.includes('does not exist')) {
+          throw engagementError;
+        }
+        // Table doesn't exist, just use empty data
+        engagementData = [];
+      } else {
+        engagementData = engagementQueryData || [];
+      }
 
       return {
-        contentPerformance: contentData,
+        contentPerformance: contentData || [],
         tradingActivity: tradingData,
         platformEngagement: engagementData
       };
