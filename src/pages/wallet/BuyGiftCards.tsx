@@ -185,7 +185,7 @@ const BuyGiftCards = () => {
                   <div>
                     <p className="text-sm text-gray-600">Available Balance</p>
                     <p className="text-3xl font-bold text-gray-900 mt-1">
-                      ${walletBalance?.total.toFixed(2) || "0.00"}
+                      {formatCurrency(walletBalance?.total || 0)}
                     </p>
                   </div>
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
