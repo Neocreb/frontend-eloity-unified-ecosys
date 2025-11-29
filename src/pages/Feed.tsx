@@ -259,7 +259,7 @@ const Feed = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="hidden lg:block lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1 xl:col-span-1">
             <div className="sticky top-4">
               <SuggestedSidebar />
             </div>
