@@ -538,49 +538,54 @@ export const UnifiedChatInterface: React.FC<UnifiedChatInterfaceProps> = ({
       // Load group chats
       if (user?.id) {
         try {
-          // Load user's group chat memberships
-          const { data: userGroups, error: userGroupsError } = await supabase
-            .from('group_chat_threads')
-            .select('*')
-            .in('id', (await supabase
-              .from('group_participants')
-              .select('group_id')
-              .eq('user_id', user.id)));
+          // First, get the group IDs the user is a member of
+          const { data: membershipData, error: membershipError } = await supabase
+            .from('group_participants')
+            .select('group_id')
+            .eq('user_id', user.id);
 
-          console.log("User groups query result:", { userGroups, userGroupsError });
+          if (!membershipError && membershipData && membershipData.length > 0) {
+            const groupIds = membershipData.map((m: any) => m.group_id);
 
-          if (userGroupsError) {
-            console.error("Error loading user groups:", userGroupsError);
-          } else if (userGroups && Array.isArray(userGroups)) {
-            console.log("Found user groups:", userGroups);
+            // Load user's group chat threads
+            const { data: userGroups, error: userGroupsError } = await supabase
+              .from('group_chat_threads')
+              .select('*')
+              .in('id', groupIds);
 
-            // Convert user groups to unified chat threads
-            const unifiedUserGroups: UnifiedChatThread[] = userGroups.map((group: any) => ({
-              id: group.id,
-              type: "social" as UnifiedChatType,
-              referenceId: null,
-              participants: [],
-              lastMessage: group.description || "Welcome to the group!",
-              lastMessageAt: group.last_activity || new Date().toISOString(),
-              updatedAt: group.updated_at || new Date().toISOString(),
-              isGroup: true,
-              groupName: group.name,
-              groupAvatar: group.avatar,
-              createdAt: group.created_at || new Date().toISOString(),
-              unreadCount: 0,
-              contextData: {},
-            }));
+            console.log("User groups query result:", { userGroups, userGroupsError });
 
-            console.log("Unified user groups:", unifiedUserGroups);
+            if (!userGroupsError && userGroups) {
+              console.log("Found user groups:", userGroups);
 
-            // Merge user groups with regular threads, avoiding duplicates
-            unifiedUserGroups.forEach(userGroup => {
-              if (!unifiedThreads.some(thread => thread.id === userGroup.id)) {
-                unifiedThreads.push(userGroup);
-              }
-            });
+              // Convert user groups to unified chat threads
+              const unifiedUserGroups: UnifiedChatThread[] = userGroups.map((group: any) => ({
+                id: group.id,
+                type: "social" as UnifiedChatType,
+                referenceId: null,
+                participants: [],
+                lastMessage: group.description || "Welcome to the group!",
+                lastMessageAt: group.last_activity || new Date().toISOString(),
+                updatedAt: group.updated_at || new Date().toISOString(),
+                isGroup: true,
+                groupName: group.name,
+                groupAvatar: group.avatar,
+                createdAt: group.created_at || new Date().toISOString(),
+                unreadCount: 0,
+                contextData: {},
+              }));
 
-            console.log("Unified threads after adding user groups:", unifiedThreads);
+              console.log("Unified user groups:", unifiedUserGroups);
+
+              // Merge user groups with regular threads, avoiding duplicates
+              unifiedUserGroups.forEach(userGroup => {
+                if (!unifiedThreads.some(thread => thread.id === userGroup.id)) {
+                  unifiedThreads.push(userGroup);
+                }
+              });
+
+              console.log("Unified threads after adding user groups:", unifiedThreads);
+            }
           }
         } catch (error) {
           console.error("Error loading user groups:", error);
