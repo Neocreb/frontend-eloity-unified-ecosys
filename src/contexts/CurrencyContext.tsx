@@ -115,6 +115,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
   const [autoDetectEnabled, setAutoDetectEnabled] = useState(true);
   const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
   const [detectedCurrency, setDetectedCurrency] = useState<Currency | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Initialize currency on component mount and user change
   useEffect(() => {
