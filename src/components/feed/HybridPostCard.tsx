@@ -259,7 +259,7 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
                   </Button>
                 </>
               )}
-              {!post.author.id.startsWith(user?.id || '') && (
+              {post.author.id && user?.id && post.author.id !== user.id && (
                 <CompactFollowButton
                   type="user"
                   isFollowing={isFollowing}
