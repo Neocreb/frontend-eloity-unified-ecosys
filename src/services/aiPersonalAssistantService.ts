@@ -2,6 +2,7 @@
 import { User } from "@/types/user";
 import { fetchPlatformAnalytics } from "@/services/analyticsService";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/utils/utils";
 
 export interface AIInsight {
   id: string;
@@ -1113,32 +1114,52 @@ class AIPersonalAssistantService {
       if (contentError) throw contentError;
 
       // Fetch trading activity data
-      const { data: tradingData, error: tradingError } = await supabase
+      let tradingData = [];
+      const { data: tradingQueryData, error: tradingError } = await supabase
         .from('user_trades')
         .select('*')
         .eq('user_id', userId)
         .order('timestamp', { ascending: false })
         .limit(20);
 
-      if (tradingError) throw tradingError;
+      // Handle missing table gracefully
+      if (tradingError) {
+        if (!tradingError.message.includes('does not exist')) {
+          throw tradingError;
+        }
+        // Table doesn't exist, just use empty data
+        tradingData = [];
+      } else {
+        tradingData = tradingQueryData || [];
+      }
 
       // Fetch platform engagement data
-      const { data: engagementData, error: engagementError } = await supabase
+      let engagementData = [];
+      const { data: engagementQueryData, error: engagementError } = await supabase
         .from('user_engagement')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(15);
 
-      if (engagementError) throw engagementError;
+      // Handle missing table gracefully
+      if (engagementError) {
+        if (!engagementError.message.includes('does not exist')) {
+          throw engagementError;
+        }
+        // Table doesn't exist, just use empty data
+        engagementData = [];
+      } else {
+        engagementData = engagementQueryData || [];
+      }
 
       return {
-        contentPerformance: contentData,
+        contentPerformance: contentData || [],
         tradingActivity: tradingData,
         platformEngagement: engagementData
       };
     } catch (error) {
-      console.error('Error fetching user analytics:', error);
+      console.error('Error fetching user analytics:', getErrorMessage(error));
       return {
         contentPerformance: [],
         tradingActivity: [],

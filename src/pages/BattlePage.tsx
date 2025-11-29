@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getErrorMessage } from '@/utils/utils';
 import { 
   Swords, Users, Heart, MessageCircle, Share, Gift, 
   Play, Pause, Volume2, VolumeX, Maximize, Minimize, PhoneOff,
@@ -83,7 +84,7 @@ const BattlePage: React.FC = () => {
           opponent: mockBattle.battle.opponent_score
         });
       } catch (error) {
-        console.error("Error fetching battle:", error);
+        console.error("Error fetching battle:", getErrorMessage(error));
         navigate('/app/videos');
       }
     };

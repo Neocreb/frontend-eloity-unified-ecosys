@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/utils';
 
 export interface FeedPost {
   id: string;
@@ -90,7 +91,7 @@ export const useFeedPosts = () => {
 
       setPosts(transformedPosts);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('Error fetching posts:', getErrorMessage(error));
     } finally {
       setLoading(false);
     }

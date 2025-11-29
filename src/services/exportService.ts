@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { FeatureAnalytics } from './analyticsService';
 import { UserDemographics } from './userDemographicsService';
+import { getErrorMessage } from '@/utils/utils';
 
 // Types for export data
 export interface ExportData {
@@ -201,7 +202,7 @@ export const fetchExportData = async (
 
     return exportData;
   } catch (error) {
-    console.error('Error fetching export data:', error);
+    console.error('Error fetching export data:', getErrorMessage(error));
     throw new Error('Failed to fetch data for export');
   }
 };

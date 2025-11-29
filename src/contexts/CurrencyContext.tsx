@@ -13,18 +13,25 @@ interface ExchangeRate {
 
 interface CurrencyContextType {
   selectedCurrency: Currency | null;
+  userCurrency: Currency | null;
   isLoading: boolean;
   error: Error | null;
   exchangeRates: Map<string, number>;
   autoDetectEnabled: boolean;
   detectedCountry: string | null;
   detectedCurrency: Currency | null;
+  lastUpdated: Date | null;
   setCurrency: (currencyCode: string) => Promise<void>;
+  setUserCurrency: (currency: Currency | string) => Promise<void>;
   toggleAutoDetect: (enabled: boolean) => Promise<void>;
   convertAmount: (amount: number, fromCode: string, toCode: string) => number;
+  convert: (amount: number, fromCode: string, toCode: string, options?: ConversionOptions) => { amount: number; rate: number; timestamp: Date; formattedAmount: string };
   formatCurrency: (amount: number, currencyCode?: string) => string;
   getExchangeRate: (fromCode: string, toCode: string) => number | null;
+  getSupportedCurrencies: () => Currency[];
+  getCurrenciesByCategory: (category: Currency['category']) => Currency[];
   refreshExchangeRates: () => Promise<void>;
+  refreshRates: () => Promise<void>;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -109,6 +116,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
   const [autoDetectEnabled, setAutoDetectEnabled] = useState(true);
   const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
   const [detectedCurrency, setDetectedCurrency] = useState<Currency | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Initialize currency on component mount and user change
   useEffect(() => {
@@ -186,7 +194,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
     try {
       const response = await fetch('/api/currency/rates');
       if (!response.ok) throw new Error('Failed to fetch exchange rates');
-      
+
       const data = await response.json();
       if (data.success && data.rates) {
         const ratesMap = new Map<string, number>();
@@ -194,6 +202,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
           ratesMap.set(`${rate.from}_${rate.to}`, rate.rate);
         });
         setExchangeRates(ratesMap);
+        setLastUpdated(new Date());
       }
     } catch (err) {
       console.error('Failed to fetch exchange rates:', err);
@@ -333,21 +342,101 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
     await fetchExchangeRates();
   }, []);
 
+  const refreshRates = refreshExchangeRates;
+
+  const setUserCurrency = useCallback(async (currency: Currency | string) => {
+    const currencyCode = typeof currency === 'string' ? currency : currency.code;
+    await setCurrency(currencyCode);
+  }, [setCurrency]);
+
+  const getSupportedCurrencies = useCallback((): Currency[] => {
+    return SUPPORTED_CURRENCIES;
+  }, []);
+
+  const getCurrenciesByCategory = useCallback((category: Currency['category']): Currency[] => {
+    return SUPPORTED_CURRENCIES.filter(currency => currency.category === category);
+  }, []);
+
+  const convert = useCallback((
+    amount: number,
+    fromCode: string,
+    toCode: string,
+    options?: ConversionOptions
+  ) => {
+    const {
+      decimals = 2,
+      showSymbol = false,
+      showCode = false,
+      locale = 'en-US'
+    } = options || {};
+
+    if (fromCode === toCode) {
+      return {
+        amount,
+        rate: 1,
+        timestamp: new Date(),
+        formattedAmount: amount.toString()
+      };
+    }
+
+    const rate = exchangeRates.get(`${fromCode}_${toCode}`) || 1;
+    const convertedAmount = parseFloat((amount * rate).toFixed(decimals));
+
+    const targetCurrency = getCurrencyByCode(toCode);
+    let formattedAmount = convertedAmount.toString();
+
+    if (targetCurrency) {
+      const formattedNumber = new Intl.NumberFormat(locale, {
+        style: 'decimal',
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }).format(convertedAmount);
+
+      formattedAmount = formattedNumber;
+
+      if (showSymbol) {
+        if ((targetCurrency as any).isCrypto) {
+          formattedAmount = `${formattedAmount} ${targetCurrency.symbol}`;
+        } else {
+          formattedAmount = `${targetCurrency.symbol}${formattedAmount}`;
+        }
+      }
+
+      if (showCode) {
+        formattedAmount = `${formattedAmount} ${targetCurrency.code}`;
+      }
+    }
+
+    return {
+      amount: convertedAmount,
+      rate,
+      timestamp: new Date(),
+      formattedAmount
+    };
+  }, [exchangeRates]);
+
   const value = useMemo<CurrencyContextType>(
     () => ({
-      selectedCurrency,
+      selectedCurrency: selectedCurrency || getCurrencyByCode(DEFAULT_CURRENCY) || SUPPORTED_CURRENCIES[0] || null,
+      userCurrency: selectedCurrency || getCurrencyByCode(DEFAULT_CURRENCY) || SUPPORTED_CURRENCIES[0] || null,
       isLoading,
       error,
       exchangeRates,
       autoDetectEnabled,
       detectedCountry,
       detectedCurrency,
+      lastUpdated,
       setCurrency,
+      setUserCurrency,
       toggleAutoDetect,
       convertAmount,
+      convert,
       formatCurrency,
       getExchangeRate,
+      getSupportedCurrencies,
+      getCurrenciesByCategory,
       refreshExchangeRates,
+      refreshRates,
     }),
     [
       selectedCurrency,
@@ -357,12 +446,18 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       autoDetectEnabled,
       detectedCountry,
       detectedCurrency,
+      lastUpdated,
       setCurrency,
+      setUserCurrency,
       toggleAutoDetect,
       convertAmount,
+      convert,
       formatCurrency,
       getExchangeRate,
+      getSupportedCurrencies,
+      getCurrenciesByCategory,
       refreshExchangeRates,
+      refreshRates,
     ]
   );
 

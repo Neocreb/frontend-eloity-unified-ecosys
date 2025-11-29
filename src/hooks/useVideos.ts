@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/utils';
 
 export interface VideoItem {
   id: string;
@@ -90,7 +91,7 @@ export const useVideos = () => {
 
       setVideos(transformedVideos);
     } catch (error) {
-      console.error('Error fetching videos:', error);
+      console.error('Error fetching videos:', getErrorMessage(error));
     } finally {
       setLoading(false);
     }

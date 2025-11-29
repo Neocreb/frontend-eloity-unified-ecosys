@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { videoService, Video } from "@/services/videoService";
 import { ContentItem, VideoItem, AdItem } from "@/types/video";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/utils/utils";
 
 // Ad data - fetch real ads from the database
 const fetchRealAdData = async () => {
@@ -43,7 +44,7 @@ const fetchRealAdData = async () => {
       };
     }
   } catch (error) {
-    console.error("Error fetching real ad data:", error);
+    console.error("Error fetching real ad data:", getErrorMessage(error));
     // According to project policy, we should not use mock data
     // Return null to indicate no ad data is available
     return null;
