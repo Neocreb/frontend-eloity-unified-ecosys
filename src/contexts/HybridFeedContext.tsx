@@ -38,22 +38,27 @@ interface HybridFeedContextType {
   addPost: (post: Omit<Post, 'id' | 'createdAt'>) => void;
   updatePost: (postId: string, updates: Partial<Post>) => void;
   removePost: (postId: string) => void;
-  
+
   // Saved content management
   savedPosts: Post[];
   savePost: (postId: string) => void;
   unsavePost: (postId: string) => void;
-  
+
   // History tracking
   viewHistory: Post[];
   addToHistory: (postId: string) => void;
   clearHistory: () => void;
-  
+
   // Interaction handling
   toggleLike: (postId: string) => void;
   toggleBookmark: (postId: string) => void;
   toggleGift: (postId: string) => void;
   incrementShares: (postId: string) => void;
+
+  // Threading support
+  createReplyPost: (parentId: string, content: string, author: any) => void;
+  createQuotePost: (originalPostId: string, content: string, author: any) => void;
+  getPostReplies: (postId: string) => Post[];
 }
 
 const HybridFeedContext = createContext<HybridFeedContextType | undefined>(undefined);
