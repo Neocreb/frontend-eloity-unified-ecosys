@@ -660,6 +660,7 @@ const EnhancedSettings = () => {
   const saveAppearanceSettings = async () => {
     setIsLoading(true);
     try {
+      // Update all appearance settings in the database
       await updateProfile({
         settings: {
           auto_play_videos: autoPlayVideos,
@@ -670,11 +671,41 @@ const EnhancedSettings = () => {
         },
       });
 
-      toast({
-        title: "Appearance settings updated",
-        description: "Your appearance preferences have been saved successfully.",
-      });
+      // Also update the profiles table directly to ensure persistence
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            font_size: fontSize,
+            ui_language: language,
+            auto_play_videos: autoPlayVideos,
+            reduced_motion: reducedMotion,
+            high_contrast: highContrast,
+          })
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error saving appearance settings to profiles:', error);
+          toast({
+            title: "Warning",
+            description: "Settings saved locally but database update failed. Changes may not persist after refresh.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Appearance settings updated",
+            description: "Your appearance preferences have been saved successfully.",
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "User not authenticated. Please log in again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
+      console.error('Error updating appearance settings:', error);
       toast({
         title: "Error",
         description: "Failed to update appearance settings. Please try again.",
