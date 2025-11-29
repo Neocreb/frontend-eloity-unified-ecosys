@@ -4,7 +4,7 @@ import { requireTier2, triggerKYCIfNeeded } from '../middleware/tierAccessContro
 import { logger } from '../utils/logger.js';
 import { db } from '../../server/enhanced-index.js';
 import { profiles, products } from '../../shared/enhanced-schema.js';
-import { eq, and, or, desc, asc, like, sql, count } from 'drizzle-orm';
+import { eq, and, or, desc, asc, like, sql, count, inArray } from 'drizzle-orm';
 
 const router = express.Router();
 
