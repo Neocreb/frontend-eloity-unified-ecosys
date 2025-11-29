@@ -106,11 +106,23 @@ class NotificationSettingsService {
         .single();
 
       if (updateError && updateError.code !== 'PGRST116') {
+        console.error('Notification preference update failed:', {
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details,
+          userId: userId,
+          timestamp: new Date().toISOString()
+        });
         throw updateError;
       }
 
       // If update succeeded, return the data
       if (updateData) {
+        console.log('Notification preferences updated successfully:', {
+          userId: userId,
+          timestamp: new Date().toISOString(),
+          updatedFields: Object.keys(preferences)
+        });
         return updateData as NotificationPreferences;
       }
 
@@ -126,10 +138,29 @@ class NotificationSettingsService {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Notification preference insert failed:', {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          userId: userId,
+          timestamp: new Date().toISOString()
+        });
+        throw insertError;
+      }
+
+      console.log('Notification preferences created successfully:', {
+        userId: userId,
+        timestamp: new Date().toISOString()
+      });
+
       return insertData as NotificationPreferences;
     } catch (error) {
-      console.error('Error updating notification preferences:', error);
+      console.error('Error updating notification preferences:', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: userId,
+        timestamp: new Date().toISOString()
+      });
       return null;
     }
   }
