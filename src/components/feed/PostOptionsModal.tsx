@@ -515,6 +515,11 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
                 <span>Edit Post</span>
               </DropdownMenuItem>
 
+              <DropdownMenuItem onClick={handleViewEditHistory}>
+                <Clock className="h-4 w-4 mr-2" />
+                <span>View Edit History</span>
+              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
                 <Trash2 className="h-4 w-4 mr-2 text-red-500" />
                 <span className="text-red-500">Delete Post</span>
@@ -527,9 +532,17 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
                 <span>Add to Favorites</span>
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={handleSnooze}>
-                <Bell className="h-4 w-4 mr-2" />
-                <span>Snooze {postAuthorName}</span>
+              <DropdownMenuItem onClick={() => {
+                // Copy post link to clipboard
+                navigator.clipboard.writeText(`${window.location.origin}/app/post/${postId}`);
+                toast({
+                  title: "Link Copied",
+                  description: "Post link copied to clipboard.",
+                });
+                setOpen(false);
+              }}>
+                <Share2 className="h-4 w-4 mr-2" />
+                <span>Copy Link</span>
               </DropdownMenuItem>
             </>
           ) : (
@@ -786,6 +799,49 @@ export const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
                 Snooze
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit History Dialog */}
+      <Dialog open={showEditHistoryDialog} onOpenChange={setShowEditHistoryDialog}>
+        <DialogContent className="max-w-md max-h-96 overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit History</DialogTitle>
+            <DialogDescription>
+              All changes made to this post
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {editHistory && editHistory.length > 0 ? (
+              editHistory.map((edit: any, index: number) => (
+                <div key={index} className="border-l-2 border-muted-foreground pl-3 py-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Version {editHistory.length - index}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {edit.edited_at
+                        ? new Date(edit.edited_at).toLocaleString()
+                        : "Recently"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-3">
+                    {edit.content || edit.text || "No content"}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <p className="text-sm">No edit history available</p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setShowEditHistoryDialog(false)}
+            >
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
