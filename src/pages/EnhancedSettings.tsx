@@ -3033,7 +3033,7 @@ const EnhancedSettings = () => {
             </div>
           </TabsContent>
 
-          {/* Internationalization Tab - Temporarily disabled */}
+          {/* Internationalization Tab */}
           <TabsContent value="i18n" className="space-y-6">
             <Card>
               <CardHeader>
@@ -3041,36 +3041,99 @@ const EnhancedSettings = () => {
                   <Languages className="w-5 h-5" />
                   Language & Regional Settings
                 </CardTitle>
+                <CardDescription>
+                  Customize your language, region, and currency preferences
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    Language settings temporarily unavailable. Please check back
-                    later.
-                  </p>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label>Language</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select your preferred language for the interface
+                    </p>
+                    <Select value={currentLanguage?.code || "en"} onValueChange={(value) => {
+                      setLanguage(value);
+                      setAppearanceLanguage(value);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supportedLanguages.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                            {lang.flag} {lang.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <Label>Region</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select your geographic region
+                    </p>
+                    <Select value={selectedRegion} onValueChange={(value) => {
+                      setSelectedRegion(value);
+                      setRegion(value);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((region) => (
+                          <SelectItem key={region.code} value={region.code}>
+                            {region.flag} {region.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <Label>Currency</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select your preferred currency for prices and transactions
+                    </p>
+                    <Select value={selectedCurrency} onValueChange={(value) => {
+                      setSelectedCurrency(value);
+                      setCurrency(value);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supportedCurrencies.map((currency) => (
+                          <SelectItem key={currency.code} value={currency.code}>
+                            {currency.symbol} {currency.name} ({currency.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                    <div className="flex items-start gap-2">
+                      <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">Localization Preview</p>
+                        <p>Your preferences affect how prices, dates, and content are displayed throughout the app.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                {/* <I18nSettingsModal
-                  trigger={
-                    <Button variant="outline" className="w-full">
-                      <Globe2 className="w-4 h-4 mr-2" />
-                      Configure Language & Region
-                    </Button>
-                  }
-                /> */}
+
+                <Button onClick={saveAppearanceSettings} disabled={isLoading}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Regional Preferences
+                </Button>
               </CardContent>
             </Card>
-
-            {/* <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Regional Payment Methods
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RegionalPaymentMethods />
-              </CardContent>
-            </Card> */}
           </TabsContent>
         </Tabs>
 
