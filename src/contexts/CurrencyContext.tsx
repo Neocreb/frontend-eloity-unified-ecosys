@@ -353,6 +353,10 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
     return SUPPORTED_CURRENCIES;
   }, []);
 
+  const getCurrenciesByCategory = useCallback((category: Currency['category']): Currency[] => {
+    return SUPPORTED_CURRENCIES.filter(currency => currency.category === category);
+  }, []);
+
   const convert = useCallback((
     amount: number,
     fromCode: string,
