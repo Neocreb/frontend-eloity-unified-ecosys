@@ -44,7 +44,7 @@ import AppLayout from "./components/layout/AppLayout";
 import Auth from "./pages/Auth";
 import Join from "./pages/Join";
 import Home from "./pages/Home";
-import EnhancedFeedWithTabs from "./pages/EnhancedFeedWithTabs";
+import Feed from "./pages/Feed";
 import EnhancedFreelance from "./pages/EnhancedFreelance";
 import FreelanceJobs from "./pages/freelance/FreelanceJobs";
 // import RoleSwitcherDashboard from "./pages/freelance/RoleSwitcherDashboard";
