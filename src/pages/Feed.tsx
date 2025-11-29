@@ -32,8 +32,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useFeed } from "@/hooks/use-feed";
 import FeedSkeleton from "@/components/feed/FeedSkeleton";
 import CreatePostTrigger from "@/components/feed/CreatePostTrigger";
 import EnhancedStoriesSection from "@/components/feed/EnhancedStoriesSection";
