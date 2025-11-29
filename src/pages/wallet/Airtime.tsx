@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle2, AlertCircle, Phone } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrencyAmount } from "@/utils/currencyUtils";
 
 interface Provider {
   id: number;
