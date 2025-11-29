@@ -209,14 +209,37 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       setSelectedCurrency(currency);
 
       if (user?.id && session) {
-        const { error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from('profiles')
           .update({ preferred_currency: currencyCode })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Currency update failed:', {
+            code: updateError.code,
+            message: updateError.message,
+            details: updateError.details,
+            userId: user.id,
+            currencyCode: currencyCode
+          });
+          throw new Error(`Failed to save currency preference: ${updateError.message}`);
+        }
+
+        if (!data) {
+          console.warn('No data returned from currency update. RLS policy may be blocking update.');
+          throw new Error('Currency update was rejected by server (RLS policy issue)');
+        }
+
+        console.log('Currency preference saved successfully:', {
+          currencyCode,
+          userId: user.id,
+          timestamp: new Date().toISOString()
+        });
       } else {
         localStorage.setItem('preferred_currency', currencyCode);
+        console.log('Currency preference saved to localStorage (unauthenticated):', currencyCode);
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to set currency'));
