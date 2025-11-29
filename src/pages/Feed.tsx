@@ -343,26 +343,7 @@ const Feed = () => {
                       </HybridFeedProvider>
                     </ErrorBoundary>
                   ) : (
-                    <>
-                      {feedWithAds.length > 0 ? (
-                        <>
-                          {feedWithAds.map((item) => renderFeedItem(item))}
-                          {hasMore && (
-                            <div className="flex justify-center py-4">
-                              <button 
-                                onClick={loadMorePosts}
-                                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                                disabled={isLoading}
-                              >
-                                {isLoading ? 'Loading...' : 'Load More'}
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <UnifiedFeedContent feedType={tab.value} />
-                      )}
-                    </>
+                    <UnifiedFeedContent feedType={tab.value} />
                   )}
                 </TabsContent>
               ))}
