@@ -121,7 +121,7 @@ export class MarketplaceService {
         .limit(filters.limit || 20);
 
       if (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching products:", error.message || JSON.stringify(error));
         return [];
       }
 

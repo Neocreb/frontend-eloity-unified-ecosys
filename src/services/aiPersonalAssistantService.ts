@@ -1138,7 +1138,8 @@ class AIPersonalAssistantService {
         platformEngagement: engagementData
       };
     } catch (error) {
-      console.error('Error fetching user analytics:', error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Error fetching user analytics:', errorMessage);
       return {
         contentPerformance: [],
         tradingActivity: [],
