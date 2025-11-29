@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { logger } from '../utils/logger.js';
-import { SUPPORTED_CURRENCIES } from '../../config/currencies.ts';
+import { SUPPORTED_CURRENCIES } from '../../src/config/currencies.ts';
 
 const CRYPTOAPIS_BASE_URL = 'https://rest.cryptoapis.io/v2';
 const CRYPTOAPIS_API_KEY = process.env.CRYPTOAPIS_API_KEY;
