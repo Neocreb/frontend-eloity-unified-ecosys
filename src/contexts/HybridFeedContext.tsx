@@ -82,6 +82,7 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
       id: '1',
       content: 'Just launched my new project! Excited to share it with everyone 🚀',
       author: {
+        id: 'user-1',
         name: 'Sarah Chen',
         username: 'sarahc_dev',
         avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
@@ -104,6 +105,7 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
       id: '2',
       content: 'Beautiful weather today! Perfect for a walk in the park 🌞 #nature #weekend',
       author: {
+        id: 'user-2',
         name: 'Emma Wilson',
         username: 'emma_w',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
@@ -126,6 +128,7 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
       id: '3',
       content: 'Working on some exciting new features. Can\'t wait to show you all what we\'re building! 💻✨',
       author: {
+        id: 'user-3',
         name: 'Mike Johnson',
         username: 'mikej_dev',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
