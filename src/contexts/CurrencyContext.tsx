@@ -259,12 +259,34 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       }
 
       if (user?.id && session) {
-        const { error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from('profiles')
           .update({ auto_detect_currency: enabled })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Auto-detect currency update failed:', {
+            code: updateError.code,
+            message: updateError.message,
+            details: updateError.details,
+            userId: user.id,
+            enabled: enabled
+          });
+          throw new Error(`Failed to save auto-detect setting: ${updateError.message}`);
+        }
+
+        if (!data) {
+          console.warn('No data returned from auto-detect update. RLS policy may be blocking update.');
+          throw new Error('Auto-detect setting update was rejected by server (RLS policy issue)');
+        }
+
+        console.log('Auto-detect currency preference saved successfully:', {
+          enabled,
+          userId: user.id,
+          timestamp: new Date().toISOString()
+        });
       } else {
         localStorage.setItem('auto_detect_currency', String(enabled));
       }
