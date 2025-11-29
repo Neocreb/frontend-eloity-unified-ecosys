@@ -38,6 +38,7 @@ const Data = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
+  const { selectedCurrency, formatCurrency } = useCurrency();
   const [step, setStep] = useState<"provider" | "plan" | "phone" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
