@@ -323,6 +323,42 @@ export function requireTier2() {
 }
 
 /**
+ * Middleware: Check user role access
+ */
+export function tierAccessControl(allowedRoles: string[]) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = (req as any).user?.id;
+      const userRole = (req as any).user?.role;
+
+      if (!userId) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'UNAUTHENTICATED',
+        });
+      }
+
+      if (!allowedRoles.includes(userRole)) {
+        return res.status(403).json({
+          error: 'Insufficient permissions',
+          code: 'FORBIDDEN',
+          requiredRole: allowedRoles,
+          userRole: userRole,
+        });
+      }
+
+      next();
+    } catch (error) {
+      logger.error('Error in tier access control middleware:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR',
+      });
+    }
+  };
+}
+
+/**
  * Get tier access summary for user
  */
 export async function getTierAccessSummary(userId: string) {
