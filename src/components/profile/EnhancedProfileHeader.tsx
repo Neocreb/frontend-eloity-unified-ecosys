@@ -95,7 +95,7 @@ export const EnhancedProfileHeader: React.FC<EnhancedProfileHeaderProps> = ({
   return (
     <div className="relative">
       {/* Banner Section */}
-      <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 overflow-hidden rounded-b-lg">
+      <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 overflow-hidden rounded-b-lg group cursor-pointer">
         {profile.banner_url && (
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -109,6 +109,24 @@ export const EnhancedProfileHeader: React.FC<EnhancedProfileHeaderProps> = ({
           <div className="absolute top-4 left-4 flex items-center gap-2 bg-green-500/90 text-white px-3 py-1 rounded-full text-sm">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
             Online
+          </div>
+        )}
+
+        {/* Banner Edit Overlay - Only visible on own profile */}
+        {isOwnProfile && (
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.();
+              }}
+              className="gap-2"
+            >
+              <Camera className="w-4 h-4" />
+              Change Cover Photo
+            </Button>
           </div>
         )}
 
