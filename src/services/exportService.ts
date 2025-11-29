@@ -201,7 +201,8 @@ export const fetchExportData = async (
 
     return exportData;
   } catch (error) {
-    console.error('Error fetching export data:', error);
+    const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+    console.error('Error fetching export data:', errorMessage);
     throw new Error('Failed to fetch data for export');
   }
 };

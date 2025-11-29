@@ -52,7 +52,8 @@ const LiveStreamPage: React.FC = () => {
           setViewerCount(streamData.viewer_count || 0);
         }
       } catch (error) {
-        console.error("Error fetching stream:", error);
+        const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+        console.error("Error fetching stream:", errorMessage);
         navigate('/app/videos');
       }
     };

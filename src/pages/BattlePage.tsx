@@ -83,7 +83,8 @@ const BattlePage: React.FC = () => {
           opponent: mockBattle.battle.opponent_score
         });
       } catch (error) {
-        console.error("Error fetching battle:", error);
+        const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+        console.error("Error fetching battle:", errorMessage);
         navigate('/app/videos');
       }
     };
