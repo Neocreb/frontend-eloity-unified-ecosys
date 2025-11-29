@@ -48,6 +48,8 @@ import ErrorBoundary from "@/components/ui/error-boundary";
 import { HybridFeedProvider } from "@/contexts/HybridFeedContext";
 import HybridFeedContent from "@/components/feed/HybridFeedContent";
 import UnifiedFeedContent from "@/components/feed/UnifiedFeedContent";
+import SuggestedSidebar from "@/components/feed/SuggestedSidebar";
+import FeedSidebar from "@/components/feed/FeedSidebar";
 
 // Define the Post type
 export type Post = {
