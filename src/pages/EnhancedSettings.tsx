@@ -2057,9 +2057,9 @@ const EnhancedSettings = () => {
             {/* Enhanced Premium Features Promotion */}
             <Card className="mb-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-200">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 rounded-xl">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
+                  <div className="flex items-start md:items-center gap-4">
+                    <div className="p-3 bg-blue-100 rounded-xl flex-shrink-0">
                       <Star className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
@@ -2070,7 +2070,7 @@ const EnhancedSettings = () => {
                         Get the blue checkmark, unlock premium features, and
                         show everyone you're authentic and trusted
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-blue-600">
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-blue-600">
                         <span>✓ Verified badge</span>
                         <span>✓ Priority support</span>
                         <span>✓ Advanced tools</span>
@@ -2079,7 +2079,7 @@ const EnhancedSettings = () => {
                   </div>
                   <Button
                     onClick={() => window.open("/app/premium", "_blank")}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 w-full md:w-auto flex-shrink-0"
                   >
                     <Crown className="w-4 h-4 mr-2" />
                     Upgrade to Premium
@@ -2091,9 +2091,9 @@ const EnhancedSettings = () => {
             {/* Enhanced KYC Verification Promotion */}
             <Card className="mb-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-200">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-100 rounded-xl">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
+                  <div className="flex items-start md:items-center gap-4">
+                    <div className="p-3 bg-green-100 rounded-xl flex-shrink-0">
                       <ShieldCheck className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
@@ -2104,7 +2104,7 @@ const EnhancedSettings = () => {
                         Verify your identity to unlock higher trading limits,
                         enhanced security, and access to premium features
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-green-600">
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-green-600">
                         <span>✓ Higher trading limits</span>
                         <span>✓ Enhanced security</span>
                         <span>✓ Faster withdrawals</span>
@@ -2114,7 +2114,7 @@ const EnhancedSettings = () => {
                   <Button
                     onClick={() => navigate('/app/kyc')}
                     variant="outline"
-                    className="border-green-600 text-green-600 hover:bg-green-50 px-6 py-3"
+                    className="border-green-600 text-green-600 hover:bg-green-50 px-6 py-3 w-full md:w-auto flex-shrink-0"
                   >
                     <Shield className="w-4 h-4 mr-2" />
                     Start Verification
@@ -2233,9 +2233,9 @@ const EnhancedSettings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
@@ -2249,7 +2249,7 @@ const EnhancedSettings = () => {
                   </div>
                   <Button
                     variant="outline"
-                    className="border-green-600 text-green-600 hover:bg-green-50"
+                    className="border-green-600 text-green-600 hover:bg-green-50 w-full sm:w-auto flex-shrink-0"
                     onClick={() => window.open("/app/kyc", "_blank")}
                   >
                     Start Verification
