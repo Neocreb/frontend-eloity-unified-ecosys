@@ -2,10 +2,25 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, TrendingUp, Users, Building, Bookmark, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate, useLocation } from "react-router-dom";
+import UnifiedFeedContent from "@/components/feed/UnifiedFeedContent";
+import CreatePostTrigger from "@/components/feed/CreatePostTrigger";
+import CreatePostFlow from "@/components/feed/CreatePostFlow";
+import EnhancedStoriesSection from "@/components/feed/EnhancedStoriesSection";
+import { CreateStoryModal } from "@/components/feed/CreateStory";
+import StoryViewer from "@/components/feed/StoryViewer";
+import ErrorBoundary from "@/components/ui/error-boundary";
+import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLiveNowData } from "@/hooks/use-sidebar-widgets";
+import { HybridFeedProvider } from "@/contexts/HybridFeedContext";
+import HybridFeedContent from "@/components/feed/HybridFeedContent";
 
 interface Story {
   id: string;
@@ -204,82 +219,36 @@ const EnhancedFeedWithTabs = () => {
 
   const handleCreateStory = async (storyData: any) => {
     try {
+      setIsLoading(true);
       // Add the new story to the userStories state
       const newStory = {
         id: `story-${Date.now()}`,
-      setIsLoading(true);
-
-      const { data, error } = await supabase
-        .from("stories")
-        .select(
-          `
-          id,
-          user_id,
-          created_at,
-          media_url,
-          profiles:user_id(
-            username,
-            full_name,
-            avatar_url
-          )
-        `
-        )
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      const fetchedStories: Story[] = (data || []).map((story: any) => ({
-        id: story.id,
-        user: {
-          id: story.user_id,
-          name:
-            story.profiles?.full_name ||
-            story.profiles?.username ||
-            "Unknown User",
-          avatar:
-            story.profiles?.avatar_url ||
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-          isUser: story.user_id === user?.id,
-        },
-        hasStory: true,
-        hasNew:
-          new Date(story.created_at) >
-          new Date(Date.now() - 24 * 60 * 60 * 1000),
-        thumbnail: story.media_url,
-        timestamp: new Date(story.created_at),
-      }));
-
-      const createStoryOption: Story = {
-        id: "create",
         user: {
           id: user?.id || "current-user",
-          name: "Create story",
-          avatar:
-            user?.user_metadata?.avatar ||
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
+          name: user?.name || "You",
+          username: user?.username || "you",
+          avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
           isUser: true,
         },
-        hasStory: false,
-        hasNew: false,
+        timestamp: new Date(),
+        content: storyData,
+        views: 0,
+        hasNew: true,
       };
 
-      setStories([createStoryOption, ...fetchedStories]);
-    } catch {
-      const createStoryOption: Story = {
-        id: "create",
-        user: {
-          id: user?.id || "current-user",
-          name: "Create story",
-          avatar:
-            user?.user_metadata?.avatar ||
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-          isUser: true,
-        },
-        hasStory: false,
-        hasNew: false,
-      };
-      setStories([createStoryOption]);
+      setUserStories(prev => [newStory, ...prev]);
+
+      toast({
+        title: "Story created!",
+        description: "Your story has been published.",
+      });
+    } catch (error) {
+      console.error("Error creating story:", error);
+      toast({
+        title: "Failed to create story",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
