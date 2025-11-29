@@ -244,7 +244,7 @@ const SendGifts = () => {
 
           {/* Tab Navigation */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 dark:border-gray-800 scrollbar-hide">
+            <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-800 scrollbar-hide">
               <TabsList className="inline-flex h-auto p-0 bg-transparent gap-0 border-none w-min rounded-none">
                 <TabsTrigger value="quick-send" className="px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base">
                   Quick Send
