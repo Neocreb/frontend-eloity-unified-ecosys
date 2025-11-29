@@ -24,7 +24,8 @@ import {
   VolumeX
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useHybridFeed, type HybridPost } from "@/contexts/HybridFeedContext";
+import { useHybridFeed } from "@/contexts/HybridFeedContext";
+import type { HybridPost } from "@/contexts/HybridFeedContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompactFollowButton } from "./FollowButton";
 import { useEntityFollowHandlers } from "./UnifiedFeedHandlers";
