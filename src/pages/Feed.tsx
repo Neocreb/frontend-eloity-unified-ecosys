@@ -16,6 +16,7 @@ import {
   MapPin,
   Smile,
   Plus,
+  TrendingUp,
   Users,
   Globe,
   Building,
