@@ -193,7 +193,7 @@ const Feed = () => {
           </div>
 
           {/* Main Feed */}
-          <div className="col-span-1 lg:col-span-2">
+          <div className="col-span-1 lg:col-span-2 xl:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Tab Navigation */}
               <div className="sticky top-0 z-40 bg-white border-b border-gray-200 mb-4">
