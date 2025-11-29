@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { FeatureAnalytics } from './analyticsService';
 import { UserDemographics } from './userDemographicsService';
+import { getErrorMessage } from '@/utils/utils';
 
 // Types for export data
 export interface ExportData {
