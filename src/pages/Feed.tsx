@@ -32,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLiveNowData } from "@/hooks/use-sidebar-widgets";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeed } from "@/hooks/use-feed";
 import EnhancedPostCard from "@/components/feed/EnhancedPostCard";
