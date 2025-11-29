@@ -29,6 +29,7 @@ interface CurrencyContextType {
   formatCurrency: (amount: number, currencyCode?: string) => string;
   getExchangeRate: (fromCode: string, toCode: string) => number | null;
   getSupportedCurrencies: () => Currency[];
+  getCurrenciesByCategory: (category: Currency['category']) => Currency[];
   refreshExchangeRates: () => Promise<void>;
   refreshRates: () => Promise<void>;
 }
