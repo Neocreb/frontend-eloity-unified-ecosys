@@ -91,8 +91,7 @@ export const useFeedPosts = () => {
 
       setPosts(transformedPosts);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-      console.error('Error fetching posts:', errorMessage);
+      console.error('Error fetching posts:', getErrorMessage(error));
     } finally {
       setLoading(false);
     }

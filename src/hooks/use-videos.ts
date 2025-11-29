@@ -44,8 +44,7 @@ const fetchRealAdData = async () => {
       };
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-    console.error("Error fetching real ad data:", errorMessage);
+    console.error("Error fetching real ad data:", getErrorMessage(error));
     // According to project policy, we should not use mock data
     // Return null to indicate no ad data is available
     return null;
