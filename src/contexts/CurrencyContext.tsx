@@ -37,11 +37,54 @@ export const useCurrency = () => {
   return context;
 };
 
+interface ConversionOptions {
+  decimals?: number;
+  showSymbol?: boolean;
+  showCode?: boolean;
+  locale?: string;
+}
+
 export const useCurrencyConversion = () => {
   const context = useContext(CurrencyContext);
   if (!context) {
     throw new Error('useCurrencyConversion must be used within a CurrencyProvider');
   }
+
+  const formatAmountWithOptions = (amount: number, currencyCode?: string, options?: ConversionOptions): string => {
+    const code = currencyCode || context.selectedCurrency?.code || DEFAULT_CURRENCY;
+    const currency = getCurrencyByCode(code);
+
+    if (!currency) return `${amount.toFixed(2)}`;
+
+    const {
+      decimals = currency.decimals,
+      showSymbol = true,
+      showCode = false,
+      locale = 'en-US'
+    } = options || {};
+
+    const formattedNumber = new Intl.NumberFormat(locale, {
+      style: 'decimal',
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(amount);
+
+    let result = formattedNumber;
+
+    if (showSymbol) {
+      if ((currency as any).isCrypto) {
+        result = `${result} ${currency.symbol}`;
+      } else {
+        result = `${currency.symbol}${result}`;
+      }
+    }
+
+    if (showCode) {
+      result = `${result} ${currency.code}`;
+    }
+
+    return result;
+  };
 
   return {
     convertToUserCurrency: (amount: number, fromCurrency: string) => ({
@@ -49,9 +92,7 @@ export const useCurrencyConversion = () => {
       rate: context.getExchangeRate(fromCurrency, context.selectedCurrency?.code || DEFAULT_CURRENCY) || 1,
     }),
     userCurrency: context.selectedCurrency,
-    formatAmount: (amount: number, currency?: string, options?: any) => {
-      return context.formatCurrency(amount, currency);
-    },
+    formatAmount: formatAmountWithOptions,
   };
 };
 
