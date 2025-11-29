@@ -9,43 +9,6 @@ const SUPABASE_PUBLISHABLE_KEY = typeof import.meta !== 'undefined' && import.me
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Custom fetch that logs failures without interfering with downstream consumers.
-// We avoid reading the response body directly; when possible we create a fresh
-// Response instance containing the same bytes so later readers (like
-// supabase-js internals) can safely consume the body even if an upstream
-// consumer drained the original stream.
-const debugFetch: typeof fetch = async (input, init) => {
-  try {
-    const res = await fetch(input as RequestInfo, init as RequestInit);
-
-    // Log metadata only without trying to read/clone the body
-    if (!res.ok) {
-      try {
-        const url = typeof input === 'string' ? input : (input as Request).url;
-        const ct = res.headers.get('content-type') || '';
-        const metadata = { url, status: res.status, statusText: res.statusText, type: res.type, contentType: ct };
-
-        if ((res.status === 404 || res.status === 400 || res.status === 406 || res.status === 409) && typeof url === 'string') {
-          const restMatch = url.match(/\/rest\/v1\/([a-zA-Z0-9_]+)/);
-          const tableName = restMatch ? restMatch[1] : null;
-          if (tableName) {
-            console.warn(`Supabase REST ${res.status} for table "${tableName}": the table may not exist or is unauthorized. URL: ${url}`);
-          }
-        } else {
-          console.error('Supabase request failed', metadata);
-        }
-      } catch (e) {
-        console.error('Supabase metadata log error', e);
-      }
-    }
-
-    return res;
-  } catch (networkError) {
-    console.error('Supabase network error', networkError);
-    throw networkError;
-  }
-};
-
 let _supabase: any;
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   console.error('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
