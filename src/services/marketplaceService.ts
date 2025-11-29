@@ -84,10 +84,7 @@ export class MarketplaceService {
     try {
       let query = supabase
         .from('products')
-        .select(`
-          *,
-          seller:profiles(full_name, username, avatar_url, is_verified)
-        `);
+        .select(`*`);
 
       if (filters.categoryId) {
         query = query.eq('category_id', filters.categoryId);
