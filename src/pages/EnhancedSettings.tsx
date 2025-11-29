@@ -1346,7 +1346,7 @@ const EnhancedSettings = () => {
                         className="flex items-center gap-1"
                       >
                         <Languages className="w-3 h-3" />
-                        {lang}
+                        {language}
                         {languages.length > 1 && (
                           <button onClick={() => removeLanguage(language)}>
                             <X className="w-3 h-3" />
