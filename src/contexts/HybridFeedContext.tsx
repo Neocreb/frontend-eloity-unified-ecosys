@@ -245,6 +245,59 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
     });
   };
 
+  const createReplyPost = (parentId: string, content: string, author: any) => {
+    const newPost: Post = {
+      id: Date.now().toString(),
+      content,
+      author: {
+        id: author.id || 'user-' + Date.now(),
+        name: author.name,
+        username: author.username,
+        avatar: author.avatar,
+        verified: author.verified || false,
+      },
+      createdAt: 'now',
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      gifts: 0,
+      type: 'reply',
+      parentId,
+      depth: 1,
+      isReply: true,
+    };
+    setPosts(prev => [newPost, ...prev]);
+  };
+
+  const createQuotePost = (originalPostId: string, content: string, author: any) => {
+    const originalPost = posts.find(p => p.id === originalPostId);
+    if (!originalPost) return;
+
+    const newPost: Post = {
+      id: Date.now().toString(),
+      content,
+      author: {
+        id: author.id || 'user-' + Date.now(),
+        name: author.name,
+        username: author.username,
+        avatar: author.avatar,
+        verified: author.verified || false,
+      },
+      createdAt: 'now',
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      gifts: 0,
+      type: 'quote',
+      originalPost,
+    };
+    setPosts(prev => [newPost, ...prev]);
+  };
+
+  const getPostReplies = (postId: string): Post[] => {
+    return posts.filter(p => p.parentId === postId && p.type === 'reply');
+  };
+
   const value = {
     posts,
     addPost,
