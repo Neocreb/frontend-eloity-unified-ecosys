@@ -182,24 +182,6 @@ const Feed = () => {
     },
   ];
 
-  if (isLoading && supabasePosts.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 p-2 sm:p-4">
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="sticky top-4">
-                <FeedSidebar />
-              </div>
-            </div>
-            <div className="col-span-1 lg:col-span-2">
-              <FeedSkeleton />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
