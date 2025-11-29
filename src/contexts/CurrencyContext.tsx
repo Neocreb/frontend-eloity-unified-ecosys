@@ -412,19 +412,25 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
 
   const value = useMemo<CurrencyContextType>(
     () => ({
-      selectedCurrency,
+      selectedCurrency: selectedCurrency || getCurrencyByCode(DEFAULT_CURRENCY) || SUPPORTED_CURRENCIES[0] || null,
+      userCurrency: selectedCurrency || getCurrencyByCode(DEFAULT_CURRENCY) || SUPPORTED_CURRENCIES[0] || null,
       isLoading,
       error,
       exchangeRates,
       autoDetectEnabled,
       detectedCountry,
       detectedCurrency,
+      lastUpdated,
       setCurrency,
+      setUserCurrency,
       toggleAutoDetect,
       convertAmount,
+      convert,
       formatCurrency,
       getExchangeRate,
+      getSupportedCurrencies,
       refreshExchangeRates,
+      refreshRates,
     }),
     [
       selectedCurrency,
@@ -434,12 +440,17 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       autoDetectEnabled,
       detectedCountry,
       detectedCurrency,
+      lastUpdated,
       setCurrency,
+      setUserCurrency,
       toggleAutoDetect,
       convertAmount,
+      convert,
       formatCurrency,
       getExchangeRate,
+      getSupportedCurrencies,
       refreshExchangeRates,
+      refreshRates,
     ]
   );
 
