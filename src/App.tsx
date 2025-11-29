@@ -654,6 +654,7 @@ const AppRoutes = () => {
           {/* <Route path="verify/kyc" element={<KYCPage />} /> */}
           <Route path="search/users" element={<UserSearch />} />
           <Route path="settings/delete-account" element={<DeleteAccount />} />
+          <Route path="settings/currency" element={<CurrencySettings />} />
 
           <Route path="notifications" element={<UnifiedNotifications />} />
 
