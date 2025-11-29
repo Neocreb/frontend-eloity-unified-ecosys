@@ -32,12 +32,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useFeed } from "@/hooks/use-feed";
-import EnhancedPostCard from "@/components/feed/EnhancedPostCard";
-import { FeedNativeAdCard } from "@/components/ads/FeedNativeAdCard";
-import { SponsoredPostCard } from "@/components/ads/SponsoredPostCard";
-import { adSettings } from "../../config/adSettings";
 import FeedSkeleton from "@/components/feed/FeedSkeleton";
 import CreatePostTrigger from "@/components/feed/CreatePostTrigger";
 import EnhancedStoriesSection from "@/components/feed/EnhancedStoriesSection";
@@ -50,46 +44,6 @@ import UnifiedFeedContent from "@/components/feed/UnifiedFeedContent";
 import SuggestedSidebar from "@/components/feed/SuggestedSidebar";
 import FeedSidebar from "@/components/feed/FeedSidebar";
 
-// Define the Post type
-export type Post = {
-  id: string;
-  content: string;
-  timestamp?: string;
-  createdAt: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  author: {
-    name: string;
-    username: string;
-    handle: string;
-    avatar: string;
-    verified?: boolean;
-  };
-  image?: string;
-  liked?: boolean;
-};
-
-// Convert Supabase post format to legacy Post format
-const convertToLegacyPost = (supabasePost: any): Post => ({
-  id: supabasePost.id,
-  content: supabasePost.content,
-  timestamp: supabasePost.createdAt,
-  createdAt: supabasePost.createdAt,
-  likes: supabasePost.likes,
-  comments: supabasePost.comments,
-  shares: supabasePost.shares,
-  author: {
-    name: supabasePost.author.name,
-    username: supabasePost.author.username,
-    handle: `@${supabasePost.author.username}`,
-    avatar: supabasePost.author.avatar,
-    verified: supabasePost.author.verified,
-  },
-  image: supabasePost.image,
-  liked: false,
-});
-
 // Main Feed Component
 const Feed = () => {
   const location = useLocation();
@@ -97,15 +51,10 @@ const Feed = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("for-you");
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
   const [showStoryViewer, setShowStoryViewer] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
-  const [feedWithAds, setFeedWithAds] = useState<(Post | { id: string; type: 'native_ad' | 'sponsored_post' })[]>([]);
-
-  // Use real feed data from Supabase
-  const { posts: supabasePosts, isLoading, hasMore, loadMorePosts, handleCreatePost } = useFeed();
 
   // Update URL when tab changes
   useEffect(() => {
@@ -120,69 +69,6 @@ const Feed = () => {
     const tab = params.get("tab");
     if (tab) setActiveTab(tab);
   }, [location.search]);
-
-  // Create feed with ads using real posts from Supabase
-  useEffect(() => {
-    if (supabasePosts.length === 0) return;
-    
-    const createFeedWithAds = () => {
-      const feedItems = [];
-      let nativeAdCounter = 0;
-      let sponsoredAdCounter = 0;
-      
-      const legacyPosts = supabasePosts.map(convertToLegacyPost);
-
-      for (let i = 0; i < legacyPosts.length; i++) {
-        feedItems.push(legacyPosts[i]);
-
-        if ((i + 1) % adSettings.feedAdFrequency === 0 && adSettings.enableAds) {
-          nativeAdCounter++;
-          feedItems.push({
-            id: `native-ad-${nativeAdCounter}`,
-            type: 'native_ad' as const
-          });
-        }
-
-        if ((i + 1) % adSettings.feedSponsoredFrequency === 0 && adSettings.enableAds) {
-          sponsoredAdCounter++;
-          feedItems.push({
-            id: `sponsored-post-${sponsoredAdCounter}`,
-            type: 'sponsored_post' as const
-          });
-        }
-      }
-
-      return feedItems;
-    };
-
-    setFeedWithAds(createFeedWithAds());
-  }, [supabasePosts]);
-
-  const renderFeedItem = (item: Post | { id: string; type: 'native_ad' | 'sponsored_post' }) => {
-    if ('type' in item) {
-      if (item.type === 'native_ad') {
-        return (
-          <FeedNativeAdCard
-            key={item.id}
-            onClick={() => console.log('Native ad clicked')}
-          />
-        );
-      } else if (item.type === 'sponsored_post') {
-        return (
-          <SponsoredPostCard
-            key={item.id}
-            title="Discover Eloity Premium"
-            content="Unlock exclusive features, priority support, and enhanced creator tools. Join thousands of creators already earning more with Eloity Premium!"
-            ctaText="Upgrade Now"
-            onClick={() => console.log('Sponsored post clicked')}
-          />
-        );
-      }
-    }
-
-    const post = item as Post;
-    return <EnhancedPostCard key={post.id} post={post} />;
-  };
 
   const handleCreateStory = async (storyData: any) => {
     try {
@@ -254,29 +140,11 @@ const Feed = () => {
     },
   ];
 
-  if (isLoading && supabasePosts.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 p-2 sm:p-4">
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="sticky top-4">
-                <FeedSidebar />
-              </div>
-            </div>
-            <div className="col-span-1 lg:col-span-2">
-              <FeedSkeleton />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 p-2 sm:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6 p-2 sm:p-4">
           {/* Left Sidebar */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-4">
@@ -285,7 +153,7 @@ const Feed = () => {
           </div>
 
           {/* Main Feed */}
-          <div className="col-span-1 lg:col-span-2">
+          <div className="col-span-1 lg:col-span-2 xl:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Tab Navigation */}
               <div className="sticky top-0 z-40 bg-white border-b border-gray-200 mb-4">
@@ -343,26 +211,7 @@ const Feed = () => {
                       </HybridFeedProvider>
                     </ErrorBoundary>
                   ) : (
-                    <>
-                      {feedWithAds.length > 0 ? (
-                        <>
-                          {feedWithAds.map((item) => renderFeedItem(item))}
-                          {hasMore && (
-                            <div className="flex justify-center py-4">
-                              <button 
-                                onClick={loadMorePosts}
-                                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                                disabled={isLoading}
-                              >
-                                {isLoading ? 'Loading...' : 'Load More'}
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <UnifiedFeedContent feedType={tab.value} />
-                      )}
-                    </>
+                    <UnifiedFeedContent feedType={tab.value} />
                   )}
                 </TabsContent>
               ))}
@@ -370,7 +219,7 @@ const Feed = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="hidden xl:block xl:col-span-1">
+          <div className="hidden lg:block lg:col-span-1 xl:col-span-1">
             <div className="sticky top-4">
               <SuggestedSidebar />
             </div>
