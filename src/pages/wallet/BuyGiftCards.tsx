@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface GiftCard {
   id: number;
@@ -18,10 +19,20 @@ interface GiftCard {
   currencyCode: string;
 }
 
+interface CommissionData {
+  original_amount: number;
+  commission_value: number;
+  commission_type: string;
+  commission_rate: number;
+  final_amount: number;
+  reloadly_amount: number;
+}
+
 const BuyGiftCards = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { walletBalance } = useWalletContext();
+  const { selectedCurrency, formatCurrency } = useCurrency();
 
   const [step, setStep] = useState<"retailer" | "amount" | "review" | "success">("retailer");
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +42,7 @@ const BuyGiftCards = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(null);
 
   // Fetch gift card products from Reloadly API
   useEffect(() => {
@@ -74,7 +86,7 @@ const BuyGiftCards = () => {
     setStep("amount");
   };
 
-  const handleContinueAmount = () => {
+  const handleContinueAmount = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
@@ -91,7 +103,33 @@ const BuyGiftCards = () => {
       toast.error("Insufficient balance");
       return;
     }
-    setStep("review");
+
+    try {
+      const token = session?.access_token;
+      const response = await fetch('/api/commission/calculate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          service_type: 'gift_cards',
+          amount: parseFloat(amount),
+          operator_id: selectedCard?.id
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setCommissionData(result.data);
+        setStep("review");
+      } else {
+        toast.error('Failed to calculate price');
+      }
+    } catch (error) {
+      console.error('Error calculating commission:', error);
+      toast.error('Failed to calculate price');
+    }
   };
 
   const handleBuy = async () => {
@@ -147,7 +185,7 @@ const BuyGiftCards = () => {
                   <div>
                     <p className="text-sm text-gray-600">Available Balance</p>
                     <p className="text-3xl font-bold text-gray-900 mt-1">
-                      ${walletBalance?.total.toFixed(2) || "0.00"}
+                      {formatCurrency(walletBalance?.total || 0)}
                     </p>
                   </div>
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
@@ -325,8 +363,6 @@ const BuyGiftCards = () => {
   }
 
   if (step === "review") {
-    const total = parseFloat(amount);
-
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <WalletActionHeader title="Review Purchase" />
@@ -348,9 +384,9 @@ const BuyGiftCards = () => {
 
                 {/* Amount Section */}
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Amount to Purchase</p>
-                  <p className="text-4xl font-bold text-gray-900">
-                    {selectedCard?.currencyCode} {parseFloat(amount).toFixed(2)}
+                  <p className="text-sm text-gray-600 mb-2">Amount</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(parseFloat(amount))}
                   </p>
                 </div>
 
@@ -370,7 +406,7 @@ const BuyGiftCards = () => {
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold text-gray-900">Total to Pay</span>
                   <span className="font-bold text-lg text-pink-600">
-                    {selectedCard?.currencyCode} {total.toFixed(2)}
+                    {formatCurrency(commissionData?.final_amount || parseFloat(amount))}
                   </span>
                 </div>
               </CardContent>
@@ -407,7 +443,10 @@ const BuyGiftCards = () => {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setStep("amount")}
+            onClick={() => {
+              setStep("amount");
+              setCommissionData(null);
+            }}
             disabled={isLoading}
             className="w-full h-12"
           >
@@ -419,9 +458,6 @@ const BuyGiftCards = () => {
   }
 
   if (step === "success") {
-    const fee = selectedCard ? parseFloat(amount) * (selectedCard.fee / 100) : 0;
-    const total = parseFloat(amount) + fee;
-
     return (
       <div className="flex flex-col h-screen bg-gradient-to-br from-pink-50 to-rose-50">
         <WalletActionHeader title="Purchase Complete" />

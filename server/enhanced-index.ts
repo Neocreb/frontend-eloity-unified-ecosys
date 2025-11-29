@@ -93,6 +93,8 @@ import tierAccessRouter from './routes/tierAccess.js';
 import subscriptionsRouter from './routes/subscriptions.js';
 import referralBonusRouter from './routes/referralBonus.js';
 import creatorFundBoostRouter from './routes/creatorFundBoost.js';
+import currencyRouter from './routes/currency.js';
+import { initializeCurrencyService } from './services/currencyService.js';
 import startMetricsSync from './tasks/metricsSync.js';
 import startCryptoDataSync from './tasks/syncCryptoData.js';
 
@@ -531,6 +533,7 @@ app.use('/api/tier', tierAccessRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/referral', referralBonusRouter);
 app.use('/api/creator-boost', creatorFundBoostRouter);
+app.use('/api/currency', currencyRouter);
 // Mount crypto user router to the same /api/crypto path (handles user-specific crypto operations with auth)
 app.use('/api/crypto/user', cryptoUserRouter);
 
@@ -882,6 +885,17 @@ if (process.env.NODE_ENV === 'production') {
       }
     });
   });
+}
+
+// =============================================================================
+// INITIALIZE SERVICES
+// =============================================================================
+
+try {
+  await initializeCurrencyService();
+  console.log('✅ Currency service initialized with daily rate updates');
+} catch (e) {
+  console.error('❌ Failed to initialize currency service:', e);
 }
 
 // =============================================================================

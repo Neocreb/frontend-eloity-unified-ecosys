@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface GiftCardProduct {
   id: number;
@@ -35,6 +36,7 @@ const GiftCards = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { walletBalance } = useWalletContext();
+  const { selectedCurrency, formatCurrency } = useCurrency();
   const [step, setStep] = useState<"products" | "select" | "review" | "success">("products");
   const [products, setProducts] = useState<GiftCardProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<GiftCardProduct | null>(null);
@@ -299,9 +301,9 @@ const GiftCards = () => {
                   <p className="text-sm text-gray-600">Gift Card</p>
                   <div className="flex items-center gap-2 mt-2">
                     {selectedProduct?.logoUrls && selectedProduct.logoUrls.length > 0 ? (
-                      <img 
-                        src={selectedProduct.logoUrls[0]} 
-                        alt={selectedProduct.brandName} 
+                      <img
+                        src={selectedProduct.logoUrls[0]}
+                        alt={selectedProduct.brandName}
                         className="w-10 h-10 object-contain"
                       />
                     ) : (
@@ -317,19 +319,13 @@ const GiftCards = () => {
                 </div>
 
                 <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Service Amount</span>
-                    <span className="font-bold">${commissionData?.original_amount.toFixed(2) || amount.toFixed(2)}</span>
+                  <div className="flex justify-between mb-4">
+                    <span className="text-gray-600">Amount</span>
+                    <span className="font-bold">{formatCurrency(amount)}</span>
                   </div>
-                  {commissionData?.commission_value > 0 && (
-                    <div className="flex justify-between mb-2 text-purple-600">
-                      <span className="text-sm">Commission ({commissionData?.commission_rate}%)</span>
-                      <span className="font-semibold">${commissionData?.commission_value.toFixed(2)}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Total You Pay</span>
-                    <span className="text-2xl font-bold text-purple-600">${commissionData?.final_amount.toFixed(2) || amount.toFixed(2)}</span>
+                    <span className="font-semibold">Total to Pay</span>
+                    <span className="text-2xl font-bold text-purple-600">{formatCurrency(commissionData?.final_amount || amount)}</span>
                   </div>
                 </div>
 

@@ -1,221 +1,289 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode, type FC } from 'react';
-import { currencyService, type ConversionOptions, type ConversionResult } from '@/services/currencyService';
-import { 
-  type Currency, 
-  DEFAULT_CURRENCY, 
-  getCurrencyByCode,
-  getDefaultCurrency 
-} from '@/config/currencies';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from './AuthContext';
+import { SUPPORTED_CURRENCIES, DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/config/currencies';
+import { supabase } from '@/integrations/supabase/client';
+
+interface ExchangeRate {
+  from: string;
+  to: string;
+  rate: number;
+  lastUpdated: Date;
+}
 
 interface CurrencyContextType {
-  // Current user's preferred currency
-  userCurrency: Currency;
-  baseCurrency: Currency; // Usually USD for internal calculations
-  
-  // Currency management
-  setUserCurrency: (currencyCode: string) => void;
-  getSupportedCurrencies: () => Currency[];
-  getCurrenciesByCategory: (category: Currency['category']) => Currency[];
-  
-  // Conversion functions
-  convert: (amount: number, fromCurrency: string, toCurrency?: string, options?: ConversionOptions) => ConversionResult;
-  convertToUserCurrency: (amount: number, fromCurrency: string, options?: ConversionOptions) => ConversionResult;
-  convertFromUserCurrency: (amount: number, toCurrency: string, options?: ConversionOptions) => ConversionResult;
-  
-  // Formatting functions
-  formatAmount: (amount: number, currencyCode?: string, options?: ConversionOptions) => string;
-  formatPrice: (price: number, currencyCode?: string, options?: ConversionOptions) => string;
-  formatUserCurrency: (amount: number, options?: ConversionOptions) => string;
-  
-  // Utility functions
+  selectedCurrency: Currency | null;
   isLoading: boolean;
-  lastUpdated: Date | null;
-  refreshRates: () => Promise<void>;
+  error: Error | null;
+  exchangeRates: Map<string, number>;
+  autoDetectEnabled: boolean;
+  detectedCountry: string | null;
+  detectedCurrency: Currency | null;
+  setCurrency: (currencyCode: string) => Promise<void>;
+  toggleAutoDetect: (enabled: boolean) => Promise<void>;
+  convertAmount: (amount: number, fromCode: string, toCode: string) => number;
+  formatCurrency: (amount: number, currencyCode?: string) => string;
+  getExchangeRate: (fromCode: string, toCode: string) => number | null;
+  refreshExchangeRates: () => Promise<void>;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
+export const useCurrency = () => {
+  const context = useContext(CurrencyContext);
+  if (!context) {
+    throw new Error('useCurrency must be used within a CurrencyProvider');
+  }
+  return context;
+};
+
 interface CurrencyProviderProps {
-  children: ReactNode;
-  defaultCurrency?: string;
+  children: React.ReactNode;
 }
 
-export const CurrencyProvider: FC<CurrencyProviderProps> = ({
-  children,
-  defaultCurrency = DEFAULT_CURRENCY
-}) => {
-  const [userCurrency, setUserCurrencyState] = useState<Currency>(() => {
-    try {
-      // Try to get from localStorage first, but only in browser
-      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-        const saved = localStorage.getItem('preferred-currency');
-        if (saved) {
-          const currency = getCurrencyByCode(saved);
-          if (currency) return currency;
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to access localStorage for currency:', error);
-    }
+export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) => {
+  const { user, session } = useAuth();
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<Map<string, number>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [autoDetectEnabled, setAutoDetectEnabled] = useState(true);
+  const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
+  const [detectedCurrency, setDetectedCurrency] = useState<Currency | null>(null);
 
-    // Fallback to default
-    return getCurrencyByCode(defaultCurrency) || getDefaultCurrency();
-  });
-  
-  const [baseCurrency] = useState<Currency>(getCurrencyByCode('USD') || getDefaultCurrency());
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-  // Save user currency preference to localStorage
-  useEffect(() => {
-    localStorage.setItem('preferred-currency', userCurrency.code);
-  }, [userCurrency]);
-
-  // Initialize currency service and set up automatic updates
+  // Initialize currency on component mount and user change
   useEffect(() => {
     const initializeCurrency = async () => {
       setIsLoading(true);
       try {
-        await currencyService.updateExchangeRates();
-        setLastUpdated(new Date());
-      } catch (error) {
-        console.error('Failed to initialize currency service:', error);
+        if (!user?.id || !session) {
+          const detected = await detectCurrencyByLocation();
+          setSelectedCurrency(detected || getCurrencyByCode(DEFAULT_CURRENCY)!);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch user's saved currency preference
+        const { data: profile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('preferred_currency, auto_detect_currency')
+          .eq('user_id', user.id)
+          .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+        const userCurrency = profile?.preferred_currency;
+        const userAutoDetect = profile?.auto_detect_currency !== false;
+
+        setAutoDetectEnabled(userAutoDetect);
+
+        if (userAutoDetect) {
+          const detected = await detectCurrencyByLocation();
+          if (detected) {
+            setSelectedCurrency(detected);
+            setDetectedCurrency(detected);
+          } else {
+            setSelectedCurrency(getCurrencyByCode(userCurrency || DEFAULT_CURRENCY)!);
+          }
+        } else if (userCurrency) {
+          setSelectedCurrency(getCurrencyByCode(userCurrency)!);
+        } else {
+          setSelectedCurrency(getCurrencyByCode(DEFAULT_CURRENCY)!);
+        }
+
+        await fetchExchangeRates();
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to initialize currency'));
+        setSelectedCurrency(getCurrencyByCode(DEFAULT_CURRENCY)!);
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeCurrency();
+  }, [user?.id, session]);
 
-    // Set up periodic updates (every 5 minutes)
-    const interval = setInterval(async () => {
-      try {
-        await currencyService.updateExchangeRates();
-        setLastUpdated(new Date());
-      } catch (error) {
-        console.error('Failed to update exchange rates:', error);
+  const detectCurrencyByLocation = async (): Promise<Currency | null> => {
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      const data = await response.json();
+      
+      setDetectedCountry(data.country_name || null);
+      
+      const currencyCode = data.currency || null;
+      if (currencyCode) {
+        const currency = getCurrencyByCode(currencyCode);
+        setDetectedCurrency(currency || null);
+        return currency || null;
       }
-    }, 5 * 60 * 1000);
+      return null;
+    } catch (err) {
+      console.error('Geolocation detection failed:', err);
+      return null;
+    }
+  };
 
-    return () => clearInterval(interval);
+  const fetchExchangeRates = async () => {
+    try {
+      const response = await fetch('/api/currency/rates');
+      if (!response.ok) throw new Error('Failed to fetch exchange rates');
+      
+      const data = await response.json();
+      if (data.success && data.rates) {
+        const ratesMap = new Map<string, number>();
+        data.rates.forEach((rate: { from: string; to: string; rate: number }) => {
+          ratesMap.set(`${rate.from}_${rate.to}`, rate.rate);
+        });
+        setExchangeRates(ratesMap);
+      }
+    } catch (err) {
+      console.error('Failed to fetch exchange rates:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch exchange rates'));
+    }
+  };
+
+  const setCurrency = useCallback(async (currencyCode: string) => {
+    try {
+      const currency = getCurrencyByCode(currencyCode);
+      if (!currency) throw new Error('Invalid currency code');
+
+      setSelectedCurrency(currency);
+
+      if (user?.id && session) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ preferred_currency: currencyCode })
+          .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+      } else {
+        localStorage.setItem('preferred_currency', currencyCode);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to set currency'));
+      throw err;
+    }
+  }, [user?.id, session]);
+
+  const toggleAutoDetect = useCallback(async (enabled: boolean) => {
+    try {
+      setAutoDetectEnabled(enabled);
+
+      if (enabled) {
+        const detected = await detectCurrencyByLocation();
+        if (detected) {
+          setSelectedCurrency(detected);
+        }
+      }
+
+      if (user?.id && session) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ auto_detect_currency: enabled })
+          .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+      } else {
+        localStorage.setItem('auto_detect_currency', String(enabled));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to update auto-detect setting'));
+      throw err;
+    }
+  }, [user?.id, session]);
+
+  const convertAmount = useCallback((amount: number, fromCode: string, toCode: string): number => {
+    if (fromCode === toCode) return amount;
+
+    const rate = exchangeRates.get(`${fromCode}_${toCode}`);
+    if (!rate) {
+      console.warn(`No exchange rate found for ${fromCode} to ${toCode}`);
+      return amount;
+    }
+
+    return parseFloat((amount * rate).toFixed(2));
+  }, [exchangeRates]);
+
+  const formatCurrency = useCallback((amount: number, currencyCode?: string): string => {
+    const code = currencyCode || selectedCurrency?.code || DEFAULT_CURRENCY;
+    const currency = getCurrencyByCode(code);
+    
+    if (!currency) return `${amount.toFixed(2)}`;
+
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: code,
+      minimumFractionDigits: currency.decimals,
+      maximumFractionDigits: currency.decimals,
+    }).format(amount);
+
+    return formatted;
+  }, [selectedCurrency]);
+
+  const getExchangeRate = useCallback((fromCode: string, toCode: string): number | null => {
+    if (fromCode === toCode) return 1;
+    return exchangeRates.get(`${fromCode}_${toCode}`) || null;
+  }, [exchangeRates]);
+
+  const refreshExchangeRates = useCallback(async () => {
+    await fetchExchangeRates();
   }, []);
 
-  const setUserCurrency = (currencyCode: string) => {
-    const currency = getCurrencyByCode(currencyCode);
-    if (currency) {
-      setUserCurrencyState(currency);
-    } else {
-      console.warn(`Invalid currency code: ${currencyCode}`);
-    }
-  };
-
-  const convert = (
-    amount: number, 
-    fromCurrency: string, 
-    toCurrency: string = userCurrency.code, 
-    options?: ConversionOptions
-  ): ConversionResult => {
-    return currencyService.convert(amount, fromCurrency, toCurrency, options);
-  };
-
-  const convertToUserCurrency = (
-    amount: number, 
-    fromCurrency: string, 
-    options?: ConversionOptions
-  ): ConversionResult => {
-    return currencyService.convert(amount, fromCurrency, userCurrency.code, options);
-  };
-
-  const convertFromUserCurrency = (
-    amount: number, 
-    toCurrency: string, 
-    options?: ConversionOptions
-  ): ConversionResult => {
-    return currencyService.convert(amount, userCurrency.code, toCurrency, options);
-  };
-
-  const formatAmount = (
-    amount: number, 
-    currencyCode: string = userCurrency.code, 
-    options?: ConversionOptions
-  ): string => {
-    return currencyService.formatAmount(amount, currencyCode, options);
-  };
-
-  const formatPrice = (
-    price: number, 
-    currencyCode: string = userCurrency.code, 
-    options?: ConversionOptions
-  ): string => {
-    return currencyService.formatPrice(price, currencyCode, options);
-  };
-
-  const formatUserCurrency = (
-    amount: number, 
-    options?: ConversionOptions
-  ): string => {
-    return currencyService.formatAmount(amount, userCurrency, options);
-  };
-
-  const refreshRates = async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      await currencyService.updateExchangeRates();
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Failed to refresh exchange rates:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const contextValue: CurrencyContextType = {
-    userCurrency,
-    baseCurrency,
-    setUserCurrency,
-    getSupportedCurrencies: currencyService.getSupportedCurrencies,
-    getCurrenciesByCategory: currencyService.getCurrenciesByCategory,
-    convert,
-    convertToUserCurrency,
-    convertFromUserCurrency,
-    formatAmount,
-    formatPrice,
-    formatUserCurrency,
-    isLoading,
-    lastUpdated,
-    refreshRates
-  };
+  const value = useMemo<CurrencyContextType>(
+    () => ({
+      selectedCurrency,
+      isLoading,
+      error,
+      exchangeRates,
+      autoDetectEnabled,
+      detectedCountry,
+      detectedCurrency,
+      setCurrency,
+      toggleAutoDetect,
+      convertAmount,
+      formatCurrency,
+      getExchangeRate,
+      refreshExchangeRates,
+    }),
+    [
+      selectedCurrency,
+      isLoading,
+      error,
+      exchangeRates,
+      autoDetectEnabled,
+      detectedCountry,
+      detectedCurrency,
+      setCurrency,
+      toggleAutoDetect,
+      convertAmount,
+      formatCurrency,
+      getExchangeRate,
+      refreshExchangeRates,
+    ]
+  );
 
   return (
-    <CurrencyContext.Provider value={contextValue}>
+    <CurrencyContext.Provider value={value}>
       {children}
     </CurrencyContext.Provider>
   );
 };
 
-export const useCurrency = (): CurrencyContextType => {
-  const context = useContext(CurrencyContext);
-  if (context === undefined) {
-    throw new Error('useCurrency must be used within a CurrencyProvider');
-  }
-  return context;
-};
+// Helper functions
+export function getCurrencyByCode(code: string): Currency | undefined {
+  return SUPPORTED_CURRENCIES.find(c => c.code === code);
+}
 
-// Additional hooks for common use cases
-export const useUserCurrency = () => {
-  const { userCurrency } = useCurrency();
-  return userCurrency;
-};
+export function getCurrencyByCountry(country: string): Currency | undefined {
+  return SUPPORTED_CURRENCIES.find(c => c.country === country);
+}
 
-export const useCurrencyConversion = () => {
-  const { convert, convertToUserCurrency, convertFromUserCurrency } = useCurrency();
-  return { convert, convertToUserCurrency, convertFromUserCurrency };
-};
-
-export const useCurrencyFormatting = () => {
-  const { formatAmount, formatPrice, formatUserCurrency } = useCurrency();
-  return { formatAmount, formatPrice, formatUserCurrency };
-};
-
-export default CurrencyContext;
+export function getAfricanCurrencies(): Currency[] {
+  return SUPPORTED_CURRENCIES.filter(c => {
+    const africanCountries = [
+      'Nigeria', 'Kenya', 'Ghana', 'South Africa', 'Egypt', 'Uganda', 'Tanzania',
+      'Senegal', 'Ivory Coast', 'Morocco', 'Cameroon', 'Ethiopia'
+    ];
+    return africanCountries.includes(c.country);
+  });
+}

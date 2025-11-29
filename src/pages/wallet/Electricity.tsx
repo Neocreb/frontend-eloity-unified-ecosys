@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle2, Zap } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Provider {
   id: number;
@@ -29,6 +30,7 @@ const Electricity = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
+  const { selectedCurrency, formatCurrency } = useCurrency();
   const [step, setStep] = useState<"provider" | "meterNumber" | "amount" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [meterNumber, setMeterNumber] = useState("");
@@ -152,7 +154,7 @@ const Electricity = () => {
             <CardContent className="pt-6">
               <p className="text-sm text-gray-600">Available Balance</p>
               <p className="text-4xl font-bold text-gray-900 mt-2">
-                ${walletBalance?.total.toFixed(2) || "0.00"}
+                {formatCurrency(walletBalance?.total || 0)}
               </p>
             </CardContent>
           </Card>
@@ -308,22 +310,14 @@ const Electricity = () => {
                     <span className="text-gray-600">Meter Number</span>
                     <span className="font-semibold font-mono">{meterNumber}</span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Amount</span>
+                    <span className="font-semibold">{formatCurrency(parseInt(amount) || 0)}</span>
+                  </div>
 
-                  <div className="border-t pt-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Service Amount</span>
-                      <span className="font-semibold">₦{commissionData?.original_amount.toLocaleString()}</span>
-                    </div>
-                    {commissionData?.commission_value > 0 && (
-                      <div className="flex justify-between items-center text-yellow-600">
-                        <span className="text-sm">Commission ({commissionData?.commission_type === 'fixed_amount' ? 'Fixed' : commissionData?.commission_rate + '%'})</span>
-                        <span className="font-semibold">₦{commissionData?.commission_value.toLocaleString()}</span>
-                      </div>
-                    )}
-                    <div className="border-t pt-3 flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">Total You Pay</span>
-                      <span className="text-xl font-bold text-yellow-600">₦{commissionData?.final_amount.toLocaleString()}</span>
-                    </div>
+                  <div className="border-t pt-4 flex justify-between items-center">
+                    <span className="font-semibold text-gray-900">Total to Pay</span>
+                    <span className="text-xl font-bold text-yellow-600">{formatCurrency(commissionData?.final_amount || 0)}</span>
                   </div>
                 </CardContent>
               </Card>

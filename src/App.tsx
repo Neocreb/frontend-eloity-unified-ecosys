@@ -220,6 +220,7 @@ import StickerCreation from "./pages/chat/StickerCreation";
 import ShareMeme from "./pages/chat/ShareMeme";
 import UserSearch from "./pages/search/UserSearch";
 import DeleteAccount from "./pages/settings/DeleteAccount";
+import CurrencySettings from "./pages/settings/CurrencySettings";
 // Phase 3 - User List Modal Conversions
 import UserFollowers from "./pages/profile/UserFollowers";
 import UserFollowing from "./pages/profile/UserFollowing";
@@ -653,6 +654,7 @@ const AppRoutes = () => {
           {/* <Route path="verify/kyc" element={<KYCPage />} /> */}
           <Route path="search/users" element={<UserSearch />} />
           <Route path="settings/delete-account" element={<DeleteAccount />} />
+          <Route path="settings/currency" element={<CurrencySettings />} />
 
           <Route path="notifications" element={<UnifiedNotifications />} />
 
