@@ -150,9 +150,8 @@ const EnhancedFeedWithTabs = () => {
                   <CreatePostTrigger onPostCreated={() => handleRefresh()} />
 
                   <HybridFeedContent
-                    tabValue={tab.value}
-                    isRefreshing={isRefreshing}
-                    onRefresh={handleRefresh}
+                    feedType={tab.value}
+                    viewMode={activeTab === 'saved' ? 'saved' : 'classic'}
                   />
                 </TabsContent>
               ))}
