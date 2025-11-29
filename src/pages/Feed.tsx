@@ -98,10 +98,6 @@ const Feed = () => {
   const [showStoryViewer, setShowStoryViewer] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [userStories, setUserStories] = useState<any[]>([]);
-  const [feedWithAds, setFeedWithAds] = useState<(Post | { id: string; type: 'native_ad' | 'sponsored_post' })[]>([]);
-
-  // Use real feed data from Supabase
-  const { posts: supabasePosts, isLoading, hasMore, loadMorePosts, handleCreatePost } = useFeed();
 
   // Update URL when tab changes
   useEffect(() => {
@@ -116,69 +112,6 @@ const Feed = () => {
     const tab = params.get("tab");
     if (tab) setActiveTab(tab);
   }, [location.search]);
-
-  // Create feed with ads using real posts from Supabase
-  useEffect(() => {
-    if (supabasePosts.length === 0) return;
-    
-    const createFeedWithAds = () => {
-      const feedItems = [];
-      let nativeAdCounter = 0;
-      let sponsoredAdCounter = 0;
-      
-      const legacyPosts = supabasePosts.map(convertToLegacyPost);
-
-      for (let i = 0; i < legacyPosts.length; i++) {
-        feedItems.push(legacyPosts[i]);
-
-        if ((i + 1) % adSettings.feedAdFrequency === 0 && adSettings.enableAds) {
-          nativeAdCounter++;
-          feedItems.push({
-            id: `native-ad-${nativeAdCounter}`,
-            type: 'native_ad' as const
-          });
-        }
-
-        if ((i + 1) % adSettings.feedSponsoredFrequency === 0 && adSettings.enableAds) {
-          sponsoredAdCounter++;
-          feedItems.push({
-            id: `sponsored-post-${sponsoredAdCounter}`,
-            type: 'sponsored_post' as const
-          });
-        }
-      }
-
-      return feedItems;
-    };
-
-    setFeedWithAds(createFeedWithAds());
-  }, [supabasePosts]);
-
-  const renderFeedItem = (item: Post | { id: string; type: 'native_ad' | 'sponsored_post' }) => {
-    if ('type' in item) {
-      if (item.type === 'native_ad') {
-        return (
-          <FeedNativeAdCard
-            key={item.id}
-            onClick={() => console.log('Native ad clicked')}
-          />
-        );
-      } else if (item.type === 'sponsored_post') {
-        return (
-          <SponsoredPostCard
-            key={item.id}
-            title="Discover Eloity Premium"
-            content="Unlock exclusive features, priority support, and enhanced creator tools. Join thousands of creators already earning more with Eloity Premium!"
-            ctaText="Upgrade Now"
-            onClick={() => console.log('Sponsored post clicked')}
-          />
-        );
-      }
-    }
-
-    const post = item as Post;
-    return <EnhancedPostCard key={post.id} post={post} />;
-  };
 
   const handleCreateStory = async (storyData: any) => {
     try {
