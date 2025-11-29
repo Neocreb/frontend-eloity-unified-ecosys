@@ -42,6 +42,12 @@ export const profiles = pgTable('profiles', {
   tier_level: text('tier_level').default('tier_1'),
   kyc_trigger_reason: text('kyc_trigger_reason'),
   tier_upgraded_at: timestamp('tier_upgraded_at'),
+  // Appearance settings
+  font_size: text('font_size').default('medium'),
+  ui_language: text('ui_language').default('en'),
+  auto_play_videos: boolean('auto_play_videos').default(true),
+  reduced_motion: boolean('reduced_motion').default(false),
+  high_contrast: boolean('high_contrast').default(false),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });
