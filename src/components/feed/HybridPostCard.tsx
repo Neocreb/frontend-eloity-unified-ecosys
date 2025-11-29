@@ -24,7 +24,8 @@ import {
   VolumeX
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useHybridFeed, type HybridPost } from "@/contexts/HybridFeedContext";
+import { useHybridFeed } from "@/contexts/HybridFeedContext";
+import type { HybridPost } from "@/contexts/HybridFeedContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompactFollowButton } from "./FollowButton";
 import { useEntityFollowHandlers } from "./UnifiedFeedHandlers";
@@ -258,7 +259,7 @@ const HybridPostCard: React.FC<HybridPostCardProps> = ({
                   </Button>
                 </>
               )}
-              {!post.author.id.startsWith(user?.id || '') && (
+              {post.author.id && user?.id && post.author.id !== user.id && (
                 <CompactFollowButton
                   type="user"
                   isFollowing={isFollowing}

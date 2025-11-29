@@ -4,6 +4,7 @@ interface Post {
   id: string;
   content: string;
   author: {
+    id?: string;
     name: string;
     username: string;
     avatar: string;
@@ -19,12 +20,17 @@ interface Post {
   gifted?: boolean;
   image?: string;
   location?: string;
-  type: 'post';
+  type: 'post' | 'reply' | 'quote';
   originalPost?: Post;
   media?: any[];
   privacy?: string;
   feeling?: { emoji: string; text: string };
+  parentId?: string;
+  depth?: number;
+  isReply?: boolean;
 }
+
+export type HybridPost = Post;
 
 interface HybridFeedContextType {
   // Post management
@@ -32,22 +38,27 @@ interface HybridFeedContextType {
   addPost: (post: Omit<Post, 'id' | 'createdAt'>) => void;
   updatePost: (postId: string, updates: Partial<Post>) => void;
   removePost: (postId: string) => void;
-  
+
   // Saved content management
   savedPosts: Post[];
   savePost: (postId: string) => void;
   unsavePost: (postId: string) => void;
-  
+
   // History tracking
   viewHistory: Post[];
   addToHistory: (postId: string) => void;
   clearHistory: () => void;
-  
+
   // Interaction handling
   toggleLike: (postId: string) => void;
   toggleBookmark: (postId: string) => void;
   toggleGift: (postId: string) => void;
   incrementShares: (postId: string) => void;
+
+  // Threading support
+  createReplyPost: (parentId: string, content: string, author: any) => void;
+  createQuotePost: (originalPostId: string, content: string, author: any) => void;
+  getPostReplies: (postId: string) => Post[];
 }
 
 const HybridFeedContext = createContext<HybridFeedContextType | undefined>(undefined);
@@ -71,6 +82,7 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
       id: '1',
       content: 'Just launched my new project! Excited to share it with everyone 🚀',
       author: {
+        id: 'user-1',
         name: 'Sarah Chen',
         username: 'sarahc_dev',
         avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
@@ -93,6 +105,7 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
       id: '2',
       content: 'Beautiful weather today! Perfect for a walk in the park 🌞 #nature #weekend',
       author: {
+        id: 'user-2',
         name: 'Emma Wilson',
         username: 'emma_w',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
@@ -115,6 +128,7 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
       id: '3',
       content: 'Working on some exciting new features. Can\'t wait to show you all what we\'re building! 💻✨',
       author: {
+        id: 'user-3',
         name: 'Mike Johnson',
         username: 'mikej_dev',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
@@ -234,6 +248,59 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
     });
   };
 
+  const createReplyPost = (parentId: string, content: string, author: any) => {
+    const newPost: Post = {
+      id: Date.now().toString(),
+      content,
+      author: {
+        id: author.id || 'user-' + Date.now(),
+        name: author.name,
+        username: author.username,
+        avatar: author.avatar,
+        verified: author.verified || false,
+      },
+      createdAt: 'now',
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      gifts: 0,
+      type: 'reply',
+      parentId,
+      depth: 1,
+      isReply: true,
+    };
+    setPosts(prev => [newPost, ...prev]);
+  };
+
+  const createQuotePost = (originalPostId: string, content: string, author: any) => {
+    const originalPost = posts.find(p => p.id === originalPostId);
+    if (!originalPost) return;
+
+    const newPost: Post = {
+      id: Date.now().toString(),
+      content,
+      author: {
+        id: author.id || 'user-' + Date.now(),
+        name: author.name,
+        username: author.username,
+        avatar: author.avatar,
+        verified: author.verified || false,
+      },
+      createdAt: 'now',
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      gifts: 0,
+      type: 'quote',
+      originalPost,
+    };
+    setPosts(prev => [newPost, ...prev]);
+  };
+
+  const getPostReplies = (postId: string): Post[] => {
+    return posts.filter(p => p.parentId === postId && p.type === 'reply');
+  };
+
   const value = {
     posts,
     addPost,
@@ -249,6 +316,9 @@ export const HybridFeedProvider: React.FC<HybridFeedProviderProps> = ({ children
     toggleBookmark,
     toggleGift,
     incrementShares,
+    createReplyPost,
+    createQuotePost,
+    getPostReplies,
   };
 
   return (

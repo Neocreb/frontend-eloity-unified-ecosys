@@ -103,13 +103,15 @@ router.patch('/operators/:operatorId', async (req, res) => {
       isActive,
     );
 
-    await adminReloadlyService.logAuditAction(
-      req.userId,
-      'UPDATE_OPERATOR',
-      'bill_payment_operators',
-      operatorId,
-      { isActive },
-    );
+    if (req.userId) {
+      await adminReloadlyService.logAuditAction(
+        req.userId,
+        'UPDATE_OPERATOR',
+        'bill_payment_operators',
+        operatorId,
+        { isActive },
+      );
+    }
 
     res.json({ success: true, operator });
   } catch (error: unknown) {
@@ -126,13 +128,15 @@ router.post('/operators/sync', async (req, res) => {
 
     const operators = await adminReloadlyService.syncOperatorsFromReloadly(countryCode);
 
-    await adminReloadlyService.logAuditAction(
-      req.userId,
-      'SYNC_OPERATORS',
-      'bill_payment_operators',
-      countryCode || 'all',
-      { count: operators.length },
-    );
+    if (req.userId) {
+      await adminReloadlyService.logAuditAction(
+        req.userId,
+        'SYNC_OPERATORS',
+        'bill_payment_operators',
+        countryCode || 'all',
+        { count: operators.length },
+      );
+    }
 
     res.json({ success: true, synced: operators.length, operators });
   } catch (error: unknown) {
@@ -168,6 +172,10 @@ router.post('/settings', async (req, res) => {
 
     if (!settingKey || settingValue === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({ error: 'User ID not available' });
     }
 
     const setting = await adminReloadlyService.updateSetting(
