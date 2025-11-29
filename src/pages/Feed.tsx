@@ -36,13 +36,11 @@ import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLi
 import { supabase } from "@/integrations/supabase/client";
 import { useFeed } from "@/hooks/use-feed";
 import EnhancedPostCard from "@/components/feed/EnhancedPostCard";
-import EnhancedCreatePostCard from "@/components/feed/EnhancedCreatePostCard";
 import { FeedNativeAdCard } from "@/components/ads/FeedNativeAdCard";
 import { SponsoredPostCard } from "@/components/ads/SponsoredPostCard";
 import { adSettings } from "../../config/adSettings";
 import FeedSkeleton from "@/components/feed/FeedSkeleton";
 import CreatePostTrigger from "@/components/feed/CreatePostTrigger";
-import CreatePostFlow from "@/components/feed/CreatePostFlow";
 import EnhancedStoriesSection from "@/components/feed/EnhancedStoriesSection";
 import { CreateStoryModal } from "@/components/feed/CreateStory";
 import StoryViewer from "@/components/feed/StoryViewer";
