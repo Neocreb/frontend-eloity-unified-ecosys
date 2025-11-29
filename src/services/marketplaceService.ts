@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/utils/utils";
 import type { Database } from "@/integrations/supabase/types";
 import {
   Product,
@@ -121,7 +122,7 @@ export class MarketplaceService {
         .limit(filters.limit || 20);
 
       if (error) {
-        console.error("Error fetching products:", error.message || JSON.stringify(error));
+        console.error("Error fetching products:", getErrorMessage(error));
         return [];
       }
 
