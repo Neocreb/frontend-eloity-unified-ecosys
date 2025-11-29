@@ -455,6 +455,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
       formatCurrency,
       getExchangeRate,
       getSupportedCurrencies,
+      getCurrenciesByCategory,
       refreshExchangeRates,
       refreshRates,
     ]
