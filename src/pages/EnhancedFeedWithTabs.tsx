@@ -25,37 +25,15 @@ import {
   Play,
   Settings,
   Search,
-  MessageSquare,
-  List,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import UnifiedFeedContent from "@/components/feed/UnifiedFeedContent";
-import CreatePostTrigger from "@/components/feed/CreatePostTrigger";
-import CreatePostFlow from "@/components/feed/CreatePostFlow";
-import EnhancedStoriesSection from "@/components/feed/EnhancedStoriesSection";
+import EnhancedCreatePostCard from "@/components/feed/EnhancedCreatePostCard";
 import { useToast } from "@/components/ui/use-toast";
-import { CreateStoryModal } from "@/components/feed/CreateStory";
-import StoryViewer from "@/components/feed/StoryViewer";
-import { HybridFeedProvider, useHybridFeed } from "@/contexts/HybridFeedContext";
-import HybridPostCard from "@/components/feed/HybridPostCard";
-import HybridFeedContent from "@/components/feed/HybridFeedContent";
-import CommentSection from "@/components/feed/CommentSection";
-import ErrorBoundary from "@/components/ui/error-boundary";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLiveNowData } from "@/hooks/use-sidebar-widgets";
-import { supabase } from "@/integrations/supabase/client";
 
 // Stories component for the feed
-const StoriesSection = ({
-  onCreateStory,
-  userStories,
-  onViewStory
-}: {
-  onCreateStory: () => void,
-  userStories: any[],
-  onViewStory: (index: number) => void
-}) => {
+const StoriesSection = () => {
   const { user } = useAuth();
   const [stories, setStories] = useState([
     {
@@ -65,7 +43,7 @@ const StoriesSection = ({
         avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
         isUser: true,
       },
-      hasStory: userStories.length > 0,
+      hasStory: false,
     },
     {
       id: "2",
@@ -141,20 +119,7 @@ const StoriesSection = ({
           >
             {stories.map((story) => (
               <div key={story.id} className="flex-shrink-0">
-                <div
-                  className="relative cursor-pointer group"
-                  onClick={() => {
-                    if (story.user.isUser && !story.hasStory) {
-                      onCreateStory();
-                    } else {
-                      // Handle viewing story - find story index
-                      const storyIndex = stories.findIndex(s => s.id === story.id);
-                      if (storyIndex !== -1) {
-                        onViewStory(storyIndex);
-                      }
-                    }
-                  }}
-                >
+                <div className="relative cursor-pointer group">
                   <div
                     className={cn(
                       "w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5",
@@ -204,60 +169,23 @@ const StoriesSection = ({
 // Sidebar for desktop view
 const FeedSidebar = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const quickLinks = useQuickLinksStats();
-  const { data: trendingTopics } = useTrendingTopicsData();
 
-  // Fetch real user stats from the database
-  const [userStats, setUserStats] = useState({
-    posts: 0,
-    friends: 0,
-    following: 0
-  });
+  const shortcuts = [
+    { name: "Friends", icon: Users, count: 127 },
+    { name: "Groups", icon: Users, count: 8 },
+    { name: "Pages", icon: Building, count: 4 },
+    { name: "Marketplace", icon: Building, count: null },
+    { name: "Memories", icon: Building, count: null },
+    { name: "Saved", icon: Bookmark, count: 15 },
+  ];
 
-  useEffect(() => {
-    const fetchUserStats = async () => {
-      if (!user?.id) return;
-      
-      try {
-        // Fetch user's post count
-        const { count: postsCount, error: postsError } = await supabase
-          .from('posts')
-          .select('*', { count: 'exact' })
-          .eq('user_id', user.id);
-        
-        // Fetch user's followers count
-        const { count: followersCount, error: followersError } = await supabase
-          .from('followers')
-          .select('*', { count: 'exact' })
-          .eq('following_id', user.id);
-        
-        // Fetch user's following count
-        const { count: followingCount, error: followingError } = await supabase
-          .from('followers')
-          .select('*', { count: 'exact' })
-          .eq('follower_id', user.id);
-        
-        if (!postsError && !followersError && !followingError) {
-          setUserStats({
-            posts: postsCount || 0,
-            friends: followersCount || 0,
-            following: followingCount || 0
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching user stats:", error);
-        // Fallback to mock data if database fetch fails
-        setUserStats({
-          posts: 1200,
-          friends: 5400,
-          following: 890
-        });
-      }
-    };
-    
-    fetchUserStats();
-  }, [user?.id]);
+  const trendingTopics = [
+    "#ReactJS",
+    "#WebDevelopment", 
+    "#TechNews",
+    "#Startup",
+    "#Design",
+  ];
 
   return (
     <div className="space-y-4">
@@ -276,15 +204,15 @@ const FeedSidebar = () => {
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-sm">
             <div>
-              <p className="font-semibold">{userStats.posts.toLocaleString()}</p>
+              <p className="font-semibold">1.2K</p>
               <p className="text-gray-500">Posts</p>
             </div>
             <div>
-              <p className="font-semibold">{userStats.friends.toLocaleString()}</p>
+              <p className="font-semibold">5.4K</p>
               <p className="text-gray-500">Friends</p>
             </div>
             <div>
-              <p className="font-semibold">{userStats.following.toLocaleString()}</p>
+              <p className="font-semibold">890</p>
               <p className="text-gray-500">Following</p>
             </div>
           </div>
@@ -296,19 +224,18 @@ const FeedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Quick Links</h3>
           <div className="space-y-2">
-            {quickLinks.map((item) => (
+            {shortcuts.map((shortcut) => (
               <button
-                key={item.name}
+                key={shortcut.name}
                 className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 text-left"
-                onClick={() => navigate(item.route)}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm">{item.name}</span>
+                  <shortcut.icon className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm">{shortcut.name}</span>
                 </div>
-                {typeof item.count === "number" && item.count > 0 && (
+                {shortcut.count && (
                   <Badge variant="secondary" className="text-xs">
-                    {item.count}
+                    {shortcut.count}
                   </Badge>
                 )}
               </button>
@@ -322,12 +249,12 @@ const FeedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Trending Topics</h3>
           <div className="space-y-2">
-            {(trendingTopics || []).map((topic: any) => (
+            {trendingTopics.map((topic, index) => (
               <button
-                key={topic.id || topic.name}
+                key={topic}
                 className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 text-left"
               >
-                <span className="text-sm text-blue-600">#{topic.name || topic}</span>
+                <span className="text-sm text-blue-600">{topic}</span>
                 <TrendingUp className="w-3 h-3 text-gray-400" />
               </button>
             ))}
@@ -340,23 +267,49 @@ const FeedSidebar = () => {
 
 // Right sidebar for suggested content
 const SuggestedSidebar = () => {
-  const { user } = useAuth();
-  const { data: suggestedUsers } = useSuggestedUsersData(6);
-  const { liveStreams } = useLiveNowData();
-  const [following, setFollowing] = React.useState<Record<string, boolean>>({});
+  const suggestedUsers = [
+    {
+      id: "1",
+      name: "Alex Chen",
+      username: "alexchen",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
+      verified: true,
+      mutualFriends: 12,
+    },
+    {
+      id: "2", 
+      name: "Maria Garcia",
+      username: "mariagarcia",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maria",
+      verified: false,
+      mutualFriends: 8,
+    },
+    {
+      id: "3",
+      name: "John Smith",
+      username: "johnsmith",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
+      verified: true,
+      mutualFriends: 15,
+    },
+  ];
 
-  const toggleFollowUser = async (id: string) => {
-    try {
-      const current = !!following[id];
-      setFollowing((prev) => ({ ...prev, [id]: !current }));
-      const { toggleFollow } = await import("@/services/profileService");
-      if (user?.id && id) {
-        await toggleFollow(user.id, id, current);
-      }
-    } catch (e) {
-      console.warn("Follow action failed", e);
-    }
-  };
+  const liveStreams = [
+    {
+      id: "1",
+      title: "React Masterclass",
+      creator: "DevTutor",
+      viewers: 234,
+      thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=300&h=200&fit=crop",
+    },
+    {
+      id: "2",
+      title: "Design Workshop",
+      creator: "DesignPro",
+      viewers: 156,
+      thumbnail: "https://images.unsplash.com/photo-1558618734-fbd6c5d20cc8?w=300&h=200&fit=crop",
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -365,37 +318,30 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">People You May Know</h3>
           <div className="space-y-3">
-            {(suggestedUsers || []).map((u: any) => {
-              const name = u.name || u.profile?.full_name || u.username;
-              const id = u.id || u.profile?.id || (u.username || u.profile?.username || "user");
-              const username = u.username || u.profile?.username || "user";
-              const avatar = u.avatar || u.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
-              const verified = Boolean(u.verified || u.profile?.is_verified);
-              const mutualConnections = u.mutualFriends ?? Math.floor((u.followers || u.profile?.followers_count || 0) % 16);
-              const isFollowing = !!following[id];
-              return (
-                <div key={id} className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={avatar} />
-                    <AvatarFallback>{String(name || "U").charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium text-sm truncate">{name}</p>
-                      {verified && (
-                        <Badge variant="secondary" className="h-3 w-3 p-0 rounded-full bg-blue-500">
-                          <span className="text-white text-xs">✓</span>
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500">{mutualConnections} mutual connections</p>
+            {suggestedUsers.map((suggestedUser) => (
+              <div key={suggestedUser.id} className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={suggestedUser.avatar} />
+                  <AvatarFallback>{suggestedUser.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="font-medium text-sm truncate">{suggestedUser.name}</p>
+                    {suggestedUser.verified && (
+                      <Badge variant="secondary" className="h-3 w-3 p-0 rounded-full bg-blue-500">
+                        <span className="text-white text-xs">✓</span>
+                      </Badge>
+                    )}
                   </div>
-                  <Button size="sm" variant={isFollowing ? "secondary" : "outline"} className="text-xs px-2 py-1 h-auto" onClick={() => toggleFollowUser(id)}>
-                    {isFollowing ? "Following" : "Follow"}
-                  </Button>
+                  <p className="text-xs text-gray-500">
+                    {suggestedUser.mutualFriends} mutual friends
+                  </p>
                 </div>
-              );
-            })}
+                <Button size="sm" variant="outline" className="text-xs px-2 py-1 h-auto">
+                  Add
+                </Button>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -405,26 +351,31 @@ const SuggestedSidebar = () => {
         <CardContent className="p-4">
           <h3 className="font-semibold mb-3">Live Now</h3>
           <div className="space-y-3">
-            {(liveStreams || []).map((content: any) => (
-              <div key={content.id} className="relative cursor-pointer group">
+            {liveStreams.map((stream) => (
+              <div key={stream.id} className="relative cursor-pointer group">
                 <div className="relative">
                   <img
-                    src={content.user.avatar}
-                    alt={content.title}
+                    src={stream.thumbnail}
+                    alt={stream.title}
                     className="w-full h-24 object-cover rounded-lg"
                   />
-                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Play className="w-6 h-6 text-white" />
                   </div>
-                  <Badge variant="destructive" className="absolute top-2 right-2 text-xs animate-pulse">LIVE</Badge>
-                  <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-white text-xs flex items-center gap-1">
+                  <Badge
+                    variant="destructive"
+                    className="absolute top-2 right-2 text-xs animate-pulse"
+                  >
+                    LIVE
+                  </Badge>
+                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 px-2 py-1 rounded text-white text-xs flex items-center gap-1">
                     <Users className="w-3 h-3" />
-                    {content.viewerCount}
+                    {stream.viewers}
                   </div>
                 </div>
                 <div className="mt-2">
-                  <p className="font-medium text-sm truncate">{content.title}</p>
-                  <p className="text-xs text-gray-500">{content.user.displayName}</p>
+                  <p className="font-medium text-sm truncate">{stream.title}</p>
+                  <p className="text-xs text-gray-500">{stream.creator}</p>
                 </div>
               </div>
             ))}
@@ -437,70 +388,20 @@ const SuggestedSidebar = () => {
 
 // Main enhanced feed component
 const EnhancedFeedWithTabs = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("for-you");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
-  const [showStoryViewer, setShowStoryViewer] = useState(false);
-  const [showCreatePostFlow, setShowCreatePostFlow] = useState(false);
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [userStories, setUserStories] = useState<any[]>([]);
-  const [refetchTrigger, setRefetchTrigger] = useState(0);
   const { toast } = useToast();
 
-  console.debug("[EnhancedFeedWithTabs] Rendered with location:", location.pathname);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tab = params.get("tab");
-    if (tab) setActiveTab(tab);
-  }, [location.search]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    params.set("tab", activeTab);
-    navigate({ pathname: "/app/feed", search: params.toString() }, { replace: true });
-  }, [activeTab]);
-
-  // Trigger refetch when returning from CreateStory page
-  useEffect(() => {
-    // Check if we just returned from the create story page by checking sessionStorage flag
-    const shouldRefetch = sessionStorage.getItem("refetchStoriesOnReturn");
-    if (shouldRefetch === "true") {
-      console.debug("[EnhancedFeedWithTabs] Detected story creation, triggering refetch");
-      sessionStorage.removeItem("refetchStoriesOnReturn");
-      setRefetchTrigger(prev => prev + 1);
-    }
-  }, [location.pathname]);
-
-  // Also watch for direct path changes (e.g., from /app/feed/create-story back to /app/feed)
-  useEffect(() => {
-    const previousPath = sessionStorage.getItem("previousFeedPath");
-    const currentPath = location.pathname;
-
-    if (previousPath && previousPath !== currentPath && currentPath === "/app/feed") {
-      console.debug("[EnhancedFeedWithTabs] Detected return to feed path, potential story creation");
-      // Small delay to ensure story is persisted
-      setTimeout(() => {
-        setRefetchTrigger(prev => prev + 1);
-      }, 100);
-    }
-
-    sessionStorage.setItem("previousFeedPath", currentPath);
-  }, [location.pathname]);
-
-  const baseTabs = [
+  const tabs = [
     {
       value: "for-you",
-      label: "All",
+      label: "For You",
       icon: TrendingUp,
       description: "Personalized content based on your interests",
     },
     {
       value: "following",
-      label: "Friends",
+      label: "Following",
       icon: Users,
       description: "Posts from people you follow",
     },
@@ -516,15 +417,7 @@ const EnhancedFeedWithTabs = () => {
       icon: Building,
       description: "Content from pages and businesses you follow",
     },
-    {
-      value: "saved",
-      label: "Saved",
-      icon: Bookmark,
-      description: "Your saved posts and viewing history",
-    },
   ];
-
-  const tabs = baseTabs;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -538,55 +431,10 @@ const EnhancedFeedWithTabs = () => {
     }, 1000);
   };
 
-  const handleCreateStory = async (storyData: any) => {
-    console.debug("[EnhancedFeedWithTabs] handleCreateStory called with data:", storyData);
-    try {
-      // Add the new story to the userStories state
-      const newStory = {
-        id: `story-${Date.now()}`,
-        user: {
-          id: user?.id || "current-user",
-          name: user?.name || "You",
-          username: user?.username || "you",
-          avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
-          isUser: true,
-        },
-        timestamp: new Date(),
-        content: storyData,
-        views: 0,
-        hasNew: true,
-      };
-
-      console.debug("[EnhancedFeedWithTabs] Adding new story to state:", newStory);
-      setUserStories(prev => [newStory, ...prev]);
-
-      // Trigger refetch to ensure carousel is updated
-      console.debug("[EnhancedFeedWithTabs] Triggering refetch after story creation");
-      setRefetchTrigger(prev => prev + 1);
-
-      toast({
-        title: "Story created!",
-        description: "Your story has been published.",
-      });
-    } catch (error) {
-      console.error("[EnhancedFeedWithTabs] Error creating story:", error);
-      toast({
-        title: "Failed to create story",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleViewStory = (storyIndex: number) => {
-    setCurrentStoryIndex(storyIndex);
-    setShowStoryViewer(true);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 p-2 sm:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-4">
           {/* Left Sidebar - Hidden on mobile */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-4">
@@ -601,41 +449,63 @@ const EnhancedFeedWithTabs = () => {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              {/* Modern Tab Navigation - Horizontally scrollable */}
-              <div className="sticky top-0 z-40 bg-white border-b border-gray-200 mb-4">
-                <div className="flex overflow-x-auto scrollbar-hide">
+              {/* Tab Navigation */}
+              <div className="sticky top-0 z-40 bg-gray-50 pb-4">
+                <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-white">
                   {tabs.map((tab) => (
-                    <button
+                    <TabsTrigger
                       key={tab.value}
-                      onClick={() => {
-                        setActiveTab(tab.value);
-                      }}
-                      className={cn(
-                        "flex-shrink-0 flex items-center gap-2 px-4 py-3 text-sm font-medium text-center border-b-2 transition-colors min-w-max",
-                        activeTab === tab.value
-                          ? "text-blue-600 border-blue-600"
-                          : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
-                      )}
+                      value={tab.value}
+                      className="flex flex-col items-center gap-1 py-3 px-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600"
                     >
-                      <tab.icon className="h-4 w-4" />
-                      <span>{tab.label}</span>
-                    </button>
+                      <tab.icon className="w-4 h-4" />
+                      <span className="text-xs font-medium hidden sm:block">
+                        {tab.label}
+                      </span>
+                      <span className="text-xs font-medium sm:hidden">
+                        {tab.label.split(" ")[0]}
+                      </span>
+                    </TabsTrigger>
                   ))}
+                </TabsList>
+
+                {/* Tab Description and Controls */}
+                <div className="flex items-center justify-between mt-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      {tabs.find((tab) => tab.value === activeTab)?.label}
+                    </h2>
+                    <p className="text-sm text-gray-500 hidden sm:block">
+                      {tabs.find((tab) => tab.value === activeTab)?.description}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleRefresh}
+                      disabled={isRefreshing}
+                      className="h-8 w-8"
+                    >
+                      <Settings
+                        className={cn(
+                          "w-4 h-4",
+                          isRefreshing && "animate-spin"
+                        )}
+                      />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Search className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              {/* Stories and Create Post - Only show on "For You" tab */}
-              {activeTab === "for-you" && (
-                <>
-                  <EnhancedStoriesSection
-                    onCreateStory={() => setShowCreateStoryModal(true)}
-                    userStories={userStories}
-                    onViewStory={handleViewStory}
-                    refetchTrigger={refetchTrigger}
-                  />
-                  <CreatePostTrigger onOpenCreatePost={() => setShowCreatePostFlow(true)} />
-                </>
-              )}
+              {/* Stories Section - Only show on For You tab */}
+              {activeTab === "for-you" && <StoriesSection />}
+
+              {/* Create Post */}
+              <EnhancedCreatePostCard />
 
               {/* Tab Content */}
               {tabs.map((tab) => (
@@ -644,35 +514,7 @@ const EnhancedFeedWithTabs = () => {
                   value={tab.value}
                   className="mt-0 space-y-0"
                 >
-                  {tab.value === 'saved' ? (
-                    <ErrorBoundary
-                      fallback={
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                            <Bookmark className="w-8 h-8 text-red-500" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            Saved Content Error
-                          </h3>
-                          <p className="text-gray-600 max-w-sm mb-4">
-                            Unable to load saved content. Please try again later.
-                          </p>
-                          <Button
-                            onClick={() => setActiveTab('for-you')}
-                            variant="outline"
-                          >
-                            Go to All Feed
-                          </Button>
-                        </div>
-                      }
-                    >
-                      <HybridFeedProvider>
-                        <HybridFeedContent feedType={tab.value} viewMode='saved' />
-                      </HybridFeedProvider>
-                    </ErrorBoundary>
-                  ) : (
-                    <UnifiedFeedContent feedType={tab.value} />
-                  )}
+                  <UnifiedFeedContent feedType={tab.value} />
                 </TabsContent>
               ))}
             </Tabs>
@@ -686,55 +528,6 @@ const EnhancedFeedWithTabs = () => {
           </div>
         </div>
       </div>
-
-      {/* Story Creation Modal */}
-      <CreateStoryModal
-        isOpen={showCreateStoryModal}
-        onClose={() => setShowCreateStoryModal(false)}
-        onSubmit={handleCreateStory}
-      />
-
-      {/* Create Post Flow */}
-      <CreatePostFlow
-        isOpen={showCreatePostFlow}
-        onClose={() => setShowCreatePostFlow(false)}
-      />
-
-      {/* Story Viewer */}
-      {showStoryViewer && (
-        <StoryViewer
-          stories={[
-            ...userStories,
-            {
-              id: "2",
-              user: { id: "user-sarah", name: "Sarah", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah", isUser: false },
-              timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-              content: { text: "Having a great day! 🌟" },
-              views: 45,
-              hasNew: true,
-            },
-            {
-              id: "3",
-              user: { id: "user-mike", name: "Mike", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike", isUser: false },
-              timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-              content: { text: "Just finished a great workout! 💪" },
-              views: 23,
-              hasNew: false,
-            },
-            {
-              id: "4",
-              user: { id: "user-emma", name: "Emma", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma", isUser: false },
-              timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-              content: { text: "Beautiful sunset today! 🌅" },
-              views: 67,
-              hasNew: true,
-            },
-          ]}
-          initialIndex={currentStoryIndex}
-          onClose={() => setShowStoryViewer(false)}
-          onStoryChange={setCurrentStoryIndex}
-        />
-      )}
     </div>
   );
 };
