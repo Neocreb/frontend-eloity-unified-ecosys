@@ -321,11 +321,11 @@ const GiftCards = () => {
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between mb-4">
                     <span className="text-gray-600">Amount</span>
-                    <span className="font-bold">${amount.toFixed(2)}</span>
+                    <span className="font-bold">{formatCurrency(amount)}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-gray-200">
                     <span className="font-semibold">Total to Pay</span>
-                    <span className="text-2xl font-bold text-purple-600">${commissionData?.final_amount.toFixed(2) || amount.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-purple-600">{formatCurrency(commissionData?.final_amount || amount)}</span>
                   </div>
                 </div>
 
