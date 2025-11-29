@@ -2,6 +2,7 @@
 import { User } from "@/types/user";
 import { fetchPlatformAnalytics } from "@/services/analyticsService";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/utils/utils";
 
 export interface AIInsight {
   id: string;
@@ -1138,8 +1139,7 @@ class AIPersonalAssistantService {
         platformEngagement: engagementData
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-      console.error('Error fetching user analytics:', errorMessage);
+      console.error('Error fetching user analytics:', getErrorMessage(error));
       return {
         contentPerformance: [],
         tradingActivity: [],
