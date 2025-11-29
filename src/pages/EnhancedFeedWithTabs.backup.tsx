@@ -27,15 +27,6 @@ import {
   Search,
   MessageSquare,
   List,
-  ShoppingCart,
-  Briefcase,
-  Wrench,
-  Calendar,
-  Star,
-  DollarSign,
-  Eye,
-  Gift,
-  Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,7 +47,15 @@ import { useQuickLinksStats, useTrendingTopicsData, useSuggestedUsersData, useLi
 import { supabase } from "@/integrations/supabase/client";
 
 // Stories component for the feed
-const StoriesSection = () => {
+const StoriesSection = ({
+  onCreateStory,
+  userStories,
+  onViewStory
+}: {
+  onCreateStory: () => void,
+  userStories: any[],
+  onViewStory: (index: number) => void
+}) => {
   const { user } = useAuth();
   const [stories, setStories] = useState([
     {
@@ -66,7 +65,7 @@ const StoriesSection = () => {
         avatar: user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user",
         isUser: true,
       },
-      hasStory: false,
+      hasStory: userStories.length > 0,
     },
     {
       id: "2",
@@ -142,7 +141,20 @@ const StoriesSection = () => {
           >
             {stories.map((story) => (
               <div key={story.id} className="flex-shrink-0">
-                <div className="relative cursor-pointer group">
+                <div
+                  className="relative cursor-pointer group"
+                  onClick={() => {
+                    if (story.user.isUser && !story.hasStory) {
+                      onCreateStory();
+                    } else {
+                      // Handle viewing story - find story index
+                      const storyIndex = stories.findIndex(s => s.id === story.id);
+                      if (storyIndex !== -1) {
+                        onViewStory(storyIndex);
+                      }
+                    }
+                  }}
+                >
                   <div
                     className={cn(
                       "w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5",

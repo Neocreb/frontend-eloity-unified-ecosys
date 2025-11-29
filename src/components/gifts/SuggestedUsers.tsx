@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Users } from 'lucide-react';
-import { VirtualGift } from '@/types/gifts';
+import type { VirtualGift } from '@/types/gifts';
 import { supabase } from '@/lib/supabase';
 
 interface SuggestedUser {
