@@ -44,46 +44,6 @@ import UnifiedFeedContent from "@/components/feed/UnifiedFeedContent";
 import SuggestedSidebar from "@/components/feed/SuggestedSidebar";
 import FeedSidebar from "@/components/feed/FeedSidebar";
 
-// Define the Post type
-export type Post = {
-  id: string;
-  content: string;
-  timestamp?: string;
-  createdAt: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  author: {
-    name: string;
-    username: string;
-    handle: string;
-    avatar: string;
-    verified?: boolean;
-  };
-  image?: string;
-  liked?: boolean;
-};
-
-// Convert Supabase post format to legacy Post format
-const convertToLegacyPost = (supabasePost: any): Post => ({
-  id: supabasePost.id,
-  content: supabasePost.content,
-  timestamp: supabasePost.createdAt,
-  createdAt: supabasePost.createdAt,
-  likes: supabasePost.likes,
-  comments: supabasePost.comments,
-  shares: supabasePost.shares,
-  author: {
-    name: supabasePost.author.name,
-    username: supabasePost.author.username,
-    handle: `@${supabasePost.author.username}`,
-    avatar: supabasePost.author.avatar,
-    verified: supabasePost.author.verified,
-  },
-  image: supabasePost.image,
-  liked: false,
-});
-
 // Main Feed Component
 const Feed = () => {
   const location = useLocation();
