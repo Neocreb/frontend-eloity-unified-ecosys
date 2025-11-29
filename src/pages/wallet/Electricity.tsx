@@ -30,6 +30,7 @@ const Electricity = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { walletBalance, deductBalance } = useWalletContext();
+  const { selectedCurrency, formatCurrency } = useCurrency();
   const [step, setStep] = useState<"provider" | "meterNumber" | "amount" | "review" | "success">("provider");
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [meterNumber, setMeterNumber] = useState("");
