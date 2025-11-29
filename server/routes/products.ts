@@ -104,11 +104,14 @@ router.get('/', async (req, res) => {
 
     // Get seller information for each product
     const sellerIds = [...new Set(productsResult.map(p => p.seller_id))];
-    const sellersResult = await db.select().from(profiles).where(sql`${profiles.user_id} in ${sellerIds}`).execute();
+    let sellersResult = [];
+    if (sellerIds.length > 0) {
+      sellersResult = await db.select().from(profiles).where(inArray(profiles.user_id, sellerIds)).execute();
+    }
     const sellersMap = sellersResult.reduce((acc, seller) => {
       acc[seller.user_id] = seller;
       return acc;
-    }, {});
+    }, {} as Record<string, any>);
 
     const productsData = productsResult.map(product => ({
       id: product.id,
