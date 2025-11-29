@@ -363,7 +363,11 @@ const EnhancedSettings = () => {
   const [fontSize, setFontSize] = useState(
     user?.settings?.font_size || "medium",
   );
-  const [language, setLanguage] = useState(user?.settings?.language || "en");
+  const [language, setLanguageState] = useState(user?.settings?.language || "en");
+
+  // Regional and internationalization settings
+  const [selectedRegion, setSelectedRegion] = useState(currentRegion?.code || "US");
+  const [selectedCurrency, setSelectedCurrency] = useState(currentCurrency?.code || "USD");
 
   // Data & Storage
   const [dataUsage, setDataUsage] = useState("unlimited");
