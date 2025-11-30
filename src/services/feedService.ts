@@ -338,7 +338,7 @@ class FeedService {
     try {
       const { data, error } = await supabase
         .from('post_comments')
-        .select('*')
+        .select('id, content, created_at, post_id, user_id, updated_at')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
