@@ -12,7 +12,6 @@ export interface ServiceFavorite {
 export interface FavoriteService {
   serviceId: string;
   isFavorite: boolean;
-  position?: number;
 }
 
 class ServiceFavoritesService {
