@@ -374,8 +374,6 @@ class FeedService {
           post_id: postId,
           user_id: userId,
           content: content,
-          likes_count: 0,
-          is_edited: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
