@@ -87,7 +87,6 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
   const [showTagPeopleModal, setShowTagPeopleModal] = useState(false);
   const [showFeelingModal, setShowFeelingModal] = useState(false);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
