@@ -333,9 +333,9 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
             </div>
           )}
 
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium">Tips for better results:</p>
-            <ul className="list-disc list-inside space-y-1 mt-1">
+          <div className={`text-muted-foreground border-t pt-3 sm:pt-4 ${isEmbedded ? "text-xs sm:text-sm" : "text-sm"}`}>
+            <p className={`font-medium ${isEmbedded ? "text-xs sm:text-sm" : ""}`}>Tips for better results:</p>
+            <ul className={`list-disc list-inside space-y-0.5 sm:space-y-1 mt-1 text-xs sm:text-sm`}>
               <li>Be specific and descriptive in your prompts</li>
               <li>Include details like colors, lighting, and style</li>
               <li>Use negative prompts to exclude unwanted elements</li>
