@@ -25,8 +25,7 @@ class ServiceFavoritesService {
       const { data, error } = await supabase
         .from("user_service_favorites")
         .select("*")
-        .eq("user_id", userId)
-        .order("position", { ascending: true });
+        .eq("user_id", userId);
 
       if (error) throw error;
       return data || [];
