@@ -395,7 +395,7 @@ class FeedService {
         userAvatar: '/placeholder.svg',
         content: data.content,
         timestamp: new Date(data.created_at).toLocaleString(),
-        likes: data.likes_count,
+        likes: 0,
         isLiked: false,
       };
     } catch (error) {
