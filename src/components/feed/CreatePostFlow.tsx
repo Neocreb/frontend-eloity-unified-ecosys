@@ -594,7 +594,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
             )}
 
             {currentStep === "ai" && (
-              <div className="p-0">
+              <div className="p-3 sm:p-4">
                 <EdithAIGenerator
                   isEmbedded={true}
                   onContentGenerated={handleAIContentGenerated}
