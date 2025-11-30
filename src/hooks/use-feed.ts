@@ -166,7 +166,7 @@ export const useFeed = () => {
       const { data, error } = await supabase
         .from('post_comments')
         .insert({ post_id: postId, user_id: user.id, content: commentText })
-        .select('*, profiles:user_id(full_name, username, avatar_url, is_verified)')
+        .select('id, content, created_at, post_id, user_id, updated_at, profiles:user_id(full_name, username, avatar_url, is_verified)')
         .single();
       if (error) throw error;
 
