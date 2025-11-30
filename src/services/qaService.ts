@@ -43,11 +43,7 @@ export class QAService {
     try {
       const { data, error } = await supabase
         .from('product_questions')
-        .select(`
-          *,
-          user:profiles(full_name, avatar_url),
-          answers:product_answers(*, user:profiles(full_name, avatar_url))
-        `)
+        .select('*')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
 
