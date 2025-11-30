@@ -156,22 +156,48 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
     setLocation(location.name);
   };
 
-  const handleAIContentGenerated = (content: { type: "image" | "video"; url: string; prompt: string }) => {
-    // For now, we'll just show a toast. In a real implementation, you might want to:
-    // 1. Download the content from the URL
-    // 2. Convert it to a File object
-    // 3. Set it as the selected media
-    toast({
-      title: "AI Content Generated!",
-      description: `Your ${content.type} has been generated. You can now use it in your post.`,
-    });
-    
-    // In a full implementation, you would:
-    // 1. Fetch the content from the URL
-    // 2. Convert it to a File object
-    // 3. Set it as selectedMedia
-    // 4. Set the mediaPreview
-    // 5. Set the mediaType
+  const handleAIContentGenerated = async (content: { type: "image" | "video"; url: string; prompt: string }) => {
+    try {
+      // Fetch the content from the URL
+      const response = await fetch(content.url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch generated content: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+
+      // Determine file extension based on content type
+      const extension = content.type === "image" ? "png" : "mp4";
+      const filename = `edith-${content.type}-${Date.now()}.${extension}`;
+
+      // Create a File object from the blob
+      const file = new File([blob], filename, {
+        type: content.type === "image" ? "image/png" : "video/mp4",
+      });
+
+      // Set the media in the post flow
+      setSelectedMedia(file);
+      setMediaType(content.type);
+
+      // Create a preview URL
+      const previewUrl = URL.createObjectURL(blob);
+      setMediaPreview(previewUrl);
+
+      // Close the AI generator and go back to create step
+      setShowAIGenerator(false);
+
+      toast({
+        title: "Content Added!",
+        description: `Your AI-generated ${content.type} has been added to your post.`,
+      });
+    } catch (error) {
+      console.error("Error processing generated content:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add the generated content. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePost = async () => {
