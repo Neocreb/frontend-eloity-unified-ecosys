@@ -51,7 +51,7 @@ export const useVideos = () => {
 
       // Transform to VideoItem format
       const transformedVideos: VideoItem[] = (videoPosts || []).map(post => {
-        const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
+        const profile = undefined;
         
         return {
           id: post.id,
