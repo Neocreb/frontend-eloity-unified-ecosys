@@ -161,10 +161,7 @@ export class MarketplaceService {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select(`
-          *,
-          seller:profiles(full_name, username, avatar_url, is_verified)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
