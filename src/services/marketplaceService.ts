@@ -161,10 +161,7 @@ export class MarketplaceService {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select(`
-          *,
-          seller:profiles(full_name, username, avatar_url, is_verified)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -490,10 +487,7 @@ export class MarketplaceService {
     try {
       const { data, error } = await supabase
         .from('reviews')
-        .select(`
-          *,
-          profiles:user_id(full_name, avatar_url)
-        `)
+        .select('*')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
 
@@ -506,8 +500,8 @@ export class MarketplaceService {
         id: review.id,
         productId: review.product_id,
         userId: review.user_id,
-        userName: review.profiles?.full_name || "Anonymous",
-        userAvatar: review.profiles?.avatar_url || "",
+        userName: "Anonymous",
+        userAvatar: "",
         rating: review.rating,
         title: review.title || "",
         comment: review.comment || "",

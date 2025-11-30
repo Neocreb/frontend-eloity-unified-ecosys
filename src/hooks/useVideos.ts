@@ -41,16 +41,7 @@ export const useVideos = () => {
       // Fetch video posts from posts table
       const { data: videoPosts, error } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles:user_id (
-            user_id,
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .eq('type', 'video')
         .not('video_url', 'is', null)
         .order('created_at', { ascending: false })
@@ -60,7 +51,7 @@ export const useVideos = () => {
 
       // Transform to VideoItem format
       const transformedVideos: VideoItem[] = (videoPosts || []).map(post => {
-        const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
+        const profile = undefined;
         
         return {
           id: post.id,

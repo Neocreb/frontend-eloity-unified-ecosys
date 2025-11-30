@@ -31,10 +31,7 @@ export class ProductService {
       // Then, fetch related products from the same category (excluding the current product)
       const { data, error } = await supabase
         .from('products')
-        .select(`
-          *,
-          seller:profiles(full_name, username, avatar_url, is_verified)
-        `)
+        .select('*')
         .eq('category', product.category)
         .neq('id', productId)
         .limit(10);

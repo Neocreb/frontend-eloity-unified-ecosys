@@ -20,17 +20,10 @@ export class ProfileService {
         return this.formatUserProfile(response.profile);
       }
 
-      // Fallback to direct database query
+      // Fallback to direct database query (use simple query to avoid PostgREST relationship issues)
       const { data, error } = await supabase
         .from("profiles")
-        .select(
-          `
-          *,
-          marketplace_profiles(*),
-          freelance_profiles(*),
-          crypto_profiles(*)
-        `,
-        )
+        .select("*")
         .eq("username", username)
         .single();
 
@@ -39,27 +32,6 @@ export class ProfileService {
           "User not found in database:",
           error.message
         );
-        
-        // If the error is related to missing tables, try a simpler query
-        if (error.message.includes("marketplace_profiles") || 
-            error.message.includes("freelance_profiles") || 
-            error.message.includes("crypto_profiles") ||
-            error.message.includes("400")) {
-          console.log("Attempting fallback query without extension tables...");
-          const { data: simpleData, error: simpleError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("username", username)
-            .single();
-          
-          if (simpleError) {
-            console.warn("Simple profile query also failed:", simpleError.message);
-            return null;
-          }
-          
-          return this.formatUserProfile(simpleData);
-        }
-        
         return null;
       }
 
@@ -78,43 +50,15 @@ export class ProfileService {
         return this.formatUserProfile(response.profile);
       }
 
-      // Fallback to direct database query
+      // Fallback to direct database query (use simple query to avoid PostgREST relationship issues)
       const { data, error } = await supabase
         .from("profiles")
-        .select(
-          `
-          *,
-          marketplace_profiles(*),
-          freelance_profiles(*),
-          crypto_profiles(*)
-        `,
-        )
+        .select("*")
         .eq("user_id", userId)
         .single();
 
       if (error) {
         console.warn("User not found in database:", error.message);
-        
-        // If the error is related to missing tables, try a simpler query
-        if (error.message.includes("marketplace_profiles") || 
-            error.message.includes("freelance_profiles") || 
-            error.message.includes("crypto_profiles") ||
-            error.message.includes("400")) {
-          console.log("Attempting fallback query without extension tables...");
-          const { data: simpleData, error: simpleError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("user_id", userId)
-            .single();
-          
-          if (simpleError) {
-            console.warn("Simple profile query also failed:", simpleError.message);
-            return null;
-          }
-          
-          return this.formatUserProfile(simpleData);
-        }
-        
         return null;
       }
 
@@ -263,12 +207,7 @@ export class ProfileService {
       // Fallback to direct database query
       const { data, error } = await supabase
         .from("posts")
-        .select(
-          `
-          *,
-          profiles:user_id(*)
-        `,
-        )
+        .select('*')
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
@@ -335,12 +274,7 @@ export class ProfileService {
       // Fallback to direct database query
       const { data, error } = await supabase
         .from("freelance_profiles")
-        .select(
-          `
-          *,
-          profiles:user_id(*)
-        `,
-        )
+        .select('*')
         .eq("user_id", userId)
         .order("updated_at", { ascending: false });
 

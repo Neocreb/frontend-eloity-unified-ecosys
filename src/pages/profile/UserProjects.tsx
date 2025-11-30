@@ -29,6 +29,7 @@ import {
 import { UserProfile } from "@/types/user";
 import { profileService } from "@/services/profileService";
 import { apiClient } from "@/lib/api";
+import AddExternalWorkModal from "@/components/profile/AddExternalWorkModal";
 
 interface Project {
   id: string;

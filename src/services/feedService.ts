@@ -154,15 +154,7 @@ class FeedService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -171,10 +163,10 @@ class FeedService {
         id: data.id,
         user: {
           id: data.user_id,
-          name: data.profiles?.full_name || 'User',
-          username: data.profiles?.username || 'user',
-          avatar: data.profiles?.avatar_url || '/placeholder.svg',
-          isVerified: !!data.profiles?.is_verified,
+          name: 'User',
+          username: 'user',
+          avatar: '/placeholder.svg',
+          isVerified: false,
         },
         content: data.content,
         media: data.media_urls?.map((url: string, index: number) => ({
@@ -346,15 +338,7 @@ class FeedService {
     try {
       const { data, error } = await supabase
         .from('post_comments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
@@ -363,8 +347,8 @@ class FeedService {
       return data.map(comment => ({
         id: comment.id,
         userId: comment.user_id,
-        userName: comment.profiles?.full_name || 'User',
-        userAvatar: comment.profiles?.avatar_url || '/placeholder.svg',
+        userName: 'User',
+        userAvatar: '/placeholder.svg',
         content: comment.content,
         timestamp: new Date(comment.created_at).toLocaleString(),
         likes: comment.likes_count,
@@ -395,15 +379,7 @@ class FeedService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -417,8 +393,8 @@ class FeedService {
       return {
         id: data.id,
         userId: data.user_id,
-        userName: data.profiles?.full_name || 'User',
-        userAvatar: data.profiles?.avatar_url || '/placeholder.svg',
+        userName: 'User',
+        userAvatar: '/placeholder.svg',
         content: data.content,
         timestamp: new Date(data.created_at).toLocaleString(),
         likes: data.likes_count,
