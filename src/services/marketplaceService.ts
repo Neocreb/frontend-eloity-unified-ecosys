@@ -487,10 +487,7 @@ export class MarketplaceService {
     try {
       const { data, error } = await supabase
         .from('reviews')
-        .select(`
-          *,
-          profiles:user_id(full_name, avatar_url)
-        `)
+        .select('*')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
 
