@@ -27,9 +27,10 @@ interface GeneratedContent {
 interface EdithAIGeneratorProps {
   onContentGenerated: (content: GeneratedContent) => void;
   onClose: () => void;
+  isEmbedded?: boolean;
 }
 
-const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated, onClose }) => {
+const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated, onClose, isEmbedded = false }) => {
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [negativePrompt, setNegativePrompt] = useState("");
@@ -119,7 +120,7 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
 
     try {
       const upscaledUrl = await replicateService.upscaleImage(generatedContent.url, 2);
-      
+
       setGeneratedContent({
         ...generatedContent,
         url: upscaledUrl,
@@ -142,9 +143,17 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
     }
   };
 
+  const containerClass = isEmbedded
+    ? "w-full"
+    : "fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4";
+
+  const cardClass = isEmbedded
+    ? "w-full border-0 shadow-none bg-transparent"
+    : "w-full max-w-2xl max-h-[90vh] overflow-y-auto";
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className={containerClass}>
+      <Card className={cardClass}>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-500" />
