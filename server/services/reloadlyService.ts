@@ -75,6 +75,25 @@ async function getReloadlyAccessToken(): Promise<string> {
     });
 
     if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      let errorDetails = '';
+
+      if (contentType?.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          errorDetails = JSON.stringify(errorData);
+        } catch {
+          errorDetails = await response.text();
+        }
+      } else {
+        errorDetails = await response.text();
+      }
+
+      logger.error('Reloadly auth failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        details: errorDetails
+      });
       throw new Error(`Authentication failed: ${response.status} ${response.statusText}`);
     }
 
