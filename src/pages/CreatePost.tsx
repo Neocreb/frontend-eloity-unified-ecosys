@@ -28,6 +28,7 @@ import {
   BookOpen,
   ChevronRight,
   Calendar as CalendarIcon,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -363,11 +364,54 @@ const CreatePost = () => {
           </div>
 
           {/* AI Generator (Optional) */}
-          <EdithAIGenerator
-            onInsert={(text) => {
-              setPostContent((prev) => prev + " " + text);
-            }}
-          />
+          <div className="bg-white rounded-lg p-6 mb-4">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              Generate Content with Edith AI
+            </h3>
+            <EdithAIGenerator
+              isEmbedded={true}
+              onContentGenerated={async (content) => {
+                try {
+                  // Fetch the content from the URL
+                  const response = await fetch(content.url);
+                  if (!response.ok) {
+                    throw new Error(`Failed to fetch generated content: ${response.statusText}`);
+                  }
+
+                  const blob = await response.blob();
+
+                  // Determine file extension based on content type
+                  const extension = content.type === "image" ? "png" : "mp4";
+                  const filename = `edith-${content.type}-${Date.now()}.${extension}`;
+
+                  // Create a File object from the blob
+                  const file = new File([blob], filename, {
+                    type: content.type === "image" ? "image/png" : "video/mp4",
+                  });
+
+                  // Set the media in the post form
+                  setSelectedImage(file);
+                  setImagePreview(URL.createObjectURL(blob));
+
+                  toast({
+                    title: "Content Added!",
+                    description: `Your AI-generated ${content.type} has been added to your post.`,
+                  });
+                } catch (error) {
+                  console.error("Error processing generated content:", error);
+                  toast({
+                    title: "Error",
+                    description: "Failed to add the generated content. Please try again.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+              onClose={() => {
+                // Close is handled by the embedded component
+              }}
+            />
+          </div>
         </form>
       </div>
 

@@ -51,7 +51,7 @@ interface CreatePostFlowProps {
   onClose: () => void;
 }
 
-type PostStep = "create" | "settings";
+type PostStep = "create" | "settings" | "ai";
 type AudienceType = "public" | "friends" | "private" | "custom";
 
 const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
@@ -87,7 +87,6 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
   const [showTagPeopleModal, setShowTagPeopleModal] = useState(false);
   const [showFeelingModal, setShowFeelingModal] = useState(false);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +135,9 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
     if (currentStep === "settings") {
       setCurrentStep("create");
     }
+    if (currentStep === "ai") {
+      setCurrentStep("create");
+    }
   };
 
   const handleTaggedUsers = (users: any[]) => {
@@ -156,22 +158,48 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
     setLocation(location.name);
   };
 
-  const handleAIContentGenerated = (content: { type: "image" | "video"; url: string; prompt: string }) => {
-    // For now, we'll just show a toast. In a real implementation, you might want to:
-    // 1. Download the content from the URL
-    // 2. Convert it to a File object
-    // 3. Set it as the selected media
-    toast({
-      title: "AI Content Generated!",
-      description: `Your ${content.type} has been generated. You can now use it in your post.`,
-    });
-    
-    // In a full implementation, you would:
-    // 1. Fetch the content from the URL
-    // 2. Convert it to a File object
-    // 3. Set it as selectedMedia
-    // 4. Set the mediaPreview
-    // 5. Set the mediaType
+  const handleAIContentGenerated = async (content: { type: "image" | "video"; url: string; prompt: string }) => {
+    try {
+      // Fetch the content from the URL
+      const response = await fetch(content.url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch generated content: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+
+      // Determine file extension based on content type
+      const extension = content.type === "image" ? "png" : "mp4";
+      const filename = `edith-${content.type}-${Date.now()}.${extension}`;
+
+      // Create a File object from the blob
+      const file = new File([blob], filename, {
+        type: content.type === "image" ? "image/png" : "video/mp4",
+      });
+
+      // Set the media in the post flow
+      setSelectedMedia(file);
+      setMediaType(content.type);
+
+      // Create a preview URL
+      const previewUrl = URL.createObjectURL(blob);
+      setMediaPreview(previewUrl);
+
+      // Close the AI generator and go back to create step
+      setCurrentStep("create");
+
+      toast({
+        title: "Content Added!",
+        description: `Your AI-generated ${content.type} has been added to your post.`,
+      });
+    } catch (error) {
+      console.error("Error processing generated content:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add the generated content. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePost = async () => {
@@ -333,13 +361,13 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
           {/* Header */}
           <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-white sticky top-0 z-10">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              {currentStep === "settings" && (
+              {(currentStep === "settings" || currentStep === "ai") && (
                 <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                   <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               )}
               <h2 className="text-sm sm:text-base md:text-lg font-semibold truncate">
-                {currentStep === "create" ? "Create post" : "Post settings"}
+                {currentStep === "create" ? "Create post" : currentStep === "settings" ? "Post settings" : "Generate with Edith AI"}
               </h2>
             </div>
 
@@ -511,7 +539,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
                   <Button
                     variant="outline"
                     className="h-12 sm:h-16 flex-col gap-1 text-xs"
-                    onClick={() => setShowAIGenerator(true)}
+                    onClick={() => setCurrentStep("ai")}
                   >
                     <Sparkles className="h-4 w-4 sm:h-6 sm:w-6 text-purple-500" />
                     <span>Edith AI</span>
@@ -562,6 +590,16 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
                     )}
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {currentStep === "ai" && (
+              <div className="p-0">
+                <EdithAIGenerator
+                  isEmbedded={true}
+                  onContentGenerated={handleAIContentGenerated}
+                  onClose={() => setCurrentStep("create")}
+                />
               </div>
             )}
 
@@ -738,14 +776,6 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Edith AI Generator Modal */}
-      {showAIGenerator && (
-        <EdithAIGenerator
-          onContentGenerated={handleAIContentGenerated}
-          onClose={() => setShowAIGenerator(false)}
-        />
-      )}
 
       {/* Audience Selection Modal */}
       <Dialog open={showAudienceModal} onOpenChange={setShowAudienceModal}>

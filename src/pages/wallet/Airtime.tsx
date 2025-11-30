@@ -65,6 +65,16 @@ const Airtime = () => {
           }
         });
 
+        // Check if response is OK and is JSON
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('API returned non-JSON response');
+        }
+
         const result = await response.json();
         if (result.success && result.operators) {
           // Map operators to provider format
@@ -78,10 +88,30 @@ const Airtime = () => {
           if (mappedProviders.length > 0) {
             setSelectedOperatorId(mappedProviders[0].id);
           }
+        } else {
+          // Fallback to demo data if API doesn't return expected format
+          console.warn('API did not return operators in expected format. Using fallback data.');
+          const fallbackProviders: Provider[] = [
+            { id: 1, name: 'MTN', icon: '🟡', description: 'MTN Airtime' },
+            { id: 2, name: 'Airtel', icon: '🔴', description: 'Airtel Airtime' },
+            { id: 3, name: 'Glo', icon: '🟢', description: 'Glo Airtime' },
+            { id: 4, name: '9mobile', icon: '🟠', description: '9mobile Airtime' },
+          ];
+          setProviders(fallbackProviders);
+          setSelectedOperatorId(fallbackProviders[0].id);
         }
       } catch (error) {
         console.error('Failed to fetch operators:', error);
-        toast.error('Failed to load service providers');
+        // Use fallback data so app still works
+        const fallbackProviders: Provider[] = [
+          { id: 1, name: 'MTN', icon: '🟡', description: 'MTN Airtime' },
+          { id: 2, name: 'Airtel', icon: '🔴', description: 'Airtel Airtime' },
+          { id: 3, name: 'Glo', icon: '🟢', description: 'Glo Airtime' },
+          { id: 4, name: '9mobile', icon: '🟠', description: '9mobile Airtime' },
+        ];
+        setProviders(fallbackProviders);
+        setSelectedOperatorId(fallbackProviders[0].id);
+        toast.error('Using demo service providers. Live data unavailable.');
       }
     };
 
