@@ -109,7 +109,7 @@ async function getReloadlyAccessToken(): Promise<string> {
 export async function getOperatorsByCountry(countryCode: string) {
   try {
     const token = await getReloadlyAccessToken();
-    
+
     const response = await fetch(`${RELOADLY_BASE_URL}/operators/countries/${countryCode}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -118,6 +118,26 @@ export async function getOperatorsByCountry(countryCode: string) {
     });
 
     if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      let errorDetails = '';
+
+      if (contentType?.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          errorDetails = JSON.stringify(errorData);
+        } catch {
+          errorDetails = await response.text();
+        }
+      } else {
+        errorDetails = await response.text();
+      }
+
+      logger.error('Reloadly operators fetch failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        countryCode,
+        details: errorDetails
+      });
       throw new Error(`Failed to fetch operators: ${response.status} ${response.statusText}`);
     }
 
