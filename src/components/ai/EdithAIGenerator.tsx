@@ -154,10 +154,10 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
   return (
     <div className={containerClass}>
       <Card className={cardClass}>
-        <CardHeader className={`flex flex-row items-center justify-between ${isEmbedded ? "px-0 py-4 border-b" : ""}`}>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-500" />
-            Edith AI Content Generator
+        <CardHeader className={`flex flex-row items-center justify-between ${isEmbedded ? "px-0 py-3 border-b" : ""}`}>
+          <CardTitle className={`flex items-center gap-2 ${isEmbedded ? "text-base sm:text-lg" : ""}`}>
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+            <span className={isEmbedded ? "" : ""}>Edith AI Content Generator</span>
           </CardTitle>
           {!isEmbedded && (
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -165,43 +165,47 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
             </Button>
           )}
           {isEmbedded && (
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-xs">
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-xs sm:text-sm h-8">
               Back to Post
             </Button>
           )}
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className={`${isEmbedded ? "space-y-4 px-0 py-4" : "space-y-6"}`}>
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+            <Alert variant="destructive" className={isEmbedded ? "text-xs sm:text-sm py-2 px-3" : ""}>
+              <AlertCircle className={`h-3 w-3 sm:h-4 sm:w-4 ${isEmbedded ? "mt-0.5" : ""}`} />
+              <AlertTitle className={isEmbedded ? "text-xs sm:text-sm" : ""}>Error</AlertTitle>
+              <AlertDescription className={isEmbedded ? "text-xs sm:text-sm" : ""}>{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid grid-cols-2 gap-2 sm:gap-4`}>
             <Button
               variant={contentType === "image" ? "default" : "outline"}
               onClick={() => setContentType("image")}
-              className="flex items-center gap-2"
+              className={`flex items-center justify-center gap-1 sm:gap-2 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+              size={isEmbedded ? "sm" : "default"}
             >
               <Image className="w-4 h-4" />
-              Generate Image
+              <span className={isEmbedded ? "hidden sm:inline" : ""}>Generate Image</span>
+              <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Image</span>
             </Button>
             <Button
               variant={contentType === "video" ? "default" : "outline"}
               onClick={() => setContentType("video")}
-              className="flex items-center gap-2"
+              className={`flex items-center justify-center gap-1 sm:gap-2 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+              size={isEmbedded ? "sm" : "default"}
             >
               <Video className="w-4 h-4" />
-              Generate Video
+              <span className={isEmbedded ? "hidden sm:inline" : ""}>Generate Video</span>
+              <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Video</span>
             </Button>
           </div>
 
           {contentType === "image" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Width</Label>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="space-y-1">
+                <Label className={isEmbedded ? "text-xs sm:text-sm" : ""}>Width</Label>
                 <Input
                   type="number"
                   value={dimensions.width}
@@ -209,10 +213,11 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
                   min="256"
                   max="1024"
                   step="64"
+                  className={isEmbedded ? "text-xs sm:text-sm h-8" : ""}
                 />
               </div>
-              <div>
-                <Label>Height</Label>
+              <div className="space-y-1">
+                <Label className={isEmbedded ? "text-xs sm:text-sm" : ""}>Height</Label>
                 <Input
                   type="number"
                   value={dimensions.height}
@@ -220,92 +225,106 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
                   min="256"
                   max="1024"
                   step="64"
+                  className={isEmbedded ? "text-xs sm:text-sm h-8" : ""}
                 />
               </div>
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="prompt">Prompt</Label>
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="prompt" className={isEmbedded ? "text-xs sm:text-sm" : ""}>Prompt</Label>
             <Textarea
               id="prompt"
               placeholder="Describe what you want to generate in detail..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              rows={4}
+              rows={isEmbedded ? 3 : 4}
+              className={isEmbedded ? "text-xs sm:text-sm" : ""}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="negativePrompt">Negative Prompt (Optional)</Label>
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="negativePrompt" className={isEmbedded ? "text-xs sm:text-sm" : ""}>Negative Prompt (Optional)</Label>
             <Textarea
               id="negativePrompt"
               placeholder="Describe what you want to avoid in the generation..."
               value={negativePrompt}
               onChange={(e) => setNegativePrompt(e.target.value)}
-              rows={2}
+              rows={isEmbedded ? 2 : 2}
+              className={isEmbedded ? "text-xs sm:text-sm" : ""}
             />
           </div>
 
-          <div className="flex justify-end">
-            <Button 
-              onClick={handleGenerate} 
+          <div className={`flex ${isEmbedded ? "justify-center sm:justify-end" : "justify-end"}`}>
+            <Button
+              onClick={handleGenerate}
               disabled={isGenerating}
-              className="w-full"
+              className={`${isEmbedded ? "w-full sm:w-auto" : "w-full"} ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+              size={isEmbedded ? "sm" : "default"}
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
+                  <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  <span className={isEmbedded ? "hidden sm:inline" : ""}>Generating...</span>
+                  <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Generating</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate with Edith AI
+                  <Sparkles className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className={isEmbedded ? "hidden sm:inline" : ""}>Generate with Edith AI</span>
+                  <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Generate</span>
                 </>
               )}
             </Button>
           </div>
 
           {generatedContent && (
-            <div className="space-y-4">
-              <div className="border rounded-lg overflow-hidden">
+            <div className={`space-y-3 sm:space-y-4 border-t pt-3 sm:pt-4 ${isEmbedded ? "-mx-0" : ""}`}>
+              <div className="border rounded-lg overflow-hidden bg-gray-50">
                 {generatedContent.type === "image" ? (
-                  <img 
-                    src={generatedContent.url} 
-                    alt="Generated content" 
-                    className="w-full h-auto max-h-96 object-contain"
+                  <img
+                    src={generatedContent.url}
+                    alt="Generated content"
+                    className={`w-full h-auto object-contain ${isEmbedded ? "max-h-48 sm:max-h-64" : "max-h-96"}`}
                   />
                 ) : (
-                  <video 
-                    src={generatedContent.url} 
-                    controls 
-                    className="w-full h-auto max-h-96"
+                  <video
+                    src={generatedContent.url}
+                    controls
+                    className={`w-full h-auto ${isEmbedded ? "max-h-48 sm:max-h-64" : "max-h-96"}`}
                   />
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button onClick={handleUseContent} className="flex-1">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Use Content
+              <div className={`flex flex-col sm:flex-row gap-2 ${isEmbedded ? "gap-2" : ""}`}>
+                <Button
+                  onClick={handleUseContent}
+                  className={`flex-1 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+                  size={isEmbedded ? "sm" : "default"}
+                >
+                  <CheckCircle className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className={isEmbedded ? "hidden sm:inline" : ""}>Use Content</span>
+                  <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Use</span>
                 </Button>
                 {generatedContent.type === "image" && (
-                  <Button 
-                    onClick={handleUpscale} 
+                  <Button
+                    onClick={handleUpscale}
                     disabled={isGenerating}
                     variant="secondary"
-                    className="flex-1"
+                    className={`flex-1 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+                    size={isEmbedded ? "sm" : "default"}
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Upscaling...
+                        <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                        <span className={isEmbedded ? "hidden sm:inline" : ""}>Upscaling...</span>
+                        <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Upscale</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upscale 2x
+                        <Upload className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className={isEmbedded ? "hidden sm:inline" : ""}>Upscale 2x</span>
+                        <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>2x</span>
                       </>
                     )}
                   </Button>
@@ -314,9 +333,9 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
             </div>
           )}
 
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium">Tips for better results:</p>
-            <ul className="list-disc list-inside space-y-1 mt-1">
+          <div className={`text-muted-foreground border-t pt-3 sm:pt-4 ${isEmbedded ? "text-xs sm:text-sm" : "text-sm"}`}>
+            <p className={`font-medium ${isEmbedded ? "text-xs sm:text-sm" : ""}`}>Tips for better results:</p>
+            <ul className={`list-disc list-inside space-y-0.5 sm:space-y-1 mt-1 text-xs sm:text-sm`}>
               <li>Be specific and descriptive in your prompts</li>
               <li>Include details like colors, lighting, and style</li>
               <li>Use negative prompts to exclude unwanted elements</li>

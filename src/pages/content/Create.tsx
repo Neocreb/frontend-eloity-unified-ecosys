@@ -4,15 +4,17 @@ import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CreatePostForm from '@/components/content/CreatePostForm';
 import CreateProductForm from '@/components/content/CreateProductForm';
+import CreatePostFlow from '@/components/feed/CreatePostFlow';
 
 type ContentType = 'post' | 'product' | 'video' | 'live';
 
 const CreateContent: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   const type = (searchParams.get('type') || 'post') as ContentType;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreatePostFlow, setShowCreatePostFlow] = useState(type === 'post');
 
   const handleSuccess = () => {
     setIsSubmitting(false);
@@ -20,6 +22,10 @@ const CreateContent: React.FC = () => {
   };
 
   const handleCancel = () => {
+    navigate(-1);
+  };
+
+  const handlePostCreated = () => {
     navigate(-1);
   };
 
@@ -37,14 +43,17 @@ const CreateContent: React.FC = () => {
     switch (type) {
       case 'post':
         return (
-          <CreatePostForm 
-            onSuccess={handleSuccess}
-            onCancel={handleCancel}
+          <CreatePostFlow
+            isOpen={showCreatePostFlow}
+            onClose={() => {
+              setShowCreatePostFlow(false);
+              handlePostCreated();
+            }}
           />
         );
       case 'product':
         return (
-          <CreateProductForm 
+          <CreateProductForm
             onSuccess={handleSuccess}
             onCancel={handleCancel}
           />
@@ -83,29 +92,35 @@ const CreateContent: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b p-4 z-10">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCancel}
-            className="p-0 h-auto"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-          <h1 className="text-xl font-bold">{getTitle()}</h1>
-        </div>
-      </div>
+    <>
+      {type === 'post' ? (
+        renderForm()
+      ) : (
+        <div className="flex flex-col min-h-screen bg-gray-50">
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b p-4 z-10">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancel}
+                className="p-0 h-auto"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+              <h1 className="text-xl font-bold">{getTitle()}</h1>
+            </div>
+          </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-4xl mx-auto">
-          {renderForm()}
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="max-w-4xl mx-auto">
+              {renderForm()}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
