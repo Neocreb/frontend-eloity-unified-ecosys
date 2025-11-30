@@ -41,16 +41,7 @@ export const useVideos = () => {
       // Fetch video posts from posts table
       const { data: videoPosts, error } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles:user_id (
-            user_id,
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .eq('type', 'video')
         .not('video_url', 'is', null)
         .order('created_at', { ascending: false })
