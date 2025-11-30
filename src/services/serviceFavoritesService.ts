@@ -100,40 +100,22 @@ class ServiceFavoritesService {
   }
 
   /**
-   * Reorder favorites
+   * Reorder favorites (deprecated - position column no longer used)
    */
   async updateFavoritePosition(
     userId: string,
     serviceId: string,
     newPosition: number
   ): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from("user_service_favorites")
-        .update({ position: newPosition })
-        .eq("user_id", userId)
-        .eq("service_id", serviceId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error("Error updating favorite position:", error);
-      return false;
-    }
+    // Position column has been removed. This method is kept for backward compatibility.
+    return true;
   }
 
   /**
-   * Reorder favorites after deletion
+   * Reorder favorites after deletion (deprecated - position column no longer used)
    */
   private async reorderFavorites(userId: string): Promise<void> {
-    try {
-      const favorites = await this.getFavorites(userId);
-      for (let i = 0; i < favorites.length; i++) {
-        await this.updateFavoritePosition(userId, favorites[i].serviceId, i);
-      }
-    } catch (error) {
-      console.error("Error reordering favorites:", error);
-    }
+    // Position column has been removed. This method is kept for backward compatibility.
   }
 
   /**
