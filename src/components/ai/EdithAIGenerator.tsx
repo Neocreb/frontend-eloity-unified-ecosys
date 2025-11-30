@@ -154,14 +154,21 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
   return (
     <div className={containerClass}>
       <Card className={cardClass}>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className={`flex flex-row items-center justify-between ${isEmbedded ? "px-0 py-4 border-b" : ""}`}>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-500" />
             Edith AI Content Generator
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
+          {!isEmbedded && (
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+          {isEmbedded && (
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-xs">
+              Back to Post
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
