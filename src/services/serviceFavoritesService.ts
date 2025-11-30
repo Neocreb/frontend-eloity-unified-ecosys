@@ -60,22 +60,11 @@ class ServiceFavoritesService {
    */
   async addFavorite(userId: string, serviceId: string): Promise<ServiceFavorite | null> {
     try {
-      // Get current max position
-      const { data: maxData } = await supabase
-        .from("user_service_favorites")
-        .select("position")
-        .eq("user_id", userId)
-        .order("position", { ascending: false })
-        .limit(1);
-
-      const nextPosition = maxData && maxData.length > 0 ? maxData[0].position + 1 : 0;
-
       const { data, error } = await supabase
         .from("user_service_favorites")
         .insert({
           user_id: userId,
           service_id: serviceId,
-          position: nextPosition,
         })
         .select()
         .single();
