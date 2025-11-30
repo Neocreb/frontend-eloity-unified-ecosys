@@ -45,8 +45,10 @@ const CreateContent: React.FC = () => {
         return (
           <CreatePostFlow
             isOpen={showCreatePostFlow}
-            onClose={() => setShowCreatePostFlow(false)}
-            onPostCreated={handlePostCreated}
+            onClose={() => {
+              setShowCreatePostFlow(false);
+              handlePostCreated();
+            }}
           />
         );
       case 'product':
