@@ -337,20 +337,7 @@ class RealtimeFeedService {
           return null;
         }
 
-        // Decrement likes count
-        const { data: updatedComment, error: updateError } = await supabase
-          .from('post_comments')
-          .update({ likes_count: supabase.rpc('post_comments.likes_count - 1') })
-          .eq('id', commentId)
-          .select('likes_count')
-          .single();
-
-        if (updateError) {
-          console.error("Error updating comment likes count:", updateError);
-        } else {
-          likesCount = updatedComment.likes_count;
-        }
-
+        // Unlike - remove the like from comment_likes table
         return { isLiked: false, likesCount: Math.max(0, likesCount) };
       } else {
         // Like
@@ -369,20 +356,7 @@ class RealtimeFeedService {
           return null;
         }
 
-        // Increment likes count
-        const { data: updatedComment, error: updateError } = await supabase
-          .from('post_comments')
-          .update({ likes_count: supabase.rpc('post_comments.likes_count + 1') })
-          .eq('id', commentId)
-          .select('likes_count')
-          .single();
-
-        if (updateError) {
-          console.error("Error updating comment likes count:", updateError);
-        } else {
-          likesCount = updatedComment.likes_count;
-        }
-
+        // Like count is maintained via comment_likes table
         return { isLiked: true, likesCount };
       }
     } catch (error) {
@@ -446,7 +420,7 @@ class RealtimeFeedService {
 
       const { data: comments, error: commentsError } = await supabase
         .from('post_comments')
-        .select('*')
+        .select('id, content, created_at, post_id, user_id, updated_at')
         .eq('post_id', postId)
         .order('created_at', { ascending: true })
         .range(from, to);
@@ -527,12 +501,11 @@ class RealtimeFeedService {
         .from('post_comments')
         .update({
           content,
-          is_edited: true,
           updated_at: new Date().toISOString()
         })
         .eq('id', commentId)
         .eq('user_id', userId)
-        .select()
+        .select('id, content, created_at, post_id, user_id, updated_at')
         .single();
 
       if (error) {
