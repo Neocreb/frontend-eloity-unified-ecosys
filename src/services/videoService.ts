@@ -206,14 +206,7 @@ export const videoService = {
   async getVideoComments(videoId: string): Promise<VideoComment[]> {
     const { data, error } = await supabase
       .from('video_comments')
-      .select(`
-        *,
-        user:profiles(
-          username,
-          full_name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('video_id', videoId)
       .is('parent_id', null)
       .order('created_at', { ascending: false });
@@ -239,14 +232,7 @@ export const videoService = {
         content,
         parent_id: parentId || null
       })
-      .select(`
-        *,
-        user:profiles(
-          username,
-          full_name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .single();
 
     if (error) throw error;
