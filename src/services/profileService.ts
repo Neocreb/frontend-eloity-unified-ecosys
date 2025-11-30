@@ -274,12 +274,7 @@ export class ProfileService {
       // Fallback to direct database query
       const { data, error } = await supabase
         .from("freelance_profiles")
-        .select(
-          `
-          *,
-          profiles:user_id(*)
-        `,
-        )
+        .select('*')
         .eq("user_id", userId)
         .order("updated_at", { ascending: false });
 
