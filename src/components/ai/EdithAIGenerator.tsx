@@ -279,44 +279,52 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
           </div>
 
           {generatedContent && (
-            <div className="space-y-4">
-              <div className="border rounded-lg overflow-hidden">
+            <div className={`space-y-3 sm:space-y-4 border-t pt-3 sm:pt-4 ${isEmbedded ? "-mx-0" : ""}`}>
+              <div className="border rounded-lg overflow-hidden bg-gray-50">
                 {generatedContent.type === "image" ? (
-                  <img 
-                    src={generatedContent.url} 
-                    alt="Generated content" 
-                    className="w-full h-auto max-h-96 object-contain"
+                  <img
+                    src={generatedContent.url}
+                    alt="Generated content"
+                    className={`w-full h-auto object-contain ${isEmbedded ? "max-h-48 sm:max-h-64" : "max-h-96"}`}
                   />
                 ) : (
-                  <video 
-                    src={generatedContent.url} 
-                    controls 
-                    className="w-full h-auto max-h-96"
+                  <video
+                    src={generatedContent.url}
+                    controls
+                    className={`w-full h-auto ${isEmbedded ? "max-h-48 sm:max-h-64" : "max-h-96"}`}
                   />
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button onClick={handleUseContent} className="flex-1">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Use Content
+              <div className={`flex flex-col sm:flex-row gap-2 ${isEmbedded ? "gap-2" : ""}`}>
+                <Button
+                  onClick={handleUseContent}
+                  className={`flex-1 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+                  size={isEmbedded ? "sm" : "default"}
+                >
+                  <CheckCircle className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className={isEmbedded ? "hidden sm:inline" : ""}>Use Content</span>
+                  <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Use</span>
                 </Button>
                 {generatedContent.type === "image" && (
-                  <Button 
-                    onClick={handleUpscale} 
+                  <Button
+                    onClick={handleUpscale}
                     disabled={isGenerating}
                     variant="secondary"
-                    className="flex-1"
+                    className={`flex-1 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+                    size={isEmbedded ? "sm" : "default"}
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Upscaling...
+                        <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                        <span className={isEmbedded ? "hidden sm:inline" : ""}>Upscaling...</span>
+                        <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Upscale</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upscale 2x
+                        <Upload className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className={isEmbedded ? "hidden sm:inline" : ""}>Upscale 2x</span>
+                        <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>2x</span>
                       </>
                     )}
                   </Button>
