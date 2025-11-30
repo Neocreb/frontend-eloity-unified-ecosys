@@ -778,14 +778,6 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Edith AI Generator Modal */}
-      {showAIGenerator && (
-        <EdithAIGenerator
-          onContentGenerated={handleAIContentGenerated}
-          onClose={() => setShowAIGenerator(false)}
-        />
-      )}
-
       {/* Audience Selection Modal */}
       <Dialog open={showAudienceModal} onOpenChange={setShowAudienceModal}>
         <DialogContent className="max-w-md w-full p-0">
