@@ -154,15 +154,7 @@ class FeedService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -171,10 +163,10 @@ class FeedService {
         id: data.id,
         user: {
           id: data.user_id,
-          name: data.profiles?.full_name || 'User',
-          username: data.profiles?.username || 'user',
-          avatar: data.profiles?.avatar_url || '/placeholder.svg',
-          isVerified: !!data.profiles?.is_verified,
+          name: 'User',
+          username: 'user',
+          avatar: '/placeholder.svg',
+          isVerified: false,
         },
         content: data.content,
         media: data.media_urls?.map((url: string, index: number) => ({
