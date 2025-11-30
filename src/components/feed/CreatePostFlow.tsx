@@ -51,7 +51,7 @@ interface CreatePostFlowProps {
   onClose: () => void;
 }
 
-type PostStep = "create" | "settings";
+type PostStep = "create" | "settings" | "ai";
 type AudienceType = "public" | "friends" | "private" | "custom";
 
 const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
