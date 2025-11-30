@@ -229,25 +229,27 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="prompt">Prompt</Label>
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="prompt" className={isEmbedded ? "text-xs sm:text-sm" : ""}>Prompt</Label>
             <Textarea
               id="prompt"
               placeholder="Describe what you want to generate in detail..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              rows={4}
+              rows={isEmbedded ? 3 : 4}
+              className={isEmbedded ? "text-xs sm:text-sm" : ""}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="negativePrompt">Negative Prompt (Optional)</Label>
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="negativePrompt" className={isEmbedded ? "text-xs sm:text-sm" : ""}>Negative Prompt (Optional)</Label>
             <Textarea
               id="negativePrompt"
               placeholder="Describe what you want to avoid in the generation..."
               value={negativePrompt}
               onChange={(e) => setNegativePrompt(e.target.value)}
-              rows={2}
+              rows={isEmbedded ? 2 : 2}
+              className={isEmbedded ? "text-xs sm:text-sm" : ""}
             />
           </div>
 
