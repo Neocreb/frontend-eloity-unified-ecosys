@@ -179,22 +179,26 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
             </Alert>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid grid-cols-2 gap-2 sm:gap-4`}>
             <Button
               variant={contentType === "image" ? "default" : "outline"}
               onClick={() => setContentType("image")}
-              className="flex items-center gap-2"
+              className={`flex items-center justify-center gap-1 sm:gap-2 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+              size={isEmbedded ? "sm" : "default"}
             >
               <Image className="w-4 h-4" />
-              Generate Image
+              <span className={isEmbedded ? "hidden sm:inline" : ""}>Generate Image</span>
+              <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Image</span>
             </Button>
             <Button
               variant={contentType === "video" ? "default" : "outline"}
               onClick={() => setContentType("video")}
-              className="flex items-center gap-2"
+              className={`flex items-center justify-center gap-1 sm:gap-2 ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+              size={isEmbedded ? "sm" : "default"}
             >
               <Video className="w-4 h-4" />
-              Generate Video
+              <span className={isEmbedded ? "hidden sm:inline" : ""}>Generate Video</span>
+              <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Video</span>
             </Button>
           </div>
 
