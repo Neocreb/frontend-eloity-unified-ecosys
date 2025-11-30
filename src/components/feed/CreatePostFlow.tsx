@@ -186,7 +186,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
       setMediaPreview(previewUrl);
 
       // Close the AI generator and go back to create step
-      setShowAIGenerator(false);
+      setCurrentStep("create");
 
       toast({
         title: "Content Added!",
