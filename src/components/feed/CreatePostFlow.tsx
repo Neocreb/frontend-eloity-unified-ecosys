@@ -540,7 +540,7 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
                   <Button
                     variant="outline"
                     className="h-12 sm:h-16 flex-col gap-1 text-xs"
-                    onClick={() => setShowAIGenerator(true)}
+                    onClick={() => setCurrentStep("ai")}
                   >
                     <Sparkles className="h-4 w-4 sm:h-6 sm:w-6 text-purple-500" />
                     <span>Edith AI</span>
