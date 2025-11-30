@@ -154,10 +154,10 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
   return (
     <div className={containerClass}>
       <Card className={cardClass}>
-        <CardHeader className={`flex flex-row items-center justify-between ${isEmbedded ? "px-0 py-4 border-b" : ""}`}>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-500" />
-            Edith AI Content Generator
+        <CardHeader className={`flex flex-row items-center justify-between ${isEmbedded ? "px-0 py-3 border-b" : ""}`}>
+          <CardTitle className={`flex items-center gap-2 ${isEmbedded ? "text-base sm:text-lg" : ""}`}>
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+            <span className={isEmbedded ? "" : ""}>Edith AI Content Generator</span>
           </CardTitle>
           {!isEmbedded && (
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -165,12 +165,12 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
             </Button>
           )}
           {isEmbedded && (
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-xs">
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-xs sm:text-sm h-8">
               Back to Post
             </Button>
           )}
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className={`${isEmbedded ? "space-y-4 px-0 py-4" : "space-y-6"}`}>
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
