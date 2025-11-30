@@ -256,8 +256,6 @@ class RealtimeFeedService {
           post_id: postId,
           user_id: userId,
           content: content,
-          likes_count: 0,
-          is_edited: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -292,8 +290,8 @@ class RealtimeFeedService {
         user_id: data.user_id,
         parent_id: data.parent_id,
         content: data.content,
-        likes_count: data.likes_count,
-        is_edited: data.is_edited,
+        likes_count: 0,
+        is_edited: false,
         created_at: data.created_at,
         updated_at: data.updated_at,
         user: {
