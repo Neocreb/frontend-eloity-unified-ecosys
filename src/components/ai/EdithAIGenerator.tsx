@@ -203,9 +203,9 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
           </div>
 
           {contentType === "image" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Width</Label>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="space-y-1">
+                <Label className={isEmbedded ? "text-xs sm:text-sm" : ""}>Width</Label>
                 <Input
                   type="number"
                   value={dimensions.width}
@@ -213,10 +213,11 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
                   min="256"
                   max="1024"
                   step="64"
+                  className={isEmbedded ? "text-xs sm:text-sm h-8" : ""}
                 />
               </div>
-              <div>
-                <Label>Height</Label>
+              <div className="space-y-1">
+                <Label className={isEmbedded ? "text-xs sm:text-sm" : ""}>Height</Label>
                 <Input
                   type="number"
                   value={dimensions.height}
@@ -224,6 +225,7 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
                   min="256"
                   max="1024"
                   step="64"
+                  className={isEmbedded ? "text-xs sm:text-sm h-8" : ""}
                 />
               </div>
             </div>
