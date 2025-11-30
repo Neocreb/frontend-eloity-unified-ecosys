@@ -255,21 +255,24 @@ const EdithAIGenerator: React.FC<EdithAIGeneratorProps> = ({ onContentGenerated,
             />
           </div>
 
-          <div className="flex justify-end">
-            <Button 
-              onClick={handleGenerate} 
+          <div className={`flex ${isEmbedded ? "justify-center sm:justify-end" : "justify-end"}`}>
+            <Button
+              onClick={handleGenerate}
               disabled={isGenerating}
-              className="w-full"
+              className={`${isEmbedded ? "w-full sm:w-auto" : "w-full"} ${isEmbedded ? "text-xs sm:text-sm h-9" : ""}`}
+              size={isEmbedded ? "sm" : "default"}
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
+                  <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  <span className={isEmbedded ? "hidden sm:inline" : ""}>Generating...</span>
+                  <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Generating</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate with Edith AI
+                  <Sparkles className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className={isEmbedded ? "hidden sm:inline" : ""}>Generate with Edith AI</span>
+                  <span className={isEmbedded ? "inline sm:hidden" : "hidden"}>Generate</span>
                 </>
               )}
             </Button>
