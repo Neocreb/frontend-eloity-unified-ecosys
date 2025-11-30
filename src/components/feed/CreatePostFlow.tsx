@@ -136,6 +136,9 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
     if (currentStep === "settings") {
       setCurrentStep("create");
     }
+    if (currentStep === "ai") {
+      setCurrentStep("create");
+    }
   };
 
   const handleTaggedUsers = (users: any[]) => {
