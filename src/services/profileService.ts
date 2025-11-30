@@ -207,12 +207,7 @@ export class ProfileService {
       // Fallback to direct database query
       const { data, error } = await supabase
         .from("posts")
-        .select(
-          `
-          *,
-          profiles:user_id(*)
-        `,
-        )
+        .select('*')
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
