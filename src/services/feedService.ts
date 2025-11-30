@@ -338,7 +338,7 @@ class FeedService {
     try {
       const { data, error } = await supabase
         .from('post_comments')
-        .select('*')
+        .select('id, content, created_at, post_id, user_id, updated_at')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
@@ -374,8 +374,6 @@ class FeedService {
           post_id: postId,
           user_id: userId,
           content: content,
-          likes_count: 0,
-          is_edited: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -397,7 +395,7 @@ class FeedService {
         userAvatar: '/placeholder.svg',
         content: data.content,
         timestamp: new Date(data.created_at).toLocaleString(),
-        likes: data.likes_count,
+        likes: 0,
         isLiked: false,
       };
     } catch (error) {
