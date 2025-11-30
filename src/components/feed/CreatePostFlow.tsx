@@ -362,13 +362,13 @@ const CreatePostFlow: React.FC<CreatePostFlowProps> = ({ isOpen, onClose }) => {
           {/* Header */}
           <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-white sticky top-0 z-10">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              {currentStep === "settings" && (
+              {(currentStep === "settings" || currentStep === "ai") && (
                 <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                   <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               )}
               <h2 className="text-sm sm:text-base md:text-lg font-semibold truncate">
-                {currentStep === "create" ? "Create post" : "Post settings"}
+                {currentStep === "create" ? "Create post" : currentStep === "settings" ? "Post settings" : "Generate with Edith AI"}
               </h2>
             </div>
 
