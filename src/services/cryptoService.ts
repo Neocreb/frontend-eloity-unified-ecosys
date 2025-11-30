@@ -1093,16 +1093,7 @@ export class CryptoService {
     try {
       let query = supabase
         .from('p2p_offers')
-        .select(`
-          *,
-          profiles:user_id (
-            user_id,
-            full_name,
-            username,
-            avatar_url,
-            is_verified
-          )
-        `)
+        .select('*')
         .eq('status', 'active');
       
       if (filters?.asset) {
