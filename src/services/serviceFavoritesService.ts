@@ -5,7 +5,6 @@ export interface ServiceFavorite {
   id: string;
   userId: string;
   serviceId: string;
-  position: number;
   createdAt: string;
   service?: any;
 }
