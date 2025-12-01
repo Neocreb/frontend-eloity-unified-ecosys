@@ -1,374 +1,245 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Copy,
-  Trash2,
-  CheckCircle2,
   RefreshCw,
   Gift,
-  TrendingUp,
   DollarSign,
-  Search,
+  AlertTriangle,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface GiftCardRecord {
+interface GiftCardTransaction {
   id: string;
   userId: string;
-  retailerName: string;
+  productName: string;
   amount: number;
-  code: string;
-  status: 'active' | 'redeemed' | 'pending' | 'expired';
-  direction: 'buy' | 'sell';
+  status: 'success' | 'pending' | 'failed';
   createdAt: string;
 }
 
 const AdminGiftCardsManagement = () => {
   const { toast } = useToast();
-  const [records, setRecords] = useState<GiftCardRecord[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const { session } = useAuth();
+  const [transactions, setTransactions] = useState<GiftCardTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [status, setStatus] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Mock data for gift card records
-  const mockRecords: GiftCardRecord[] = [
-    {
-      id: '1',
-      userId: 'user123',
-      retailerName: 'Amazon',
-      amount: 50.00,
-      code: 'AMZN-XXXX-XXXX-1234',
-      status: 'active',
-      direction: 'buy',
-      createdAt: '2025-11-20T10:30:00Z'
-    },
-    {
-      id: '2',
-      userId: 'user456',
-      retailerName: 'Google Play',
-      amount: 25.00,
-      code: 'GPLY-XXXX-XXXX-5678',
-      status: 'redeemed',
-      direction: 'buy',
-      createdAt: '2025-11-18T14:15:00Z'
-    },
-    {
-      id: '3',
-      userId: 'user789',
-      retailerName: 'Steam',
-      amount: 100.00,
-      code: 'STM-XXXX-XXXX-9012',
-      status: 'active',
-      direction: 'buy',
-      createdAt: '2025-11-22T09:45:00Z'
-    }
-  ];
+  // Fetch transactions from real API
+  const fetchTransactions = async () => {
+    if (!session?.access_token) return;
 
-  // Mock data for transactions
-  const mockTransactions = [
-    {
-      id: 'tx1',
-      userId: 'user123',
-      providerName: 'RELOADLY',
-      amount: 50.00,
-      status: 'success',
-      createdAt: '2025-11-20T10:30:00Z'
-    },
-    {
-      id: 'tx2',
-      userId: 'user456',
-      providerName: 'RELOADLY',
-      amount: 25.00,
-      status: 'pending',
-      createdAt: '2025-11-18T14:15:00Z'
-    }
-  ];
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/admin/reloadly/transactions', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.transactions) {
+        setTransactions(data.transactions);
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch transactions',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to fetch transactions',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load data on mount
   useEffect(() => {
-    setRecords(mockRecords);
-    setTransactions(mockTransactions);
-  }, []);
-
-  const filtered = records.filter(r => {
-    const matchesSearch = r.retailerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          r.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = status === 'all' || r.status === status;
-    return matchesSearch && matchesStatus;
-  });
+    if (session?.access_token) {
+      fetchTransactions();
+    }
+  }, [session?.access_token]);
 
   const filteredTransactions = transactions.filter(tx => {
-    const matchesSearch = tx.providerName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = tx.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.userId.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || tx.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const setStatusFor = async (id: string, newStatus: string) => {
-    try {
-      setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setRecords(records.map(r => 
-        r.id === id ? { ...r, status: newStatus as any } : r
-      ));
-      
-      toast({
-        title: 'Status Updated',
-        description: `Gift card status updated to ${newStatus}`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update status',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const remove = async (id: string) => {
-    try {
-      setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setRecords(records.filter(r => r.id !== id));
-      
-      toast({
-        title: 'Gift Card Removed',
-        description: 'Gift card record has been deleted',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to remove gift card',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchTransactions = async () => {
-    try {
-      setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: 'Transactions Refreshed',
-        description: 'Latest transactions loaded',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch transactions',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <Badge variant="outline" className="bg-green-50 text-green-700">Success</Badge>;
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700">Pending</Badge>;
+      case 'failed':
+        return <Badge variant="outline" className="bg-red-50 text-red-700">Failed</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Gift className="h-6 w-6" />
-          Gift Cards Management
-        </h1>
-        <p className="text-muted-foreground">
-          Manage gift card inventory and transactions
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Gift className="w-8 h-8" />
+            Gift Cards Management
+          </h1>
+          <p className="text-gray-600 mt-1">Manage gift card sales and transactions</p>
+        </div>
+        <Button
+          onClick={fetchTransactions}
+          disabled={isLoading}
+          className="gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          {isLoading ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
-      <Tabs defaultValue="inventory" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-        </TabsList>
+      {/* Search and Filter */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter Transactions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search by product or user ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2 border rounded-md"
+            >
+              <option value="all">All Statuses</option>
+              <option value="success">Success</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Inventory Tab */}
-        <TabsContent value="inventory" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gift Card Inventory</CardTitle>
-              <CardDescription>Manage gift card records and status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Filters */}
-              <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by retailer or code..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={status === 'all' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStatus('all')}
-                  >
-                    All
-                  </Button>
-                  <Button
-                    variant={status === 'active' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStatus('active')}
-                  >
-                    Active
-                  </Button>
-                  <Button
-                    variant={status === 'redeemed' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStatus('redeemed')}
-                  >
-                    Redeemed
-                  </Button>
-                  <Button
-                    variant={status === 'pending' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setStatus('pending')}
-                  >
-                    Pending
-                  </Button>
-                </div>
-              </div>
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">Total Transactions</p>
+              <p className="text-3xl font-bold">{transactions.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">Successful</p>
+              <p className="text-3xl font-bold text-green-600">
+                {transactions.filter(t => t.status === 'success').length}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">Total Value</p>
+              <p className="text-3xl font-bold">
+                ${transactions
+                  .filter(t => t.status === 'success')
+                  .reduce((sum, t) => sum + t.amount, 0)
+                  .toFixed(2)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-              {/* Records List */}
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                {filtered.map((r) => (
-                  <div key={r.id} className="flex items-start justify-between rounded border p-4 hover:bg-muted/50">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={r.direction === 'buy' ? 'default' : 'secondary'}>
-                          {r.direction}
-                        </Badge>
-                        <span className="font-medium text-base">{r.retailerName}</span>
-                        <Badge
-                          variant={
-                            r.status === 'redeemed'
-                              ? 'secondary'
-                              : r.status === 'active'
-                                ? 'default'
-                                : 'outline'
-                          }
-                        >
-                          {r.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Amount: <span className="font-semibold">${r.amount.toFixed(2)}</span>
-                      </div>
-                      <div className="text-xs font-mono bg-muted p-2 rounded break-all">{r.code}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(r.createdAt).toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0 ml-4">
-                      {r.status !== 'redeemed' && r.direction === 'buy' && (
-                        <Button size="sm" onClick={() => setStatusFor(r.id, 'redeemed')}>
-                          <CheckCircle2 className="h-4 w-4 mr-1" /> Mark Redeemed
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          navigator.clipboard.writeText(r.code);
-                          toast({ title: 'Copied to clipboard' });
-                        }}
-                      >
-                        <Copy className="h-4 w-4 mr-1" /> Copy
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => remove(r.id)}>
-                        <Trash2 className="h-4 w-4 mr-1" /> Delete
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                {filtered.length === 0 && (
-                  <div className="text-sm text-muted-foreground text-center py-8">No records found.</div>
-                )}
+      {/* Transactions List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Transactions</CardTitle>
+          <CardDescription>Gift card purchase and redemption history</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="text-center py-8 text-gray-500">Loading transactions...</div>
+            ) : filteredTransactions.length === 0 ? (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  No transactions found matching your filters.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="text-left py-2 px-4">Product</th>
+                      <th className="text-left py-2 px-4">User ID</th>
+                      <th className="text-left py-2 px-4">Amount</th>
+                      <th className="text-left py-2 px-4">Status</th>
+                      <th className="text-left py-2 px-4">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTransactions.map(transaction => (
+                      <tr key={transaction.id} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-4">
+                          <span className="font-medium">{transaction.productName}</span>
+                        </td>
+                        <td className="py-3 px-4 text-gray-600 text-xs">{transaction.userId}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4" />
+                            {transaction.amount.toFixed(2)}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          {getStatusBadge(transaction.status)}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {new Date(transaction.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Transactions Tab */}
-        <TabsContent value="transactions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
-              <CardDescription>Latest gift card purchase transactions from RELOADLY</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2 mb-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by brand..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button onClick={fetchTransactions} disabled={isLoading} variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-              </div>
-
-              <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-2">
-                          {tx.providerName}
-                          <Badge
-                            variant={
-                              tx.status === 'success'
-                                ? 'default'
-                                : tx.status === 'pending'
-                                  ? 'secondary'
-                                  : 'destructive'
-                            }
-                          >
-                            {tx.status}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(tx.createdAt).toLocaleString()}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold">${tx.amount.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center text-muted-foreground py-8">No transactions found</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
