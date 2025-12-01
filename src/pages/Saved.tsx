@@ -348,7 +348,7 @@ const Saved = () => {
               {item.price !== undefined && (
                 <div className="mt-2">
                   <span className="font-bold text-lg">
-                    {item.currency} {item.price.toLocaleString()}
+                    {formatCurrency(item.price)}
                   </span>
                 </div>
               )}
@@ -1020,7 +1020,7 @@ const Saved = () => {
               {item.price !== undefined && (
                 <div className="mt-2">
                   <span className="font-bold text-lg">
-                    {item.currency} {item.price.toLocaleString()}
+                    {formatCurrency(item.price)}
                   </span>
                 </div>
               )}
