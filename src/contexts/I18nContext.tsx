@@ -85,7 +85,10 @@ const I18nProvider: FC<{ children: ReactNode }> = ({
       if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
         try {
           savedLanguage = localStorage.getItem("eloity_language");
-          savedCurrency = localStorage.getItem("eloity_currency");
+          // Use the same key as CurrencyContext for consistency ("preferred_currency")
+          // Fall back to old key for backward compatibility
+          savedCurrency = localStorage.getItem("preferred_currency") ||
+                         localStorage.getItem("eloity_currency");
         } catch (storageError) {
           console.warn("Failed to access localStorage:", storageError);
         }
