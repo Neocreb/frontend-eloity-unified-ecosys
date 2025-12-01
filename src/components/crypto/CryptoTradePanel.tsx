@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { Crypto } from "@/pages/CryptoMarket";
 
 interface CryptoTradePanelProps {
@@ -15,6 +16,7 @@ const CryptoTradePanel = ({ crypto, onTrade }: CryptoTradePanelProps) => {
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState<string>('');
   const [usdValue, setUsdValue] = useState<string>('');
+  const { formatCurrency, userCurrency } = useCurrency();
   
   if (!crypto) return null;
   
@@ -80,7 +82,7 @@ const CryptoTradePanel = ({ crypto, onTrade }: CryptoTradePanelProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label className="crypto-text-premium">Value (USD)</Label>
+              <Label className="crypto-text-premium">Value ({userCurrency?.code || 'USD'})</Label>
               <div className="relative">
                 <Input
                   type="text"
@@ -89,13 +91,13 @@ const CryptoTradePanel = ({ crypto, onTrade }: CryptoTradePanelProps) => {
                   onChange={handleUsdValueChange}
                 />
                 <div className="absolute right-3 top-2.5 text-sm crypto-text-muted-premium">
-                  USD
+                  {userCurrency?.code || 'USD'}
                 </div>
               </div>
             </div>
             
             <div className="text-sm crypto-text-muted-premium">
-              1 {crypto.symbol.toUpperCase()} = ${crypto.current_price.toLocaleString()} USD
+              1 {crypto.symbol.toUpperCase()} = {formatCurrency(crypto.current_price)}
             </div>
             
             <Button 
@@ -110,8 +112,8 @@ const CryptoTradePanel = ({ crypto, onTrade }: CryptoTradePanelProps) => {
             <div className="crypto-gradient-bg crypto-border-premium border p-3 rounded-md text-sm">
               <div className="font-medium mb-1 crypto-text-premium">Mock Trading Account</div>
               <div className="flex justify-between crypto-text-secondary-premium">
-                <span>Available USD:</span>
-                <span>$10,000.00</span>
+                <span>Available {userCurrency?.code || 'USD'}:</span>
+                <span>{formatCurrency(10000)}</span>
               </div>
               <div className="flex justify-between mt-1 crypto-text-secondary-premium">
                 <span>Available {crypto.symbol.toUpperCase()}:</span>
