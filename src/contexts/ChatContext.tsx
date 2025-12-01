@@ -97,10 +97,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             .from("profiles")
             .select("*")
             .eq("user_id", otherParticipantId)
-            .single();
+            .maybeSingle();
 
           if (profileError) {
             console.error("Error loading participant profile:", profileError);
+            continue;
+          }
+
+          if (!profileData) {
+            console.warn("No profile data found for participant:", otherParticipantId);
             continue;
           }
 
