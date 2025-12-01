@@ -4,11 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ShoppingCart, 
-  Video, 
-  TrendingUp, 
-  MessageSquare, 
+import { useCurrency } from '@/contexts/CurrencyContext';
+import {
+  ShoppingCart,
+  Video,
+  TrendingUp,
+  MessageSquare,
   Home,
   Bell,
   Search,
@@ -29,6 +30,7 @@ import EnhancedSocialFeed from '@/components/feed/EnhancedSocialFeed';
 const EnhancedPlatform: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'feed' | 'marketplace' | 'videos' | 'crypto'>('feed');
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const { formatCompactCurrency } = require('@/utils/currencyUtils');
 
   const navigationItems = [
     { id: 'feed', label: 'Feed', icon: Home, description: 'Social media feed with Instagram/Facebook features' },
@@ -39,9 +41,9 @@ const EnhancedPlatform: React.FC = () => {
 
   const platformStats = {
     feed: { users: '2.1M', posts: '145K', engagement: '87%' },
-    marketplace: { products: '500K+', sellers: '25K+', transactions: '$2.1B' },
+    marketplace: { products: '500K+', sellers: '25K+', transactions: formatCompactCurrency(2100000000, 'USD') },
     videos: { creators: '890K', views: '12.5B', uploads: '2.3M' },
-    crypto: { pairs: '200+', volume: '$450M', users: '180K' }
+    crypto: { pairs: '200+', volume: formatCompactCurrency(450000000, 'USD'), users: '180K' }
   };
 
   const renderMainContent = () => {
