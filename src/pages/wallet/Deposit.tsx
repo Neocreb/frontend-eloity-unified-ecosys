@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ const Deposit = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { walletBalance } = useWalletContext();
+  const { formatCurrency, userCurrency } = useCurrency();
   const [userCountry, setUserCountry] = useState("NG");
 
   useEffect(() => {
@@ -104,7 +106,7 @@ const Deposit = () => {
               <CardContent className="pt-6">
                 <p className="text-sm text-gray-600">Current Balance</p>
                 <p className="text-4xl font-bold text-gray-900 mt-2">
-                  ${walletBalance?.total.toFixed(2) || "0.00"}
+                  {formatCurrency(walletBalance?.total || 0)}
                 </p>
               </CardContent>
             </Card>
@@ -234,7 +236,7 @@ const Deposit = () => {
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-3">Amount</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-600">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-600">{userCurrency?.symbol || '$'}</span>
                 <Input
                   type="number"
                   placeholder="0.00"
@@ -244,7 +246,7 @@ const Deposit = () => {
                 />
               </div>
               <div className="mt-3 flex justify-between text-xs text-gray-600">
-                <span>Min: $1</span>
+                <span>Min: {formatCurrency(1)}</span>
                 <span>No maximum</span>
               </div>
             </div>
@@ -257,7 +259,7 @@ const Deposit = () => {
                   onClick={() => setAmount(quickAmount.toString())}
                   className="w-full"
                 >
-                  ${quickAmount}
+                  {formatCurrency(quickAmount)}
                 </Button>
               ))}
             </div>
@@ -337,15 +339,15 @@ const Deposit = () => {
                 <div className="border-t border-gray-200 pt-6">
                   <div className="flex justify-between mb-3">
                     <span className="text-gray-600">Amount</span>
-                    <span className="font-semibold">${depositAmount.toFixed(2)}</span>
+                    <span className="font-semibold">{formatCurrency(depositAmount)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600 mb-3">
                     <span>Fee</span>
-                    <span className="font-semibold">${feeCalc.fee.toFixed(2)}</span>
+                    <span className="font-semibold">{formatCurrency(feeCalc.fee)}</span>
                   </div>
                   <div className="flex justify-between border-t border-gray-200 pt-3">
                     <span className="font-semibold">Total Charge</span>
-                    <span className="font-bold text-lg">${feeCalc.total.toFixed(2)}</span>
+                    <span className="font-bold text-lg">{formatCurrency(feeCalc.total)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -365,7 +367,7 @@ const Deposit = () => {
                 Processing...
               </>
             ) : (
-              `Deposit $${feeCalc.total.toFixed(2)}`
+              `Deposit ${formatCurrency(feeCalc.total)}`
             )}
           </Button>
           <Button
@@ -394,7 +396,7 @@ const Deposit = () => {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Deposit Successful!</h2>
             <p className="text-gray-600 mb-8">
-              ${parseFloat(amount).toFixed(2)} has been added to {destinationInfo?.emoji} {destinationInfo?.label}
+              {formatCurrency(parseFloat(amount))} has been added to {destinationInfo?.emoji} {destinationInfo?.label}
             </p>
 
             <Card className="border-0 shadow-sm mb-6">
