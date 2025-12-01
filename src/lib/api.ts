@@ -285,13 +285,20 @@ class ApiClient {
 
   async getCryptoTrades() {
     try {
-      // Use backend endpoint for transaction history
+      const token = getAuthToken();
+      if (!token) {
+        console.warn('No auth token available for crypto trades request');
+        return [];
+      }
+
+      // Use backend endpoint for transaction history with auth headers
       const response = await fetch('/api/cryptoapis/address/history/ethereum/mainnet/0x0000000000000000000000000000000000000000?limit=50', {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
@@ -308,7 +315,7 @@ class ApiClient {
       }));
     } catch (error) {
       console.error('Error fetching crypto trades:', error);
-      throw error;
+      return [];
     }
   }
 }

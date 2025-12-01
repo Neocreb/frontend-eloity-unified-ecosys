@@ -123,14 +123,25 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
     const initializeCurrency = async () => {
       setIsLoading(true);
       try {
+        // Check localStorage first for any previously saved preference (works for both auth and unauth users)
+        let savedCurrency = localStorage.getItem('preferred_currency');
+        let savedAutoDetect = localStorage.getItem('auto_detect_currency');
+
         if (!user?.id || !session) {
-          const detected = await detectCurrencyByLocation();
-          setSelectedCurrency(detected || getCurrencyByCode(DEFAULT_CURRENCY)!);
+          // Not authenticated - use localStorage or geolocation
+          if (savedAutoDetect === null || savedAutoDetect === 'true') {
+            const detected = await detectCurrencyByLocation();
+            setSelectedCurrency(detected || getCurrencyByCode(DEFAULT_CURRENCY)!);
+          } else if (savedCurrency) {
+            setSelectedCurrency(getCurrencyByCode(savedCurrency)!);
+          } else {
+            setSelectedCurrency(getCurrencyByCode(DEFAULT_CURRENCY)!);
+          }
           setIsLoading(false);
           return;
         }
 
-        // Fetch user's saved currency preference
+        // Authenticated - fetch from Supabase
         const { data: profile, error: fetchError } = await supabase
           .from('profiles')
           .select('preferred_currency, auto_detect_currency')
@@ -143,6 +154,12 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
         const userAutoDetect = profile?.auto_detect_currency !== false;
 
         setAutoDetectEnabled(userAutoDetect);
+
+        // Sync Supabase value to localStorage for consistency
+        if (userCurrency) {
+          localStorage.setItem('preferred_currency', userCurrency);
+        }
+        localStorage.setItem('auto_detect_currency', String(userAutoDetect));
 
         if (userAutoDetect) {
           const detected = await detectCurrencyByLocation();
@@ -161,7 +178,9 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
         await fetchExchangeRates();
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to initialize currency'));
-        setSelectedCurrency(getCurrencyByCode(DEFAULT_CURRENCY)!);
+        // Try localStorage fallback before defaulting
+        const fallbackCurrency = localStorage.getItem('preferred_currency');
+        setSelectedCurrency(getCurrencyByCode(fallbackCurrency || DEFAULT_CURRENCY)!);
       } finally {
         setIsLoading(false);
       }
