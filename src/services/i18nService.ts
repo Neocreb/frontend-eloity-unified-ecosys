@@ -527,7 +527,25 @@ class I18nService {
 
   // Currency Management
   detectUserCurrency(): void {
-    // Try to detect based on user's location/timezone
+    // First, check if currency is saved in localStorage (same key as CurrencyContext)
+    if (typeof window !== "undefined") {
+      try {
+        const savedCurrency = localStorage.getItem("preferred_currency");
+        if (savedCurrency) {
+          const supported = SUPPORTED_CURRENCIES.find(
+            (curr) => curr.code === savedCurrency,
+          );
+          if (supported) {
+            this.currentCurrency = savedCurrency;
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to read currency preference from localStorage:", error);
+      }
+    }
+
+    // If no saved currency, try to detect based on user's location/timezone
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     // Simple mapping based on timezone
@@ -563,6 +581,9 @@ class I18nService {
       this.currentCurrency = currencyCode;
       if (typeof window !== "undefined") {
         try {
+          // Use the same localStorage key as CurrencyContext for consistency
+          localStorage.setItem("preferred_currency", currencyCode);
+          // Also set old key for backward compatibility
           localStorage.setItem("eloity_currency", currencyCode);
         } catch (error) {
           console.warn("Failed to save currency preference:", error);
