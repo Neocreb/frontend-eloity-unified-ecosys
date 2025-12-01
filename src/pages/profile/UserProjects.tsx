@@ -72,6 +72,7 @@ const UserProjects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddWorkModal, setShowAddWorkModal] = useState(false);
 
   // Check if this is the user's own profile (in real app, check authentication)
   const isOwnProfile = true; // Mock - in real app: currentUser?.username === username
