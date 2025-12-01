@@ -24,6 +24,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface OrderTrackingCardProps {
   order: {
@@ -59,6 +60,11 @@ export default function OrderTrackingCard({ order }: OrderTrackingCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const { toast } = useToast();
+  const { formatCurrency: formatCurrencyContext } = useCurrency();
+
+  const formatCurrency = (amount: number) => {
+    return formatCurrencyContext(amount);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {

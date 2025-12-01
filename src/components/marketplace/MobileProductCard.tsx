@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { EnhancedProduct } from "../../types/enhanced-marketplace";
 
 interface MobileProductCardProps {
@@ -31,6 +32,7 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
+  const { formatCurrency } = useCurrency();
 
   const images = Array.isArray(product.images)
     ? product.images
@@ -306,7 +308,7 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
           <span className="capitalize">{product.productType}</span>
           {product.productType === "physical" && (
-            <span>Free shipping over $50</span>
+            <span>Free shipping over {formatCurrency(50)}</span>
           )}
           {product.productType === "digital" && <span>Instant download</span>}
         </div>
