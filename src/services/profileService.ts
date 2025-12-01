@@ -325,14 +325,7 @@ export class ProfileService {
           .from("profiles")
           .update(updates)
           .eq("user_id", userId)
-          .select(
-            `
-            *,
-            marketplace_profiles(*),
-            freelance_profiles(*),
-            crypto_profiles(*)
-          `,
-          )
+          .select()
           .single();
 
         if (error) throw error;
