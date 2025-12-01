@@ -58,6 +58,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cryptoService } from "@/services/cryptoService";
 import {
   StakingProduct,
