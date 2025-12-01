@@ -46,6 +46,7 @@ import {
   Diamond,
   Gem,
 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface UserBadge {
   id: string;
@@ -263,14 +264,14 @@ const EnhancedBadgeSystem: React.FC = () => {
       {
         id: "top_earner",
         name: "Top Earner",
-        description: "Earned over $100,000 on the platform",
+        description: "Earned over 100,000 in platform earnings",
         icon: <Crown className="w-6 h-6" />,
         category: "milestone",
         tier: "platinum",
         rarity: "legendary",
         isUnlocked: false,
-        progress: { current: 75000, required: 100000, unit: "$" },
-        requirements: ["Earn $100,000 total"],
+        progress: { current: 75000, required: 100000, unit: "currency" },
+        requirements: ["Earn 100,000 total"],
         benefits: ["Elite status", "Premium features", "Success story feature"],
         displayOrder: 9,
         isVisible: true,
