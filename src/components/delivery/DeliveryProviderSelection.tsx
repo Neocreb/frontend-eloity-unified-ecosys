@@ -208,17 +208,6 @@ export default function DeliveryProviderSelection({
     }
   };
 
-  const formatCurrencyLocal = (amount: number) => {
-    // Use the hook's formatCurrency if available, otherwise use Intl
-    try {
-      return formatCurrencyHook(amount, 'text');
-    } catch {
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount);
-    }
-  };
 
   const getVehicleIcon = (type: string) => {
     switch (type) {
