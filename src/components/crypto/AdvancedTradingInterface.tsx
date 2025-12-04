@@ -135,19 +135,19 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       const id = idMap[base] || 'bitcoin';
       const r = await fetch(`/api/crypto/prices?symbols=${encodeURIComponent(id)}`);
 
-      // Read body once to avoid "body stream already read" errors
-      const clonedResponse = r.clone();
-      let responseText: string;
-
-      try {
-        responseText = await clonedResponse.text();
-      } catch (readError) {
-        console.error("Error reading response body:", readError);
+      // Check status first before reading body
+      if (!r.ok) {
+        console.error(`Failed to fetch market price: HTTP ${r.status}`);
         return;
       }
 
-      if (!r.ok) {
-        console.error(`Failed to fetch market price: HTTP ${r.status}`, responseText);
+      // Read body from cloned response to avoid "body stream already read" errors
+      let responseText: string;
+      try {
+        const clonedResponse = r.clone();
+        responseText = await clonedResponse.text();
+      } catch (readError) {
+        console.error("Error reading response body:", readError);
         return;
       }
 
@@ -168,7 +168,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
         setVolume24h(Number(p.usd_24h_vol || 0));
       }
     } catch (e) {
-      // ignore
+      console.error('Error fetching market price:', e instanceof Error ? e.message : e);
     }
   };
 
