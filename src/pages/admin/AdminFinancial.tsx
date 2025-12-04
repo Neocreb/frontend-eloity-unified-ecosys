@@ -142,6 +142,7 @@ const AdminFinancial = () => {
   const [error, setError] = useState<string | null>(null);
 
   const notification = useNotification();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     loadFinancialData();
