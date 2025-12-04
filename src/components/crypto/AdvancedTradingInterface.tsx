@@ -136,7 +136,15 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       const r = await fetch(`/api/crypto/prices?symbols=${encodeURIComponent(id)}`);
 
       // Read body once to avoid "body stream already read" errors
-      const responseText = await r.text();
+      const clonedResponse = r.clone();
+      let responseText: string;
+
+      try {
+        responseText = await clonedResponse.text();
+      } catch (readError) {
+        console.error("Error reading response body:", readError);
+        return;
+      }
 
       if (!r.ok) {
         console.error(`Failed to fetch market price: HTTP ${r.status}`, responseText);
@@ -179,7 +187,15 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       const response = await fetch(url, { headers });
 
       // Read body once to avoid "body stream already read" errors
-      const responseText = await response.text();
+      const clonedResponse = response.clone();
+      let responseText: string;
+
+      try {
+        responseText = await clonedResponse.text();
+      } catch (readError) {
+        console.error("Error reading response body:", readError);
+        return;
+      }
 
       if (!response.ok) {
         console.error(`Failed to fetch orderbook: HTTP ${response.status}`, responseText);
