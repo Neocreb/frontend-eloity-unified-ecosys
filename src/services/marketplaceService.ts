@@ -492,7 +492,11 @@ export class MarketplaceService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("Error fetching reviews:", error);
+        console.error("Error fetching reviews:", error instanceof Error ? error.message : JSON.stringify(error));
+        return [];
+      }
+
+      if (!data) {
         return [];
       }
 
@@ -511,7 +515,8 @@ export class MarketplaceService {
         updatedAt: new Date(review.updated_at)
       }));
     } catch (error) {
-      console.error("Error in getReviews:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Error in getReviews:", errorMessage);
       return [];
     }
   }
