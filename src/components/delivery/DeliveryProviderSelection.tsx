@@ -432,11 +432,12 @@ export default function DeliveryProviderSelection({
                         <div className="flex justify-between font-medium">
                           <span>Delivery Fee</span>
                           <span className="text-green-600">
-                            {formatCurrencyLocal(
+                            {formatCurrency(
                               calculateAdjustedFee(
                                 providers.find(p => p.id === selectedProvider)?.estimatedFee || 0,
                                 selectedServiceType
-                              )
+                              ),
+                              'text'
                             )}
                           </span>
                         </div>
