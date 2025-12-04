@@ -61,16 +61,31 @@ class WalletServiceClass {
       }
 
       // Call unified wallet API endpoint instead of making multiple Supabase queries
-      const response = await apiCall(`/api/wallet/balance?userId=${user.id}`);
+      try {
+        const response = await apiCall(`/api/wallet/balance?userId=${user.id}`);
 
-      if (response?.data?.balances) {
-        return {
-          total: response.data.balances.total || 0,
-          crypto: response.data.balances.crypto || 0,
-          ecommerce: response.data.balances.marketplace || 0,
-          rewards: response.data.balances.rewards || 0,
-          freelance: response.data.balances.freelance || 0,
-        };
+        if (response?.data?.balances) {
+          return {
+            total: response.data.balances.total || 0,
+            crypto: response.data.balances.crypto || 0,
+            ecommerce: response.data.balances.marketplace || 0,
+            rewards: response.data.balances.rewards || 0,
+            freelance: response.data.balances.freelance || 0,
+          };
+        }
+
+        if (response?.balances) {
+          return {
+            total: response.balances.total || 0,
+            crypto: response.balances.crypto || 0,
+            ecommerce: response.balances.marketplace || 0,
+            rewards: response.balances.rewards || 0,
+            freelance: response.balances.freelance || 0,
+          };
+        }
+      } catch (apiError) {
+        // API endpoint might not exist, fallback to default
+        console.warn('Wallet balance API error:', apiError);
       }
 
       // Fallback to zero balances if API fails
