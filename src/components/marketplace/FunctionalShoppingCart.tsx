@@ -90,7 +90,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
   }, [cart]);
 
   const subtotal = getCartTotal();
-  const shippingCost = subtotal > 50 ? 0 : subtotal > 0 ? 9.99 : 0;
+  const shippingCost = subtotal > 50 ? 0 : subtotal > 0 ? formatCurrency(9.99, 'amount') : 0;
   const taxAmount = subtotal * 0.08; // 8% tax
   const discountAmount = appliedPromo?.discountAmount || 0;
   const total = subtotal + shippingCost + taxAmount - discountAmount;
@@ -203,12 +203,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
+  // formatPrice is now provided by formatCurrency from useCurrency hook
 
   const handleBulkAction = () => {
     if (!bulkAction) return;
@@ -436,7 +431,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                       </span>
                       {item.product?.price && item.product.price > item.priceSnapshot && (
                         <span className="text-sm text-gray-500 line-through">
-                          {formatPrice(item.product.price)}
+                          {formatCurrency(item.product.price)}
                         </span>
                       )}
                     </div>
@@ -446,7 +441,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                       <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
                         <Bell className="w-4 h-4" />
                         <span>
-                          Price alert set at {formatPrice(priceAlerts[item.productId].targetPrice)}
+                          Price alert set at {formatCurrency(priceAlerts[item.productId].targetPrice)}
                         </span>
                       </div>
                     ) : (
@@ -545,7 +540,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{formatCurrency(subtotal)}</span>
               </div>
 
               <div className="flex justify-between">
@@ -554,13 +549,13 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                   <span>Shipping</span>
                 </div>
                 <span className={shippingCost === 0 ? "text-green-600" : ""}>
-                  {shippingCost === 0 ? "FREE" : formatPrice(shippingCost)}
+                  {shippingCost === 0 ? "FREE" : formatCurrency(shippingCost)}
                 </span>
               </div>
 
               <div className="flex justify-between">
                 <span>Tax</span>
-                <span>{formatPrice(taxAmount)}</span>
+                <span>{formatCurrency(taxAmount)}</span>
               </div>
 
               {appliedPromo && (
@@ -576,7 +571,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
-                  <span>-{formatPrice(appliedPromo.discountAmount)}</span>
+                  <span>-{formatCurrency(appliedPromo.discountAmount)}</span>
                 </div>
               )}
 
@@ -584,7 +579,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
 
               <div className="flex justify-between text-lg font-semibold">
                 <span>Total</span>
-                <span>{formatPrice(total)}</span>
+                <span>{formatCurrency(total)}</span>
               </div>
 
               {/* Promo Code */}

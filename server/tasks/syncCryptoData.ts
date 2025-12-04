@@ -3,7 +3,7 @@ import { db } from '../utils/db.js';
 import { crypto_exchange_rates, crypto_balances_cache, crypto_wallet_addresses } from '../../shared/crypto-schema.js';
 import axios from 'axios';
 
-const CRYPTOAPIS_BASE_URL = 'https://rest.cryptoapis.io/v2';
+const CRYPTOAPIS_BASE_URL = 'https://rest.cryptoapis.io';
 const API_KEY = process.env.CRYPTOAPIS_API_KEY;
 
 interface ExchangeRatePair {

@@ -69,12 +69,7 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
     onShare?.(product.id);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
+  // formatPrice is now provided by formatCurrency from useCurrency hook
 
   const discountPercentage = product.discountPrice
     ? Math.round(
@@ -117,15 +112,15 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
               {product.discountPrice ? (
                 <>
                   <span className="text-sm font-bold text-green-600">
-                    {formatPrice(product.discountPrice)}
+                    {formatCurrency(product.discountPrice)}
                   </span>
                   <span className="text-xs text-gray-500 line-through">
-                    {formatPrice(product.price)}
+                    {formatCurrency(product.price)}
                   </span>
                 </>
               ) : (
                 <span className="text-sm font-bold text-gray-900">
-                  {formatPrice(product.price)}
+                  {formatCurrency(product.price)}
                 </span>
               )}
             </div>
@@ -274,15 +269,15 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
             {product.discountPrice ? (
               <div>
                 <span className="text-lg font-bold text-green-600">
-                  {formatPrice(product.discountPrice)}
+                  {formatCurrency(product.discountPrice)}
                 </span>
                 <span className="text-sm text-gray-500 line-through ml-2">
-                  {formatPrice(product.price)}
+                  {formatCurrency(product.price)}
                 </span>
               </div>
             ) : (
               <span className="text-lg font-bold text-gray-900">
-                {formatPrice(product.price)}
+                {formatCurrency(product.price)}
               </span>
             )}
           </div>

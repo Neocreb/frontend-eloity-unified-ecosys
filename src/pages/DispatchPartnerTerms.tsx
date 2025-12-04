@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Truck, Shield, DollarSign, AlertTriangle, Clock, Users, MapPin } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const DispatchPartnerTerms = () => {
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -182,7 +184,7 @@ const DispatchPartnerTerms = () => {
               <ul className="list-disc list-inside space-y-1 text-sm">
                 <li>Instant payout available after each completed delivery</li>
                 <li>Weekly automatic deposits every Tuesday for standard payouts</li>
-                <li>Minimum payout threshold of $5 for instant payments</li>
+                <li>Minimum payout threshold of {formatCurrency(5)} for instant payments</li>
                 <li>Payment processing fees may apply for instant payouts</li>
                 <li>All earnings are subject to applicable taxes and deductions</li>
                 <li>Disputed payments are held pending resolution</li>

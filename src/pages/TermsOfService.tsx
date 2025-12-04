@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Users, ShoppingCart, Briefcase, Coins, Shield, AlertTriangle } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const TermsOfService = () => {
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -66,7 +68,7 @@ const TermsOfService = () => {
               <p className="text-sm">
                 Eloity offers both free and premium subscription tiers. Free users have access to all
                 core features with certain limitations (10 video uploads/month, 5GB storage, 90-day content
-                retention). Premium users ($9.99/month or $99.99/year) receive enhanced features including
+                retention). Premium users ({formatCurrency(9.99)}/month or {formatCurrency(99.99)}/year) receive enhanced features including
                 verified badges, unlimited uploads, 100GB storage, and priority support.
               </p>
             </div>

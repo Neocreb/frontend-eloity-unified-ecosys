@@ -5,7 +5,7 @@ This document tracks the removal of all mock data from crypto components and int
 
 **Status**: Mostly Complete - Core implementation done, ready for production testing
 **Last Updated**: 2024-11-24
-**API Base URL**: https://rest.cryptoapis.io/v2
+**API Base URL**: https://rest.cryptoapis.io
 **Authentication**: X-API-Key via CRYPTOAPIS_API_KEY environment variable
 
 ### Implementation Summary

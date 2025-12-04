@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWalletContext } from "@/contexts/WalletContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
@@ -177,11 +178,9 @@ export default function DeliveryProviderDashboard() {
   const [transferAmount, setTransferAmount] = useState("");
   const { toast } = useToast();
   const { walletBalance, refreshWallet } = useWalletContext();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
   const currentPath = location.pathname.split('/').pop() || 'overview';
   const isOnOverview = currentPath === 'overview' || currentPath === 'dashboard' || currentPath === '';
@@ -189,7 +188,7 @@ export default function DeliveryProviderDashboard() {
   const handleTransferToWallet = async () => {
     const amount = parseFloat(transferAmount || "0");
     if (!amount || amount < 5) {
-      toast({ title: "Error", description: "Minimum transfer is $5.00", variant: "destructive" });
+      toast({ title: "Error", description: `Minimum transfer is ${formatCurrency(5)}`, variant: "destructive" });
       return;
     }
     setShowTransferModal(false);
