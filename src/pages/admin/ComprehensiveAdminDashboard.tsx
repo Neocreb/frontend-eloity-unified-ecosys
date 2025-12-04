@@ -521,11 +521,11 @@ const ComprehensiveAdminDashboard: React.FC = () => {
           
           <MetricCard
             title="Total Revenue"
-            value={`$${(dashboardData.overview.revenue.total / 1000000).toFixed(1)}M`}
+            value={`${(dashboardData.overview.revenue.total / 1000000).toFixed(1)}M`}
             change={dashboardData.overview.revenue.growth}
             icon={<DollarSign className="h-5 w-5" />}
             trend="up"
-            description={`$${dashboardData.overview.revenue.arpu} ARPU`}
+            description={`${formatCurrency(dashboardData.overview.revenue.arpu)} ARPU`}
           />
           
           <MetricCard
