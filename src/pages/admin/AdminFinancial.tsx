@@ -302,12 +302,6 @@ const AdminFinancial = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
