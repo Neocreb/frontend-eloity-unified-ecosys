@@ -65,7 +65,7 @@ export async function getCryptoPrices(symbols: string[], vsCurrency: string = 'u
 
     // Fallback to CryptoAPIs if CoinGecko didn't work
     logger.info('Falling back to CryptoAPIs for missing prices');
-    const cryptoapisBase = 'https://rest.cryptoapis.io/v2';
+    const cryptoapisBase = 'https://rest.cryptoapis.io';
     const cryptoapisKey = process.env.CRYPTOAPIS_API_KEY;
 
     if (!cryptoapisKey) {
