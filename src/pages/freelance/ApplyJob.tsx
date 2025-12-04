@@ -31,6 +31,7 @@ import { JobPosting, Proposal } from "@/types/freelance";
 import { useFreelance } from "@/hooks/use-freelance";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Milestone {
   title: string;
