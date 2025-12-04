@@ -322,8 +322,8 @@ const ApplyJob: React.FC = () => {
                   <DollarSign className="w-4 h-4" />
                   <span>
                     {job.budget.type === "fixed"
-                      ? `$${job.budget.amount?.toLocaleString()}`
-                      : `$${job.budget.min}-$${job.budget.max}/hr`}
+                      ? formatCurrency(job.budget.amount || 0)
+                      : `${formatCurrency(job.budget.min || 0)}-${formatCurrency(job.budget.max || 0)}/hr`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
