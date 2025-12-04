@@ -231,18 +231,21 @@ export function useCrypto() {
 
   const loadTradingData = async (pair: string) => {
     try {
-      const [orderBook, recentTrades] = await Promise.all([
-        cryptoService.getOrderBook(pair),
-        cryptoService.getRecentTrades(pair, 50),
+      const results = await Promise.allSettled([
+        cryptoService.getOrderBook ? cryptoService.getOrderBook(pair) : Promise.resolve(null),
+        cryptoService.getRecentTrades ? cryptoService.getRecentTrades(pair, 50) : Promise.resolve([]),
       ]);
+
+      const [orderBookResult, recentTradesResult] = results;
 
       setState((prev) => ({
         ...prev,
-        orderBook,
-        recentTrades,
+        orderBook: orderBookResult.status === 'fulfilled' ? orderBookResult.value : null,
+        recentTrades: recentTradesResult.status === 'fulfilled' ? recentTradesResult.value : [],
       }));
     } catch (error) {
-      console.error("Failed to load trading data:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to load trading data:", errorMessage);
     }
   };
 
