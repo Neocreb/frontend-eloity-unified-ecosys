@@ -90,7 +90,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
   }, [cart]);
 
   const subtotal = getCartTotal();
-  const shippingCost = subtotal > 50 ? 0 : subtotal > 0 ? 9.99 : 0;
+  const shippingCost = subtotal > 50 ? 0 : subtotal > 0 ? formatCurrency(9.99, 'amount') : 0;
   const taxAmount = subtotal * 0.08; // 8% tax
   const discountAmount = appliedPromo?.discountAmount || 0;
   const total = subtotal + shippingCost + taxAmount - discountAmount;
@@ -203,12 +203,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
+  // formatPrice is now provided by formatCurrency from useCurrency hook
 
   const handleBulkAction = () => {
     if (!bulkAction) return;
