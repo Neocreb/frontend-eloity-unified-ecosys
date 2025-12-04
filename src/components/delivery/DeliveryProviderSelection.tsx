@@ -327,7 +327,7 @@ export default function DeliveryProviderSelection({
 
                               <div className="text-right ml-4">
                                 <p className="text-lg font-bold text-green-600">
-                                  {formatCurrencyLocal(calculateAdjustedFee(provider.estimatedFee, selectedServiceType))}
+                                  {formatCurrency(calculateAdjustedFee(provider.estimatedFee, selectedServiceType), 'text')}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   ~{calculateEstimatedTime(provider.estimatedDeliveryTime, selectedServiceType)}h delivery
