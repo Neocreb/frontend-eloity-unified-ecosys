@@ -63,6 +63,7 @@ const DashboardInner = () => {
   const { walletBalance, refreshWallet, transactions } = useWalletContext();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   const [showBalance, setShowBalance] = useState(true);
   const [portfolio, setPortfolio] = useState<'total'|'ecommerce'|'crypto'|'rewards'|'freelance'>('total');
