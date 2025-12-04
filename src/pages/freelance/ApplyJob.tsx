@@ -45,6 +45,7 @@ const ApplyJob: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const [job, setJob] = useState<JobPosting | null>(null);
   const [loading, setLoading] = useState(true);
+  const { formatCurrency } = useCurrency();
 
   const [coverLetter, setCoverLetter] = useState("");
   const [proposedRateType, setProposedRateType] = useState<"fixed" | "hourly">(
