@@ -27,6 +27,7 @@ const CryptoDetail: React.FC = () => {
   const navigate = useNavigate();
   const [crypto, setCrypto] = useState<Cryptocurrency | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { formatCurrency: formatCurrencyContext } = useCurrency();
 
   useEffect(() => {
     const loadCryptoDetail = async () => {
