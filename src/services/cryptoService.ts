@@ -123,8 +123,9 @@ export class CryptoService {
         return data;
       }
     } catch (error) {
-      console.error("Error fetching cryptocurrency data:", error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Error fetching cryptocurrency data:", errorMessage);
+      return []; // Return empty array as fallback
     }
   }
 
@@ -173,8 +174,22 @@ export class CryptoService {
         trending: cryptos.slice(0, 5)
       };
     } catch (error) {
-      console.error("Error fetching market data:", error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Error fetching market data:", errorMessage);
+      return {
+        globalStats: {
+          totalMarketCap: 0,
+          totalVolume24h: 0,
+          marketCapChange24h: 0,
+          btcDominance: 0,
+          ethDominance: 0,
+          activeCoins: 0,
+          markets: 0
+        },
+        topMovers: { gainers: [], losers: [] },
+        fearGreedIndex: { value: 50, classification: "Neutral", timestamp: new Date().toISOString() },
+        trending: []
+      };
     }
   }
 
@@ -242,8 +257,9 @@ export class CryptoService {
         return data;
       }
     } catch (error) {
-      console.error('Failed to fetch trading pairs:', error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Failed to fetch trading pairs:', errorMessage);
+      return [];
     }
   }
 
@@ -342,8 +358,15 @@ export class CryptoService {
         return data;
       }
     } catch (error) {
-      console.error('Failed to fetch portfolio:', error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Failed to fetch portfolio:', errorMessage);
+      return {
+        totalValue: 0,
+        totalChange24h: 0,
+        totalChangePercent24h: 0,
+        assets: [],
+        allocation: []
+      };
     }
   }
 
@@ -405,8 +428,9 @@ export class CryptoService {
         return data;
       }
     } catch (error) {
-      console.error('Failed to fetch staking products:', error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Failed to fetch staking products:', errorMessage);
+      return [];
     }
   }
 
@@ -475,8 +499,9 @@ export class CryptoService {
         return data;
       }
     } catch (error) {
-      console.error('Failed to fetch staking positions:', error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Failed to fetch staking positions:', errorMessage);
+      return [];
     }
   }
 
@@ -522,8 +547,9 @@ export class CryptoService {
         return result.success;
       }
     } catch (error) {
-      console.error(`Failed to stake ${amount} ${asset} for user ${userId}:`, error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error(`Failed to stake ${amount} ${asset} for user ${userId}:`, errorMessage);
+      return false;
     }
   }
 
@@ -602,8 +628,9 @@ export class CryptoService {
         return data;
       }
     } catch (error) {
-      console.error('Failed to fetch watchlist:', error);
-      throw error; // No fallback to mock data
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Failed to fetch watchlist:', errorMessage);
+      return [];
     }
   }
 
