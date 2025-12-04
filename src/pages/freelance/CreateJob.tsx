@@ -278,12 +278,12 @@ const CreateJob: React.FC = () => {
   const calculateBudgetDisplay = () => {
     if (formData.budgetType === "fixed") {
       return formData.budgetAmount
-        ? `$${formData.budgetAmount.toLocaleString()}`
-        : "$0";
+        ? formatCurrency(formData.budgetAmount)
+        : formatCurrency(0);
     } else {
       const min = formData.budgetMin || 0;
       const max = formData.budgetMax || 0;
-      return `$${min}-$${max}/hr`;
+      return `${formatCurrency(min)}-${formatCurrency(max)}/hr`;
     }
   };
 
