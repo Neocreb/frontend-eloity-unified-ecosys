@@ -100,10 +100,18 @@ export class CryptoService {
         const response = await fetch('/api/crypto/cryptocurrencies');
 
         // Read body once to avoid "body stream already read" errors
-        const responseText = await response.text();
+        const clonedResponse = response.clone();
+        let responseText: string;
+
+        try {
+          responseText = await clonedResponse.text();
+        } catch (readError) {
+          console.error("Error reading response body:", readError);
+          throw new Error(`Failed to read response: ${response.status}`);
+        }
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          throw new Error(`API error: ${response.status} - ${responseText}`);
         }
 
         let data;
@@ -211,10 +219,18 @@ export class CryptoService {
         const response = await fetch('/api/crypto/trading-pairs');
 
         // Read body once to avoid "body stream already read" errors
-        const responseText = await response.text();
+        const clonedResponse = response.clone();
+        let responseText: string;
+
+        try {
+          responseText = await clonedResponse.text();
+        } catch (readError) {
+          console.error("Error reading response body:", readError);
+          throw new Error(`Failed to read response: ${response.status}`);
+        }
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          throw new Error(`API error: ${response.status} - ${responseText}`);
         }
 
         let data;
@@ -303,10 +319,18 @@ export class CryptoService {
         const response = await fetch('/api/crypto/portfolio');
 
         // Read body once to avoid "body stream already read" errors
-        const responseText = await response.text();
+        const clonedResponse = response.clone();
+        let responseText: string;
+
+        try {
+          responseText = await clonedResponse.text();
+        } catch (readError) {
+          console.error("Error reading response body:", readError);
+          throw new Error(`Failed to read response: ${response.status}`);
+        }
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          throw new Error(`API error: ${response.status} - ${responseText}`);
         }
 
         let data;
@@ -358,10 +382,18 @@ export class CryptoService {
         const response = await fetch('/api/crypto/staking-products');
 
         // Read body once to avoid "body stream already read" errors
-        const responseText = await response.text();
+        const clonedResponse = response.clone();
+        let responseText: string;
+
+        try {
+          responseText = await clonedResponse.text();
+        } catch (readError) {
+          console.error("Error reading response body:", readError);
+          throw new Error(`Failed to read response: ${response.status}`);
+        }
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          throw new Error(`API error: ${response.status} - ${responseText}`);
         }
 
         let data;
@@ -420,10 +452,18 @@ export class CryptoService {
         const response = await fetch(`/api/crypto/staking-positions?userId=${userId}`);
 
         // Read body once to avoid "body stream already read" errors
-        const responseText = await response.text();
+        const clonedResponse = response.clone();
+        let responseText: string;
+
+        try {
+          responseText = await clonedResponse.text();
+        } catch (readError) {
+          console.error("Error reading response body:", readError);
+          throw new Error(`Failed to read response: ${response.status}`);
+        }
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          throw new Error(`API error: ${response.status} - ${responseText}`);
         }
 
         let data;
@@ -539,10 +579,18 @@ export class CryptoService {
         const response = await fetch(`/api/crypto/watchlist?userId=${userId}`);
 
         // Read body once to avoid "body stream already read" errors
-        const responseText = await response.text();
+        const clonedResponse = response.clone();
+        let responseText: string;
+
+        try {
+          responseText = await clonedResponse.text();
+        } catch (readError) {
+          console.error("Error reading response body:", readError);
+          throw new Error(`Failed to read response: ${response.status}`);
+        }
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          throw new Error(`API error: ${response.status} - ${responseText}`);
         }
 
         let data;
