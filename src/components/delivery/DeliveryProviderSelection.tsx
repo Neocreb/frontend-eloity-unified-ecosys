@@ -160,7 +160,7 @@ export default function DeliveryProviderSelection({
   const [loading, setLoading] = useState(false);
   const [showProviderDetails, setShowProviderDetails] = useState<string | null>(null);
   const { toast } = useToast();
-  const { formatCurrency: formatCurrencyHook } = useCurrency();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     if (open) {
