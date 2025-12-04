@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
 
 interface FunctionalShoppingCartProps {
@@ -68,6 +69,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
   } = useEnhancedMarketplace();
 
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<any>(null);
@@ -644,7 +646,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Truck className="w-4 h-4 text-green-600" />
-                  <span>Free shipping on orders over $50</span>
+                  <span>Free shipping on orders over {formatCurrency(50)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="w-4 h-4 text-blue-600" />

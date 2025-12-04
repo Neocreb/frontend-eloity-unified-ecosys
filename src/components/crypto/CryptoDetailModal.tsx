@@ -23,6 +23,7 @@ import {
   Users,
   Coins,
 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Cryptocurrency } from "@/types/crypto";
 
 interface CryptoDetailModalProps {
@@ -38,23 +39,20 @@ const CryptoDetailModal: React.FC<CryptoDetailModalProps> = ({
 }) => {
   if (!crypto) return null;
 
+  const { formatCurrency: formatCurrencyContext, userCurrency } = useCurrency();
+
   const formatCurrency = (value: number) => {
-    if (typeof value !== "number" || isNaN(value)) return "$0.00";
+    if (typeof value !== "number" || isNaN(value)) return formatCurrencyContext(0);
 
     if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
+      return `${formatCurrencyContext(value / 1000000000)}B`;
     } else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
+      return `${formatCurrencyContext(value / 1000000)}M`;
     } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
+      return `${formatCurrencyContext(value / 1000)}K`;
     }
 
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: value < 1 ? 6 : 2,
-    }).format(value);
+    return formatCurrencyContext(value);
   };
 
   const formatNumber = (value: number) => {

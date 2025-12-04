@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNotification } from "@/hooks/use-notification";
 import { AdminService } from "@/services/adminService";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Zap,
   TrendingUp,
@@ -87,6 +88,7 @@ const AdminBoosts = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const notification = useNotification();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     loadBoostData();
@@ -213,12 +215,6 @@ const AdminBoosts = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {

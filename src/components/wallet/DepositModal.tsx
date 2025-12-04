@@ -25,6 +25,7 @@ import { africanPaymentService, type PaymentResponse } from "@/services/africanP
 import { useToast } from "@/components/ui/use-toast";
 import AfricanCountryCurrencySelector from "./AfricanCountryCurrencySelector";
 import PaymentStatusDisplay from "./PaymentStatusDisplay";
+import { useCurrency } from "@/contexts/CurrencyContext";
 // import { useI18n } from "@/contexts/I18nContext"; // Temporarily disabled
 // import { RegionalPaymentMethods } from "@/components/i18n/LanguageCurrencySelector"; // Temporarily disabled
 import {
@@ -61,6 +62,7 @@ const DepositModal = ({ isOpen, onClose, onSuccess }: DepositModalProps) => {
   const [showCountrySelector, setShowCountrySelector] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<{transactionId: string, amount: number, method: string, provider?: string} | null>(null);
   const { toast } = useToast();
+  const { formatCurrency, userCurrency } = useCurrency();
   // const { currentCurrency, availablePaymentMethods, formatCurrency } = useI18n(); // Temporarily disabled
 
   const paymentMethods = [
@@ -148,7 +150,7 @@ const DepositModal = ({ isOpen, onClose, onSuccess }: DepositModalProps) => {
     if (depositAmount < 1) {
       toast({
         title: "Minimum Deposit",
-        description: "Minimum deposit amount is $1.00",
+        description: `Minimum deposit amount is ${formatCurrency(1)}`,
         variant: "destructive",
       });
       return;
@@ -247,7 +249,7 @@ const DepositModal = ({ isOpen, onClose, onSuccess }: DepositModalProps) => {
             <Label htmlFor="amount">Deposit Amount</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                $
+                {userCurrency?.symbol || '$'}
               </span>
               <Input
                 id="amount"
@@ -261,7 +263,7 @@ const DepositModal = ({ isOpen, onClose, onSuccess }: DepositModalProps) => {
                 required
               />
             </div>
-            <p className="text-sm text-gray-500">Minimum deposit: $1.00</p>
+            <p className="text-sm text-gray-500">Minimum deposit: {formatCurrency(1)}</p>
           </div>
 
           {/* Country & Currency Selection */}

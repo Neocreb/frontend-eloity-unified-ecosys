@@ -51,6 +51,7 @@ import {
 import { useEnhancedMarketplace } from "@/contexts/EnhancedMarketplaceContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { CartItem, Address, PaymentMethod } from "@/types/enhanced-marketplace";
 
 interface EnhancedShoppingCartProps {
@@ -82,6 +83,7 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
   const { balances, sendPayment, getPaymentMethods } = useWallet();
 
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const [step, setStep] = useState<"cart" | "shipping" | "payment" | "review">(
     "cart",
@@ -484,14 +486,14 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
               <p className="font-medium">Express Shipping</p>
               <p className="text-sm text-muted-foreground">2-3 business days</p>
             </div>
-            <span className="font-semibold">$12.99</span>
+            <span className="font-semibold">{formatCurrency(12.99)}</span>
           </div>
           <div className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
             <div>
               <p className="font-medium">Next Day Delivery</p>
               <p className="text-sm text-muted-foreground">1 business day</p>
             </div>
-            <span className="font-semibold">$24.99</span>
+            <span className="font-semibold">{formatCurrency(24.99)}</span>
           </div>
         </CardContent>
       </Card>

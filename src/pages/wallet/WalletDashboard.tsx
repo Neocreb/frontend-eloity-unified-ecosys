@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { WalletProvider, useWalletContext } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Eye, EyeOff, ChevronDown, BarChart3, List, PlugZap, Send, Repeat, Plus, MoreHorizontal, Gift, Plane, ArrowDown, ArrowUp, Wallet, Phone, CreditCard, Home, Clock, Star, Zap } from "lucide-react";
@@ -62,6 +63,7 @@ const DashboardInner = () => {
   const { walletBalance, refreshWallet, transactions } = useWalletContext();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   const [showBalance, setShowBalance] = useState(true);
   const [portfolio, setPortfolio] = useState<'total'|'ecommerce'|'crypto'|'rewards'|'freelance'>('total');
@@ -217,7 +219,7 @@ const DashboardInner = () => {
           {/* Balance Display */}
           <div className="mb-2">
             <div className="text-white text-5xl font-bold tracking-tight mb-3">
-              {showBalance ? `$${viewBalance.toFixed(2)}` : '••••••••'}
+              {showBalance ? formatCurrency(viewBalance) : '••••••••'}
             </div>
             <div className="inline-block bg-emerald-400/20 text-emerald-100 px-3 py-1 rounded-full text-xs font-medium border border-emerald-400/30">
               +0.0% from last month

@@ -41,6 +41,7 @@ import {
 import { useFreelance } from "@/hooks/use-freelance";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { JobPosting } from "@/types/freelance";
 
 interface CreateJobModalProps {
@@ -199,6 +200,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   const { createJob } = useFreelance();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const handleInputChange = (field: keyof JobFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -295,12 +297,12 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   const calculateBudgetDisplay = () => {
     if (formData.budgetType === "fixed") {
       return formData.budgetAmount
-        ? `$${formData.budgetAmount.toLocaleString()}`
-        : "$0";
+        ? formatCurrency(formData.budgetAmount)
+        : formatCurrency(0);
     } else {
       const min = formData.budgetMin || 0;
       const max = formData.budgetMax || 0;
-      return `$${min}-$${max}/hr`;
+      return `${formatCurrency(min)}-${formatCurrency(max)}/hr`;
     }
   };
 

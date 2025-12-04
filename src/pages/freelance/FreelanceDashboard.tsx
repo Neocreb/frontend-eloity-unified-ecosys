@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -147,6 +148,7 @@ export const FreelanceDashboard: React.FC = () => {
 
   const { getProjects, getFreelanceStats, loading } = useFreelance();
   const { getUserEscrows } = useEscrow();
+  const { formatCurrency } = useCurrency();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -523,7 +525,7 @@ export const FreelanceDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                   title="Total Earnings"
-                  value={`$${stats.totalEarnings.toLocaleString()}`}
+                  value={formatCurrency(stats.totalEarnings)}
                   change="+12% this month"
                   icon={<DollarSign className="w-6 h-6 text-white" />}
                   color="bg-gradient-to-br from-green-500 to-emerald-600"

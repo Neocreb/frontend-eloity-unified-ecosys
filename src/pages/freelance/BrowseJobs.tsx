@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +78,7 @@ interface Job {
 const BrowseJobs: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -362,9 +364,9 @@ const BrowseJobs: React.FC = () => {
             <div className="flex items-center gap-1">
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className="font-medium">
-                {job.budget.type === "fixed" 
-                  ? `$${job.budget.amount.toLocaleString()} fixed` 
-                  : `$${job.budget.amount}/hour`
+                {job.budget.type === "fixed"
+                  ? `${formatCurrency(job.budget.amount)} fixed`
+                  : `${formatCurrency(job.budget.amount)}/hour`
                 }
               </span>
             </div>

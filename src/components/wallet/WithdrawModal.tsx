@@ -25,6 +25,7 @@ import { walletService } from "@/services/walletService";
 import { africanPaymentService, type PaymentResponse, type BankTransferRequest } from "@/services/africanPaymentService";
 import { useToast } from "@/components/ui/use-toast";
 import AfricanCountryCurrencySelector from "./AfricanCountryCurrencySelector";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Loader2,
   CreditCard,
@@ -61,6 +62,7 @@ const WithdrawModal = ({
   const [showCountrySelector, setShowCountrySelector] = useState(false);
   const [isLoadingBanks, setIsLoadingBanks] = useState(false);
   const { toast } = useToast();
+  const { formatCurrency, userCurrency } = useCurrency();
 
   useEffect(() => {
     if (isOpen) {
@@ -175,7 +177,7 @@ const WithdrawModal = ({
     if (withdrawAmount > availableBalance) {
       toast({
         title: "Insufficient Funds",
-        description: `You only have $${availableBalance.toFixed(2)} available`,
+        description: `You only have ${formatCurrency(availableBalance)} available`,
         variant: "destructive",
       });
       return;
@@ -215,7 +217,7 @@ const WithdrawModal = ({
       if (result.success) {
         toast({
           title: "Withdrawal Successful",
-          description: `${result.message}${result.fees ? ` (Fee: $${result.fees.toFixed(2)})` : ""}`,
+          description: `${result.message}${result.fees ? ` (Fee: ${formatCurrency(result.fees)})` : ""}`,
         });
         onSuccess();
         onClose();
@@ -325,19 +327,19 @@ const WithdrawModal = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="total">
-                  💰 Total Balance - ${walletBalance.total.toFixed(2)}
+                  💰 Total Balance - {formatCurrency(walletBalance.total)}
                 </SelectItem>
                 <SelectItem value="ecommerce">
-                  🛒 E-Commerce - ${walletBalance.ecommerce.toFixed(2)}
+                  🛒 E-Commerce - {formatCurrency(walletBalance.ecommerce)}
                 </SelectItem>
                 <SelectItem value="crypto">
-                  💹 Crypto Portfolio - ${walletBalance.crypto.toFixed(2)}
+                  💹 Crypto Portfolio - {formatCurrency(walletBalance.crypto)}
                 </SelectItem>
                 <SelectItem value="rewards">
-                  🎁 Rewards - ${walletBalance.rewards.toFixed(2)}
+                  🎁 Rewards - {formatCurrency(walletBalance.rewards)}
                 </SelectItem>
                 <SelectItem value="freelance">
-                  💼 Freelance - ${walletBalance.freelance.toFixed(2)}
+                  💼 Freelance - {formatCurrency(walletBalance.freelance)}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -354,7 +356,7 @@ const WithdrawModal = ({
                     variant="outline"
                     className="text-green-600 border-green-200"
                   >
-                    ${availableBalance.toFixed(2)} available
+                    {formatCurrency(availableBalance)} available
                   </Badge>
                 </div>
               </CardContent>
@@ -366,7 +368,7 @@ const WithdrawModal = ({
             <Label htmlFor="amount">Withdrawal Amount</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                $
+                {userCurrency?.symbol || '$'}
               </span>
               <Input
                 id="amount"
@@ -382,8 +384,8 @@ const WithdrawModal = ({
               />
             </div>
             <div className="flex justify-between text-sm text-gray-500">
-              <span>Minimum: $0.01</span>
-              <span>Maximum: ${availableBalance.toFixed(2)}</span>
+              <span>Minimum: {formatCurrency(0.01)}</span>
+              <span>Maximum: {formatCurrency(availableBalance)}</span>
             </div>
           </div>
 

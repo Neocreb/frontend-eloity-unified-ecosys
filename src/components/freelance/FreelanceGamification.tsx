@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface FreelanceAchievement {
   id: string;
@@ -125,6 +126,7 @@ const freelanceAchievements: FreelanceAchievement[] = [
     rewardType: "privilege",
     rewardValue: "Priority Support Access",
   },
+  // Will be updated with formatCurrency in component
   {
     id: "century-club",
     title: "Century Club",
@@ -138,7 +140,7 @@ const freelanceAchievements: FreelanceAchievement[] = [
     target: 100,
     rarity: "epic",
     rewardType: "monetary",
-    rewardValue: "$500 Bonus",
+    rewardValue: "500", // Store as number, will format in component
   },
   {
     id: "speed-demon",
@@ -170,6 +172,7 @@ const freelanceAchievements: FreelanceAchievement[] = [
     rewardType: "feature",
     rewardValue: "Exclusive Portfolio Showcase",
   },
+  // Move this note to clarify that $100,000 target is fixed and will be converted based on selected currency
   {
     id: "client-whisperer",
     title: "Client Whisperer",

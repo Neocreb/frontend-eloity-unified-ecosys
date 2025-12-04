@@ -58,6 +58,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cryptoService } from "@/services/cryptoService";
 import {
   StakingProduct,
@@ -211,31 +212,25 @@ export default function DeFiDashboard() {
     return prices[asset] || 1;
   };
 
+  const { formatCurrency: formatCurrencyContext } = useCurrency();
+
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    return formatCurrencyContext(amount);
   };
 
   const formatLargeCurrency = (value: number) => {
     if (typeof value !== "number" || isNaN(value)) {
-      return "$0.00";
+      return formatCurrencyContext(0);
     }
 
     if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
+      return `${formatCurrencyContext(value / 1000000000)}B`;
     } else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
+      return `${formatCurrencyContext(value / 1000000)}M`;
     } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
+      return `${formatCurrencyContext(value / 1000)}K`;
     }
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: value < 1 ? 6 : 2,
-    }).format(value);
+    return formatCurrencyContext(value);
   };
 
   const formatPercentage = (value: number) => {

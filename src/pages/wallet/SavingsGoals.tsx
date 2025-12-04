@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,7 @@ interface SavingsGoal {
 
 const SavingsGoals = () => {
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
   const [goals, setGoals] = useState<SavingsGoal[]>([
     {
       id: "1",
@@ -186,13 +188,13 @@ const SavingsGoals = () => {
                       innerRadius={60}
                       outerRadius={100}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: $${value}`}
+                      label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `$${value}`} />
+                    <Tooltip formatter={(value) => formatCurrency(value)} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>

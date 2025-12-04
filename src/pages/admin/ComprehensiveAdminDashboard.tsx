@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 // Types
 interface DashboardMetrics {
@@ -361,6 +362,7 @@ const ComprehensiveAdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const isMobile = useIsMobile();
+  const { formatCurrency } = useCurrency();
 
   // Mock data - in production this would come from API
   const mockData: DashboardMetrics = {
@@ -519,11 +521,11 @@ const ComprehensiveAdminDashboard: React.FC = () => {
           
           <MetricCard
             title="Total Revenue"
-            value={`$${(dashboardData.overview.revenue.total / 1000000).toFixed(1)}M`}
+            value={`${(dashboardData.overview.revenue.total / 1000000).toFixed(1)}M`}
             change={dashboardData.overview.revenue.growth}
             icon={<DollarSign className="h-5 w-5" />}
             trend="up"
-            description={`$${dashboardData.overview.revenue.arpu} ARPU`}
+            description={`${formatCurrency(dashboardData.overview.revenue.arpu)} ARPU`}
           />
           
           <MetricCard

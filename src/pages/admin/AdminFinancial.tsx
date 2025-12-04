@@ -66,6 +66,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Simple Badge component since import is having issues
 interface BadgeProps {
@@ -141,6 +142,7 @@ const AdminFinancial = () => {
   const [error, setError] = useState<string | null>(null);
 
   const notification = useNotification();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     loadFinancialData();
@@ -300,12 +302,6 @@ const AdminFinancial = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {

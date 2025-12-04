@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { Product } from "@/types/marketplace";
 import { cn } from "@/utils/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ProductCardProps {
   product: Product;
@@ -41,6 +41,7 @@ const ProductCard = ({
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -160,11 +161,11 @@ const ProductCard = ({
         <div>
           {product.discountPrice ? (
             <div className="flex items-center gap-2">
-              <span className="font-semibold">${product.discountPrice.toFixed(2)}</span>
-              <span className="text-sm text-muted-foreground line-through">${product.price.toFixed(2)}</span>
+              <span className="font-semibold">{formatCurrency(product.discountPrice)}</span>
+              <span className="text-sm text-muted-foreground line-through">{formatCurrency(product.price)}</span>
             </div>
           ) : (
-            <span className="font-semibold">${product.price.toFixed(2)}</span>
+            <span className="font-semibold">{formatCurrency(product.price)}</span>
           )}
         </div>
 

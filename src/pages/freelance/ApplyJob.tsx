@@ -31,6 +31,7 @@ import { JobPosting, Proposal } from "@/types/freelance";
 import { useFreelance } from "@/hooks/use-freelance";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Milestone {
   title: string;
@@ -44,6 +45,7 @@ const ApplyJob: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const [job, setJob] = useState<JobPosting | null>(null);
   const [loading, setLoading] = useState(true);
+  const { formatCurrency } = useCurrency();
 
   const [coverLetter, setCoverLetter] = useState("");
   const [proposedRateType, setProposedRateType] = useState<"fixed" | "hourly">(
@@ -320,8 +322,8 @@ const ApplyJob: React.FC = () => {
                   <DollarSign className="w-4 h-4" />
                   <span>
                     {job.budget.type === "fixed"
-                      ? `$${job.budget.amount?.toLocaleString()}`
-                      : `$${job.budget.min}-$${job.budget.max}/hr`}
+                      ? formatCurrency(job.budget.amount || 0)
+                      : `${formatCurrency(job.budget.min || 0)}-${formatCurrency(job.budget.max || 0)}/hr`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">

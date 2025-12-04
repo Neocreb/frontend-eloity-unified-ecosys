@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ interface Recipient {
 const SendMoney = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const { walletBalance } = useWalletContext();
 
   const [step, setStep] = useState<"type" | "recipient" | "amount" | "review" | "success">(
@@ -618,13 +620,13 @@ const SendMoney = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Transfer Fee</span>
                     <span className="font-semibold text-gray-900">
-                      {fee === 0 ? "Free" : `$${fee.toFixed(2)}`}
+                      {fee === 0 ? "Free" : formatCurrency(fee)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-gray-200 pt-3">
                     <span className="font-semibold text-gray-900">Total Charge</span>
                     <span className="font-bold text-lg text-gray-900">
-                      ${total.toFixed(2)}
+                      {formatCurrency(total)}
                     </span>
                   </div>
                 </div>

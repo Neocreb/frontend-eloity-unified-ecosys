@@ -32,6 +32,7 @@ import {
 import { useFreelance } from "@/hooks/use-freelance";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { JobPosting } from "@/types/freelance";
 
 interface JobFormData {
@@ -155,6 +156,7 @@ const DURATIONS = [
 
 const CreateJob: React.FC = () => {
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
   const [formData, setFormData] = useState<JobFormData>({
     title: "",
     description: "",
@@ -276,12 +278,12 @@ const CreateJob: React.FC = () => {
   const calculateBudgetDisplay = () => {
     if (formData.budgetType === "fixed") {
       return formData.budgetAmount
-        ? `$${formData.budgetAmount.toLocaleString()}`
-        : "$0";
+        ? formatCurrency(formData.budgetAmount)
+        : formatCurrency(0);
     } else {
       const min = formData.budgetMin || 0;
       const max = formData.budgetMax || 0;
-      return `$${min}-$${max}/hr`;
+      return `${formatCurrency(min)}-${formatCurrency(max)}/hr`;
     }
   };
 

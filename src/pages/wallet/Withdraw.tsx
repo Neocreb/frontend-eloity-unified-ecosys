@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletContext } from "@/contexts/WalletContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { WalletActionHeader } from "@/components/wallet/WalletActionHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ const Withdraw = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { walletBalance } = useWalletContext();
+  const { formatCurrency } = useCurrency();
   const [step, setStep] = useState<"recipient" | "amount" | "review" | "success">("recipient");
   const [recipientType, setRecipientType] = useState<RecipientType>("bank");
   const [recipient, setRecipient] = useState<RecipientData>({ type: "bank" });
@@ -403,7 +405,7 @@ const Withdraw = () => {
                 Processing...
               </>
             ) : (
-              `Withdraw $${(amountNum - fee).toFixed(2)}`
+              `Withdraw ${formatCurrency(amountNum - fee)}`
             )}
           </Button>
           <Button
