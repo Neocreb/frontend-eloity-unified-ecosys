@@ -362,6 +362,7 @@ const ComprehensiveAdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const isMobile = useIsMobile();
+  const { formatCurrency } = useCurrency();
 
   // Mock data - in production this would come from API
   const mockData: DashboardMetrics = {
