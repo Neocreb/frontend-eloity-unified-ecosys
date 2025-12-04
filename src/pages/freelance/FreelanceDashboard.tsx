@@ -148,6 +148,7 @@ export const FreelanceDashboard: React.FC = () => {
 
   const { getProjects, getFreelanceStats, loading } = useFreelance();
   const { getUserEscrows } = useEscrow();
+  const { formatCurrency } = useCurrency();
   const { user } = useAuth();
 
   useEffect(() => {
