@@ -343,17 +343,31 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(url, config);
 
   // Read body once to avoid "body stream already read" errors
-  const text = await response.text();
+  let text = "";
   let data: any;
+
+  try {
+    // Clone the response to safely read the body
+    const clonedResponse = response.clone();
+    text = await clonedResponse.text();
+  } catch (e) {
+    // Handle cases where body stream has already been read or is unavailable
+    console.error("Error reading response body:", e);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to read response`);
+    }
+    return null;
+  }
 
   try {
     data = text ? JSON.parse(text) : null;
   } catch (e) {
+    console.warn(`Failed to parse JSON from ${endpoint}:`, text?.substring(0, 200));
     data = { error: text || "Unknown error" };
   }
 
   if (!response.ok) {
-    const errorMessage = (data && data.error) || `HTTP ${response.status}`;
+    const errorMessage = (data?.error) || (data?.message) || `HTTP ${response.status}`;
     throw new Error(errorMessage);
   }
 

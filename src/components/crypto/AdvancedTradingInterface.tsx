@@ -135,11 +135,19 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       const id = idMap[base] || 'bitcoin';
       const r = await fetch(`/api/crypto/prices?symbols=${encodeURIComponent(id)}`);
 
-      // Read body once to avoid "body stream already read" errors
-      const responseText = await r.text();
-
+      // Check status first before reading body
       if (!r.ok) {
-        console.error(`Failed to fetch market price: HTTP ${r.status}`, responseText);
+        console.error(`Failed to fetch market price: HTTP ${r.status}`);
+        return;
+      }
+
+      // Read body from cloned response to avoid "body stream already read" errors
+      let responseText: string;
+      try {
+        const clonedResponse = r.clone();
+        responseText = await clonedResponse.text();
+      } catch (readError) {
+        console.error("Error reading response body:", readError);
         return;
       }
 
@@ -160,7 +168,7 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
         setVolume24h(Number(p.usd_24h_vol || 0));
       }
     } catch (e) {
-      // ignore
+      console.error('Error fetching market price:', e instanceof Error ? e.message : e);
     }
   };
 
@@ -178,11 +186,19 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
 
       const response = await fetch(url, { headers });
 
-      // Read body once to avoid "body stream already read" errors
-      const responseText = await response.text();
-
+      // Check status first before reading body
       if (!response.ok) {
-        console.error(`Failed to fetch orderbook: HTTP ${response.status}`, responseText);
+        console.error(`Failed to fetch orderbook: HTTP ${response.status}`);
+        return;
+      }
+
+      // Read body from cloned response to avoid "body stream already read" errors
+      let responseText: string;
+      try {
+        const clonedResponse = response.clone();
+        responseText = await clonedResponse.text();
+      } catch (readError) {
+        console.error("Error reading response body:", readError);
         return;
       }
 
@@ -194,14 +210,14 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
         return;
       }
 
-      if (data.success && data.data) {
+      if (data && data.success && data.data) {
         setOrderBook({
           asks: data.data.asks || [],
           bids: data.data.bids || []
         });
       }
     } catch (error) {
-      console.error('Failed to fetch orderbook:', error);
+      console.error('Failed to fetch orderbook:', error instanceof Error ? error.message : error);
     }
   };
 

@@ -123,34 +123,37 @@ export function useCrypto() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const [
-        cryptocurrencies,
-        tradingPairs,
-        marketData,
-        stakingProducts,
-        news,
-        educationContent,
-      ] = await Promise.all([
-        cryptoService.getCryptocurrencies(50),
+      const results = await Promise.allSettled([
+        cryptoService.getCryptocurrencies(),
         cryptoService.getTradingPairs(),
         cryptoService.getMarketData(),
         cryptoService.getStakingProducts(),
-        cryptoService.getNews(20),
-        cryptoService.getEducationContent(),
+        cryptoService.getNews ? cryptoService.getNews(20) : Promise.resolve([]),
+        cryptoService.getEducationContent ? cryptoService.getEducationContent() : Promise.resolve([]),
       ]);
+
+      const [
+        cryptocurrenciesResult,
+        tradingPairsResult,
+        marketDataResult,
+        stakingProductsResult,
+        newsResult,
+        educationContentResult,
+      ] = results;
 
       setState((prev) => ({
         ...prev,
-        cryptocurrencies,
-        tradingPairs,
-        marketData,
-        stakingProducts,
-        news,
-        educationContent,
+        cryptocurrencies: cryptocurrenciesResult.status === 'fulfilled' ? cryptocurrenciesResult.value : [],
+        tradingPairs: tradingPairsResult.status === 'fulfilled' ? tradingPairsResult.value : [],
+        marketData: marketDataResult.status === 'fulfilled' ? marketDataResult.value : null,
+        stakingProducts: stakingProductsResult.status === 'fulfilled' ? stakingProductsResult.value : [],
+        news: newsResult.status === 'fulfilled' ? newsResult.value : [],
+        educationContent: educationContentResult.status === 'fulfilled' ? educationContentResult.value : [],
         isLoading: false,
       }));
     } catch (error) {
-      console.error("Failed to load initial crypto data:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to load initial crypto data:", errorMessage);
       setState((prev) => ({
         ...prev,
         error: "Failed to load crypto data",
@@ -163,25 +166,33 @@ export function useCrypto() {
     if (!user) return;
 
     try {
-      const [portfolio, watchlist, stakingPositions, transactions, openOrders] =
-        await Promise.all([
-          cryptoService.getPortfolio(),
-          cryptoService.getWatchlist(),
-          cryptoService.getStakingPositions(),
-          cryptoService.getTransactions(50),
-          cryptoService.getOpenOrders(),
-        ]);
+      const results = await Promise.allSettled([
+        cryptoService.getPortfolio(),
+        cryptoService.getWatchlist(user.id),
+        cryptoService.getStakingPositions(user.id),
+        cryptoService.getTransactions ? cryptoService.getTransactions(50) : Promise.resolve([]),
+        cryptoService.getOpenOrders ? cryptoService.getOpenOrders() : Promise.resolve([]),
+      ]);
+
+      const [
+        portfolioResult,
+        watchlistResult,
+        stakingPositionsResult,
+        transactionsResult,
+        openOrdersResult,
+      ] = results;
 
       setState((prev) => ({
         ...prev,
-        portfolio,
-        watchlist,
-        stakingPositions,
-        transactions,
-        openOrders,
+        portfolio: portfolioResult.status === 'fulfilled' ? portfolioResult.value : null,
+        watchlist: watchlistResult.status === 'fulfilled' ? watchlistResult.value : [],
+        stakingPositions: stakingPositionsResult.status === 'fulfilled' ? stakingPositionsResult.value : [],
+        transactions: transactionsResult.status === 'fulfilled' ? transactionsResult.value : [],
+        openOrders: openOrdersResult.status === 'fulfilled' ? openOrdersResult.value : [],
       }));
     } catch (error) {
-      console.error("Failed to load user crypto data:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to load user crypto data:", errorMessage);
     }
   };
 
@@ -191,8 +202,9 @@ export function useCrypto() {
       const marketData = await cryptoService.getMarketData();
       setState((prev) => ({ ...prev, marketData }));
     } catch (error) {
-      console.error("Failed to fetch market data:", error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to fetch market data:", errorMessage);
+      // Don't throw, just log the error
     }
   }, []);
 
@@ -203,8 +215,9 @@ export function useCrypto() {
       const portfolio = await cryptoService.getPortfolio();
       setState((prev) => ({ ...prev, portfolio }));
     } catch (error) {
-      console.error("Failed to fetch portfolio:", error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to fetch portfolio:", errorMessage);
+      // Don't throw, just log the error
     }
   }, [isAuthenticated]);
 
@@ -218,18 +231,21 @@ export function useCrypto() {
 
   const loadTradingData = async (pair: string) => {
     try {
-      const [orderBook, recentTrades] = await Promise.all([
-        cryptoService.getOrderBook(pair),
-        cryptoService.getRecentTrades(pair, 50),
+      const results = await Promise.allSettled([
+        cryptoService.getOrderBook ? cryptoService.getOrderBook(pair) : Promise.resolve(null),
+        cryptoService.getRecentTrades ? cryptoService.getRecentTrades(pair, 50) : Promise.resolve([]),
       ]);
+
+      const [orderBookResult, recentTradesResult] = results;
 
       setState((prev) => ({
         ...prev,
-        orderBook,
-        recentTrades,
+        orderBook: orderBookResult.status === 'fulfilled' ? orderBookResult.value : null,
+        recentTrades: recentTradesResult.status === 'fulfilled' ? recentTradesResult.value : [],
       }));
     } catch (error) {
-      console.error("Failed to load trading data:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to load trading data:", errorMessage);
     }
   };
 
@@ -261,7 +277,8 @@ export function useCrypto() {
 
         return order;
       } catch (error) {
-        console.error("Failed to place order:", error);
+        const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+        console.error("Failed to place order:", errorMessage);
         toast({
           title: "Order failed",
           description: "Failed to place order. Please try again.",

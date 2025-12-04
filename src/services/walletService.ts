@@ -61,16 +61,31 @@ class WalletServiceClass {
       }
 
       // Call unified wallet API endpoint instead of making multiple Supabase queries
-      const response = await apiCall(`/api/wallet/balance?userId=${user.id}`);
+      try {
+        const response = await apiCall(`/api/wallet/balance?userId=${user.id}`);
 
-      if (response?.data?.balances) {
-        return {
-          total: response.data.balances.total || 0,
-          crypto: response.data.balances.crypto || 0,
-          ecommerce: response.data.balances.marketplace || 0,
-          rewards: response.data.balances.rewards || 0,
-          freelance: response.data.balances.freelance || 0,
-        };
+        if (response?.data?.balances) {
+          return {
+            total: response.data.balances.total || 0,
+            crypto: response.data.balances.crypto || 0,
+            ecommerce: response.data.balances.marketplace || 0,
+            rewards: response.data.balances.rewards || 0,
+            freelance: response.data.balances.freelance || 0,
+          };
+        }
+
+        if (response?.balances) {
+          return {
+            total: response.balances.total || 0,
+            crypto: response.balances.crypto || 0,
+            ecommerce: response.balances.marketplace || 0,
+            rewards: response.balances.rewards || 0,
+            freelance: response.balances.freelance || 0,
+          };
+        }
+      } catch (apiError) {
+        // API endpoint might not exist, fallback to default
+        console.warn('Wallet balance API error:', apiError);
       }
 
       // Fallback to zero balances if API fails
@@ -99,21 +114,41 @@ class WalletServiceClass {
       if (!user) return [];
 
       // Call unified wallet transactions endpoint
-      const response = await apiCall(`/api/wallet/transactions?userId=${user.id}&limit=50`);
+      try {
+        const response = await apiCall(`/api/wallet/transactions?userId=${user.id}&limit=50`);
 
-      if (response?.data?.transactions && Array.isArray(response.data.transactions)) {
-        // Format transactions from server response
-        return response.data.transactions.map((tx: any) => ({
-          id: tx.id,
-          type: tx.type || 'transfer',
-          amount: parseFloat(tx.amount.toString()),
-          currency: tx.currency || 'USD',
-          source: tx.source || 'unknown',
-          description: `${tx.type} - ${tx.source}`,
-          status: tx.status || 'completed',
-          timestamp: tx.created_at,
-          createdAt: tx.created_at,
-        })).slice(0, 20);
+        if (response?.data?.transactions && Array.isArray(response.data.transactions)) {
+          // Format transactions from server response
+          return response.data.transactions.map((tx: any) => ({
+            id: tx.id,
+            type: tx.type || 'transfer',
+            amount: parseFloat(tx.amount.toString()),
+            currency: tx.currency || 'USD',
+            source: tx.source || 'unknown',
+            description: `${tx.type} - ${tx.source}`,
+            status: tx.status || 'completed',
+            timestamp: tx.created_at,
+            createdAt: tx.created_at,
+          })).slice(0, 20);
+        }
+
+        if (response?.transactions && Array.isArray(response.transactions)) {
+          // Format transactions from server response (alternative response format)
+          return response.transactions.map((tx: any) => ({
+            id: tx.id,
+            type: tx.type || 'transfer',
+            amount: parseFloat(tx.amount.toString()),
+            currency: tx.currency || 'USD',
+            source: tx.source || 'unknown',
+            description: `${tx.type} - ${tx.source}`,
+            status: tx.status || 'completed',
+            timestamp: tx.created_at,
+            createdAt: tx.created_at,
+          })).slice(0, 20);
+        }
+      } catch (apiError) {
+        // API endpoint might not exist, fallback to empty array
+        console.warn('Transactions API error:', apiError);
       }
 
       return [];
