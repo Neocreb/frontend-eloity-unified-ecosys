@@ -10,6 +10,28 @@ import { formatNumber } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiClient } from "@/lib/api";
+
+interface SelectTrigger extends React.ReactHTMLAttributes<HTMLDivElement> {}
+interface SelectValue extends React.ReactHTMLAttributes<HTMLDivElement> {}
+interface SelectContent extends React.ReactHTMLAttributes<HTMLDivElement> {}
+interface SelectItem extends React.ReactHTMLAttributes<HTMLDivElement> {
+  value?: string;
+}
+
+const Select: React.FC<any> = ({ children, value, onValueChange }) => (
+  <div>{children}</div>
+);
+const SelectTrigger: React.FC<SelectTrigger> = ({ children, ...props }) => (
+  <div {...props}>{children}</div>
+);
+const SelectValue: React.FC<SelectValue> = ({ placeholder }) => <span>{placeholder}</span>;
+const SelectContent: React.FC<SelectContent> = ({ children }) => (
+  <div>{children}</div>
+);
+const SelectItem: React.FC<SelectItem & { children?: React.ReactNode }> = ({
+  children,
+  value,
+}) => <div>{children}</div>;
 import {
   Bookmark,
   Search,

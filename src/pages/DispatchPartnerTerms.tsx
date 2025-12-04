@@ -184,7 +184,7 @@ const DispatchPartnerTerms = () => {
               <ul className="list-disc list-inside space-y-1 text-sm">
                 <li>Instant payout available after each completed delivery</li>
                 <li>Weekly automatic deposits every Tuesday for standard payouts</li>
-                <li>Minimum payout threshold of {formatCurrency(5)} for instant payments</li>
+                <li>Minimum payout threshold of {formatCurrency(5, 'text')} for instant payments</li>
                 <li>Payment processing fees may apply for instant payouts</li>
                 <li>All earnings are subject to applicable taxes and deductions</li>
                 <li>Disputed payments are held pending resolution</li>
@@ -286,7 +286,7 @@ const DispatchPartnerTerms = () => {
               <h4 className="font-semibold mb-2">Platform Insurance Coverage</h4>
               <ul className="list-disc list-inside space-y-1 text-sm">
                 <li>Commercial liability coverage during active delivery periods</li>
-                <li>Package loss/damage coverage up to declared value ($500 maximum)</li>
+                <li>Package loss/damage coverage up to declared value ({formatCurrency(500, 'text')} maximum)</li>
                 <li>Third-party liability protection for delivery-related incidents</li>
                 <li>Coverage gaps filled between personal and commercial insurance</li>
                 <li>Emergency roadside assistance during active deliveries</li>
