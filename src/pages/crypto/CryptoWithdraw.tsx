@@ -195,7 +195,17 @@ export default function CryptoWithdraw() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const j = await r.json();
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await r.text();
+
+      let j;
+      try {
+        j = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        throw new Error('Failed to parse withdrawal response');
+      }
+
       if (!r.ok) throw new Error(j?.error || 'Withdraw failed');
 
       toast({
