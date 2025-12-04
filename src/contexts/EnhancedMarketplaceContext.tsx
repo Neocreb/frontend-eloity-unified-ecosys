@@ -915,7 +915,8 @@ export const EnhancedMarketplaceProvider = ({
       // Return reviews for this product if they exist
       return reviews[productId] || [];
     } catch (error) {
-      console.error("Error fetching product reviews:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Error fetching product reviews:", errorMessage);
       return [];
     }
   };
