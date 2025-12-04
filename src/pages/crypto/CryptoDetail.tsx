@@ -79,22 +79,20 @@ const CryptoDetail: React.FC = () => {
   }
 
   const formatCurrency = (value: number) => {
-    if (typeof value !== "number" || isNaN(value)) return "$0.00";
+    if (typeof value !== "number" || isNaN(value)) return formatCurrencyContext(0);
 
     if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
+      const symbol = formatCurrencyContext(0).replace(/[\d.,]/g, '').trim();
+      return `${symbol}${(value / 1000000000).toFixed(2)}B`;
     } else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
+      const symbol = formatCurrencyContext(0).replace(/[\d.,]/g, '').trim();
+      return `${symbol}${(value / 1000000).toFixed(2)}M`;
     } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
+      const symbol = formatCurrencyContext(0).replace(/[\d.,]/g, '').trim();
+      return `${symbol}${(value / 1000).toFixed(2)}K`;
     }
 
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: value < 1 ? 6 : 2,
-    }).format(value);
+    return formatCurrencyContext(value);
   };
 
   const formatNumber = (value: number) => {
