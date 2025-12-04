@@ -161,7 +161,22 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       }
 
       const response = await fetch(url, { headers });
-      const data = await response.json();
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        console.error(`Failed to fetch orderbook: HTTP ${response.status}`, responseText);
+        return;
+      }
+
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        console.error('Failed to parse orderbook response:', responseText);
+        return;
+      }
 
       if (data.success && data.data) {
         setOrderBook({
