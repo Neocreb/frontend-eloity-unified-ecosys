@@ -69,12 +69,7 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
     onShare?.(product.id);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
+  // formatPrice is now provided by formatCurrency from useCurrency hook
 
   const discountPercentage = product.discountPrice
     ? Math.round(
