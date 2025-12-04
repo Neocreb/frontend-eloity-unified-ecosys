@@ -364,9 +364,9 @@ const BrowseJobs: React.FC = () => {
             <div className="flex items-center gap-1">
               <DollarSign className="w-4 h-4 text-green-500" />
               <span className="font-medium">
-                {job.budget.type === "fixed" 
-                  ? `$${job.budget.amount.toLocaleString()} fixed` 
-                  : `$${job.budget.amount}/hour`
+                {job.budget.type === "fixed"
+                  ? `${formatCurrency(job.budget.amount)} fixed`
+                  : `${formatCurrency(job.budget.amount)}/hour`
                 }
               </span>
             </div>
