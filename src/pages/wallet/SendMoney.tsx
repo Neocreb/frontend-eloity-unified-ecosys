@@ -40,6 +40,7 @@ interface Recipient {
 const SendMoney = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const { walletBalance } = useWalletContext();
 
   const [step, setStep] = useState<"type" | "recipient" | "amount" | "review" | "success">(
