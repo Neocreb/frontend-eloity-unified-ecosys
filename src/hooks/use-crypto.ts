@@ -166,25 +166,33 @@ export function useCrypto() {
     if (!user) return;
 
     try {
-      const [portfolio, watchlist, stakingPositions, transactions, openOrders] =
-        await Promise.all([
-          cryptoService.getPortfolio(),
-          cryptoService.getWatchlist(),
-          cryptoService.getStakingPositions(),
-          cryptoService.getTransactions(50),
-          cryptoService.getOpenOrders(),
-        ]);
+      const results = await Promise.allSettled([
+        cryptoService.getPortfolio(),
+        cryptoService.getWatchlist(user.id),
+        cryptoService.getStakingPositions(user.id),
+        cryptoService.getTransactions ? cryptoService.getTransactions(50) : Promise.resolve([]),
+        cryptoService.getOpenOrders ? cryptoService.getOpenOrders() : Promise.resolve([]),
+      ]);
+
+      const [
+        portfolioResult,
+        watchlistResult,
+        stakingPositionsResult,
+        transactionsResult,
+        openOrdersResult,
+      ] = results;
 
       setState((prev) => ({
         ...prev,
-        portfolio,
-        watchlist,
-        stakingPositions,
-        transactions,
-        openOrders,
+        portfolio: portfolioResult.status === 'fulfilled' ? portfolioResult.value : null,
+        watchlist: watchlistResult.status === 'fulfilled' ? watchlistResult.value : [],
+        stakingPositions: stakingPositionsResult.status === 'fulfilled' ? stakingPositionsResult.value : [],
+        transactions: transactionsResult.status === 'fulfilled' ? transactionsResult.value : [],
+        openOrders: openOrdersResult.status === 'fulfilled' ? openOrdersResult.value : [],
       }));
     } catch (error) {
-      console.error("Failed to load user crypto data:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to load user crypto data:", errorMessage);
     }
   };
 
