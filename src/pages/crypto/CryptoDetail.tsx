@@ -203,7 +203,7 @@ const CryptoDetail: React.FC = () => {
                               : "text-red-600 dark:text-red-400"
                           }`}
                         >
-                          {crypto.price_change_24h ? formatCurrency(Math.abs(crypto.price_change_24h)) : "$0.00"}
+                          {crypto.price_change_24h ? formatCurrency(Math.abs(crypto.price_change_24h)) : formatCurrency(0)}
                         </div>
                       </div>
                       <div>
