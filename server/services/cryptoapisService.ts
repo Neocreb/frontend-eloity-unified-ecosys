@@ -2,7 +2,7 @@ import axios from 'axios';
 import { logger } from '../utils/logger.js';
 
 // CRYPTO APIs base configuration
-const CRYPTOAPIS_BASE_URL = 'https://rest.cryptoapis.io/v2';
+const CRYPTOAPIS_BASE_URL = 'https://rest.cryptoapis.io';
 const API_KEY = process.env.CRYPTOAPIS_API_KEY;
 
 // Validate API key on startup
