@@ -123,34 +123,37 @@ export function useCrypto() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const [
-        cryptocurrencies,
-        tradingPairs,
-        marketData,
-        stakingProducts,
-        news,
-        educationContent,
-      ] = await Promise.all([
-        cryptoService.getCryptocurrencies(50),
+      const results = await Promise.allSettled([
+        cryptoService.getCryptocurrencies(),
         cryptoService.getTradingPairs(),
         cryptoService.getMarketData(),
         cryptoService.getStakingProducts(),
-        cryptoService.getNews(20),
-        cryptoService.getEducationContent(),
+        cryptoService.getNews ? cryptoService.getNews(20) : Promise.resolve([]),
+        cryptoService.getEducationContent ? cryptoService.getEducationContent() : Promise.resolve([]),
       ]);
+
+      const [
+        cryptocurrenciesResult,
+        tradingPairsResult,
+        marketDataResult,
+        stakingProductsResult,
+        newsResult,
+        educationContentResult,
+      ] = results;
 
       setState((prev) => ({
         ...prev,
-        cryptocurrencies,
-        tradingPairs,
-        marketData,
-        stakingProducts,
-        news,
-        educationContent,
+        cryptocurrencies: cryptocurrenciesResult.status === 'fulfilled' ? cryptocurrenciesResult.value : [],
+        tradingPairs: tradingPairsResult.status === 'fulfilled' ? tradingPairsResult.value : [],
+        marketData: marketDataResult.status === 'fulfilled' ? marketDataResult.value : null,
+        stakingProducts: stakingProductsResult.status === 'fulfilled' ? stakingProductsResult.value : [],
+        news: newsResult.status === 'fulfilled' ? newsResult.value : [],
+        educationContent: educationContentResult.status === 'fulfilled' ? educationContentResult.value : [],
         isLoading: false,
       }));
     } catch (error) {
-      console.error("Failed to load initial crypto data:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to load initial crypto data:", errorMessage);
       setState((prev) => ({
         ...prev,
         error: "Failed to load crypto data",
