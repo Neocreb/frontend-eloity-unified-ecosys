@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Cryptocurrency } from "@/types/crypto";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const CryptoDetail: React.FC = () => {
   const { symbol } = useParams<{ symbol: string }>();
