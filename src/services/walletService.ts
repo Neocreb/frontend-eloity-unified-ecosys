@@ -114,21 +114,41 @@ class WalletServiceClass {
       if (!user) return [];
 
       // Call unified wallet transactions endpoint
-      const response = await apiCall(`/api/wallet/transactions?userId=${user.id}&limit=50`);
+      try {
+        const response = await apiCall(`/api/wallet/transactions?userId=${user.id}&limit=50`);
 
-      if (response?.data?.transactions && Array.isArray(response.data.transactions)) {
-        // Format transactions from server response
-        return response.data.transactions.map((tx: any) => ({
-          id: tx.id,
-          type: tx.type || 'transfer',
-          amount: parseFloat(tx.amount.toString()),
-          currency: tx.currency || 'USD',
-          source: tx.source || 'unknown',
-          description: `${tx.type} - ${tx.source}`,
-          status: tx.status || 'completed',
-          timestamp: tx.created_at,
-          createdAt: tx.created_at,
-        })).slice(0, 20);
+        if (response?.data?.transactions && Array.isArray(response.data.transactions)) {
+          // Format transactions from server response
+          return response.data.transactions.map((tx: any) => ({
+            id: tx.id,
+            type: tx.type || 'transfer',
+            amount: parseFloat(tx.amount.toString()),
+            currency: tx.currency || 'USD',
+            source: tx.source || 'unknown',
+            description: `${tx.type} - ${tx.source}`,
+            status: tx.status || 'completed',
+            timestamp: tx.created_at,
+            createdAt: tx.created_at,
+          })).slice(0, 20);
+        }
+
+        if (response?.transactions && Array.isArray(response.transactions)) {
+          // Format transactions from server response (alternative response format)
+          return response.transactions.map((tx: any) => ({
+            id: tx.id,
+            type: tx.type || 'transfer',
+            amount: parseFloat(tx.amount.toString()),
+            currency: tx.currency || 'USD',
+            source: tx.source || 'unknown',
+            description: `${tx.type} - ${tx.source}`,
+            status: tx.status || 'completed',
+            timestamp: tx.created_at,
+            createdAt: tx.created_at,
+          })).slice(0, 20);
+        }
+      } catch (apiError) {
+        // API endpoint might not exist, fallback to empty array
+        console.warn('Transactions API error:', apiError);
       }
 
       return [];
