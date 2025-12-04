@@ -353,7 +353,7 @@ const GiftCards = () => {
                 Processing...
               </>
             ) : (
-              `Purchase $${(commissionData?.final_amount || amount).toFixed(2)} Gift Card`
+              `Purchase ${formatCurrency(commissionData?.final_amount || parseFloat(amount) || 0)} Gift Card`
             )}
           </Button>
           <Button
