@@ -41,6 +41,7 @@ const ProductCard = ({
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
