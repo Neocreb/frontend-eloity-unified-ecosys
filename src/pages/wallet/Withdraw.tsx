@@ -32,6 +32,7 @@ const Withdraw = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { walletBalance } = useWalletContext();
+  const { formatCurrency } = useCurrency();
   const [step, setStep] = useState<"recipient" | "amount" | "review" | "success">("recipient");
   const [recipientType, setRecipientType] = useState<RecipientType>("bank");
   const [recipient, setRecipient] = useState<RecipientData>({ type: "bank" });
