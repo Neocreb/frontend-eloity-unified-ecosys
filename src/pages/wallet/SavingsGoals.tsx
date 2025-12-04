@@ -188,7 +188,7 @@ const SavingsGoals = () => {
                       innerRadius={60}
                       outerRadius={100}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: $${value}`}
+                      label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
