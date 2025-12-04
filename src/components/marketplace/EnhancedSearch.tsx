@@ -36,6 +36,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { searchService } from "@/services/searchService";
 import { categoryService } from "@/services";
 
+type SearchFilters = typeof defaultFilters;
+
 interface SearchSuggestion {
   id: string;
   text: string;
@@ -90,7 +92,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
   const [trendingSearches, setTrendingSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const { userCurrency } = useCurrency();
+  const { userCurrency, formatCurrency } = useCurrency();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -196,7 +198,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
     if (newFilters.seller.length > 0) active.push(...newFilters.seller);
     if (newFilters.priceRange[0] > 0 || newFilters.priceRange[1] < 1000) {
       active.push(
-        `$${newFilters.priceRange[0]} - $${newFilters.priceRange[1]}`,
+        `${formatCurrency(newFilters.priceRange[0])} - ${formatCurrency(newFilters.priceRange[1])}`,
       );
     }
     setActiveFilters(active);
@@ -313,8 +315,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
                       {/* Price Range */}
                       <div>
                         <label className="text-sm font-medium mb-2 block">
-                          Price Range: {userCurrency?.symbol || '$'}{filters.priceRange[0]} - {userCurrency?.symbol || '$'}
-                          {filters.priceRange[1]}
+                          Price Range: {formatCurrency(filters.priceRange[0])} - {formatCurrency(filters.priceRange[1])}
                         </label>
                         <Slider
                           value={filters.priceRange}

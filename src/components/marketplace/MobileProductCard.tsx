@@ -69,8 +69,6 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
     onShare?.(product.id);
   };
 
-  // formatPrice is now provided by formatCurrency from useCurrency hook
-
   const discountPercentage = product.discountPrice
     ? Math.round(
         ((product.price - product.discountPrice) / product.price) * 100,
@@ -303,7 +301,7 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
           <span className="capitalize">{product.productType}</span>
           {product.productType === "physical" && (
-            <span>Free shipping over {formatCurrency(50)}</span>
+            <span>Free shipping over {formatCurrency(50, 'text')}</span>
           )}
           {product.productType === "digital" && <span>Instant download</span>}
         </div>
