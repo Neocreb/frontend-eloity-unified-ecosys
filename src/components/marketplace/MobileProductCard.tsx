@@ -112,15 +112,15 @@ export const MobileProductCard: React.FC<MobileProductCardProps> = ({
               {product.discountPrice ? (
                 <>
                   <span className="text-sm font-bold text-green-600">
-                    {formatPrice(product.discountPrice)}
+                    {formatCurrency(product.discountPrice)}
                   </span>
                   <span className="text-xs text-gray-500 line-through">
-                    {formatPrice(product.price)}
+                    {formatCurrency(product.price)}
                   </span>
                 </>
               ) : (
                 <span className="text-sm font-bold text-gray-900">
-                  {formatPrice(product.price)}
+                  {formatCurrency(product.price)}
                 </span>
               )}
             </div>
