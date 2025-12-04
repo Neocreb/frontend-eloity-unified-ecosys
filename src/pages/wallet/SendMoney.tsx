@@ -620,13 +620,13 @@ const SendMoney = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Transfer Fee</span>
                     <span className="font-semibold text-gray-900">
-                      {fee === 0 ? "Free" : `$${fee.toFixed(2)}`}
+                      {fee === 0 ? "Free" : formatCurrency(fee)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-gray-200 pt-3">
                     <span className="font-semibold text-gray-900">Total Charge</span>
                     <span className="font-bold text-lg text-gray-900">
-                      ${total.toFixed(2)}
+                      {formatCurrency(total)}
                     </span>
                   </div>
                 </div>
