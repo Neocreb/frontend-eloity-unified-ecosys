@@ -431,7 +431,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                       </span>
                       {item.product?.price && item.product.price > item.priceSnapshot && (
                         <span className="text-sm text-gray-500 line-through">
-                          {formatPrice(item.product.price)}
+                          {formatCurrency(item.product.price)}
                         </span>
                       )}
                     </div>
@@ -441,7 +441,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                       <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
                         <Bell className="w-4 h-4" />
                         <span>
-                          Price alert set at {formatPrice(priceAlerts[item.productId].targetPrice)}
+                          Price alert set at {formatCurrency(priceAlerts[item.productId].targetPrice)}
                         </span>
                       </div>
                     ) : (
