@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { WalletProvider, useWalletContext } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Eye, EyeOff, ChevronDown, BarChart3, List, PlugZap, Send, Repeat, Plus, MoreHorizontal, Gift, Plane, ArrowDown, ArrowUp, Wallet, Phone, CreditCard, Home, Clock, Star, Zap } from "lucide-react";
