@@ -29,6 +29,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
 
+type DeliveryProviderSelectionProps = typeof mockProviders;
+
 interface DeliveryProvider {
   id: string;
   businessName: string;
@@ -160,6 +162,7 @@ export default function DeliveryProviderSelection({
   const [loading, setLoading] = useState(false);
   const [showProviderDetails, setShowProviderDetails] = useState<string | null>(null);
   const { toast } = useToast();
+  const { formatCurrency: formatCurrencyHook } = useCurrency();
 
   useEffect(() => {
     if (open) {
@@ -207,11 +210,16 @@ export default function DeliveryProviderSelection({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+  const formatCurrencyLocal = (amount: number) => {
+    // Use the hook's formatCurrency if available, otherwise use Intl
+    try {
+      return formatCurrencyHook(amount, 'text');
+    } catch {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(amount);
+    }
   };
 
   const getVehicleIcon = (type: string) => {
@@ -332,7 +340,7 @@ export default function DeliveryProviderSelection({
 
                               <div className="text-right ml-4">
                                 <p className="text-lg font-bold text-green-600">
-                                  {formatCurrency(calculateAdjustedFee(provider.estimatedFee, selectedServiceType))}
+                                  {formatCurrencyLocal(calculateAdjustedFee(provider.estimatedFee, selectedServiceType))}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   ~{calculateEstimatedTime(provider.estimatedDeliveryTime, selectedServiceType)}h delivery
@@ -437,7 +445,7 @@ export default function DeliveryProviderSelection({
                         <div className="flex justify-between font-medium">
                           <span>Delivery Fee</span>
                           <span className="text-green-600">
-                            {formatCurrency(
+                            {formatCurrencyLocal(
                               calculateAdjustedFee(
                                 providers.find(p => p.id === selectedProvider)?.estimatedFee || 0,
                                 selectedServiceType

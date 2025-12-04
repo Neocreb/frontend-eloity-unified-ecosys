@@ -357,7 +357,7 @@ export default function DeliveryTracking({
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Delivery Fee</p>
                   <p className="text-lg font-bold text-green-600">
-                    {formatCurrency(trackingData.assignment.deliveryFee)}
+                    {formatCurrency(trackingData.assignment.deliveryFee, 'text')}
                   </p>
                 </div>
               </div>
@@ -454,7 +454,7 @@ export default function DeliveryTracking({
                   <div>
                     <p className="text-sm font-medium">Value</p>
                     <p className="text-sm text-gray-600">
-                      {formatCurrency(trackingData.assignment.packageDetails.value)}
+                      {formatCurrency(trackingData.assignment.packageDetails.value, 'text')}
                     </p>
                   </div>
                   {trackingData.assignment.packageDetails.fragile && (
