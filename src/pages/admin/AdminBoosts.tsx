@@ -88,6 +88,7 @@ const AdminBoosts = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const notification = useNotification();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     loadBoostData();
