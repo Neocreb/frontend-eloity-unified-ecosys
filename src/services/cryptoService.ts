@@ -98,12 +98,21 @@ export class CryptoService {
       } else {
         // Client-side fallback - make API call to our own backend
         const response = await fetch('/api/crypto/cryptocurrencies');
-        
+
+        // Read body once to avoid "body stream already read" errors
+        const responseText = await response.text();
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
-        return await response.json();
+
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (parseError) {
+          throw new Error('Failed to parse cryptocurrencies response');
+        }
+        return data;
       }
     } catch (error) {
       console.error("Error fetching cryptocurrency data:", error);
@@ -200,12 +209,21 @@ export class CryptoService {
       } else {
         // Client-side fallback - make API call to our own backend
         const response = await fetch('/api/crypto/trading-pairs');
-        
+
+        // Read body once to avoid "body stream already read" errors
+        const responseText = await response.text();
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
-        return await response.json();
+
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (parseError) {
+          throw new Error('Failed to parse trading pairs response');
+        }
+        return data;
       }
     } catch (error) {
       console.error('Failed to fetch trading pairs:', error);
@@ -283,12 +301,21 @@ export class CryptoService {
       } else {
         // Client-side fallback - make API call to our own backend
         const response = await fetch('/api/crypto/portfolio');
-        
+
+        // Read body once to avoid "body stream already read" errors
+        const responseText = await response.text();
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
-        return await response.json();
+
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (parseError) {
+          throw new Error('Failed to parse portfolio response');
+        }
+        return data;
       }
     } catch (error) {
       console.error('Failed to fetch portfolio:', error);
@@ -329,12 +356,21 @@ export class CryptoService {
       } else {
         // Client-side fallback - make API call to our own backend
         const response = await fetch('/api/crypto/staking-products');
-        
+
+        // Read body once to avoid "body stream already read" errors
+        const responseText = await response.text();
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
-        return await response.json();
+
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (parseError) {
+          throw new Error('Failed to parse staking products response');
+        }
+        return data;
       }
     } catch (error) {
       console.error('Failed to fetch staking products:', error);
@@ -382,12 +418,21 @@ export class CryptoService {
       } else {
         // Client-side fallback - make API call to our own backend
         const response = await fetch(`/api/crypto/staking-positions?userId=${userId}`);
-        
+
+        // Read body once to avoid "body stream already read" errors
+        const responseText = await response.text();
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
-        return await response.json();
+
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (parseError) {
+          throw new Error('Failed to parse staking positions response');
+        }
+        return data;
       }
     } catch (error) {
       console.error('Failed to fetch staking positions:', error);
@@ -492,12 +537,21 @@ export class CryptoService {
       } else {
         // Client-side fallback - make API call to our own backend
         const response = await fetch(`/api/crypto/watchlist?userId=${userId}`);
-        
+
+        // Read body once to avoid "body stream already read" errors
+        const responseText = await response.text();
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
-        return await response.json();
+
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : null;
+        } catch (parseError) {
+          throw new Error('Failed to parse watchlist response');
+        }
+        return data;
       }
     } catch (error) {
       console.error('Failed to fetch watchlist:', error);
