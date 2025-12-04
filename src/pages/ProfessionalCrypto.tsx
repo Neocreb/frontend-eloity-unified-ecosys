@@ -88,25 +88,25 @@ const ProfessionalCrypto = () => {
         }
       });
 
-      // Check if response is OK and is actually JSON
+      // Read body once to avoid "body stream already read" errors
+      const pricesText = await pricesRes.text();
+
       if (!pricesRes.ok) {
-        const errorText = await pricesRes.text();
-        console.error(`HTTP error! status: ${pricesRes.status}`, errorText);
+        console.error(`HTTP error! status: ${pricesRes.status}`, pricesText);
         throw new Error(`HTTP error! status: ${pricesRes.status}`);
       }
 
       const contentType = pricesRes.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        const text = await pricesRes.text();
-        console.error('Non-JSON response received:', text.substring(0, 500)); // Limit log size
-        throw new Error(`Received non-JSON response from API: ${text.substring(0, 100)}`);
+        console.error('Non-JSON response received:', pricesText.substring(0, 500)); // Limit log size
+        throw new Error(`Received non-JSON response from API: ${pricesText.substring(0, 100)}`);
       }
 
       let pricesPayload;
       try {
-        pricesPayload = await pricesRes.json();
+        pricesPayload = pricesText ? JSON.parse(pricesText) : null;
       } catch (parseError) {
-        console.error('Failed to parse JSON response:', pricesRes);
+        console.error('Failed to parse JSON response:', pricesText);
         throw new Error('Failed to parse API response as JSON');
       }
       const prices: Record<string, any> = {};
@@ -165,26 +165,26 @@ const ProfessionalCrypto = () => {
         try {
           if (user?.id) {
             const r = await fetch(`/api/wallet/balance?userId=${encodeURIComponent(user.id)}`);
-            
-            // Check if response is OK and is actually JSON
+
+            // Read body once to avoid "body stream already read" errors
+            const walletText = await r.text();
+
             if (!r.ok) {
-              const errorText = await r.text();
-              console.error(`HTTP error! status: ${r.status}`, errorText);
+              console.error(`HTTP error! status: ${r.status}`, walletText);
               throw new Error(`HTTP error! status: ${r.status}`);
             }
-            
+
             const contentType = r.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-              const text = await r.text();
-              console.error('Non-JSON response received:', text.substring(0, 500)); // Limit log size
-              throw new Error(`Received non-JSON response from wallet balance API: ${text.substring(0, 100)}`);
+              console.error('Non-JSON response received:', walletText.substring(0, 500)); // Limit log size
+              throw new Error(`Received non-JSON response from wallet balance API: ${walletText.substring(0, 100)}`);
             }
 
             let j;
             try {
-              j = await r.json();
+              j = walletText ? JSON.parse(walletText) : null;
             } catch (parseError) {
-              console.error('Failed to parse wallet balance response:', r);
+              console.error('Failed to parse wallet balance response:', walletText);
               throw new Error('Failed to parse wallet balance response as JSON');
             }
             const total = Number(j?.data?.balances?.crypto || 0);

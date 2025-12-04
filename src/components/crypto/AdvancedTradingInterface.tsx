@@ -134,7 +134,23 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       };
       const id = idMap[base] || 'bitcoin';
       const r = await fetch(`/api/crypto/prices?symbols=${encodeURIComponent(id)}`);
-      const j = await r.json();
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await r.text();
+
+      if (!r.ok) {
+        console.error(`Failed to fetch market price: HTTP ${r.status}`, responseText);
+        return;
+      }
+
+      let j;
+      try {
+        j = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        console.error('Failed to parse market price response:', responseText);
+        return;
+      }
+
       const p = j?.prices?.[id];
       if (p) {
         const prev = Number(p.usd) / (1 + Number(p.usd_24h_change || 0) / 100);
@@ -161,7 +177,22 @@ const AdvancedTradingInterface: React.FC<AdvancedTradingInterfaceProps> = ({
       }
 
       const response = await fetch(url, { headers });
-      const data = await response.json();
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        console.error(`Failed to fetch orderbook: HTTP ${response.status}`, responseText);
+        return;
+      }
+
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        console.error('Failed to parse orderbook response:', responseText);
+        return;
+      }
 
       if (data.success && data.data) {
         setOrderBook({

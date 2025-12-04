@@ -539,12 +539,20 @@ class GlobalSearchService {
       }
       
       const response = await fetch(`${this.baseUrl}/products/search?q=${encodeURIComponent(query)}`);
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await response.text();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Products search API failed with status ${response.status}: ${errorText}`);
+        throw new Error(`Products search API failed with status ${response.status}: ${responseText}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        throw new Error(`Failed to parse products search response: ${parseError}`);
+      }
       
       // Validate response data
       if (!data || !Array.isArray(data.products)) {
@@ -587,12 +595,20 @@ class GlobalSearchService {
       }
       
       const response = await fetch(`${this.baseUrl}/freelance/search?q=${encodeURIComponent(query)}`);
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await response.text();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Freelance search API failed with status ${response.status}: ${errorText}`);
+        throw new Error(`Freelance search API failed with status ${response.status}: ${responseText}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        throw new Error(`Failed to parse freelance search response: ${parseError}`);
+      }
       
       // Validate response data
       if (!data) {
@@ -653,12 +669,20 @@ class GlobalSearchService {
       }
       
       const response = await fetch(`${this.baseUrl}/posts/search?q=${encodeURIComponent(query)}`);
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await response.text();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Posts search API failed with status ${response.status}: ${errorText}`);
+        throw new Error(`Posts search API failed with status ${response.status}: ${responseText}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        throw new Error(`Failed to parse posts search response: ${parseError}`);
+      }
       
       // Validate response data
       if (!data || !Array.isArray(data.posts)) {
@@ -702,12 +726,20 @@ class GlobalSearchService {
       }
       
       const response = await fetch(`${this.baseUrl}/videos/search?q=${encodeURIComponent(query)}`);
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await response.text();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Videos search API failed with status ${response.status}: ${errorText}`);
+        throw new Error(`Videos search API failed with status ${response.status}: ${responseText}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        throw new Error(`Failed to parse videos search response: ${parseError}`);
+      }
       
       // Validate response data
       if (!data || !Array.isArray(data.videos)) {
@@ -747,14 +779,22 @@ class GlobalSearchService {
         console.warn('Invalid search query provided for crypto:', query);
         return [];
       }
-      
+
       const response = await fetch(`${this.baseUrl}/crypto/search?q=${encodeURIComponent(query)}`);
+
+      // Read body once to avoid "body stream already read" errors
+      const responseText = await response.text();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Crypto search API failed with status ${response.status}: ${errorText}`);
+        throw new Error(`Crypto search API failed with status ${response.status}: ${responseText}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        throw new Error(`Failed to parse crypto search response: ${parseError}`);
+      }
       
       // Validate response data
       if (!data || !Array.isArray(data.cryptos)) {

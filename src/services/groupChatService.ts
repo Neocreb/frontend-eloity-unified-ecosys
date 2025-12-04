@@ -47,35 +47,28 @@ export class GroupChatService {
 
         console.log('Group creation response status:', response.status);
 
-        let result;
+        // Read body once to avoid "body stream already read" errors
+        const responseText = await response.text();
         const contentType = response.headers.get('content-type');
 
-        if (!response.ok) {
-          let errorData;
-          try {
-            if (contentType?.includes('application/json')) {
-              errorData = await response.json();
-            } else {
-              const errorText = await response.text();
-              errorData = { error: errorText };
-            }
-          } catch (e) {
-            errorData = { error: `HTTP ${response.status}` };
-          }
-
-          const errorMessage = errorData.error || 'Failed to create group via function endpoint';
-          throw new Error(`${errorMessage} (Status: ${response.status})`);
-        }
-
+        let result;
         try {
           if (contentType?.includes('application/json')) {
-            result = await response.json();
+            result = responseText ? JSON.parse(responseText) : null;
           } else {
-            const text = await response.text();
-            result = JSON.parse(text);
+            result = responseText ? JSON.parse(responseText) : null;
           }
-        } catch (e) {
+        } catch (parseError) {
+          if (!response.ok) {
+            const errorMessage = responseText || 'Failed to create group via function endpoint';
+            throw new Error(`${errorMessage} (Status: ${response.status})`);
+          }
           throw new Error('Failed to parse group creation response');
+        }
+
+        if (!response.ok) {
+          const errorMessage = result?.error || responseText || 'Failed to create group via function endpoint';
+          throw new Error(`${errorMessage} (Status: ${response.status})`);
         }
         console.log('Group creation successful:', result);
         
