@@ -24,6 +24,7 @@ interface SavingsGoal {
 
 const SavingsGoals = () => {
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
   const [goals, setGoals] = useState<SavingsGoal[]>([
     {
       id: "1",
