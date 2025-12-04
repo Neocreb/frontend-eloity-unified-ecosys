@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNotification } from "@/hooks/use-notification";
 import { AdminService } from "@/services/adminService";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Zap,
   TrendingUp,
