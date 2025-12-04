@@ -343,8 +343,19 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(url, config);
 
   // Read body once to avoid "body stream already read" errors
-  const text = await response.text();
+  let text = "";
   let data: any;
+
+  try {
+    text = await response.text();
+  } catch (e) {
+    // Handle cases where body stream has already been read or is unavailable
+    console.error("Error reading response body:", e);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to read response`);
+    }
+    return null;
+  }
 
   try {
     data = text ? JSON.parse(text) : null;
