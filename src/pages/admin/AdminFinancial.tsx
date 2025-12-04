@@ -66,6 +66,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Simple Badge component since import is having issues
 interface BadgeProps {
