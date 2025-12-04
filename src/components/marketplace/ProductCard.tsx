@@ -161,11 +161,11 @@ const ProductCard = ({
         <div>
           {product.discountPrice ? (
             <div className="flex items-center gap-2">
-              <span className="font-semibold">${product.discountPrice.toFixed(2)}</span>
-              <span className="text-sm text-muted-foreground line-through">${product.price.toFixed(2)}</span>
+              <span className="font-semibold">{formatCurrency(product.discountPrice)}</span>
+              <span className="text-sm text-muted-foreground line-through">{formatCurrency(product.price)}</span>
             </div>
           ) : (
-            <span className="font-semibold">${product.price.toFixed(2)}</span>
+            <span className="font-semibold">{formatCurrency(product.price)}</span>
           )}
         </div>
 
