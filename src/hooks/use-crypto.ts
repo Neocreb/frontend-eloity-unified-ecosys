@@ -277,7 +277,8 @@ export function useCrypto() {
 
         return order;
       } catch (error) {
-        console.error("Failed to place order:", error);
+        const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+        console.error("Failed to place order:", errorMessage);
         toast({
           title: "Order failed",
           description: "Failed to place order. Please try again.",
