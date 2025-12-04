@@ -90,7 +90,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
   }, [cart]);
 
   const subtotal = getCartTotal();
-  const shippingCost = subtotal > 50 ? 0 : subtotal > 0 ? formatCurrency(9.99, 'amount') : 0;
+  const shippingCost = subtotal > 50 ? 0 : subtotal > 0 ? 9.99 : 0;
   const taxAmount = subtotal * 0.08; // 8% tax
   const discountAmount = appliedPromo?.discountAmount || 0;
   const total = subtotal + shippingCost + taxAmount - discountAmount;
@@ -427,7 +427,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="font-semibold text-green-600">
-                        {formatPrice(item.priceSnapshot)}
+                        {formatCurrency(item.priceSnapshot)}
                       </span>
                       {item.product?.price && item.product.price > item.priceSnapshot && (
                         <span className="text-sm text-gray-500 line-through">
@@ -641,7 +641,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Truck className="w-4 h-4 text-green-600" />
-                  <span>Free shipping on orders over {formatCurrency(50)}</span>
+                  <span>Free shipping on orders over {formatCurrency(50, 'text')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="w-4 h-4 text-blue-600" />
