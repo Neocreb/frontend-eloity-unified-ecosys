@@ -156,6 +156,7 @@ const DURATIONS = [
 
 const CreateJob: React.FC = () => {
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
   const [formData, setFormData] = useState<JobFormData>({
     title: "",
     description: "",
