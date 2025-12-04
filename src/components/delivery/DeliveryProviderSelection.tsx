@@ -160,6 +160,7 @@ export default function DeliveryProviderSelection({
   const [loading, setLoading] = useState(false);
   const [showProviderDetails, setShowProviderDetails] = useState<string | null>(null);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     if (open) {
@@ -207,12 +208,6 @@ export default function DeliveryProviderSelection({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
 
   const getVehicleIcon = (type: string) => {
     switch (type) {
@@ -332,7 +327,7 @@ export default function DeliveryProviderSelection({
 
                               <div className="text-right ml-4">
                                 <p className="text-lg font-bold text-green-600">
-                                  {formatCurrency(calculateAdjustedFee(provider.estimatedFee, selectedServiceType))}
+                                  {formatCurrency(calculateAdjustedFee(provider.estimatedFee, selectedServiceType), 'text')}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   ~{calculateEstimatedTime(provider.estimatedDeliveryTime, selectedServiceType)}h delivery
@@ -441,7 +436,8 @@ export default function DeliveryProviderSelection({
                               calculateAdjustedFee(
                                 providers.find(p => p.id === selectedProvider)?.estimatedFee || 0,
                                 selectedServiceType
-                              )
+                              ),
+                              'text'
                             )}
                           </span>
                         </div>
