@@ -133,7 +133,7 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
       setAppliedPromo(promotion);
       toast({
         title: "Promo Code Applied",
-        description: `You saved $${promotion.value || 0}!`,
+        description: `You saved ${formatCurrency(promotion.value || 0)}!`,
       });
     } catch (error) {
       toast({
@@ -252,8 +252,8 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
                         {item.product?.name}
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        ${item.priceSnapshot.toFixed(2)} each
-                      </p>
+                  {formatCurrency(item.priceSnapshot)} each
+                </p>
                       {item.variantId && (
                         <Badge variant="secondary" className="mt-1">
                           Variant: {item.variantId}
@@ -313,7 +313,7 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
                           <X className="h-4 w-4" />
                         </Button>
                         <p className="font-semibold text-sm sm:text-base">
-                          ${(item.priceSnapshot * item.quantity).toFixed(2)}
+                          {formatCurrency(item.priceSnapshot * item.quantity)}
                         </p>
                         <Button
                           variant="ghost"
@@ -364,7 +364,7 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
                 <div className="mt-2 flex items-center gap-2 text-green-600">
                   <CheckCircle className="h-4 w-4" />
                   <span className="text-sm">
-                    Promo code applied! You saved ${appliedPromo.value || 0}
+                    Promo code applied! You saved {formatCurrency(appliedPromo.value || 0)}
                   </span>
                 </div>
               )}
@@ -377,13 +377,13 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal ({getCartItemsCount()} items)</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatCurrency(subtotal)}</span>
                 </div>
                 {appliedPromo && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount ({appliedPromo.code})</span>
                     <span>
-                      -${appliedPromo.discountAmount?.toFixed(2) || "0.00"}
+                      -{formatCurrency(appliedPromo.discountAmount || 0)}
                     </span>
                   </div>
                 )}
@@ -391,10 +391,7 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
                   <span>
-                    $
-                    {(subtotal - (appliedPromo?.discountAmount || 0)).toFixed(
-                      2,
-                    )}
+                    {formatCurrency(subtotal - (appliedPromo?.discountAmount || 0))}
                   </span>
                 </div>
               </div>
@@ -693,26 +690,26 @@ const EnhancedShoppingCart: React.FC<EnhancedShoppingCartProps> = ({
         <CardContent className="space-y-2">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>{formatCurrency(subtotal)}</span>
           </div>
           <div className="flex justify-between">
             <span>Shipping</span>
-            <span>${shippingCost.toFixed(2)}</span>
+            <span>{formatCurrency(shippingCost)}</span>
           </div>
           <div className="flex justify-between">
             <span>Tax</span>
-            <span>${taxAmount.toFixed(2)}</span>
+            <span>{formatCurrency(taxAmount)}</span>
           </div>
           {appliedPromo && (
             <div className="flex justify-between text-green-600">
               <span>Discount</span>
-              <span>-${appliedPromo.discountAmount?.toFixed(2) || "0.00"}</span>
+              <span>-{formatCurrency(appliedPromo.discountAmount || 0)}</span>
             </div>
           )}
           <Separator />
           <div className="flex justify-between font-semibold text-lg">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatCurrency(total)}</span>
           </div>
         </CardContent>
       </Card>
