@@ -219,7 +219,7 @@ const DashboardInner = () => {
           {/* Balance Display */}
           <div className="mb-2">
             <div className="text-white text-5xl font-bold tracking-tight mb-3">
-              {showBalance ? `$${viewBalance.toFixed(2)}` : '••••••••'}
+              {showBalance ? formatCurrency(viewBalance) : '••••••••'}
             </div>
             <div className="inline-block bg-emerald-400/20 text-emerald-100 px-3 py-1 rounded-full text-xs font-medium border border-emerald-400/30">
               +0.0% from last month
