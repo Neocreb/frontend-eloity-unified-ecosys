@@ -178,11 +178,9 @@ export default function DeliveryProviderDashboard() {
   const [transferAmount, setTransferAmount] = useState("");
   const { toast } = useToast();
   const { walletBalance, refreshWallet } = useWalletContext();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
   const currentPath = location.pathname.split('/').pop() || 'overview';
   const isOnOverview = currentPath === 'overview' || currentPath === 'dashboard' || currentPath === '';
