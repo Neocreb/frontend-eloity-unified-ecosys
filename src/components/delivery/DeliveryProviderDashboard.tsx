@@ -188,7 +188,7 @@ export default function DeliveryProviderDashboard() {
   const handleTransferToWallet = async () => {
     const amount = parseFloat(transferAmount || "0");
     if (!amount || amount < 5) {
-      toast({ title: "Error", description: "Minimum transfer is $5.00", variant: "destructive" });
+      toast({ title: "Error", description: `Minimum transfer is ${formatCurrency(5)}`, variant: "destructive" });
       return;
     }
     setShowTransferModal(false);
