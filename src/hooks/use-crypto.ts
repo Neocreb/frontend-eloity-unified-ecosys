@@ -215,8 +215,9 @@ export function useCrypto() {
       const portfolio = await cryptoService.getPortfolio();
       setState((prev) => ({ ...prev, portfolio }));
     } catch (error) {
-      console.error("Failed to fetch portfolio:", error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to fetch portfolio:", errorMessage);
+      // Don't throw, just log the error
     }
   }, [isAuthenticated]);
 
