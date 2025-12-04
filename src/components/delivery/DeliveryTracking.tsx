@@ -29,6 +29,7 @@ import {
   Route,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
 
 interface TrackingEvent {
