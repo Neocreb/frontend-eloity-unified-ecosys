@@ -525,7 +525,7 @@ export const FreelanceDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                   title="Total Earnings"
-                  value={`$${stats.totalEarnings.toLocaleString()}`}
+                  value={formatCurrency(stats.totalEarnings)}
                   change="+12% this month"
                   icon={<DollarSign className="w-6 h-6 text-white" />}
                   color="bg-gradient-to-br from-green-500 to-emerald-600"
