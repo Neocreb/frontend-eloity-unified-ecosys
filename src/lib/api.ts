@@ -347,7 +347,9 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   let data: any;
 
   try {
-    text = await response.text();
+    // Clone the response to safely read the body
+    const clonedResponse = response.clone();
+    text = await clonedResponse.text();
   } catch (e) {
     // Handle cases where body stream has already been read or is unavailable
     console.error("Error reading response body:", e);
@@ -360,11 +362,12 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   try {
     data = text ? JSON.parse(text) : null;
   } catch (e) {
+    console.warn(`Failed to parse JSON from ${endpoint}:`, text?.substring(0, 200));
     data = { error: text || "Unknown error" };
   }
 
   if (!response.ok) {
-    const errorMessage = (data && data.error) || `HTTP ${response.status}`;
+    const errorMessage = (data?.error) || (data?.message) || `HTTP ${response.status}`;
     throw new Error(errorMessage);
   }
 
