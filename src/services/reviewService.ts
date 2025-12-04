@@ -6,7 +6,8 @@ export class ReviewService {
     try {
       return await MarketplaceService.getReviews(productId);
     } catch (error) {
-      console.error("Error fetching product reviews:", error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Error fetching product reviews:", errorMessage);
       return [];
     }
   }
