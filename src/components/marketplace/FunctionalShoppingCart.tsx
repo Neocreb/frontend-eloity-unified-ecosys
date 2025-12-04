@@ -540,7 +540,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{formatCurrency(subtotal)}</span>
               </div>
 
               <div className="flex justify-between">
@@ -549,13 +549,13 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                   <span>Shipping</span>
                 </div>
                 <span className={shippingCost === 0 ? "text-green-600" : ""}>
-                  {shippingCost === 0 ? "FREE" : formatPrice(shippingCost)}
+                  {shippingCost === 0 ? "FREE" : formatCurrency(shippingCost)}
                 </span>
               </div>
 
               <div className="flex justify-between">
                 <span>Tax</span>
-                <span>{formatPrice(taxAmount)}</span>
+                <span>{formatCurrency(taxAmount)}</span>
               </div>
 
               {appliedPromo && (
@@ -571,7 +571,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
-                  <span>-{formatPrice(appliedPromo.discountAmount)}</span>
+                  <span>-{formatCurrency(appliedPromo.discountAmount)}</span>
                 </div>
               )}
 
@@ -579,7 +579,7 @@ export const FunctionalShoppingCart: React.FC<FunctionalShoppingCartProps> = ({
 
               <div className="flex justify-between text-lg font-semibold">
                 <span>Total</span>
-                <span>{formatPrice(total)}</span>
+                <span>{formatCurrency(total)}</span>
               </div>
 
               {/* Promo Code */}
