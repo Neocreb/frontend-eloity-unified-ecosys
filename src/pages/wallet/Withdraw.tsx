@@ -405,7 +405,7 @@ const Withdraw = () => {
                 Processing...
               </>
             ) : (
-              `Withdraw $${(amountNum - fee).toFixed(2)}`
+              `Withdraw ${formatCurrency(amountNum - fee)}`
             )}
           </Button>
           <Button
