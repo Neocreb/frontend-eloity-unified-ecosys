@@ -90,6 +90,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
   const [trendingSearches, setTrendingSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const { userCurrency } = useCurrency();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -312,7 +313,7 @@ export const EnhancedSearch: React.FC<EnhancedSearchProps> = ({
                       {/* Price Range */}
                       <div>
                         <label className="text-sm font-medium mb-2 block">
-                          Price Range: ${filters.priceRange[0]} - $
+                          Price Range: {userCurrency?.symbol || '$'}{filters.priceRange[0]} - {userCurrency?.symbol || '$'}
                           {filters.priceRange[1]}
                         </label>
                         <Slider
