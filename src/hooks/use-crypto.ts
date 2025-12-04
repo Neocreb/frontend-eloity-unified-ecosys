@@ -202,8 +202,9 @@ export function useCrypto() {
       const marketData = await cryptoService.getMarketData();
       setState((prev) => ({ ...prev, marketData }));
     } catch (error) {
-      console.error("Failed to fetch market data:", error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("Failed to fetch market data:", errorMessage);
+      // Don't throw, just log the error
     }
   }, []);
 
