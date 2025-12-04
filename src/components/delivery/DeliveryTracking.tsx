@@ -172,6 +172,7 @@ export default function DeliveryTracking({
   const [error, setError] = useState<string | null>(null);
   const [showContactDialog, setShowContactDialog] = useState(false);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     if (initialTrackingNumber) {
@@ -262,13 +263,6 @@ export default function DeliveryTracking({
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString();
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   const getNextExpectedEvent = (currentStatus: string) => {
